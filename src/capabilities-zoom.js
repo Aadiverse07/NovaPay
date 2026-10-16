@@ -7,7 +7,7 @@
   "use strict";
   var mq = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
   if (mq && mq.matches) return;
-  var secs = [].slice.call(document.querySelectorAll(".value-strip,.features-section,.plans-section,.company-section,.pricing-band"));
+  var secs = [].slice.call(document.querySelectorAll(".value-strip,.features-section,.plans-section,.company-section"));
   if (!secs.length) return;
   var items = secs.map(function (el) { return { el: el, kids: [].slice.call(el.children), top: 0, bot: 0, last: "" }; });
   var vh = innerHeight, maxScroll = 0, ticking = false, off = false;
