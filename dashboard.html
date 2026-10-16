@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="src/tokens.css">
 <link rel="stylesheet" href="src/base.css">
 <link rel="stylesheet" href="src/dashboard.css">
+<link rel="stylesheet" href="src/novapay-live.css">
 <link rel="stylesheet" href="src/novapay-pastel.css">
 <link rel="stylesheet" href="src/novapay-dark-glow.css">
 <script src="src/novapay-logo.js"></script>
@@ -31,10 +32,10 @@
       <a href="#dashboard" data-view="dashboard" aria-current="page"><span>⌂</span><b>Dashboard</b></a>
       <a href="#transactions" data-view="transactions"><span>↕</span><b>Transactions</b></a>
       <a href="#ledger" data-view="ledger"><span>▤</span><b>Ledger</b></a>
-      <a href="#reports" data-view="reports"><span>▦</span><b>Reports</b></a>
       <a href="#ai-assistant" data-view="ai-assistant"><span class="nav-ai-logo"><novapay-logo size="17" variant="mark"></novapay-logo></span><b>AI Assistant</b></a>
       <a href="#anomalies" data-view="anomalies"><span>!</span><b>Anomalies</b><em>3</em></a>
-      <a href="#settings" data-view="settings"><span>⚙</span><b>Settings</b></a>
+      <a href="#approvals" data-view="approvals"><span>✓</span><b>Approvals</b><em id="nav-approvals-count">3</em></a>
+      <a href="#sandbox" data-view="sandbox"><span>⚡</span><b>PayPal Sandbox</b></a>
     </nav>
     <a class="back-home" href="preview.html#home">← Back to Home</a>
   </aside>
@@ -141,11 +142,6 @@
         <article class="dash-card"><div class="card-heading"><h3 class="heading-with-icon"><span class="section-icon-tile"><svg class="section-icon"><use href="src/icons.svg#i-ledger"></use></svg></span>Journal entries</h3><span>Illustrative data</span></div><div class="table-scroll"><table><thead><tr><th>Date</th><th>Description</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead><tbody><tr><td>07 Oct 2026</td><td>Payment received</td><td>₹10,000</td><td>₹10,000</td><td><span class="status ok">Balanced</span></td></tr><tr><td>07 Oct 2026</td><td>PayPal fee</td><td>₹300</td><td>₹300</td><td><span class="status ok">Balanced</span></td></tr><tr><td>06 Oct 2026</td><td>Refund issued</td><td>₹2,000</td><td>₹2,000</td><td><span class="status ok">Balanced</span></td></tr></tbody></table></div></article>
       </div>
 
-      <div class="view" id="view-reports" data-view-panel hidden>
-        <div class="page-intro"><span class="section-kicker"><svg class="section-icon" aria-hidden="true"><use href="src/icons.svg#i-reports"></use></svg>REPORTS</span><h2>Financial reports</h2><p>Navigate the reporting surface using illustrative data.</p></div>
-        <div class="report-grid"><article class="dash-card report-card"><span class="report-ic" aria-hidden="true"><svg class="section-icon"><use href="src/icons.svg#i-trial"></use></svg></span><h3>Trial Balance</h3><p>Review debit and credit totals.</p><button class="table-action">Open report</button></article><article class="dash-card report-card"><span class="report-ic" aria-hidden="true"><svg class="section-icon"><use href="src/icons.svg#i-flow"></use></svg></span><h3>Cash Flow</h3><p>Inspect money-in and money-out trends.</p><button class="table-action">Open report</button></article><article class="dash-card report-card"><span class="report-ic" aria-hidden="true"><svg class="section-icon"><use href="src/icons.svg#i-summary"></use></svg></span><h3>Ledger Summary</h3><p>See balances by account.</p><button class="table-action">Open report</button></article></div>
-      </div>
-
       <div class="view" id="view-ai-assistant" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><span class="section-kicker">NOVAPAY AI · DEMO AGENT</span><h2>Financial intelligence with human approval</h2><p>Ask NovaPay about the illustrative workspace, then review suggested actions before anything is simulated.</p></div>
         <div class="ai-command-grid">
@@ -183,11 +179,28 @@
         <div class="anomaly-grid"><article class="dash-card anomaly-card"><span class="status danger">Review</span><h3>Burst of large refunds</h3><p>Illustrative: 3 unusually large refunds within 20 minutes. Demo signal, not a live fraud determination.</p><button class="btn btn--ghost">Review item</button></article><article class="dash-card anomaly-card"><span class="status warn">Review</span><h3>Repeated dispute</h3><p>Illustrative dispute activity appears in a short review window.</p><button class="btn btn--ghost">Review item</button></article><article class="dash-card anomaly-card"><span class="status info">Review</span><h3>Fee change</h3><p>Illustrative fee movement is highlighted for merchant review.</p><button class="btn btn--ghost">Review item</button></article></div>
       </div>
 
-      <div class="view" id="view-settings" data-view-panel hidden>
-        <div class="page-intro"><span class="section-kicker"><svg class="section-icon" aria-hidden="true"><use href="src/icons.svg#i-settings"></use></svg>SETTINGS</span><h2>Demo settings</h2><p>These controls demonstrate the settings surface without changing a live account.</p></div>
-        <article class="dash-card settings-card"><label><span><b>Demo notifications</b><small>Show review notifications in this demo.</small></span><input type="checkbox" checked></label><label><span><b>AI suggestions</b><small>Show suggested questions in the AI workspace.</small></span><input type="checkbox" checked></label><label><span><b>Reduced motion</b><small>Respect the browser accessibility preference.</small></span><input type="checkbox" id="reduce-motion-toggle"></label></article>
+      <div class="view" id="view-approvals" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">HUMAN-IN-THE-LOOP</span><h2>Approval queue</h2><p>AI proposes PayPal actions. Nothing executes until you approve it. Approved refunds are sent to the PayPal sandbox and posted to the ledger.</p></div>
+        <div class="approval-grid" id="approval-queue"></div>
+        <article class="dash-card" style="margin-top:16px"><div class="card-heading"><h3>Audit trail</h3><span>This session</span></div><ul class="np-log" id="audit-log"><li class="np-empty">No decisions yet.</li></ul></article>
       </div>
-    </section>
+
+      <div class="view" id="view-sandbox" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">PAYPAL DEVELOPER PLATFORM</span><h2>PayPal Sandbox &amp; AI connection</h2><p>Live status of the Orders, Payments (refund) and Webhooks integration, plus the AI model that drives suggestions.</p></div>
+        <div class="np-status-grid">
+          <article class="dash-card"><span class="status info" id="st-paypal">Checking…</span><h3>PayPal Sandbox</h3><p>OAuth2 · Orders v2 · Payments v2 refunds · Webhooks</p></article>
+          <article class="dash-card"><span class="status info" id="st-ai">Checking…</span><h3>AI model</h3><p id="st-ai-model">Claude via Anthropic API (tool-style action proposals)</p></article>
+        </div>
+        <article class="dash-card" style="margin-top:16px"><div class="card-heading"><h3>Create a sandbox payment</h3><span>Orders API</span></div>
+          <div class="chat-row"><input id="sb-amount" value="10.00" aria-label="Amount in USD"><button class="btn btn--primary" id="sb-create" type="button">Create test order</button></div>
+          <div id="sb-result" class="np-result" hidden></div></article>
+        <div class="np-status-grid" style="margin-top:16px">
+          <article class="dash-card"><div class="card-heading"><h3>Webhook events</h3><span>/api/webhook</span></div><ul class="np-log" id="webhook-log"><li class="np-empty">No events yet.</li></ul></article>
+          <article class="dash-card"><div class="card-heading"><h3>API activity</h3><span>Server calls</span></div><ul class="np-log" id="api-log"><li class="np-empty">No calls yet.</li></ul></article>
+        </div>
+        <article class="dash-card settings-card" style="margin-top:16px"><label><span><b>Notifications</b><small>Show review notifications.</small></span><input type="checkbox" checked></label><label><span><b>AI suggestions</b><small>Show suggested questions in the AI workspace.</small></span><input type="checkbox" checked></label><label><span><b>Reduced motion</b><small>Respect the browser accessibility preference.</small></span><input type="checkbox" id="reduce-motion-toggle"></label></article>
+      </div>
+</section>
   </main>
 </div>
 
@@ -225,5 +238,6 @@
 <script src="src/chart-theme.js"></script>
 <script src="src/motion.js"></script>
 <script src="src/dashboard.js"></script>
+<script src="src/novapay-live.js"></script>
 </body>
 </html>

@@ -1,3 +1,35 @@
+# NovaPay v2.0 — PayPal AI Hackathon build
+
+**NovaPay is an AI bookkeeper for PayPal merchants: AI proposes financial actions, a human approves, PayPal executes, the ledger updates.**
+
+## Run
+```
+cp .env.example .env     # add PayPal sandbox + Anthropic keys
+node server.js           # Node 18+, no npm install needed
+open http://localhost:3000/dashboard.html
+```
+Without keys or backend (e.g. opening the HTML directly) everything runs in clearly-labelled demo mode.
+
+## Where the integrations are
+| Capability | Where |
+|---|---|
+| PayPal OAuth2 + Orders v2 (create/capture sandbox payment) | `server.js` → `/api/paypal/create-order`, `/capture` |
+| PayPal Payments v2 refund after human approval | `/api/paypal/refund` (Approvals page → Approve) |
+| PayPal Webhooks (signature verification API) | `/api/webhook`, shown in the PayPal Sandbox page |
+| AI (Claude, Anthropic Messages API) answering from ledger context and proposing actions | `/api/ai/chat` → proposals land in Approvals |
+
+## Modules
+Dashboard · Transactions · Ledger · AI Assistant · **Approvals (new)** · Anomalies · **PayPal Sandbox (new, replaces Settings; toggles moved here)**.
+Removed as non-essential: Reports (inert stubs), Settings page, landing Pricing and Company sections.
+
+## Demo flow for judges
+1. PayPal Sandbox → Create test order → approve as sandbox buyer → Capture.
+2. AI Assistant → "Detect unusual activity" → AI adds a proposal.
+3. Approvals → Approve the refund → sandbox refund executes, transaction + ledger rows appear, audit trail logs it.
+
+Figures on dashboard cards are illustrative seed data; PayPal calls are sandbox only. Sandbox amounts are USD.
+
+---
 # NovaPay Design System v1.2 — Phase 4 Authentication + Navigation
 
 This package contains the NovaPay design-system preview plus a complete Phase 2 creative landing/home page implementation.

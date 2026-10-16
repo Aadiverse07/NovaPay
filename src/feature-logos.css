@@ -1,0 +1,30 @@
+/* NovaPay — large, soft NovaPay logo watermark centred behind each capability card.
+   Pure decoration: sits behind the content (z-index -1 inside the card's own stacking context), never blocks clicks. */
+.feature-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  left: 50%;
+  top: 50%;
+  width: var(--wm-size, 270px);
+  aspect-ratio: 860 / 555;
+  background: url("../assets/novapay-mark-clean.png") center / contain no-repeat;
+  opacity: var(--wm-opacity, .14);
+  transform: translate(-50%, -50%) rotate(var(--wm-rot, -8deg));
+  transition: transform 600ms cubic-bezier(.2, .75, .25, 1), opacity 500ms;
+}
+.feature-card:hover::after { opacity: calc(var(--wm-opacity, .14) + .07); transform: translate(-50%, -50%) rotate(calc(var(--wm-rot, -8deg) + 4deg)) scale(1.08); }
+
+/* the two wide cards (4 and 5) get a slightly bigger logo */
+.feature-card:nth-child(4), .feature-card:nth-child(5) { --wm-size: 320px; }
+
+/* dark theme: cards are darker/saturated, so the watermark needs a touch more presence */
+:root[data-theme="dark"] .feature-card { --wm-opacity: .22; }
+
+@media (max-width: 700px) {
+  .feature-card, .feature-card:nth-child(4), .feature-card:nth-child(5) { --wm-size: 230px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feature-card::after, .feature-card:hover::after { transition: none; }
+}

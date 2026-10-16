@@ -24,7 +24,7 @@
   applyTheme(currentTheme());
 
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
-  var titles={dashboard:"Dashboard",transactions:"Transactions",ledger:"Ledger",reports:"Reports","ai-assistant":"AI Assistant",anomalies:"Anomalies",settings:"Settings"};
+  var titles={dashboard:"Dashboard",transactions:"Transactions",ledger:"Ledger","ai-assistant":"AI Assistant",approvals:"Approvals",anomalies:"Anomalies",sandbox:"PayPal Sandbox"};
   function activate(view,writeHash){
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
@@ -78,7 +78,7 @@
     var box=$("ai-conversation");
     appendAiMessage(q,"Thinking…");
     var bots=box.querySelectorAll(".ai-bubble--assistant p"), last=bots[bots.length-1];
-    setTimeout(function(){last.textContent=matchAnswer(q);box.scrollTop=box.scrollHeight;aiBusy=false;},500);
+    var done=function(t){last.textContent=t;box.scrollTop=box.scrollHeight;aiBusy=false;};if(window.NovaLive&&NovaLive.live.ai){NovaLive.chat(q).then(done,function(){done(matchAnswer(q))});}else{setTimeout(function(){done(matchAnswer(q))},500);}
   }
   $("ai-send").addEventListener("click",function(){ask($("ai-input").value);$("ai-input").value=""});
   $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){ask(e.target.value);e.target.value=""}});
@@ -145,7 +145,7 @@
   }
   txSearch.addEventListener("input",filterTx);txType.addEventListener("change",filterTx);
 
-  var sugToggle=document.querySelectorAll("#view-settings input[type=checkbox]")[1], qa=document.querySelector(".ai-quick-actions");
+  var sugToggle=document.querySelectorAll("#view-sandbox .settings-card input[type=checkbox]")[1], qa=document.querySelector(".ai-quick-actions");
   if(sugToggle&&qa)sugToggle.addEventListener("change",function(){qa.hidden=!sugToggle.checked;});
   var reduce=$("reduce-motion-toggle");
   if(reduce){

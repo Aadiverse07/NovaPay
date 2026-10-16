@@ -151,7 +151,7 @@
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
   document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target) && !mtoggle.contains(e.target)) setMenu(false); });
 
-  var spyLinks = [].slice.call(document.querySelectorAll(".landing-nav a, .mobile-menu a[href^='#']")), spyIds = ["home", "features", "pricing", "company"];
+  var spyLinks = [].slice.call(document.querySelectorAll(".landing-nav a, .mobile-menu a[href^='#']")), spyIds = ["home", "features"];
   function spy() {
     var cur = "home", y = window.scrollY + 140;
     spyIds.forEach(function (id) { var s = $(id); if (s && s.offsetTop <= y && id !== "home") cur = id; });
