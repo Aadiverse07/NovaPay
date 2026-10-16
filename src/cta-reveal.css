@@ -1,0 +1,24 @@
+/* NovaPay — "Start with NovaPay" closing section: text glides in from the left edge of the screen, then the button pops.
+   Only active once cta-reveal.js has tagged the section with .cta-anim (so no-JS / reduced-motion users see it normally). */
+.pricing-band.cta-anim { overflow-x: clip; }
+.pricing-band.cta-anim .cta-text { opacity: 0; transform: translateX(-70vw); }
+.pricing-band.cta-anim .cta-kicker { display: inline-block; }
+.pricing-band.cta-anim .cta-word { display: inline-block; opacity: 0; transform: translateX(-70vw); }
+.pricing-band.cta-anim #pricing-start { opacity: 0; transform: scale(.2); }
+
+.pricing-band.cta-in .cta-text,
+.pricing-band.cta-in .cta-word {
+  opacity: 1; transform: none;
+  transition: transform 1000ms cubic-bezier(.16, .84, .3, 1), opacity 700ms ease-out;
+  transition-delay: var(--cta-d, 0ms);
+}
+.pricing-band.cta-in #pricing-start {
+  opacity: 1; transform: none;
+  animation: cta-pop 640ms cubic-bezier(.34, 1.56, .64, 1) var(--cta-btn-d, 1700ms) both;
+}
+/* "pop up": starts tiny, overshoots, settles */
+@keyframes cta-pop {
+  0%   { opacity: 0; transform: scale(.2); }
+  55%  { opacity: 1; transform: scale(1.14); }
+  100% { opacity: 1; transform: scale(1); }
+}
