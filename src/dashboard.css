@@ -393,3 +393,32 @@ body.modal-open{overflow:hidden}
 
 /* ---- AI Assistant nav logo: black background ---- */
 .dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--robot){background:#000;border:1px solid #000;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+
+/* ---- Module icon tiles beside nav names: light tile in light mode, dark tile in dark mode ---- */
+:root{--nav-tile-bg:#eaefff;--nav-tile-border:rgba(30,60,160,.16);--nav-tile-shadow:0 2px 8px rgba(30,60,160,.14);--nav-tile-glyph:#2f4fd0}
+:root[data-theme="dark"]{--nav-tile-bg:#13142f;--nav-tile-border:rgba(255,255,255,.10);--nav-tile-shadow:0 2px 8px rgba(0,0,0,.45);--nav-tile-glyph:#aab8ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--nav-tile-bg:#13142f;--nav-tile-border:rgba(255,255,255,.10);--nav-tile-shadow:0 2px 8px rgba(0,0,0,.45);--nav-tile-glyph:#aab8ff}}
+.dashboard-nav a span.nav-ai-logo{background:var(--nav-tile-bg);border:1px solid var(--nav-tile-border);box-shadow:var(--nav-tile-shadow)}
+.dashboard-nav a span.nav-ai-logo.nav-mod-logo--glyph{color:var(--nav-tile-glyph)}
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--robot){background:var(--nav-tile-bg);border:1px solid var(--nav-tile-border);box-shadow:var(--nav-tile-shadow)}
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){background:transparent;border:0;box-shadow:var(--nav-tile-shadow)}
+/* light artwork (default); dark artwork restored under dark theme */
+.dashboard-nav a .nav-mod-logo--tile[src$="module-dashboard.png"]{content:url(../assets/module-dashboard-light.png)}
+.dashboard-nav a .nav-mod-logo--tile[src$="module-transactions.png"]{content:url(../assets/module-transactions-light.png)}
+.dashboard-nav a .nav-mod-logo--tile[src$="module-approvals.png"]{content:url(../assets/module-approvals-light.png)}
+.dashboard-nav a .nav-mod-logo--tile[src$="module-paypal.png"]{content:url(../assets/module-paypal-light.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-dashboard.png"]{content:url(../assets/module-dashboard.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-transactions.png"]{content:url(../assets/module-transactions.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-approvals.png"]{content:url(../assets/module-approvals.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-paypal.png"]{content:url(../assets/module-paypal.png)}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-dashboard.png"]{content:url(../assets/module-dashboard.png)}
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-transactions.png"]{content:url(../assets/module-transactions.png)}
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-approvals.png"]{content:url(../assets/module-approvals.png)}
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-paypal.png"]{content:url(../assets/module-paypal.png)}
+}
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){border-radius:10px;box-shadow:none;filter:drop-shadow(0 2px 4px rgba(30,60,160,.18))}
+:root[data-theme="dark"] .dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.dashboard-nav a .nav-mod-logo--tile{border-radius:10px}
+.ai-command-grid{grid-template-columns:minmax(0,1fr)!important}
+.ai-live-status:empty{min-height:0;margin:0}
