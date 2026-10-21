@@ -1,0 +1,145 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { createApp } from '../src/app.js';
+import { createAIService } from '../src/services/ai.js';
+import { createRepositories } from '../src/repos/memory.js';
+
+const baseConfig = {
+  PORT: 3000,
+  STATIC_DIR: process.cwd(),
+  PAYPAL_CLIENT_ID: 'test-client-id',
+  PAYPAL_CLIENT_SECRET: 'test-client-secret',
+  PAYPAL_WEBHOOK_ID: 'test-webhook-id',
+  ANTHROPIC_API_KEY: 'test-anthropic-key',
+  ANTHROPIC_MODEL: 'test-model',
+  hasPayPal: true,
+  hasAI: true,
+};
+
+async function withServer(app, callback) {
+  const server = app.listen(0, '127.0.0.1');
+  await new Promise((resolve) => server.once('listening', resolve));
+  const address = server.address();
+  const oldLog = console.log;
+  const logs = [];
+  console.log = (line) => logs.push(String(line));
+  try { await callback(`http://127.0.0.1:${address.port}`, logs); }
+  finally {
+    console.log = oldLog;
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+}
+
+test('legacy API flow handles valid, invalid, unauthenticated, and repeated requests', async () => {
+  const repos = createRepositories();
+  const calls = [];
+  const paypal = {
+    async pp(method, url, body, requestId) {
+      calls.push({ method, url, requestId });
+      if (url === '/v2/checkout/orders') return { id: 'ORDER-123', status: 'CREATED', links: [{ rel: 'approve', href: 'https://www.sandbox.paypal.com/checkoutnow?token=ORDER-123' }] };
+      if (url === '/v2/checkout/orders/ORDER-123/capture') return { status: 'COMPLETED', purchase_units: [{ payments: { captures: [{ id: 'CAPTURE-123', status: 'COMPLETED', amount: { value: '10.00', currency_code: 'USD' }, seller_receivable_breakdown: { paypal_fee: { value: '0.59' } } }] } }] };
+      if (url === '/v2/payments/captures/CAPTURE-123/refund') return { id: 'REFUND-123', status: 'COMPLETED' };
+      throw new Error(`Unexpected provider request ${method} ${url}`);
+    },
+    async ppToken() { return 'token'; },
+    async verifyWebhook() { return 'VERIFIED'; },
+  };
+  const app = createApp({ config: baseConfig, repos, paypal, askAI: async () => ({ reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null }) });
+
+  await withServer(app, async (base) => {
+    const requestKey = '0123456789abcdef0123456789abcdef';
+    const create = (amount, key = requestKey, headers = {}) => fetch(`${base}/api/paypal/create-order`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify({ amount, currency: 'USD', requestKey: key }) });
+    const firstOrder = await create('10.00');
+    assert.equal(firstOrder.status, 200);
+    const orderBody = await firstOrder.json();
+    assert.equal(orderBody.orderId, 'ORDER-123');
+    const repeatedOrder = await create('10.00');
+    assert.deepEqual(await repeatedOrder.json(), orderBody);
+    assert.equal(calls.filter((call) => call.url === '/v2/checkout/orders').length, 1);
+    const invalidAmount = await create('10000.01');
+    assert.equal(invalidAmount.status, 400);
+    assert.equal(typeof (await invalidAmount.json()).error, 'string');
+    assert.equal((await create('10.00', 'bad-key')).status, 400);
+    const invalidOrderId = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'bad' }) });
+    assert.equal(invalidOrderId.status, 400);
+    const missingOrder = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'ORDER-MISSING' }) });
+    assert.equal(missingOrder.status, 404);
+
+    const captureBody = { orderId: 'ORDER-123' };
+    const capture = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(captureBody) });
+    assert.equal(capture.status, 200);
+    const captured = await capture.json();
+    assert.equal(captured.captureId, 'CAPTURE-123');
+    const repeatCapture = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(captureBody) });
+    assert.deepEqual(await repeatCapture.json(), captured);
+    assert.equal(calls.filter((call) => call.url.endsWith('/capture')).length, 1);
+
+    const approvalBody = { approvalId: 'APR-123', proposalType: 'refund', captureId: 'CAPTURE-123', amount: '4.00', currency: 'USD' };
+    const approval = await fetch(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(approvalBody) });
+    assert.equal(approval.status, 200); assert.equal((await approval.json()).registered, true);
+    const invalidApproval = await fetch(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...approvalBody, proposalType: 'hold-payout' }) });
+    assert.equal(invalidApproval.status, 400);
+    // Phase 0 intentionally keeps legacy no-auth behavior; Phase 1 introduces authentication and role checks.
+    const repeatedApproval = await fetch(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer fake-viewer-token', 'x-org-id': 'other-org' }, body: JSON.stringify(approvalBody) });
+    assert.equal(repeatedApproval.status, 200); assert.equal((await repeatedApproval.json()).registered, true);
+
+    const refundBody = { ...approvalBody, note: 'Approved refund' };
+    const unregisteredRefund = await fetch(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...refundBody, approvalId: 'APR-OTHER' }) });
+    assert.equal(unregisteredRefund.status, 403);
+    const refund = await fetch(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(refundBody) });
+    assert.equal(refund.status, 200);
+    const refunded = await refund.json();
+    assert.equal(refunded.refundId, 'REFUND-123');
+    const repeatRefund = await fetch(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer fake-viewer-token', 'x-org-id': 'other-org' }, body: JSON.stringify(refundBody) });
+    assert.deepEqual(await repeatRefund.json(), refunded);
+    assert.equal(calls.filter((call) => call.url.endsWith('/refund')).length, 1);
+
+    const ai = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'What happened?', context: { transactions: [{ id: 'CAPTURE-123' }] } }) });
+    assert.deepEqual(await ai.json(), { reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null });
+    const webhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
+    assert.deepEqual(await webhook.json(), { ok: true, verification: 'VERIFIED' });
+    const replayedWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
+    assert.deepEqual(await replayedWebhook.json(), { ok: true, verification: 'VERIFIED' });
+    const events = await (await fetch(`${base}/api/events`)).json();
+    assert.equal(events.events[0].id, 'WEBHOOK-1');
+    assert.equal(events.events.filter((event) => event.id === 'WEBHOOK-1').length, 2);
+    const status = await (await fetch(`${base}/api/status`)).json();
+    assert.equal(status.captures[0].refunded, 4);
+  });
+});
+
+test('AI provider error bodies and keys do not reach responses or activity logs', async () => {
+  const secret = 'provider-secret-sentinel';
+  const repos = createRepositories();
+  const events = repos.events;
+  const askAI = createAIService({ config: baseConfig, events });
+  const app = createApp({ config: baseConfig, repos, askAI });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => String(url).startsWith('https://api.anthropic.com/')
+    ? new Response(JSON.stringify({ error: { message: `Rejected ${secret}` } }), { status: 401, headers: { 'content-type': 'application/json' } })
+    : originalFetch(url, options);
+  try {
+    await withServer(app, async (base, logs) => {
+      const response = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
+      const responseText = await response.text();
+      assert.equal(response.status, 500);
+      assert.deepEqual(JSON.parse(responseText), { error: 'AI service returned an error.' });
+      assert.equal(responseText.includes(secret), false);
+      assert.equal(responseText.includes('at '), false);
+      const activityText = await (await fetch(`${base}/api/events`)).text();
+      assert.equal(activityText.includes(secret), false);
+      assert.equal(JSON.stringify(events.calls).includes(secret), false);
+      assert.equal(JSON.stringify(logs).includes(secret), false);
+      assert.equal(JSON.stringify(logs).includes('Error:'), false);
+    });
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test('invalid configuration fails fast without printing a stack trace', () => {
+  const result = spawnSync(process.execPath, ['server/index.js'], { cwd: path.resolve(process.cwd()), env: { ...process.env, PORT: 'invalid' }, encoding: 'utf8' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Invalid NovaPay configuration: PORT:/);
+  assert.doesNotMatch(result.stderr, /\bat\s+file:/);
+});
