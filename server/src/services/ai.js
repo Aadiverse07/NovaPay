@@ -28,7 +28,7 @@ export function createAIService({ config, events }) {
     }
     const data = await response.json();
     events.addCall({ t: new Date().toISOString(), m: `POST anthropic /v1/messages (${config.ANTHROPIC_MODEL}) → ${response.status}`, ok: response.ok });
-    if (!response.ok) throw new Error(data.error && data.error.message || 'AI error');
+    if (!response.ok) throw new Error('AI service returned an error.');
     const text = (data.content || []).map((item) => item.text || '').join('');
     return sanitizeAIResponse(text, context);
   };

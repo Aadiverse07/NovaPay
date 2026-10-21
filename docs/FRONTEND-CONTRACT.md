@@ -24,7 +24,7 @@ Request body is a PayPal event object, including string `event_type` (maximum 20
 
 Request: `{ "message": "question", "context": { "transactions": [{ "id": "..." }] } }`. Message is stringified and capped at 500 characters; context is passed through to the AI service as before.
 
-Response HTTP 200: `{ "reply": "...", "evidence": ["known transaction ID"], "proposal": null }` or a proposal object `{ "type": "refund|dispute-evidence|hold-payout|other", "txId": "...", "title": "...", "reason": "..." }`. Empty or invalid AI output returns the existing safe fallback reply and empty evidence/proposal. Missing key returns HTTP 503 `{ "error": "ANTHROPIC_API_KEY not set" }`.
+Response HTTP 200: `{ "reply": "...", "evidence": ["known transaction ID"], "proposal": null }` or a proposal object `{ "type": "refund|dispute-evidence|hold-payout|other", "txId": "...", "title": "...", "reason": "..." }`. Empty or invalid AI output returns the existing safe fallback reply and empty evidence/proposal. Missing key returns HTTP 503 `{ "error": "ANTHROPIC_API_KEY not set" }`. Provider failures return HTTP 500 `{ "error": "AI service returned an error." }`; provider response text is not forwarded.
 
 ## `POST /api/approvals/register`
 

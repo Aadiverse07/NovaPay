@@ -22,4 +22,6 @@
 - `STATIC_DIR` relative paths resolve from the repository root.
 - Added pinned `express`, `helmet`, and `zod` for the requested HTTP stack, response headers, and configuration validation; added pinned `dotenv` so standard `.env` files remain usable without retaining the hand-written parser.
 - Supabase/database-backed persistence, authentication, and new features are out of scope for this safe refactor.
+- Existing API errors remain flat `{ "error": "..." }` strings because the Phase 0 compatibility requirement is to preserve today's response shapes and the current UI reads `d.error` as a string. The generic gate's nested error shape would require a breaking API and frontend change, so it is deferred rather than silently breaking the existing UI.
+- Anthropic provider error bodies are now replaced with a generic message to comply with the master security rule against leaking provider responses; this affects only provider-error wording.
 - Helmet's default Content Security Policy is disabled because it would block existing inline UI code. Other Helmet headers remain enabled.
