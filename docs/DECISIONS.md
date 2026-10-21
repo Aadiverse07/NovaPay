@@ -15,7 +15,7 @@
 | Hand-written HTTP routing/body parser | Rewritten with Express routers and `express.json({ limit: '64kb' })` | Provides modular routing while maintaining the old request limit and API payloads. |
 | Hand-written static allow-list and MIME mapping | Rewritten with `express.static(STATIC_DIR)` and root `preview.html` handling | Uses the requested static middleware; `STATIC_DIR` defaults to the repository root. |
 | Hand-written `.env` parser | Dropped | Runtime configuration is read from `process.env` and validated with zod; launch through the environment or a standard dotenv loader outside this server. |
-| Root `server.js` | Retained temporarily for parity verification; scheduled for removal after verification | `node server.js` remains available until the modular flow is checked. Its removal is a separate commit. |
+| Root `server.js` | Dropped after parity verification in a separate follow-up commit | The modular Express server matched the legacy static pages and no-credentials route responses; the monolith is no longer needed. |
 
 ## Configuration and compatibility notes
 
