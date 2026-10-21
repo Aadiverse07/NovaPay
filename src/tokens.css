@@ -1,0 +1,114 @@
+/* NovaPay design tokens v1.1 — light (default) + dark. Framework-agnostic.
+   NOTE: the dark block appears twice (explicit data-theme + OS fallback for no-JS).
+   Both are generated from one source; edit tokens.src or keep them identical. */
+:root {
+  --font-sans: "Montserrat", "Segoe UI", "Helvetica Neue", Arial, system-ui, -apple-system, sans-serif;
+  --font-display: "Montserrat", "Segoe UI", "Helvetica Neue", Arial, system-ui, -apple-system, sans-serif;
+  --fw-heading: 700; --fw-body: 500;
+
+  /* Brand. The gradient used for FILLS is constant in both themes so white
+     label text keeps >= 4.5:1 contrast. Gradient TEXT is theme-aware. */
+  --brand-blue: #2f66f5;
+  --brand-violet: #7a3ff2;
+  --brand-gradient: linear-gradient(135deg, #2f66f5 0%, #7a3ff2 100%);
+  --brand-gradient-text: linear-gradient(135deg, #2f66f5 0%, #7a3ff2 100%);
+  --on-brand: #ffffff;
+
+  /* Semantic. *-soft = chip/tint background, *-text = AA-safe text on it,
+     base color (--ok etc.) = fills, icons, chart strokes only. */
+  --ok: #16a34a;     --ok-soft: #e7f8ee;     --ok-text: #0f7a37;
+  --danger: #ef4444; --danger-soft: #fdecec; --danger-text: #c42b2b;
+  --warn: #f59e0b;   --warn-soft: #fff4dd;   --warn-text: #8a5300;
+  --info: #2f66f5;   --info-soft: #e8efff;   --info-text: #1d4fd8;
+  --health-teal: #168f7a; --health-indigo: #5a68c8; --health-slate: #8a96ad; --health-amber: #c58b2c;
+
+  /* Surfaces & text — light */
+  --bg: #f6f8ff;
+  --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --surface-sunken: #eef2ff;
+  --border: #e3e8f6;
+  --text: #0b1b4b;
+  --text-muted: #5b6785;
+  --text-subtle: #66718f;
+  --focus-ring: #2f66f5;
+
+  /* Dark data panel (cash-flow card stays dark in both themes) */
+  --panel-dark: #0b2447;
+  --panel-dark-text: #e8eeff;
+
+  /* Shape */
+  --radius-sm: 12px; --radius-md: 16px; --radius-lg: 20px; --radius-pill: 999px;
+
+  /* Depth */
+  --shadow-sm: 0 2px 8px rgba(47, 102, 245, 0.06);
+  --shadow-md: 0 8px 30px rgba(47, 102, 245, 0.08);
+  --shadow-lg: 0 20px 60px rgba(47, 102, 245, 0.14);
+  --glass-blur: blur(14px);
+
+  /* Spacing (4px base) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 72px;
+
+  /* Type scale */
+  /* Headings large, body copy small */
+  --fs-xs: 0.6875rem; --fs-sm: 0.75rem; --fs-md: 0.8125rem;
+  --fs-lg: 1.375rem; --fs-xl: 2rem; --fs-2xl: 2.75rem;
+  --fs-hero: clamp(2.25rem, 5vw, 4.25rem);
+
+  /* Icons */
+  --icon-size: 20px; --icon-stroke: 1.75;
+
+  --motion-fast: 150ms; --motion-med: 280ms;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a1224;
+  --surface: #101b33;
+  --surface-glass: rgba(16, 27, 51, 0.72);
+  --surface-sunken: #0d1630;
+  --border: #243457;
+  --text: #f1f5ff;
+  --text-muted: #9aa7c7;
+  --text-subtle: #8d9bc0;
+  --brand-blue: #4c7dff;
+  --brand-violet: #9a6bff;
+  --brand-gradient-text: linear-gradient(135deg, #6f97ff 0%, #b18cff 100%);
+  --focus-ring: #8fb0ff;
+  --ok-soft: rgba(22, 163, 74, 0.16);     --ok-text: #4ade80;
+  --danger-soft: rgba(239, 68, 68, 0.16); --danger-text: #f87171;
+  --warn-soft: rgba(245, 158, 11, 0.16);  --warn-text: #fbbf24;
+  --info-soft: rgba(76, 125, 255, 0.18);  --info-text: #8fb0ff;
+  --health-teal: #45c6ad; --health-indigo: #91a0ff; --health-slate: #586783; --health-amber: #e6b85b;
+  --shadow-sm: 0 0 0 1px var(--border);
+  --shadow-md: 0 0 0 1px var(--border), 0 10px 40px rgba(76, 125, 255, 0.10);
+  --shadow-lg: 0 0 0 1px var(--border), 0 24px 70px rgba(76, 125, 255, 0.18);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a1224;
+    --surface: #101b33;
+    --surface-glass: rgba(16, 27, 51, 0.72);
+    --surface-sunken: #0d1630;
+    --border: #243457;
+    --text: #f1f5ff;
+    --text-muted: #9aa7c7;
+    --text-subtle: #8d9bc0;
+    --brand-blue: #4c7dff;
+    --brand-violet: #9a6bff;
+    --brand-gradient-text: linear-gradient(135deg, #6f97ff 0%, #b18cff 100%);
+    --focus-ring: #8fb0ff;
+    --ok-soft: rgba(22, 163, 74, 0.16);     --ok-text: #4ade80;
+    --danger-soft: rgba(239, 68, 68, 0.16); --danger-text: #f87171;
+    --warn-soft: rgba(245, 158, 11, 0.16);  --warn-text: #fbbf24;
+    --info-soft: rgba(76, 125, 255, 0.18);  --info-text: #8fb0ff;
+  --health-teal: #45c6ad; --health-indigo: #91a0ff; --health-slate: #586783; --health-amber: #e6b85b;
+    --shadow-sm: 0 0 0 1px var(--border);
+    --shadow-md: 0 0 0 1px var(--border), 0 10px 40px rgba(76, 125, 255, 0.10);
+    --shadow-lg: 0 0 0 1px var(--border), 0 24px 70px rgba(76, 125, 255, 0.18);
+    color-scheme: dark;
+  }
+}

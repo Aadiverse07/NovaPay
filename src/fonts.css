@@ -1,0 +1,34 @@
+/* Montserrat — the only typeface in the project.
+   Online: loaded from Google Fonts (link tag in preview.html / dashboard.html).
+   Offline / file://: installed Montserrat is used if present, otherwise drop
+   Montserrat-Variable.woff2 into assets/fonts/ (see README.txt there). */
+@font-face {
+  font-family: "Montserrat";
+  src: local("Montserrat Regular"), local("Montserrat-Regular"),
+       url("../assets/fonts/Montserrat-Variable.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: local("Montserrat Medium"), local("Montserrat-Medium"),
+       url("../assets/fonts/Montserrat-Variable.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: local("Montserrat SemiBold"), local("Montserrat-SemiBold"),
+       url("../assets/fonts/Montserrat-Variable.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: local("Montserrat Bold"), local("Montserrat-Bold"),
+       url("../assets/fonts/Montserrat-Variable.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: local("Montserrat ExtraBold"), local("Montserrat-ExtraBold"),
+       url("../assets/fonts/Montserrat-Variable.woff2") format("woff2");
+  font-weight: 800; font-style: normal; font-display: swap;
+}

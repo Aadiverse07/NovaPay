@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NovaPay — Dashboard</title>
+<meta name="description" content="NovaPay dashboard for PayPal merchants.">
+<meta name="color-scheme" content="light dark">
+<script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("novapay-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
+<script>try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login")}}catch(e){location.replace("preview.html#login")}</script>
+<script>try{if(sessionStorage.getItem("novapay-hero-enter")==="1"){sessionStorage.removeItem("novapay-hero-enter");document.documentElement.classList.add("fx-enter")}}catch(e){}</script>
+<link rel="stylesheet" href="src/dashboard-enter.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="src/fonts.css">
+<link rel="stylesheet" href="src/tokens.css">
+<link rel="stylesheet" href="src/base.css">
+<link rel="stylesheet" href="src/dashboard.css">
+<link rel="stylesheet" href="src/novapay-live.css">
+<link rel="stylesheet" href="src/novapay-pastel.css">
+<link rel="stylesheet" href="src/novapay-dark-glow.css">
+<link rel="stylesheet" href="src/approvals-polish.css">
+<link rel="stylesheet" href="src/modules.css">
+<link rel="stylesheet" href="src/hero-scene.css">
+<script src="src/novapay-logo.js"></script>
+</head>
+<body class="dashboard-body">
+<div class="novapay-scene novapay-scene--dashboard" data-novapay-scene aria-hidden="true"><span class="scene-orb scene-orb--a"></span><span class="scene-orb scene-orb--b"></span><span class="scene-cube scene-cube--a"></span></div><button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button><div class="mobile-nav-backdrop" id="mobile-nav-backdrop" hidden></div><button class="mobile-ai-fab" id="mobile-ai-fab" type="button" aria-label="Open NovaPay AI"><novapay-logo size="18" variant="mark"></novapay-logo></button>
+<div class="dashboard-shell">
+  <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
+    <a class="dashboard-brand" href="preview.html#home" aria-label="Return to NovaPay home"><img src="assets/novapay-logo.png" alt="NovaPay — Smarter Payments. Powered by AI." class="dashboard-logo-full" style="width:130px;height:auto;display:block;"><img src="assets/novapay-mark-clean.png" alt="" class="dashboard-logo-mark" aria-hidden="true"></a>
+    <div class="demo-session"><span class="session-dot"></span><span>Active session</span></div>
+    <nav class="dashboard-nav" id="dashboard-nav">
+      <a href="#dashboard" data-view="dashboard" aria-label="Dashboard" aria-current="page"><span class="nav-ai-logo"><img class="nav-mod-logo nav-mod-logo--tile" src="assets/module-dashboard.png" alt="" width="38" height="38"></span><b>Dashboard</b></a>
+      <a href="#transactions" data-view="transactions" aria-label="Transactions"><span class="nav-ai-logo"><img class="nav-mod-logo nav-mod-logo--tile" src="assets/module-transactions.png" alt="" width="38" height="38"></span><b>Transactions</b></a>
+      <a href="#ai-assistant" data-view="ai-assistant" aria-label="AI Assistant"><span class="nav-ai-logo"><img class="nav-mod-logo nav-mod-logo--robot" src="assets/ai-assistant-robot-dark.png" alt="" width="28" height="28"></span><b>AI Assistant</b></a>
+      <a href="#approvals" data-view="approvals" aria-label="Approvals"><span class="nav-ai-logo"><img class="nav-mod-logo nav-mod-logo--tile" src="assets/module-approvals.png" alt="" width="38" height="38"></span><b>Approvals</b><em id="nav-approvals-count" hidden>0</em></a>
+      <a href="#sandbox" data-view="sandbox" aria-label="PayPal Sandbox"><span class="nav-ai-logo"><img class="nav-mod-logo nav-mod-logo--tile" src="assets/module-paypal.png" alt="" width="38" height="38"></span><b>PayPal Sandbox</b></a>
+      <a href="#ledger" data-view="ledger" aria-label="Ledger"><span class="nav-ai-logo nav-mod-logo--glyph">↔</span><b>Ledger</b></a>
+      <a href="#invoices" data-view="invoices" aria-label="Invoices"><span class="nav-ai-logo nav-mod-logo--glyph">▤</span><b>Invoices</b></a>
+      <a href="#reports" data-view="reports" aria-label="Reports"><span class="nav-ai-logo nav-mod-logo--glyph">▥</span><b>Reports</b></a>
+      <a href="#documents" data-view="documents" aria-label="Documents"><span class="nav-ai-logo nav-mod-logo--glyph">▧</span><b>Documents</b></a>
+      <a href="#fundraising" data-view="fundraising" aria-label="Fundraising"><span class="nav-ai-logo nav-mod-logo--glyph">♡</span><b>Fundraising</b></a>
+      <a href="#maintenance" data-view="maintenance" aria-label="Maintenance"><span class="nav-ai-logo nav-mod-logo--glyph">⌂</span><b>Maintenance</b></a>
+      <a href="#transparency" data-view="transparency" aria-label="Transparency"><span class="nav-ai-logo nav-mod-logo--glyph">◎</span><b>Transparency</b></a>
+    </nav>
+    <a class="back-home" href="preview.html#home">← Back to Home</a>
+  </aside>
+
+  <main class="dashboard-main">
+    <header class="dashboard-topbar">
+      <div class="dashboard-heading">
+        <span class="top-kicker">NOVAPAY</span>
+        <h1 id="page-title">Dashboard</h1>
+        <p id="dashboard-subtitle">Good morning, <strong id="greeting-name">Shikhar</strong> 👋<br><span>Here's what's happening with your PayPal business today.</span></p>
+      </div>
+      <div class="top-actions">
+        <label class="date-selector" aria-label="Select dashboard date range">
+          <span aria-hidden="true">▣</span>
+          <select id="dashboard-date">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="week">Last 7 days</option>
+          </select>
+        </label>
+        <button class="icon-button notification-button" id="notifications" type="button" aria-label="View notifications" aria-expanded="false"><span aria-hidden="true" style="font-weight:700">$</span><span class="notification-dot" aria-hidden="true"></span></button>
+        <button class="theme-toggle" id="dashboard-theme" type="button" aria-label="Switch theme" aria-pressed="false">☼</button>
+        <button class="user-chip user-menu-button" id="profile-button" type="button" aria-expanded="false">
+          <span class="avatar" id="user-avatar">S</span>
+          <span><b id="user-name">Shikhar</b><small id="user-email">Business Owner</small></span>
+          <span class="profile-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <button class="btn btn--ghost logout-btn" id="logout">Log Out</button>
+      </div>
+      <div class="popover notification-popover" id="notification-popover" hidden>
+        <div class="popover-title"><b>Notifications</b><span class="status info">2 new</span></div>
+        <button type="button" class="notification-item" data-notification-view="approvals"><span class="notif-icon warn">✓</span><span><b>Proposals ready for review</b><small>Open Approvals to review suggested actions.</small></span></button>
+        <button type="button" class="notification-item" data-notification-view="ai-assistant"><span class="notif-icon info"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="16" height="16" style="width:16px;height:16px;display:block;object-fit:contain"></span><span><b>NovaPay AI insight ready</b><small>Open AI Assistant for a summary.</small></span></button>
+      </div>
+      <div class="popover profile-popover" id="profile-popover" hidden>
+        <div class="profile-popover-head"><span class="avatar">S</span><span><b id="profile-name">Shikhar</b><small>Business Owner</small></span></div>
+        <button type="button" class="popover-link" data-profile-action="settings">⚙ Settings <span>→</span></button>
+        <button type="button" class="popover-link" data-profile-action="logout">↪ Log out <span>→</span></button>
+      </div>
+    </header>
+
+    <section class="dashboard-content">
+      <div class="view" id="view-dashboard" data-view-panel>
+        <div class="dashboard-hero-card">
+          <div class="dashboard-hero-copy">
+            <span class="eyebrow"><novapay-logo size="14" variant="mark"></novapay-logo> Sample workspace</span>
+            <h2>Your PayPal transactions, now working for you.</h2>
+            <p>NovaPay organizes illustrative PayPal activity into books, highlights what matters, and helps you review next steps.</p>
+            <div class="hero-pills"><span><img class="np-tile-logo" src="assets/novapay-mark-clean.png" alt="" width="16" style="width:16px;height:auto;display:block;object-fit:contain"> Auto Bookkeeping</span><span><novapay-logo size="13" variant="mark"></novapay-logo> AI Insights</span><span><img class="np-tile-logo" src="assets/novapay-mark-clean.png" alt="" width="16" style="width:16px;height:auto;display:block;object-fit:contain"> Safe Actions</span></div>
+          </div>
+          <div class="dashboard-hero-art" data-integration-visual role="img" aria-label="PayPal payment of ₹10,000 received, then organized by NovaPay: ₹300 fee, no refunds, ₹9,700 payout, with AI analysis running">
+            <div class="hs-scene" aria-hidden="true">
+              <span class="hs-glow"></span>
+              <svg class="hs-orbit" viewBox="0 0 520 290" preserveAspectRatio="none">
+                <g transform="rotate(-7 260 150)">
+                  <ellipse class="hs-orbit-ring" cx="260" cy="150" rx="248" ry="104" pathLength="1000"/>
+                  <ellipse class="hs-orbit-comet" cx="260" cy="150" rx="248" ry="104" pathLength="1000"/>
+                  <ellipse class="hs-orbit-comet is-2" cx="260" cy="150" rx="248" ry="104" pathLength="1000"/>
+                </g>
+              </svg>
+
+              <div class="hs-layer hs-laptop"><div class="hs-float"><div class="hs-face">
+                <div class="hs-bezel"></div>
+                <div class="hs-screen">
+                  <div class="hs-screen-head"><svg class="hs-pp" viewBox="0 0 42 48"><g transform="skewX(-6) translate(3 0)"><path d="M8 4H22C30 4 35 9 33.5 17C32.2 24 27 28 20 28H15L12.5 44H3ZM16 11L14.5 21H19C23 21 25.5 19 26 15.5C26.5 12.5 24.5 11 21 11Z" transform="translate(4 3)" fill="#2c8cf4" fill-rule="evenodd"/><path d="M8 4H22C30 4 35 9 33.5 17C32.2 24 27 28 20 28H15L12.5 44H3ZM16 11L14.5 21H19C23 21 25.5 19 26 15.5C26.5 12.5 24.5 11 21 11Z" class="hs-p-front" fill-rule="evenodd"/></g></svg><div class="hs-skel"><i></i><i></i></div></div>
+                  <div class="hs-rows">
+                    <div class="hs-row is-pay is-out"><span class="hs-ico"><i></i></span><span>Payment</span><b>₹10,000</b></div>
+                    <div class="hs-row is-out"><span class="hs-ico"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M9 9h6M9 13h6"/></svg></span><span>Fee</span><b>− ₹300</b></div>
+                    <div class="hs-row is-out"><span class="hs-ico"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg></span><span>Refund</span><b>− ₹0</b></div>
+                    <div class="hs-row is-in"><span class="hs-ico"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M9 12l2 2 4-4"/></svg></span><span>Payout</span><b>+ ₹9,700</b></div>
+                  </div>
+                </div>
+                <div class="hs-base"></div>
+              </div></div></div>
+
+              <div class="hs-layer hs-paypal"><div class="hs-float"><div class="hs-face">
+                <svg class="hs-pp-big" viewBox="0 0 42 48"><g transform="skewX(-6) translate(3 0)"><path d="M8 4H22C30 4 35 9 33.5 17C32.2 24 27 28 20 28H15L12.5 44H3ZM16 11L14.5 21H19C23 21 25.5 19 26 15.5C26.5 12.5 24.5 11 21 11Z" transform="translate(4 3)" fill="#2c8cf4" fill-rule="evenodd"/><path d="M8 4H22C30 4 35 9 33.5 17C32.2 24 27 28 20 28H15L12.5 44H3ZM16 11L14.5 21H19C23 21 25.5 19 26 15.5C26.5 12.5 24.5 11 21 11Z" class="hs-p-front" fill-rule="evenodd"/></g></svg>
+                <span class="hs-pp-name">PayPal</span>
+                <div class="hs-recv"><small>Payment Received</small><strong>+ ₹10,000</strong>
+                  <span class="hs-check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></div>
+              </div></div></div>
+
+              <div class="hs-layer hs-ai"><div class="hs-float"><div class="hs-face">
+                <svg class="hs-spark" viewBox="0 0 40 40"><defs><linearGradient id="hs-spark-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b7a6ff"/><stop offset="1" stop-color="#6a5cff"/></linearGradient></defs><path d="M20 3c1.2 7.6 3.4 11.2 7 12.8 4.2 1.9 7 2.4 10 3.2-3 .8-5.8 1.3-10 3.2-3.6 1.6-5.8 5.2-7 12.8-1.2-7.6-3.4-11.2-7-12.8C9 21.3 6.200 20.800 3 20c3.200-.8 6-1.300 10-3.200C16.600 15.200 18.800 10.600 20 3z" fill="url(#hs-spark-g)"/></svg>
+                <div class="hs-ai-text"><b>AI</b><span>Analyzing<span class="hs-dots"><i>.</i><i>.</i><i>.</i></span></span></div>
+                <div class="hs-prog"><i></i></div>
+              </div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-kpis dashboard-kpi-row">
+          <article class="kpi-card kpi-revenue" tabindex="0"><div class="kpi-top"><span class="kpi-icon" aria-hidden="true"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M3 20h4v-5H3zM10 20h4V11h-4zM17 20h4V6h-4z"/><path d="M3 11l5-4 4 3 7-6"/><path d="M15 4h4v4"/></svg></span><span>Revenue</span></div><strong id="kpi-revenue">₹8,45,000</strong><small id="kpi-revenue-trend"></small><svg class="spark" id="spark-revenue" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"></svg></article>
+          <article class="kpi-card kpi-fees" tabindex="0"><div class="kpi-top"><span class="kpi-icon" aria-hidden="true"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><circle class="f" cx="12" cy="12" r="9"/><path d="M15.5 8.5l-7 7"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/></svg></span><span>PayPal Fees</span></div><strong id="kpi-fees">₹23,500</strong><small id="kpi-fees-trend"></small><svg class="spark" id="spark-fees" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"></svg></article>
+          <article class="kpi-card kpi-refunds" tabindex="0"><div class="kpi-top"><span class="kpi-icon" aria-hidden="true"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L4 9l5 5"/><path d="M4 9h10a6 6 0 010 12h-4"/><circle class="f" cx="14" cy="15" r="2.2"/></svg></span><span>Refunds</span></div><strong id="kpi-refunds">₹12,000</strong><small id="kpi-refunds-trend"></small><svg class="spark" id="spark-refunds" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"></svg></article>
+          <article class="kpi-card kpi-disputes" tabindex="0"><div class="kpi-top"><span class="kpi-icon" aria-hidden="true"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 8v5"/><path d="M12 16.4v.1"/></svg></span><span>Disputes</span></div><strong id="kpi-disputes">₹4,500</strong><small id="kpi-disputes-trend"></small><svg class="spark" id="spark-disputes" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"></svg></article>
+          <article class="kpi-card kpi-net" tabindex="0"><div class="kpi-top"><span class="kpi-icon" aria-hidden="true"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M3 8a3 3 0 013-3h11v3"/><rect class="f" x="3" y="8" width="18" height="12" rx="3"/><path d="M16 14h5"/><path d="M16.5 14v.1"/></svg></span><span>Net Money</span></div><strong id="kpi-net">₹8,05,000</strong><small id="kpi-net-trend"></small><svg class="spark" id="spark-net" viewBox="0 0 120 32" preserveAspectRatio="none" aria-hidden="true"></svg></article>
+        </div>
+
+        <div class="dash-grid dashboard-main-grid">
+          <article class="dash-card cashflow-card">
+            <div class="card-heading cashflow-heading"><div><h3 class="heading-with-icon"><span class="section-icon-tile"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14"/><path d="M14.5 4.5L18 8l-3.5 3.5"/><path d="M20 16H6"/><path d="M9.5 12.5L6 16l3.5 3.5"/><circle class="f" cx="12" cy="12" r="1.6"/></svg></span>Cash Flow Overview</h3><p id="cf-sub">Illustrative sample data · amounts in INR</p></div><div class="cashflow-legend"><span class="legend-in">● Money In</span><span class="legend-out">● Money Out</span><span class="legend-net">● Net</span></div></div>
+            <div class="range-tabs" id="cashflow-tabs" role="tablist" aria-label="Cash flow period"><button type="button" data-range="7D">7D</button><button type="button" class="active" data-range="30D">30D</button><button type="button" data-range="3M">3M</button><button type="button" data-range="1Y">1Y</button></div>
+            <div class="cashflow-summary"><div><span>Money In</span><strong id="cash-in">₹1,45,000</strong></div><div><span>Money Out</span><strong id="cash-out">₹36,000</strong></div><div><span>Net</span><strong id="cash-net">₹1,09,000</strong></div></div>
+            <div class="cashflow-chart" id="cashflow-chart"><div class="cf-y" id="cf-y" aria-hidden="true"></div><div class="cf-plot" id="cf-plot" role="img" aria-label="Illustrative cash flow chart showing Money In, Money Out and Net"><svg id="cf-svg" viewBox="0 0 900 260" preserveAspectRatio="none"><defs><linearGradient id="inFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#18b68a" stop-opacity=".30"/><stop offset="100%" stop-color="#18b68a" stop-opacity="0"/></linearGradient><linearGradient id="netFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4e76e9" stop-opacity=".30"/><stop offset="100%" stop-color="#4e76e9" stop-opacity="0"/></linearGradient></defs><g class="chart-grid" id="cf-grid"></g><path id="cash-in-area" class="cash-area in-area"></path><path id="cash-net-area" class="cash-area net-area"></path><path id="cash-in-line" class="cash-line in-line"></path><path id="cash-out-line" class="cash-line out-line"></path><path id="cash-net-line" class="cash-line net-line"></path></svg><div class="cf-cursor" id="cf-cursor" hidden></div><div class="cf-tip" id="cf-tip" hidden></div><div class="chart-labels" id="cf-x"></div></div></div>
+          </article>
+          <article class="dash-card financial-health-card"><div class="card-heading"><h3 class="heading-with-icon"><span class="section-icon-tile health"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 20.5s-8-4.6-8-10.7A4.6 4.6 0 0112 7a4.6 4.6 0 018 2.8c0 6.1-8 10.7-8 10.7z"/><path d="M6.5 12.5h3l1.5-3 2.2 6 1.5-3h2.8"/></svg></span>Financial Health</h3><span>→</span></div><div class="health-ring" aria-label="Financial Health 82 percent healthy"><svg class="health-donut" viewBox="0 0 120 120" aria-hidden="true"><circle class="health-track" cx="60" cy="60" r="48"></circle><circle class="health-segment health-segment-main" cx="60" cy="60" r="48" pathLength="100"></circle></svg><strong data-health-value>82%</strong><small>Healthy<br><b>↑ 6%</b></small></div><ul class="check-list"><li class="ok">Transaction activity available</li><li class="ok">Sandbox actions require review</li><li class="warn"><a href="#approvals">Open Approvals <span aria-hidden="true">→</span></a></li><li class="ok">Sample values clearly labeled</li></ul><div class="health-callout"><span class="callout-icon"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16v4M17 18h4"/></svg></span> Illustrative sample assessment<small>Based only on example dashboard values</small></div></article>
+        </div>
+
+        <div class="dash-lower dash-lower--transactions-only">
+        <article class="dash-card recent-card"><div class="card-heading"><div><h3 class="heading-with-icon"><span class="section-icon-tile"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>Recent Transactions</h3><p>Latest illustrative PayPal activity</p></div><a href="#transactions">View all →</a></div><div class="table-scroll"><table><thead><tr><th>Type</th><th>Amount</th><th>Fee</th><th>Net</th><th>Status</th><th>Time</th></tr></thead><tbody><tr class="transaction-row" tabindex="0" data-tx-id="PAY-1001"><td><span class="tx-badge payment">↗</span> Payment</td><td>₹10,000</td><td>₹300</td><td>₹9,700</td><td><span class="status ok">Completed</span></td><td>2 mins ago</td></tr><tr class="transaction-row" tabindex="0" data-tx-id="PAY-1002"><td><span class="tx-badge payment">↗</span> Payment</td><td>₹7,500</td><td>₹225</td><td>₹7,275</td><td><span class="status ok">Completed</span></td><td>12 mins ago</td></tr><tr class="transaction-row" tabindex="0" data-tx-id="REF-1003"><td><span class="tx-badge refund">↩</span> Refund</td><td>₹2,000</td><td>—</td><td>-₹2,000</td><td><span class="status danger">Refunded</span></td><td>28 mins ago</td></tr><tr class="transaction-row" tabindex="0" data-tx-id="DSP-1004"><td><span class="tx-badge dispute">!</span> Dispute</td><td>₹5,000</td><td>—</td><td>-₹5,000</td><td><span class="status warn">Under Review</span></td><td>1 hr ago</td></tr><tr class="transaction-row" tabindex="0" data-tx-id="PAY-1005"><td><span class="tx-badge payout">↗</span> Payout</td><td>₹50,000</td><td>—</td><td>₹50,000</td><td><span class="status ok">Completed</span></td><td>3 hrs ago</td></tr></tbody></table></div></article>
+        </div>
+      </div>
+
+      <div class="view" id="view-transactions" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker"><img class="np-kicker-logo" src="assets/novapay-mark-clean.png" alt="" width="24" style="width:24px;height:auto;display:inline-block;vertical-align:middle;margin-right:7px">TRANSACTIONS</span><h2>Transaction activity</h2><p>Review sandbox captures and illustrative examples. Sandbox records shown here come only from payments captured in this workspace; this is not a PayPal transaction history import.</p></div>
+        <article class="dash-card"><div class="tx-source-note" id="tx-source-note" role="status">Illustrative sample data is shown below. Live sandbox captures require the NovaPay backend and PayPal sandbox credentials.</div><div class="filter-row tx-filters"><input id="tx-search" placeholder="Search ID, buyer, type, or status" aria-label="Search transaction ID, buyer, type, or status"><label>From <input id="tx-from" type="date" aria-label="Start date"></label><label>To <input id="tx-to" type="date" aria-label="End date"></label><select id="tx-type" aria-label="Filter transaction type"><option value="">All types</option><option>Payment</option><option>Refund</option><option>Dispute</option><option>Payout</option></select><select id="tx-status" aria-label="Filter transaction status"><option value="">All statuses</option><option>Completed</option><option>Refunded</option><option>Under Review</option><option>Possible duplicate</option><option>Pending</option></select><label>Min <input id="tx-min" type="number" min="0" step="0.01" placeholder="Any" aria-label="Minimum amount"></label><label>Max <input id="tx-max" type="number" min="0" step="0.01" placeholder="Any" aria-label="Maximum amount"></label><button type="button" class="btn btn--ghost" id="tx-reset">Reset filters</button></div><p class="tx-result-count" id="tx-result-count" aria-live="polite"></p><div class="table-scroll"><table class="data-table"><thead><tr><th>Date &amp; time</th><th>Type</th><th>Buyer / counterparty</th><th>Gross amount</th><th>PayPal fee</th><th>Net amount</th><th>Status</th><th>PayPal transaction / capture ID</th></tr></thead><tbody id="transactions-table-body">
+        <tr class="transaction-row" tabindex="0" data-tx-id="PAY-1001" data-type="Payment" data-status="Completed" data-amount="10000" data-currency="INR" data-date="2026-10-18T10:28:00+05:30" data-source="demo" data-buyer="Unavailable"><td>18 Oct 2026, 10:28</td><td><span class="tx-badge payment">↗</span> Payment</td><td>Unavailable</td><td>INR 10,000.00</td><td>INR 300.00</td><td>INR 9,700.00</td><td><span class="status ok">Completed</span></td><td>PAY-1001</td></tr>
+        <tr class="transaction-row" tabindex="0" data-tx-id="PAY-1002" data-type="Payment" data-status="Completed" data-amount="7500" data-currency="INR" data-date="2026-10-18T10:18:00+05:30" data-source="demo" data-buyer="Unavailable"><td>18 Oct 2026, 10:18</td><td><span class="tx-badge payment">↗</span> Payment</td><td>Unavailable</td><td>INR 7,500.00</td><td>INR 225.00</td><td>INR 7,275.00</td><td><span class="status ok">Completed</span></td><td>PAY-1002</td></tr>
+        <tr class="transaction-row" tabindex="0" data-tx-id="REF-1003" data-type="Refund" data-status="Refunded" data-amount="2000" data-currency="INR" data-date="2026-10-18T10:02:00+05:30" data-source="demo" data-buyer="Unavailable"><td>18 Oct 2026, 10:02</td><td><span class="tx-badge refund">↩</span> Refund</td><td>Unavailable</td><td>INR 2,000.00</td><td>Unavailable</td><td>-INR 2,000.00</td><td><span class="status danger">Refunded</span></td><td>REF-1003</td></tr>
+        <tr class="transaction-row" tabindex="0" data-tx-id="PAY-28491" data-type="Payment" data-status="Possible duplicate" data-amount="2000" data-currency="INR" data-date="2026-10-18T09:45:00+05:30" data-source="demo" data-buyer="Unavailable"><td>18 Oct 2026, 09:45</td><td><span class="tx-badge payment">↗</span> Payment</td><td>Unavailable</td><td>INR 2,000.00</td><td>INR 60.00</td><td>INR 1,940.00</td><td><span class="status warn">Possible duplicate</span></td><td>PAY-28491</td></tr>
+        <tr class="transaction-row" tabindex="0" data-tx-id="DSP-1004" data-type="Dispute" data-status="Under Review" data-amount="5000" data-currency="INR" data-date="2026-10-18T09:00:00+05:30" data-source="demo" data-buyer="Unavailable"><td>18 Oct 2026, 09:00</td><td><span class="tx-badge dispute">!</span> Dispute</td><td>Unavailable</td><td>INR 5,000.00</td><td>Unavailable</td><td>-INR 5,000.00</td><td><span class="status warn">Under Review</span></td><td>DSP-1004</td></tr>
+        <tr class="transaction-row" tabindex="0" data-tx-id="PAY-1005" data-type="Payout" data-status="Completed" data-amount="50000" data-currency="INR" data-date="2026-10-18T07:00:00+05:30" data-source="demo" data-buyer="Unavailable"><td>18 Oct 2026, 07:00</td><td><span class="tx-badge payout">↗</span> Payout</td><td>Unavailable</td><td>INR 50,000.00</td><td>Unavailable</td><td>INR 50,000.00</td><td><span class="status ok">Completed</span></td><td>PAY-1005</td></tr>
+        </tbody></table></div><div class="empty-state" id="tx-empty" hidden><span class="empty-icon" aria-hidden="true"><svg class="section-icon"><use href="src/icons.svg#i-search"></use></svg></span><h3>No transactions found</h3><p>Nothing matches your current search or filter.</p></div></article>
+      </div>
+
+      <div class="view" id="view-ai-assistant" data-view-panel hidden>
+        <div class="page-intro ai-page-intro"><span class="section-kicker"><img class="np-kicker-logo" src="assets/novapay-mark-clean.png" alt="" width="24" style="width:24px;height:auto;display:inline-block;vertical-align:middle;margin-right:7px">NOVAPAY AI · MERCHANT ASSISTANT</span><h2>Understand the activity you can see</h2><p>Ask about available transaction records and review the evidence behind each answer. NovaPay does not import your full PayPal history.</p></div>
+        <div class="ai-command-grid">
+          <article class="ai-workspace dash-card ai-command-card">
+            <div class="ai-panel-head"><div><span class="ai-spark"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="20" height="20" style="width:20px;height:20px;display:block;object-fit:contain"></span><div><b>NovaPay AI</b><small>Answers use only activity shown in this workspace</small></div></div><span class="status warn" id="ai-service-status">Checking AI service…</span></div>
+            <div class="ai-data-status" id="ai-data-status" role="status">Checking available transaction data…</div>
+            <div class="ai-conversation" id="ai-conversation" role="log" aria-label="Assistant conversation" aria-live="polite" aria-relevant="additions text">
+              <div class="ai-bubble ai-bubble--assistant"><span class="ai-avatar"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="22" height="22" style="width:22px;height:22px;display:block;object-fit:contain"></span><div><b>NovaPay</b><p>Hi. I can summarize the activity available here, explain a transaction, and point to the records behind an answer. Missing fields stay marked unavailable.</p></div></div>
+            </div>
+            <div class="suggestions ai-quick-actions" aria-label="Quick actions">
+              <button type="button" data-ai-query="Summarize my recent payments.">Summarize my recent payments</button>
+              <button type="button" data-ai-query="What PayPal fees are shown?">What PayPal fees are shown?</button>
+              <button type="button" data-ai-query="Are there unusual refunds?">Are there unusual refunds?</button>
+              <button type="button" data-ai-query="Explain this transaction.">Explain this transaction</button>
+              <button type="button" data-ai-query="What needs my attention?">What needs my attention?</button>
+            </div>
+            <div class="ai-proposal-slot" id="ai-proposal-slot" aria-live="polite"></div>
+            <div class="chat-row ai-chat-row"><input id="ai-input" placeholder="Ask about the transactions shown…" aria-label="Ask about available transaction activity"><button class="btn btn--primary" id="ai-send" type="button">Send</button></div>
+            <p class="ai-live-status" id="ai-live-status" role="status" aria-live="polite"></p>
+            <div class="ai-demo-disclaimer">PayPal Sandbox data is limited to captures made in this workspace. Without the AI service, answers use a labeled local fallback and available illustrative examples.</div>
+          </article>
+          <aside class="dash-card agent-card">
+            <div class="agent-kicker"><span><novapay-logo size="13" variant="mark"></novapay-logo></span> AGENTIC ACTION</div>
+            <h3>Human review stays in control.</h3>
+            <p>When the connected AI returns a supported suggestion, review its evidence and send it to Approvals. No action is attempted from this assistant.</p>
+            <div class="suggested-action"><span class="status info">Approval workflow</span><p>Proposals require a valid reference in the available activity. Unsupported actions are informational and simulated only.</p><a class="btn btn--ghost" href="#approvals">Open Approvals</a></div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="view" id="view-approvals" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker"><img class="np-kicker-logo" src="assets/novapay-mark-clean.png" alt="" width="24" style="width:24px;height:auto;display:inline-block;vertical-align:middle;margin-right:7px">HUMAN-IN-THE-LOOP</span><h2>Approval queue</h2><p>Review each proposal and its evidence. A PayPal Sandbox action requires a second confirmation with the exact capture and amount. Unsupported actions are simulated only.</p></div>
+        <article class="dash-card approval-filters"><label>Status<select id="approval-status-filter"><option value="">All statuses</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Failed</option><option>Completed</option></select></label><label>Action type<select id="approval-type-filter"><option value="">All action types</option><option value="refund">Refund</option><option value="dispute-evidence">Dispute evidence</option><option value="hold-payout">Payout hold</option><option value="review-finding">Informational finding</option></select></label><label>Source<select id="approval-source-filter"><option value="">All sources</option><option>NovaPay AI</option></select></label><span id="approval-result-count" aria-live="polite"></span></article>
+        <div class="approval-grid" id="approval-queue"></div>
+        <article class="dash-card" style="margin-top:16px"><div class="card-heading"><h3>Audit trail</h3><span>Session only · cleared when this page is reloaded</span></div><ul class="approval-audit" id="audit-log" aria-live="polite"><li class="np-empty">No decisions yet.</li></ul></article>
+      </div>
+
+      <div class="view" id="view-sandbox" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker"><img class="np-kicker-logo" src="assets/novapay-mark-clean.png" alt="" width="24" style="width:24px;height:auto;display:inline-block;vertical-align:middle;margin-right:7px">PAYPAL DEVELOPER PLATFORM</span><h2>PayPal Sandbox</h2><p>Demonstrate the order, buyer approval, and capture flow. PayPal Sandbox — test transactions only. NovaPay does not import your full PayPal history.</p></div>
+        <div class="np-status-grid">
+          <article class="dash-card"><span class="status info" id="st-paypal">Checking…</span><h3>PayPal Sandbox connection</h3><p id="paypal-status-help">Checking backend and sandbox configuration…</p><small id="st-backend" class="status info">Backend status checking…</small></article>
+          <article class="dash-card"><span class="status info" id="st-ai">Checking…</span><h3>AI service</h3><p id="st-ai-model">Claude via Anthropic API (suggestions only)</p></article>
+          <article class="dash-card"><span class="status info" id="st-webhook">Checking…</span><h3>Webhook verification</h3><p id="st-webhook-help">Webhook events are shown as untrusted until verified.</p></article>
+        </div>
+        <article class="dash-card" style="margin-top:16px"><div class="card-heading"><h3>Create a sandbox payment</h3><span>Orders API</span></div>
+          <p>Step 1: enter an amount in USD (0.01–10,000.00) and create a test order. Step 2: approve it as the sandbox buyer in PayPal. Step 3: return here and capture the approved order.</p>
+          <div class="chat-row"><label for="sb-amount">Amount (USD)</label><input id="sb-amount" type="number" value="10.00" min="0.01" max="10000" step="0.01" inputmode="decimal"><span>Currency: USD</span><button class="btn btn--primary" id="sb-create" type="button">Create test order</button></div>
+          <p id="sb-status" role="status" aria-live="polite">Sandbox orders are unavailable until the backend and PayPal Sandbox credentials are ready.</p><div id="sb-result" class="np-result" hidden></div></article>
+        <div class="np-status-grid" style="margin-top:16px">
+          <article class="dash-card"><div class="card-heading"><h3>Webhook events</h3><span>/api/webhook</span></div><p>Configure this endpoint in your PayPal Sandbox app’s Webhooks. For local testing, expose the server with a trusted tunnel and use its HTTPS URL ending in <code>/api/webhook</code>. Set <code>PAYPAL_WEBHOOK_ID</code> to the webhook ID from PayPal to enable signature verification.</p><ul class="np-log" id="webhook-log" aria-live="polite"><li class="np-empty">No events received. Webhook events are session-only and are not used as transaction records.</li></ul></article>
+          <article class="dash-card"><div class="card-heading"><h3>API activity</h3><span>Session-only server log</span></div><p>Recent PayPal and AI requests. These entries are held in memory and clear when the server restarts.</p><ul class="np-log" id="api-log" aria-live="polite"><li class="np-empty">No calls yet.</li></ul></article>
+        </div>
+        <article class="dash-card settings-card" style="margin-top:16px"><label><span><b>Notifications</b><small>Show review notifications.</small></span><input type="checkbox" checked></label><label><span><b>AI suggestions</b><small>Show suggested questions in the AI workspace.</small></span><input type="checkbox" checked></label><label><span><b>Reduced motion</b><small>Respect the browser accessibility preference.</small></span><input type="checkbox" id="reduce-motion-toggle"></label></article>
+      </div>
+      <div class="view" id="view-ledger" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">FINANCIAL CORE</span><h2>Ledger</h2><p>A clear, double-entry view of money movement. Sample entries are illustrative and are not posted to a live ledger.</p></div>
+        <div class="module-kpis"><article class="dash-card"><small>Period debits</small><strong>₹4,86,300</strong><span class="status info">Illustrative</span></article><article class="dash-card"><small>Period credits</small><strong>₹4,86,300</strong><span class="status ok">Balanced</span></article><article class="dash-card"><small>Unreconciled</small><strong>1 item</strong><span class="status warn">Review</span></article></div>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Journal entries</h3><p>Debits and credits balance for each sample posting.</p></div><label>Period <select id="ledger-period"><option>Last 30 days</option><option>This quarter</option><option>This year</option></select></label></div><div class="module-table-wrap"><table class="module-table"><thead><tr><th>Date</th><th>Reference</th><th>Account</th><th>Debit</th><th>Credit</th><th>Source</th></tr></thead><tbody><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>PayPal clearing</td><td>₹10,000</td><td>—</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>Sales revenue</td><td>—</td><td>₹10,000</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>Processing fees</td><td>₹300</td><td>—</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>PayPal clearing</td><td>—</td><td>₹300</td><td><span class="status info">Illustrative</span></td></tr></tbody></table></div><div class="module-foot"><span>Example journal · entries shown for product preview only</span><button class="btn btn--ghost" data-ui-action="ledger-export">Export CSV</button></div></article>
+      </div>
+      <div class="view" id="view-invoices" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">FINANCE UTILITIES</span><h2>Invoices</h2><p>Create and track invoices with totals calculated from line items. Sending an invoice should require approval.</p></div>
+        <div class="module-kpis"><article class="dash-card"><small>Outstanding</small><strong>₹1,24,500</strong><span>4 invoices</span></article><article class="dash-card"><small>Paid this month</small><strong>₹2,80,000</strong><span>8 invoices</span></article><article class="dash-card"><small>Drafts</small><strong id="invoice-draft-count">2</strong><span>Ready for review</span></article></div>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Invoice workspace</h3><p>Review status, due dates and customer balances.</p></div><button class="btn btn--primary" data-ui-action="invoice-create">＋ New invoice</button></div><div class="module-toolbar"><input type="search" id="invoice-search" placeholder="Search invoices or customers" aria-label="Search invoices"><select id="invoice-filter" aria-label="Filter invoices"><option value="">All statuses</option><option>Draft</option><option>Awaiting approval</option><option>Sent</option><option>Paid</option><option>Overdue</option></select></div><div class="module-table-wrap"><table class="module-table" id="invoice-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Issue date</th><th>Due date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody><tr><td>INV-2048</td><td>Northstar Studio</td><td>14 Oct 2026</td><td>28 Oct 2026</td><td>₹48,000</td><td><span class="status warn">Awaiting approval</span></td><td><button class="table-action" data-ui-action="invoice-review">Review</button></td></tr><tr><td>INV-2047</td><td>Willow Market</td><td>02 Oct 2026</td><td>16 Oct 2026</td><td>₹32,500</td><td><span class="status danger">Overdue</span></td><td><button class="table-action" data-ui-action="invoice-review">View</button></td></tr><tr><td>INV-2046</td><td>BrightPath Co.</td><td>01 Oct 2026</td><td>15 Oct 2026</td><td>₹44,000</td><td><span class="status ok">Paid</span></td><td><button class="table-action" data-ui-action="invoice-review">View</button></td></tr></tbody></table></div><div class="module-foot"><span>Sample invoice records · no invoice is sent from this preview.</span></div></article>
+      </div>
+      <div class="view" id="view-reports" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">FINANCE UTILITIES</span><h2>Reports</h2><p>Financial summaries designed to reconcile to the ledger. Figures below are illustrative sample data.</p></div>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Performance overview</h3><p>Period ending 21 October 2026 · INR</p></div><div class="module-inline"><select id="report-period" aria-label="Report period"><option>This month</option><option>This quarter</option><option>This year</option></select><button class="btn btn--ghost" data-ui-action="reports-export">Export CSV</button></div></div><div class="report-summary-grid"><div><small>Gross receipts</small><strong>₹8,45,000</strong></div><div><small>Processing fees</small><strong>− ₹23,500</strong></div><div><small>Refunds</small><strong>− ₹12,000</strong></div><div><small>Net activity</small><strong>₹8,09,500</strong></div></div><div class="report-bars" aria-label="Illustrative monthly income chart"><div><span>Jul</span><i style="--bar:48%"></i><b>₹5.4L</b></div><div><span>Aug</span><i style="--bar:68%"></i><b>₹6.8L</b></div><div><span>Sep</span><i style="--bar:57%"></i><b>₹6.1L</b></div><div><span>Oct</span><i style="--bar:86%"></i><b>₹8.4L</b></div></div><div class="module-foot"><span>Source: illustrative sample series · reports should reconcile to posted ledger activity.</span></div></article>
+        <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Profit &amp; loss</h3><p>Income, fees, refunds and net activity by period.</p><button class="table-action" data-ui-action="report-open">Open report →</button></article><article class="dash-card"><h3>Trial balance</h3><p>Debits and credits grouped by account.</p><button class="table-action" data-ui-action="report-open">Open report →</button></article></div>
+        <article class="dash-card fx-converter"><div><span class="section-kicker">FINANCE UTILITY</span><h3>Currency converter</h3><p>Quick estimates for planning. Verify the latest provider rate before booking.</p></div><div class="fx-controls"><label>Amount<input id="fx-amount" type="number" min="0" step="0.01" value="5000" inputmode="decimal"></label><label>From<select id="fx-from"><option value="INR">INR · ₹</option><option value="USD">USD · $</option></select></label><span aria-hidden="true">→</span><label>To<select id="fx-to"><option value="USD">USD · $</option><option value="INR">INR · ₹</option></select></label></div><div class="fx-result"><strong id="fx-result-value">USD $60.00</strong><span id="fx-rate-note">Illustrative reference rate · 1 INR = 0.012 USD</span><small>Sample rate only · source timestamp: 21 Oct 2026, 12:00 UTC</small></div></article>
+      </div>
+      <div class="view" id="view-documents" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">DOCUMENTS &amp; OCR</span><h2>Documents</h2><p>Upload invoices and receipts, review extracted fields, and check for possible duplicates before creating a draft.</p></div>
+        <article class="dash-card module-card upload-card"><div class="upload-icon">↑</div><h3>Upload an invoice or receipt</h3><p>PDF, PNG or JPG · up to 10 MB. OCR results need human review.</p><label class="btn btn--primary" for="document-upload">Choose a file</label><input id="document-upload" type="file" accept="application/pdf,image/png,image/jpeg" hidden><span id="document-upload-name" class="module-status" role="status">No file selected</span><button class="btn btn--ghost" id="document-demo-upload" type="button">Use sample document</button></article>
+        <div class="module-kpis module-kpis--two"><article class="dash-card"><div class="card-heading"><div><h3>Needs review</h3><span class="status warn">1 document</span></div></div><div class="document-review"><span class="document-thumb">PDF</span><div><b>Willow Market · invoice-104.pdf</b><small>Uploaded 20 Oct 2026 · Possible duplicate</small></div><button class="table-action" data-ui-action="document-review">Review extraction →</button></div></article><article class="dash-card"><h3>Extraction review</h3><p>Supplier <b>Willow Market</b></p><p>Invoice total <b>₹32,500</b> <span class="status info">Check amount</span></p><p>Invoice date <b>02 Oct 2026</b></p><p>Duplicate check <span class="status warn">Similar invoice found</span></p><div class="module-inline"><button class="btn btn--primary" data-ui-action="document-draft">Create invoice draft</button><button class="btn btn--ghost" data-ui-action="document-review">Edit fields</button></div></article></div>
+      </div>
+      <div class="view" id="view-fundraising" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">COMMUNITY FUNDS</span><h2>Fundraising</h2><p>Track campaign goals and contributions with clear evidence. All amounts shown are illustrative.</p></div>
+        <div class="module-kpis"><article class="dash-card"><small>Active campaigns</small><strong>3</strong><span>Across 2 communities</span></article><article class="dash-card"><small>Raised this month</small><strong>₹4,82,000</strong><span>Illustrative contributions</span></article><article class="dash-card"><small>Needs attention</small><strong>1</strong><span>Contribution reconciliation</span></article></div>
+        <div class="campaign-grid"><article class="dash-card campaign-card"><span class="status success">Active</span><h3>Community Learning Center</h3><p>Furniture and learning materials for the new neighborhood center.</p><div class="campaign-progress"><span style="width:72%"></span></div><div class="campaign-numbers"><b>₹3,60,000 raised</b><span>of ₹5,00,000</span></div><small>42 contributions · updated 21 Oct 2026</small><button class="btn btn--ghost" data-ui-action="campaign-view">View contributions</button></article><article class="dash-card campaign-card"><span class="status info">Active</span><h3>Park Renewal Drive</h3><p>Accessible paths, seating and native planting for the local park.</p><div class="campaign-progress"><span style="width:46%"></span></div><div class="campaign-numbers"><b>₹1,22,000 raised</b><span>of ₹2,65,000</span></div><small>19 contributions · updated 20 Oct 2026</small><button class="btn btn--ghost" data-ui-action="campaign-view">View contributions</button></article><article class="dash-card campaign-create"><span class="upload-icon">＋</span><h3>Start a campaign</h3><p>Set a goal, explain the need and share transparent progress.</p><button class="btn btn--primary" data-ui-action="campaign-create">Create campaign</button></article></div>
+      </div>
+      <div class="view" id="view-maintenance" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">COMMUNITY OPERATIONS</span><h2>Maintenance</h2><p>Follow each request from quotation to approval, payment evidence and completion.</p></div>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Maintenance requests</h3><p>Every expense should link to its approval, invoice, payment and completion evidence.</p></div><button class="btn btn--primary" data-ui-action="maintenance-new">＋ New request</button></div><div class="maintenance-list"><article><span class="request-icon">⌂</span><div class="request-main"><b>Replace community hall water pump</b><small>Maple Grove · Requested 18 Oct 2026</small><div class="workflow-steps"><span class="done">Quotation</span><span class="done">Approved</span><span>Payment</span><span>Completion</span></div></div><div class="request-meta"><b>₹18,400</b><span class="status warn">Payment evidence needed</span></div><button class="table-action" data-ui-action="maintenance-view">View details</button></article><article><span class="request-icon">⌂</span><div class="request-main"><b>Repair playground safety surface</b><small>Maple Grove · Requested 12 Oct 2026</small><div class="workflow-steps"><span class="done">Quotation</span><span class="done">Approved</span><span class="done">Payment</span><span class="done">Completion</span></div></div><div class="request-meta"><b>₹26,700</b><span class="status success">Evidence complete</span></div><button class="table-action" data-ui-action="maintenance-view">View details</button></article></div></article>
+      </div>
+      <div class="view" id="view-transparency" data-view-panel hidden>
+        <div class="page-intro"><span class="section-kicker">PUBLIC VIEW</span><h2>Transparency</h2><p>A read-only community view linking fundraising contributions to approved spending and completion evidence.</p></div>
+        <article class="dash-card transparency-hero"><span class="status success">Public transparency · read only</span><h2>Maple Grove Community Fund</h2><p>Contributions and expenses are shared with personal details removed. This demonstration uses illustrative data.</p><div class="report-summary-grid"><div><small>Raised</small><strong>₹4,82,000</strong></div><div><small>Spent</small><strong>₹1,28,400</strong></div><div><small>Available</small><strong>₹3,53,600</strong></div></div></article>
+        <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Recent contributions</h3><div class="transparency-row"><span>Community supporter</span><b>₹5,000</b><small>21 Oct · Verified</small></div><div class="transparency-row"><span>Anonymous</span><b>₹2,500</b><small>20 Oct · Verified</small></div><div class="transparency-row"><span>Community supporter</span><b>₹1,000</b><small>19 Oct · Verified</small></div></article><article class="dash-card"><h3>Recent spending</h3><div class="transparency-row"><span>Playground safety surface</span><b>₹26,700</b><small>Approved · Paid · Evidence complete</small></div><div class="transparency-row"><span>Community hall water pump</span><b>₹18,400</b><small>Approved · Payment evidence pending</small></div><p class="module-foot">Each expense links to approval, invoice, payment reference and completion evidence.</p></article></div>
+      </div>
+</section>
+  </main>
+</div>
+
+<div class="transaction-modal" id="transaction-modal" hidden aria-hidden="true">
+  <div class="transaction-modal-backdrop" data-close-transaction></div>
+  <section class="transaction-dialog" role="dialog" aria-modal="true" aria-labelledby="transaction-detail-title">
+    <button class="modal-close" type="button" data-close-transaction aria-label="Close transaction details">×</button>
+    <span class="section-kicker">TRANSACTION DETAIL</span>
+    <h2 id="transaction-detail-title">Payment</h2>
+    <p id="transaction-detail-subtitle">Illustrative PayPal event</p>
+    <div class="transaction-detail-grid">
+      <div><span>Type</span><strong id="detail-type">Payment</strong></div>
+      <div><span>Date &amp; time</span><strong id="detail-date">Unavailable</strong></div>
+      <div><span>Buyer / counterparty</span><strong id="detail-buyer">Unavailable</strong></div>
+      <div><span>Reference</span><strong id="detail-reference">PAY-1001</strong></div>
+      <div><span>Amount</span><strong id="detail-amount">₹10,000</strong></div>
+      <div><span>Fee</span><strong id="detail-fee">₹300</strong></div>
+      <div><span>Net</span><strong id="detail-net">₹9,700</strong></div>
+      <div><span>Status</span><strong id="detail-status">Completed</strong></div>
+      <div><span>Currency</span><strong id="detail-currency">Unavailable</strong></div>
+      <div><span>Source</span><strong id="detail-source">Illustrative sample data</strong></div>
+      <div><span>Related refund / dispute</span><strong id="detail-related">Unavailable</strong></div>
+      <div><span>Ledger entries</span><strong id="detail-ledger">Unavailable</strong></div>
+    </div>
+    <div class="detail-note" id="detail-note">This is illustrative sample data. No live PayPal transaction is accessed or changed.</div>
+    <div class="tx-ai-controls"><label for="tx-ai-question">Ask AI about this transaction</label><div><input id="tx-ai-question" placeholder="Ask using the available transaction data"><button class="btn btn--ghost" id="tx-ai-ask" type="button">Ask AI</button></div><p id="tx-ai-answer" aria-live="polite"></p><button class="btn btn--primary" id="tx-send-approval" type="button">Send finding to Approvals</button></div>
+    <button class="btn btn--ghost" type="button" data-close-transaction>Close</button>
+  </section>
+</div>
+<div class="approval-modal" id="approval-detail-modal" hidden aria-hidden="true">
+  <div class="approval-modal-backdrop" data-close-approval></div>
+  <section class="approval-dialog" role="dialog" aria-modal="true" aria-labelledby="approval-detail-title">
+    <button class="modal-close" type="button" data-close-approval aria-label="Close proposal details">×</button><span class="section-kicker">PROPOSAL REVIEW</span><h2 id="approval-detail-title">Proposal</h2><p id="approval-detail-reason"></p><dl id="approval-detail-fields" class="approval-detail-fields"></dl><p id="approval-detail-effect" class="approval-detail-effect"></p><p id="approval-detail-limits" class="approval-detail-limits"></p><label id="approval-reject-reason-wrap" class="approval-reject-reason" hidden>Rejection reason (optional)<textarea id="approval-reject-reason" rows="2"></textarea></label><p id="approval-dialog-status" role="status" aria-live="polite"></p><div class="agent-actions"><button class="btn btn--primary" id="approval-detail-approve" type="button">Approve</button><button class="btn btn--ghost" id="approval-detail-reject" type="button">Reject</button></div>
+  </section>
+</div>
+<div class="approval-modal" id="approval-confirm-modal" hidden aria-hidden="true">
+  <div class="approval-modal-backdrop" data-close-confirm-approval></div>
+  <section class="approval-dialog" role="dialog" aria-modal="true" aria-labelledby="approval-confirm-title">
+    <button class="modal-close" type="button" data-close-confirm-approval aria-label="Close approval confirmation">×</button><span class="section-kicker">CONFIRM DECISION</span><h2 id="approval-confirm-title">Confirm approval</h2><p id="approval-confirm-copy"></p><div class="approval-confirm-target" id="approval-confirm-target"></div><p class="approval-confirm-warning">This proposal will not execute until you confirm below. PayPal Sandbox only; no production payment support.</p><p id="approval-confirm-error" role="alert" aria-live="assertive"></p><div class="agent-actions"><button class="btn btn--primary" id="approval-confirm-submit" type="button">Confirm and continue</button><button class="btn btn--ghost" type="button" data-close-confirm-approval>Cancel</button></div>
+  </section>
+</div>
+<div class="action-modal" id="action-modal" hidden aria-hidden="true">
+  <div class="action-modal-backdrop" data-close-action></div>
+  <section class="action-dialog" role="dialog" aria-modal="true" aria-labelledby="action-title">
+    <button class="modal-close" type="button" data-close-action aria-label="Close action confirmation">×</button>
+    <span class="section-kicker">HUMAN APPROVAL</span>
+    <h2 id="action-title">Confirm Action</h2>
+    <p class="action-question">Refund <strong>₹2,000</strong>?</p>
+    <div class="action-summary"><span>Transaction</span><b>PAY-28491</b><small>Possible duplicate transaction · Simulated action</small></div>
+    <div class="action-modal-buttons"><button class="btn btn--primary" id="confirm-refund" type="button">Confirm Refund</button><button class="btn btn--ghost" data-close-action type="button">Cancel</button></div>
+  </section>
+</div>
+<div class="toast" id="dashboard-toast" role="status" aria-live="polite"></div>
+<script src="src/chart-theme.js"></script>
+<script src="src/motion.js"></script>
+<script src="src/dashboard.js"></script>
+<script src="src/novapay-live.js"></script>
+<script src="src/modules.js"></script>
+</body>
+</html>

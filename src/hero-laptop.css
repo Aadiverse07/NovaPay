@@ -1,0 +1,297 @@
+/* NovaPay hero — 3D laptop + floating cards + dashboard transition.
+   Additive layer: loads after base.css. All sizes inside the laptop use container
+   units (cqw) so the whole model scales with its wrapper — no JS scaling needed. */
+
+.hero { --fx-ease: cubic-bezier(.22, 1, .36, 1); overflow-x: clip; } /* clip also fixes a pre-existing decorative-orbit horizontal scroll on tablets */
+a.btn { text-decoration: none; }
+
+/* ---------- Stage: flat so z-index is deterministic, perspective kept ---------- */
+.hero .hero-stage { transform-style: flat; perspective: 1400px; perspective-origin: 50% 40%; }
+
+/* ---------- Laptop wrapper (parallax only; 3D lives inside) ---------- */
+.hero .hero-stage .laptop-wrap {
+  container-type: inline-size;
+  width: min(680px, 88%); right: 1%; top: 17%; z-index: 2;
+  aspect-ratio: 100 / 76;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
+  transition: transform .6s var(--fx-ease);
+  will-change: auto;
+}
+.lp-float { position: absolute; inset: 0; perspective: 4800px; perspective-origin: 50% 40%; }
+.lp-model {
+  position: absolute; left: 0; top: 0; width: 100cqw; height: 76cqw;
+  transform-style: preserve-3d; transform-origin: 50% 70%;
+  transform: rotateX(-17deg) rotateY(-9deg);
+}
+.lp-glow {
+  position: absolute; left: 3cqw; right: 3cqw; top: -4cqw; height: 62cqw; border-radius: 6cqw; z-index: 0;
+  background: radial-gradient(60% 55% at 50% 52%, rgba(34,211,238,.18), rgba(47,102,245,.16) 48%, transparent 72%);
+  filter: blur(16px); opacity: .85; pointer-events: none;
+}
+
+/* Lid: hinge = bottom edge. -90deg = closed/flat, ~+10deg = open and leaning back.
+   Lid and deck share ONE width (90cqw, centred) so screen and base line up like a real notebook. */
+.lp-lid {
+  position: absolute; left: 5cqw; width: 90cqw; height: 56.2cqw; top: 0;
+  transform-origin: 50% 100%; transform-style: preserve-3d;
+  transform: rotateX(10deg);
+  z-index: 2;
+}
+.lp-lid-front, .lp-lid-back { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 1.6cqw 1.6cqw .7cqw .7cqw; box-sizing: border-box; }
+/* front: aluminium rim around a black glass bezel */
+.lp-lid-front {
+  transform: translateZ(.45cqw);
+  background: #07080b; border: .35cqw solid #b7bcc6; padding: .85cqw 1.2cqw 1.2cqw;
+  box-shadow: inset 0 0 0 .15cqw #000, 0 3cqw 7cqw rgba(20,34,66,.28);
+}
+.lp-lid-back {
+  transform: rotateY(180deg) translateZ(.45cqw);
+  background: linear-gradient(165deg, #e6e9ee 0%, #cdd1d9 45%, #b4b9c4 100%);
+  display: grid; place-items: center; color: #5b6272;
+  box-shadow: inset 0 0 0 .12cqw rgba(255,255,255,.6);
+}
+.lp-lid-back novapay-logo { height: 7cqw; width: auto; color: #7a8190; opacity: .9; filter: drop-shadow(0 .15cqw .1cqw rgba(255,255,255,.7)); }
+/* lid thickness: three thin aluminium faces (left, right, top) */
+.lp-lid-side { position: absolute; background: linear-gradient(90deg, #a3a9b5, #d3d7de 50%, #a3a9b5); }
+.lp-lid-side--l, .lp-lid-side--r { top: 1.6cqw; bottom: 0; width: .9cqw; left: -.45cqw; transform: rotateY(90deg); }
+.lp-lid-side--r { left: auto; right: -.45cqw; }
+.lp-lid-side--t { left: 1.6cqw; right: 1.6cqw; top: -.45cqw; height: .9cqw; background: linear-gradient(180deg, #d9dce2, #a3a9b5); transform: rotateX(90deg); }
+.lp-cam { position: absolute; top: .38cqw; left: 50%; width: .5cqw; height: .5cqw; margin-left: -.25cqw; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #3b4a66, #0b0e16 70%); box-shadow: 0 0 0 .08cqw #1b2130; }
+.lp-display {
+  --u: calc(86.9cqw / 1040);
+  position: relative; width: 86.9cqw; height: 53.4cqw; overflow: hidden; border-radius: .5cqw;
+  background: var(--bg);
+}
+.lp-display::after { /* glass sheen */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(118deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 28%);
+}
+
+/* Deck (keyboard base): same width as the lid, hinged at the lid's bottom edge, lying toward the viewer */
+.lp-deck {
+  position: absolute; left: 5cqw; width: 90cqw; height: 50cqw; top: 56.2cqw;
+  transform-origin: 50% 0; transform: rotateX(90deg); transform-style: preserve-3d; z-index: 1;
+  border-radius: .6cqw .6cqw 1.4cqw 1.4cqw;
+  background: linear-gradient(180deg, #d2d6dd 0%, #c9cdd5 55%, #bfc4cd 100%);
+  box-shadow: inset 0 0 0 .15cqw rgba(255,255,255,.7), inset 0 -.3cqw .6cqw rgba(60,70,90,.18);
+}
+.lp-deck::before { /* hinge barrel */
+  content: ""; position: absolute; left: 6cqw; right: 6cqw; top: 0; height: 1.5cqw;
+  background: linear-gradient(180deg, #2a2d35, #14161b 60%, #3a3e48); border-radius: 0 0 .5cqw .5cqw;
+}
+.lp-keys {
+  --kc: 5.64cqw; --kr: 3.9cqw; --gap: .5cqw;
+  position: absolute; left: 4.2cqw; right: 4.2cqw; top: 3.4cqw; height: 23.4cqw; border-radius: .7cqw;
+  box-shadow: 0 0 0 .5cqw #101116;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 calc(var(--kc) - var(--gap)), #101116 calc(var(--kc) - var(--gap)) var(--kc)),
+    repeating-linear-gradient(0deg, transparent 0 calc(var(--kr) - var(--gap)), #101116 calc(var(--kr) - var(--gap)) var(--kr)),
+    linear-gradient(180deg, #34363e, #23252c);
+}
+.lp-keys::after { /* space bar */
+  content: ""; position: absolute; left: 22%; width: 44%; bottom: 0; height: calc(var(--kr) - var(--gap));
+  background: linear-gradient(180deg, #34363e, #23252c); box-shadow: 0 0 0 var(--gap) #101116; border-radius: .3cqw;
+}
+.lp-pad { position: absolute; left: 29cqw; right: 29cqw; top: 30.5cqw; height: 16cqw; border-radius: 1cqw; background: linear-gradient(180deg, #c4c9d2, #b9bfc9); box-shadow: inset 0 0 0 .18cqw rgba(90,100,120,.45), inset 0 .25cqw .5cqw rgba(255,255,255,.55); }
+.lp-notch { position: absolute; left: 41cqw; right: 41cqw; bottom: 0; height: 1cqw; border-radius: .6cqw .6cqw 0 0; background: linear-gradient(180deg, #9aa1ae, #b3b9c4); }
+.lp-edge { /* front lip that gives the deck thickness */
+  position: absolute; left: 0; right: 0; top: 100%; height: 1.5cqw; transform-origin: 50% 0; transform: rotateX(-90deg);
+  background: linear-gradient(180deg, #aeb4bf, #868d9b); border-radius: 0 0 1.4cqw 1.4cqw;
+}
+.lp-deck-side { position: absolute; top: 0; bottom: 0; width: 1.5cqw; transform-origin: 0 50%; transform: rotateY(90deg); background: linear-gradient(90deg, #a9afba, #878e9c); }
+.lp-deck-side--l { left: 0; } .lp-deck-side--r { left: 100%; }
+
+/* ---------- Idle float (compositor-only: individual `translate` property) ---------- */
+.lp-float { animation: fx-bob-l 7.5s ease-in-out infinite; }
+@keyframes fx-bob-l { 50% { translate: 0 -6px; } }
+@keyframes fx-bob-a { 50% { translate: 0 -9px; } }
+@keyframes fx-bob-b { 50% { translate: 0 8px; } }
+@keyframes fx-bob-c { 50% { translate: 0 -7px; } }
+@keyframes fx-bob-d { 50% { translate: 0 7px; } }
+@keyframes fx-bob-e { 50% { translate: 0 -6px; } }
+
+/* ---------- Floating cards ---------- */
+.hero .hero-stage .float-card {
+  --fx-dx: 0px; --fx-dy: 0px; --fx-d: 0ms; --r: 0deg;
+  rotate: var(--r); z-index: 5; will-change: auto;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
+  transition: transform .6s var(--fx-ease), box-shadow .25s var(--fx-ease), border-color .25s var(--fx-ease);
+}
+.hero .hero-stage .pay-card { --r: 3deg; right: -2%; top: 8%; animation: fx-bob-a 6.5s ease-in-out infinite; }
+.hero .hero-stage .ai-card { --r: -2deg; right: 1%; bottom: 52px; animation: fx-bob-b 7.2s ease-in-out infinite; }
+.hero .hero-stage .ledger-card { --r: -4deg; left: 3%; bottom: 52px; animation: fx-bob-c 6.8s ease-in-out infinite; }
+.hero .hero-stage .approval-card { --r: -4deg; left: -3%; top: 31%; animation: fx-bob-d 7.6s ease-in-out infinite; }
+.flow-card { width: 310px; left: 4%; top: 0; padding: 15px; border-radius: 18px; }
+.hero .hero-stage .flow-card { --r: -2deg; z-index: 1; animation: fx-bob-e 7s ease-in-out infinite; }
+.flow-card .mini-heading { justify-content: flex-start; font-size: 12px; }
+.flow-card .mini-heading em { margin-left: auto; font-style: normal; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 99px; background: var(--info-soft); color: var(--info-text); }
+.fc-svg { display: block; width: 100%; height: 74px; margin: 10px 0 8px; }
+.fc-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fc-sum small { display: block; font-size: 10px; color: var(--text-subtle); }
+.fc-sum b { display: block; margin-top: 2px; font-size: 12px; letter-spacing: -.01em; }
+.fc-sum div:nth-child(1) b { color: #12936f; } .fc-sum div:nth-child(2) b { color: #d2405a; } .fc-sum div:nth-child(3) b { color: var(--info-text); }
+:root[data-theme="dark"] .fc-sum div:nth-child(1) b { color: #34d3a4; } :root[data-theme="dark"] .fc-sum div:nth-child(2) b { color: #ff7f95; }
+
+/* ---------- Mini dashboard on the laptop screen (mirrors dashboard.html) ---------- */
+.lpui { display: grid; grid-template-columns: calc(var(--u) * 150) 1fr; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); overflow: hidden; line-height: 1.25; }
+.lpui * { box-sizing: border-box; }
+.lpui-side { padding: calc(var(--u) * 18) calc(var(--u) * 12); border-right: calc(var(--u) * 1.2) solid var(--border); background: var(--surface); display: flex; flex-direction: column; gap: calc(var(--u) * 20); }
+.lpui-brand { display: flex; align-items: center; gap: calc(var(--u) * 8); font-weight: 800; font-size: calc(var(--u) * 18); padding-left: calc(var(--u) * 4); }
+.lpui-brand novapay-logo { width: auto; height: calc(var(--u) * 24); }
+.lpui-nav { display: grid; gap: calc(var(--u) * 4); }
+.lpui-nav i { font-style: normal; display: block; padding: calc(var(--u) * 9) calc(var(--u) * 10); border-radius: calc(var(--u) * 9); font-size: calc(var(--u) * 13); font-weight: 650; color: var(--text-muted); }
+.lpui-nav i.on { background: var(--info-soft); color: var(--info-text); box-shadow: inset calc(var(--u) * 3) 0 var(--info-text); }
+.lpui-main { padding: calc(var(--u) * 18) calc(var(--u) * 20); display: flex; flex-direction: column; gap: calc(var(--u) * 14); min-width: 0; }
+.lpui-top { display: flex; justify-content: space-between; align-items: flex-start; gap: calc(var(--u) * 10); }
+.lpui-top b { display: block; font-size: calc(var(--u) * 22); letter-spacing: -.02em; }
+.lpui-top small { display: block; font-size: calc(var(--u) * 11.5); color: var(--text-muted); margin-top: calc(var(--u) * 3); }
+.lpui-chip { font-size: calc(var(--u) * 11.5); padding: calc(var(--u) * 7) calc(var(--u) * 12); border: calc(var(--u) * 1.2) solid var(--border); border-radius: 999px; background: var(--surface); font-weight: 700; white-space: nowrap; }
+.lpui-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(var(--u) * 10); }
+.lpui-kpi { padding: calc(var(--u) * 12); border: calc(var(--u) * 1.2) solid var(--border); border-radius: calc(var(--u) * 13); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; }
+.lpui-kpi > span { display: flex; align-items: center; gap: calc(var(--u) * 6); font-size: calc(var(--u) * 11.5); color: var(--text-muted); font-weight: 700; }
+.lpui-kpi > span::before { content: ""; width: calc(var(--u) * 9); height: calc(var(--u) * 9); border-radius: 50%; background: var(--kc); }
+.lpui-kpi strong { display: block; margin-top: calc(var(--u) * 10); font-size: calc(var(--u) * 20); letter-spacing: -.02em; }
+.lpui-kpi svg { display: block; width: 100%; height: calc(var(--u) * 26); margin-top: calc(var(--u) * 9); }
+.lpui-kpi path { fill: none; stroke: var(--kc); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.lpui-grid { display: grid; grid-template-columns: 1.7fr .8fr; gap: calc(var(--u) * 12); flex: 1; min-height: 0; }
+.lpui-card { border: calc(var(--u) * 1.2) solid var(--border); border-radius: calc(var(--u) * 15); background: var(--surface); padding: calc(var(--u) * 15); position: relative; overflow: hidden; min-width: 0; }
+.lpui-card h4 { font-size: calc(var(--u) * 13.5); font-weight: 800; margin: 0; }
+.lpui-card p { font-size: calc(var(--u) * 10.5); color: var(--text-subtle); margin: calc(var(--u) * 3) 0 0; }
+.lpui-chart { background: var(--panel-dark); color: var(--panel-dark-text); border-color: transparent; }
+.lpui-chart p { color: #9fb2da; }
+.lpui-legend { display: flex; gap: calc(var(--u) * 12); font-size: calc(var(--u) * 10.5); font-weight: 750; }
+.lpui-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.lpui-chart svg { display: block; width: 100%; height: calc(var(--u) * 238); margin-top: calc(var(--u) * 8); }
+.lpui-chart svg .g { stroke: rgba(255,255,255,.1); stroke-width: 1; }
+.lpui-chart svg path { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.lpui-sum { display: flex; gap: calc(var(--u) * 26); margin-top: calc(var(--u) * 6); font-size: calc(var(--u) * 10.5); color: #9fb2da; }
+.lpui-sum b { display: block; margin-top: calc(var(--u) * 2); font-size: calc(var(--u) * 14); color: #fff; }
+.lpui-ring { position: relative; width: calc(var(--u) * 112); height: calc(var(--u) * 112); margin: calc(var(--u) * 10) auto calc(var(--u) * 10); display: grid; place-items: center; font-weight: 800; font-size: calc(var(--u) * 23); color: var(--health-teal); }
+.lpui-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.lpui-ring circle { fill: none; stroke-width: 10; }
+.lpui-ring .t { stroke: var(--health-slate); opacity: .28; } .lpui-ring .v { stroke: var(--health-teal); stroke-linecap: round; }
+.lpui-checks { display: grid; gap: calc(var(--u) * 6); font-size: calc(var(--u) * 11); color: var(--text-muted); }
+.lpui-checks .w { color: var(--warn-text); font-weight: 700; }
+
+/* ---------- Intro sequence ---------- */
+.hero-copy > :nth-child(1) { --fx-i: 0; } .hero-copy > :nth-child(2) { --fx-i: 1; } .hero-copy > :nth-child(3) { --fx-i: 2; }
+.hero-copy > :nth-child(4) { --fx-i: 3; } .hero-copy > :nth-child(5) { --fx-i: 4; }
+
+/* Pre-state (set by an inline <head> script; a timer removes it if JS never starts) */
+html.fx-pre .hero-copy > * { opacity: 0; }
+html.fx-pre .hero .lp-lid { transform: rotateX(-87deg); }
+html.fx-pre .hero .lp-glow, html.fx-pre .hero .device-shadow { opacity: 0; }
+html.fx-pre .hero .hero-stage .float-card { opacity: 0; }
+
+html.fx-run .hero-copy > * { animation: fx-rise 560ms var(--fx-ease) both; animation-delay: calc(var(--fx-i, 0) * 70ms); }
+@keyframes fx-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+html.fx-run .hero .lp-lid { animation: fx-lid 1100ms 280ms both; }
+@keyframes fx-lid {
+  0%   { transform: rotateX(-87deg); animation-timing-function: cubic-bezier(.5, 0, .2, 1); }
+  70%  { transform: rotateX(17deg);  animation-timing-function: ease-in-out; }
+  86%  { transform: rotateX(7deg);   animation-timing-function: ease-in-out; }
+  100% { transform: rotateX(10deg); }
+}
+html.fx-run .hero .lp-glow { animation: fx-glow 1000ms 700ms both; }
+html.fx-run .hero .device-shadow { animation: fx-glow 800ms 200ms both; }
+@keyframes fx-glow { from { opacity: 0; } to { opacity: .85; } }
+
+html.fx-run .hero .hero-stage .float-card {
+  animation-duration: 1000ms, var(--fx-bob, 7s);
+  animation-delay: var(--fx-d), calc(var(--fx-d) + 1000ms);
+  animation-timing-function: var(--fx-ease), ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: both, none;
+}
+html.fx-run .hero .hero-stage .pay-card { animation-name: fx-card-in, fx-bob-a; --fx-bob: 6.5s; }
+html.fx-run .hero .hero-stage .ai-card { animation-name: fx-card-in, fx-bob-b; --fx-bob: 7.2s; }
+html.fx-run .hero .hero-stage .ledger-card { animation-name: fx-card-in, fx-bob-c; --fx-bob: 6.8s; }
+html.fx-run .hero .hero-stage .approval-card { animation-name: fx-card-in, fx-bob-d; --fx-bob: 7.6s; }
+html.fx-run .hero .hero-stage .flow-card { animation-name: fx-card-in, fx-bob-e; --fx-bob: 7s; }
+@keyframes fx-card-in {
+  0%   { opacity: 0; transform: translate3d(var(--fx-dx), var(--fx-dy), -260px) scale(.4); rotate: calc(var(--r) * -3); }
+  22%  { opacity: 1; }
+  68%  { transform: translate3d(0, -8px, 50px) scale(1.04); rotate: calc(var(--r) * 1.15); }
+  100% { opacity: 1; transform: translate3d(var(--px, 0px), var(--py, 0px), 0) scale(1); rotate: var(--r); }
+}
+
+/* Intro skipped / already seen: JS simply removes .fx-run, so the base (final) styles apply. */
+
+/* Pause idle work when hero is off-screen */
+.fx-offscreen .hero-stage *, .fx-offscreen .lp-float { animation-play-state: paused !important; }
+
+/* ---------- Dashboard transition ---------- */
+.fx-straighten .lp-float { animation-play-state: paused; }
+.fx-straighten .lp-model { transform: rotateX(0deg) rotateY(0deg); transition: transform 280ms cubic-bezier(.4, 0, .2, 1); }
+.fx-straighten .lp-lid { transform: rotateX(0deg); transition: transform 280ms cubic-bezier(.4, 0, .2, 1); }
+.fx-portal { position: fixed; left: 0; top: 0; z-index: 9000; pointer-events: none; container-type: inline-size; transform-origin: 0 0; overflow: hidden; background: var(--bg); border-radius: 2.2cqw; will-change: transform; }
+.fx-portal .lpui { --u: calc(100cqw / 1040); }
+.fx-veil { position: fixed; inset: 0; z-index: 8999; background: var(--bg); opacity: 0; pointer-events: none; }
+
+/* ---------- Tablet / mobile ---------- */
+@media (max-width: 1120px) {
+  .hero .hero-stage { min-height: 640px; }
+  .hero .hero-stage .laptop-wrap { top: 19%; }
+}
+@media (max-width: 700px) {
+  /* Mobile: laptop is simply open, no lid animation; only the AI + Ledger cards stay (3 decorative cards hidden) */
+  html.fx-pre .hero .lp-lid { transform: rotateX(10deg); }
+  html.fx-run .hero .lp-lid { animation: none; }
+  html.fx-run .hero .lp-glow { animation: none; opacity: .85; }
+  .hero .hero-stage .flow-card, .hero .hero-stage .approval-card, .hero .hero-stage .pay-card { display: none; }
+  .hero .hero-stage .laptop-wrap { width: 88%; right: 6%; top: 5%; }
+  .hero .hero-stage .ai-card { bottom: 74px; right: 2%; scale: .92; transform-origin: 100% 100%; }
+  .hero .hero-stage .ledger-card { bottom: 60px; left: 2%; scale: .92; transform-origin: 0 100%; }
+  html.fx-run .hero .hero-stage .ai-card { animation-name: fx-card-lite, fx-bob-b; }
+  html.fx-run .hero .hero-stage .ledger-card { animation-name: fx-card-lite, fx-bob-c; }
+  html.fx-run .hero .hero-stage .float-card { animation-duration: 600ms, var(--fx-bob, 7s); animation-delay: var(--fx-d), calc(var(--fx-d) + 600ms); }
+  @keyframes fx-card-lite {
+    from { opacity: 0; transform: translate3d(0, 18px, 0); }
+    to   { opacity: 1; transform: translate3d(var(--px, 0px), var(--py, 0px), 0); }
+  }
+}
+
+/* ---------- Reduced motion: final static composition ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .lp-float, .hero .hero-stage .float-card { animation: none !important; }
+  .hero .hero-stage .laptop-wrap, .hero .hero-stage .float-card { transition: none !important; }
+  .hero-copy > * { opacity: 1 !important; transform: none !important; }
+}
+
+/* ---------- Phase 9.2: realism + alignment ----------
+   Shorter deck + weaker perspective so the base is no wider than the screen (it only looks wider when viewed
+   from above through strong perspective); milder tilt; rounded per-key tiles, glass trackpad, brushed aluminium. */
+.lp-float { perspective: 9500px; }
+.lp-model { transform: rotateX(-13deg) rotateY(-6deg); }
+.lp-deck {
+  height: 40cqw; border-radius: .5cqw .5cqw 1.6cqw 1.6cqw;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 18%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 .12cqw, rgba(0,0,0,.025) .12cqw .26cqw),
+    linear-gradient(180deg, #d9dce2 0%, #cfd3da 60%, #c3c8d1 100%);
+  box-shadow: inset 0 0 0 .14cqw rgba(255,255,255,.75), inset 0 -.4cqw .8cqw rgba(50,60,80,.2), 0 2cqw 3cqw rgba(20,30,55,.18);
+}
+.lp-keys {
+  left: 4cqw; right: 4cqw; top: 2.6cqw; height: 19.4cqw; border-radius: .6cqw; box-shadow: none;
+  background: #0f1116 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 32' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2347494f'/%3E%3Cstop offset='1' stop-color='%2325272d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2.2' y='2' width='55.6' height='27.5' rx='4.5' fill='url(%23g)'/%3E%3Crect x='2.2' y='2' width='55.6' height='1.6' rx='.8' fill='%23ffffff' fill-opacity='.14'/%3E%3C/svg%3E") 0 0 / calc(100% / 14) calc(100% / 6) repeat;
+  outline: .45cqw solid #0f1116; outline-offset: 0;
+}
+.lp-keys::after { display: none; }
+.lp-pad {
+  left: 30.5cqw; right: 30.5cqw; top: 25cqw; height: 12.6cqw; border-radius: .9cqw;
+  background: linear-gradient(180deg, #c9cdd5, #bfc4cd);
+  box-shadow: inset 0 0 0 .14cqw rgba(95,105,125,.5), inset 0 .2cqw .4cqw rgba(255,255,255,.6), 0 .1cqw .1cqw rgba(255,255,255,.5);
+}
+.lp-notch { left: 42cqw; right: 42cqw; height: .8cqw; background: linear-gradient(180deg, #a3a9b5, #bcc1ca); }
+.lp-edge { height: 1.2cqw; background: linear-gradient(180deg, #b9bec8, #8c93a1); border-radius: 0 0 1.6cqw 1.6cqw; }
+/* lid: slimmer black bezel, brushed-metal rim, soft glass reflection */
+.lp-lid-front { border-color: #aeb3be; padding: .6cqw .8cqw .9cqw; border-radius: 1.3cqw 1.3cqw .5cqw .5cqw; }
+.lp-lid-back { background: linear-gradient(165deg, #e4e7ec 0%, #d1d5dc 50%, #bcc1cb 100%); }
+.lp-display { width: 88.2cqw; height: 54.3cqw; --u: calc(88.2cqw / 1040); border-radius: .4cqw; box-shadow: 0 0 0 .1cqw #000; }
+.lp-display::after { background: linear-gradient(118deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 24%), linear-gradient(0deg, rgba(255,255,255,.04), transparent 30%); }
+.device-shadow { filter: blur(3.2cqw); }
+
+/* ---------- Bigger keyboard: wider/taller key area, trackpad nudged down to make room ---------- */
+.lp-keys { left: 3cqw; right: 3cqw; top: 2.2cqw; height: 22.6cqw; }
+.lp-pad { top: 27.6cqw; height: 11cqw; }
