@@ -26,18 +26,17 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
   app.use(requestId);
   // The existing UI relies on inline scripts/styles; helmet remains enabled without a CSP that blocks them.
   app.use(helmet({ contentSecurityPolicy: false }));
+  app.use((req, res, next) => {
+    const started = Date.now();
+    res.on('finish', () => console.log(JSON.stringify({ level: 'info', requestId: req.id, method: req.method, path: req.originalUrl, status: res.statusCode, durationMs: Date.now() - started })));
+    next();
+  });
   app.use(express.json({ limit: '64kb' }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/') && req.method === 'POST' && !requestBody.safeParse(req.body).success) return res.status(400).json({ error: 'Request body must be valid JSON.' });
     return next();
   });
-  app.use((req, res, next) => {
-    const started = Date.now();
-    res.on('finish', () => console.log(JSON.stringify({ level: 'info', requestId: req.id, method: req.method, path: req.path, status: res.statusCode, durationMs: Date.now() - started })));
-    next();
-  });
-
   app.get('/', (_req, res, next) => res.sendFile(path.join(config.STATIC_DIR || root, 'preview.html'), (error) => error && next(error)));
   app.use('/api', statusRoutes({ config, paypal, repos }));
   app.use('/api', webhookRoutes({ paypal, repos }));
