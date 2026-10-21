@@ -1,1 +1,1 @@
-{"name":"novapay","version":"2.0.0","private":true,"scripts":{"start":"node server.js"},"engines":{"node":">=18"}}
+{"name":"novapay","version":"2.0.0","private":true,"scripts":{"start":"node server/index.js","dev":"node --watch server/index.js","test":"node --test server/test/*.test.js","legacy":"node server.js"},"engines":{"node":">=18"},"dependencies":{"dotenv":"16.6.1","express":"5.1.0","helmet":"8.1.0","zod":"4.1.12"}}
