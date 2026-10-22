@@ -7,6 +7,7 @@ import { config as defaultConfig } from './config.js';
 import { requestId } from './middleware/requestId.js';
 import { legacyErrorCompatibility } from './middleware/errorResponses.js';
 import { createRepositories } from './repos/memory.js';
+import { createPostgresRepositories } from './repos/postgres.js';
 import { createPayPalService } from './services/paypal.js';
 import { createAIService } from './services/ai.js';
 import { createSupabaseServices } from './services/supabase.js';
@@ -18,16 +19,20 @@ import { webhookRoutes } from './routes/webhook.js';
 import { aiRoutes } from './routes/ai.js';
 import { approvalRoutes } from './routes/approvals.js';
 import { paypalRoutes } from './routes/paypal.js';
+import { financialRoutes } from './routes/financial.js';
+import { startWebhookWorker } from './services/webhookProcessor.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
 
-export function createApp({ config = defaultConfig, repos = createRepositories(), paypal, askAI, identity = createSupabaseServices(config) } = {}) {
+export function createApp({ config = defaultConfig, repos, paypal, askAI, identity = createSupabaseServices(config) } = {}) {
   const app = express();
+  repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
   askAI ||= createAIService({ config, events: repos.events });
 
   app.disable('x-powered-by');
+  app.locals.startWebhookWorker = () => startWebhookWorker({ repos, paypal });
   app.use(requestId);
   app.use(legacyErrorCompatibility);
   // The existing UI relies on inline scripts/styles; helmet remains enabled without a CSP that blocks them.
@@ -44,6 +49,7 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
   app.use('/api', authMiddleware({ config, identity }));
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 240, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many requests for this account. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) }));
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => `onboarding:${req.user.id}`, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_RATE_LIMITED', message: 'Too many onboarding attempts for this account. Try again later.' } } }));
+  app.use('/api', webhookRoutes({ paypal, repos }));
   app.use(express.json({ limit: '64kb' }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
@@ -54,9 +60,9 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
   app.use('/api', statusRoutes({ config, paypal, repos }));
   app.get('/api/public-config', (_req, res) => res.json({ supabaseUrl: config.hasSupabase ? config.SUPABASE_URL : null, supabaseAnonKey: config.hasSupabase ? config.SUPABASE_ANON_KEY : null }));
   app.use('/api', onboardingRoutes({ identity }));
-  app.use('/api', webhookRoutes({ paypal, repos }));
   app.use('/api', aiRoutes({ config, askAI }));
-  app.use('/api', approvalRoutes({ config, repos, identity }));
+  app.use('/api', approvalRoutes({ config, repos, identity, paypal }));
+  app.use('/api', financialRoutes({ repos }));
   app.use('/api', paypalRoutes({ config, paypal, repos, identity }));
 
   app.use('/api', (req, res) => {
@@ -72,11 +78,14 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
   app.use((req, res) => res.status(404).send('Not found'));
   app.use((error, req, res, _next) => {
     if (res.headersSent) return;
-    const status = error.statusCode || error.status || (error.type === 'entity.too.large' ? 413 : 500);
+    const databaseStatus = ({ '22003': 400, '22023': 400, '23505': 409, '23514': 400, P0002: 404 })[error.databaseCode];
+    const status = databaseStatus || error.statusCode || error.status || (error.type === 'entity.too.large' ? 413 : 500);
     const message = error.type === 'entity.too.large' ? 'Request body is too large.' : error.type === 'entity.parse.failed' ? 'Request body must be valid JSON.' : error.message || 'The request could not be completed.';
-    if (status >= 500) repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed`, ok: false });
-    if (req.path === '/api/onboarding' || req.path === '/api/public-config') {
-      return res.status(status).json({ error: { code: status === 413 ? 'BODY_TOO_LARGE' : status === 400 ? 'BAD_JSON' : 'INTERNAL_ERROR', message: status >= 500 ? 'The request could not be completed.' : message } });
+    if (status >= 500) Promise.resolve(repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed`, ok: false }, req.orgId)).catch(() => {});
+    const phase2Route = req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
+    if (req.path === '/api/onboarding' || req.path === '/api/public-config' || phase2Route) {
+      const code = status === 413 ? 'BODY_TOO_LARGE' : error.databaseCode ? ({ '22003': 'REFUND_AMOUNT_EXCEEDED', '22023': 'VALIDATION_ERROR', '23505': 'CONFLICT', '23514': 'LEDGER_UNBALANCED', P0002: 'NOT_FOUND' })[error.databaseCode] : status === 400 ? 'BAD_JSON' : error.code === 'DATABASE_UNAVAILABLE' ? error.code : 'INTERNAL_ERROR';
+      return res.status(status).json({ error: { code, message: status >= 500 ? 'The request could not be completed.' : message } });
     }
     return res.status(status).json({ error: message });
   });

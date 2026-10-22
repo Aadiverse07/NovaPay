@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { approveUrl, isValidOrderAmount, paypalRequestId, remainingRefundable } from '../src/services/paypal.js';
+import { approveUrl, createPayPalService, isValidOrderAmount, paypalRequestId, remainingRefundable } from '../src/services/paypal.js';
 
 test('order amount accepts 0.01 through 10,000.00 with at most two decimals', () => {
   for (const value of ['0.01', '1', '1.2', '1.23', '10000', '10000.00']) assert.equal(isValidOrderAmount(value), true, value);
@@ -22,4 +22,22 @@ test('approve URL requires https and a paypal.com hostname boundary', () => {
 test('refund remaining amount subtracts completed and reserved refunds', () => {
   assert.equal(remainingRefundable({ value: '50.00', refunded: 12.25, reserved: 7.75 }), 30);
   assert.equal(remainingRefundable({ value: '50.00' }), 50);
+});
+
+test('webhook verification request embeds the exact raw event bytes', async () => {
+  const originalFetch = globalThis.fetch;
+  const requestBodies = [];
+  globalThis.fetch = async (_url, options) => {
+    if (String(options.body).includes('grant_type=client_credentials')) return new Response(JSON.stringify({ access_token: 'test-token', expires_in: 3600 }), { status: 200 });
+    requestBodies.push(options.body);
+    return new Response(JSON.stringify({ verification_status: 'SUCCESS' }), { status: 200 });
+  };
+  try {
+    const service = createPayPalService({ config: { PAYPAL_CLIENT_ID: 'test', PAYPAL_CLIENT_SECRET: 'test', PAYPAL_WEBHOOK_ID: 'test-hook' }, events: { addCall() {} } });
+    const raw = ' { "id":"EVENT-1", "event_type":"PAYMENT.CAPTURE.COMPLETED" } ';
+    const status = await service.verifyWebhook({ 'paypal-auth-algo':'SHA256withRSA','paypal-cert-url':'https://api-m.sandbox.paypal.com/cert','paypal-transmission-id':'tx','paypal-transmission-sig':'sig','paypal-transmission-time':'time' }, JSON.parse(raw), raw);
+    assert.equal(status,'VERIFIED');
+    assert.ok(requestBodies[0].includes(`"webhook_event":${raw}}`));
+    assert.deepEqual(JSON.parse(requestBodies[0]).webhook_event,JSON.parse(raw));
+  } finally { globalThis.fetch = originalFetch; }
 });

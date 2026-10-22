@@ -36,7 +36,7 @@ Requires bearer token and `X-Org-Id`, any organization role. Returns HTTP 200 `{
 
 ## `POST /api/webhook`
 
-Public PayPal callback. Request body is a PayPal event object, including string `event_type` (maximum 200 characters). Response HTTP 200 `{ "ok": true, "verification": "UNVERIFIED|ERROR|FAILED|VERIFIED" }`. Missing/invalid `event_type` returns HTTP 400 `{ "error": "Webhook event type is missing or invalid.", "code": "LEGACY_POST_API_WEBHOOK_400" }`. A non-POST method returns HTTP 405 with the legacy string error and sibling `code`.
+Public PayPal callback. Request body is the raw PayPal event JSON, including string `id` and `event_type` (maximum 200 characters). The backend stores the raw bytes and signature headers, then returns HTTP 200 immediately as `{ "ok": true, "verification": "UNVERIFIED" }`; a worker verifies the signature and later records verification/processing state for `GET /api/events`. Retries with the same provider event ID do not enqueue a second posting. Missing/invalid `id` or `event_type` returns HTTP 400 `{ "error": "Webhook event type is missing or invalid.", "code": "LEGACY_POST_API_WEBHOOK_400" }`. Storage failure returns HTTP 503 `{ "error": { "code": "WEBHOOK_STORAGE_FAILED", "message": "The PayPal event could not be safely stored." } }`. A non-POST method returns HTTP 405 with the legacy string error and sibling `code`. Events that cannot be verified are retained and never posted.
 
 ## `POST /api/ai/chat`
 
@@ -61,6 +61,72 @@ Requires bearer token and `X-Org-Id`; allowed roles: `owner`, `admin`, `accounta
 ## `POST /api/paypal/refund`
 
 Requires bearer token and `X-Org-Id`; allowed roles: `owner`, `admin`, `approver`. Request: `{ "proposalType": "refund", "approvalId": "APR-...", "captureId": "...", "currency": "USD", "amount": "1.00", "note": "optional" }`. The approval ID must first be registered for the exact capture, amount, and currency in this organization. Success HTTP 200 `{ "refundId": "...", "status": "COMPLETED", "captureId": "...", "amount": "1.00", "currency": "USD" }`; a repeated completed request returns the cached same shape. Exact route errors: 400 `{ "error": "Only an explicitly approved refund proposal can use this route." }`, `{ "error": "A valid approval reference is required." }`, `{ "error": "Refunds are currently supported only for USD sandbox captures." }`, `{ "error": "Refund amount must be a positive USD amount with at most two decimal places." }`, `{ "error": "Refund amount must be greater than zero." }`, or the remaining-amount message `{ "error": "Refund amount exceeds the remaining captured amount (N.NN USD)." }`; 403 `{ "error": "This refund does not match a server-registered approval, capture, amount, and currency." }`; 404 `{ "error": "The specified PayPal capture is not available in this backend session. No refund was sent." }`; 409 capture-state `{ "error": "The specified capture is not in a refundable completed state." }`, already-locked `{ "error": "This approval is already being submitted. Wait for the current request to finish." }`, used reference `{ "error": "This approval reference was already used for a different refund request." }`, cached pending `{ "error": "...", "status": "...", "retryBlocked": true }`, or provider non-completed `{ "error": "PayPal returned STATUS, not COMPLETED. Verify the refund in PayPal Sandbox; this approval will not be submitted twice.", "status": "STATUS", "retryBlocked": true }`; 502 generic provider error as above; 503 uncertain request `{ "error": "PayPal request outcome is uncertain. Verify PayPal Sandbox before taking further action.", "retryBlocked": true }` or missing credentials `{ "error": "PayPal sandbox credentials not set" }`.
+
+## Phase 2 financial APIs
+
+All routes in this section require `Authorization: Bearer <Supabase JWT>` and `X-Org-Id: <organization UUID>`. The service resolves tenant membership and role; every data query is scoped to that organization. New route errors use `{ "error": { "code": "...", "message": "..." } }`.
+
+### `GET /api/transactions`
+
+Available to all organization roles. Optional query: `limit` (1–100, default 50), `offset` (0 or more, default 0), `type` (`capture|refund`), `status` (`COMPLETED|PENDING|FAILED|REFUNDED`), `from` and `to` (ISO date-time with timezone). Example: `/api/transactions?type=capture&limit=25&offset=0`. Success:
+
+```json
+{"transactions":[{"id":"<uuid>","type":"capture","sourceId":"CAPTURE-ID","orderId":"ORDER-ID","captureId":"CAPTURE-ID","refundId":null,"status":"COMPLETED","amount":"10.00","fee":"0.59","net":"9.41","currency":"USD","occurredAt":"2026-10-22T12:00:00Z","data_source":"paypal-sandbox"}],"page":{"limit":25,"offset":0}}
+```
+
+Invalid filters, unsupported status, or `from > to` return HTTP 400 code `VALIDATION_ERROR`.
+
+### `GET /api/ledger/entries`
+
+Available to all organization roles. Uses the same `limit`, `offset`, `from`, and `to` filters as transactions. Success returns persisted journal entries, each with its matching organization-scoped lines and account metadata:
+
+```json
+{"entries":[{"id":"<uuid>","org_id":"<uuid>","source_type":"capture","source_id":"CAPTURE-ID","description":"PayPal capture CAPTURE-ID","currency":"USD","created_at":"2026-10-22T12:00:00Z","lines":[{"id":"<uuid>","journal_entry_id":"<uuid>","account_id":"<uuid>","debit_minor":941,"credit_minor":0,"currency":"USD","accounts":{"code":"1000","name":"PayPal Balance","account_type":"asset"}}]}],"page":{"limit":50,"offset":0}}
+```
+
+### `GET /api/ledger/trial-balance`
+
+Available to all organization roles. Optional query `currency=USD` (USD is the only supported currency in this phase). Returns the database-computed account totals:
+
+```json
+{"currency":"USD","accounts":[{"code":"1000","name":"PayPal Balance","type":"asset","debitMinor":941,"creditMinor":0,"debit":"9.41","credit":"0.00"}],"totals":{"debitMinor":1000,"creditMinor":1000,"debits":"10.00","credits":"10.00"},"balanced":true}
+```
+
+Unsupported currency returns HTTP 400 code `VALIDATION_ERROR`.
+
+### `GET /api/approvals`
+
+Available to all organization roles. Optional query `status` (`pending|processing|approved|rejected|completed|pending_verification|failed`), `limit` (default 50, capped at 100), and `offset` (default 0). Returns `{ "approvals": [<approval>], "pendingCount": 1, "page": { "limit": 50, "offset": 0 } }`. Each approval has `approvalId`, `orgId`, `proposalType`, `captureId`, `amount`, `amountMinor`, `currency`, `status`, `decisionNote`, `reviewerId`, `result`, `createdAt`, and `createdBy`.
+
+### `GET /api/approvals/pending-count`
+
+Available to all organization roles. Returns `{ "pendingCount": 1 }` for the current organization.
+
+### `GET /api/approvals/:approvalId`
+
+Available to all organization roles. Returns `{ "approval": <approval> }` using the approval shape above. Missing or cross-organization IDs return HTTP 404 code `APPROVAL_NOT_FOUND`.
+
+### `POST /api/approvals/register`
+
+Allowed roles: `owner`, `admin`, `approver`. This is the existing UI-compatible route; its successful response remains `{ "registered": true, "approvalId": "APR-...", "captureId": "...", "amount": "1.00", "currency": "USD" }`, and its legacy string errors retain the sibling `code`. Registration requires an exact completed capture and a positive amount no greater than the capture's remaining amount. It is idempotent for an identical approval ID/capture/amount.
+
+### `POST /api/approvals/:approvalId/decision`
+
+Allowed roles: `owner`, `admin`, `approver`. Request: `{ "decision": "approve", "note": "Reviewed" }` or `{ "decision": "reject", "note": "Needs more evidence" }`; `note` is optional, trimmed, maximum 500 characters. A rejection returns `{ "approvalId": "APR-...", "status": "rejected", "reviewerId": "<user UUID>", "decisionNote": "Needs more evidence" }`. An approval invokes PayPal only for the exact linked completed capture and returns the existing refund success shape on completion. A repeated completed approval returns its cached refund result. Insufficient amount returns HTTP 400 code `REFUND_AMOUNT_EXCEEDED`; non-pending or already-submitted decisions return HTTP 409 with `APPROVAL_ALREADY_DECIDED` or `REFUND_ALREADY_SUBMITTED`; unknown/cross-tenant approval returns HTTP 404 `APPROVAL_NOT_FOUND`. Every decision records the reviewer, note, and audit row.
+
+### `GET /api/reconciliation`
+
+Available to all organization roles. Optional query `currency=USD`. Runs and persists a comparison between completed capture/refund transactions and their ledger revenue/contra-revenue lines. Success:
+
+```json
+{"run":{"id":"<uuid>","org_id":"<uuid>","status":"clean","currency":"USD","details":{"capturedMinor":1000,"ledgerCapturedMinor":1000,"refundedMinor":0,"ledgerRefundedMinor":0},"started_at":"2026-10-22T12:00:00Z","completed_at":"2026-10-22T12:00:00Z"},"data_source":"paypal-sandbox"}
+```
+
+`status` is `clean` or `mismatch`. Unsupported currency returns HTTP 400 `VALIDATION_ERROR`.
+
+### Webhook processing and event visibility
+
+`POST /api/webhook` acknowledges durable inbox storage; it does not claim the signature has already been verified. Authenticated `GET /api/events` reports recent event objects as `{ "t", "type", "id", "verification" }` and API call records as `{ "t", "m", "ok" }`, scoped to the selected organization. Verification values are `UNVERIFIED`, `FAILED`, `ERROR`, or `VERIFIED`. Only verified completed capture events are posted. Retry/dead-letter processing details remain in the database and are not included in the legacy event response shape.
 
 ## Shared request errors
 
