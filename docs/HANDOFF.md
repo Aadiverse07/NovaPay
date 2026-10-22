@@ -16,28 +16,26 @@ Branch: `backend`. Current phase: Phase 1 — Foundation.
 
 ## IN PROGRESS
 
-- `server/src/app.js`: auth middleware and API rate limits currently run after `express.json()` and generic body validation. Left: move API IP limits/auth ahead of JSON parsing so unauthenticated malformed requests are rejected as 401 before parsing; re-run route and full tests. No code change for this reorder was made.
+- No Phase 1 implementation item remains in progress. Live Supabase verification completed successfully with the authorized CLI; results are recorded in `docs/TEST-REPORT.md`.
 
 ## NOT STARTED / UNVERIFIED
 
-- Apply migration and run actual RLS tests against Supabase. No Supabase project credentials, Supabase CLI, Docker, or `psql` were available; no migration was applied to a live project.
-- Verify actual provider JWT validation, membership lookup, onboarding RPC, and audit insert against a Supabase project.
-- Re-run final completion gate after the pending middleware-order decision/change and confirm every contract detail against live routes.
-- Acceptance: live Supabase-backed cross-tenant isolation and live onboarding are UNVERIFIED. Mocked API tests prove 403 for a non-member and viewer denial; SQL tests are written but not executed.
+- No additional live Phase 1 checks remain unverified by this handoff; see `docs/TEST-REPORT.md` for live Supabase results.
 
 ## TEST STATE
 
-- Last `npm test`: PASS, 29 tests passed, 0 failed (`npm test`). This included mocked route, role, request-ID/log redaction, Supabase REST adapter, AI, and legacy PayPal-flow tests.
-- `node --check` across `server/**/*.js`: PASS on the last full check; subsequent route changes were loaded by the passing test run.
-- `npm ci`: PASS, dependencies installed with 0 reported vulnerabilities.
-- `git diff --check`: PASS on the last test run.
-- `npm start` smoke test: PASS earlier in this phase for degraded `/api/status`, protected-route 503, public config shape, and serving `dashboard.html`/`preview.html`; not repeated after the final edits.
-- SQL/RLS and real Supabase checks: UNVERIFIED. Exact commands after local Supabase setup: `supabase start` then `supabase test db`; apply to a linked project with `supabase db push` only when ready.
+- Latest `npm test`: PASS, 30 tests passed, 0 failed (`npm test`), including unauthenticated malformed JSON -> 401.
+- `find server -type f -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS.
+- `npm ci`: PASS, 0 vulnerabilities reported.
+- `git diff --check`: PASS; rerun before commit.
+- `node scripts/verify-phase1.js`: PASS; live test users and organizations were cleaned up.
+- `npm start` smoke test: PASS after final edits; `/dashboard.html`, `/preview.html`, and `/api/status` each returned HTTP 200.
+- Live SQL/RLS and two-user Supabase checks: PASS; details in `docs/TEST-REPORT.md`.
 - Frontend diff check: no frontend paths appeared in the last `git diff --stat`.
 
 ## SUPABASE
 
-No live Supabase key pair is configured or used in this work. The backend accepts either legacy anon/service_role keys or current publishable/secret keys through the same server-only variables: `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. Unit tests use fake values only. `0001_foundation.sql` is written and has not been applied to a live project.
+The local `.env` contains a Supabase key pair and was loaded without displaying values. The backend accepts either legacy anon/service_role keys or current publishable/secret keys through `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. `0001_foundation.sql` is applied; live migration object and RLS checks passed. No key values are included here.
 
 ## DECISIONS
 
@@ -45,11 +43,17 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 
 ## KNOWN BUGS / HALF-WORKING
 
-- Auth currently parses JSON before checking credentials; see IN PROGRESS.
-- Live RLS/provider behavior is unverified until a Supabase environment is available.
+- API IP limits and auth now run before `express.json()`; the malformed unauthenticated request test returns 401. Public status, public config, and webhook are exempt from auth and API rate limits.
+- No known Phase 1 behavior is currently unverified; see the test report for the commands and results.
 - Activity events from legacy unscoped in-memory entries are intentionally omitted from tenant `/api/events` results; public status returns no captures to avoid cross-tenant disclosure.
 - Rate-limit counters are process-local and reset on restart.
 - PII pattern redaction cannot reliably detect names or every free-form identifier; users must avoid entering them, as documented in `docs/RUNBOOK.md`.
+
+## NEXT STEPS
+
+1. Rerun the final Phase 1 gate and ensure no `.env` is staged.
+2. Commit Phase 1 locally on `backend` only if the gate has no failures.
+3. Ask the user whether to continue to Phase 2; do not push or merge.
 
 ## NEXT STEPS
 
