@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as defaultConfig } from './config.js';
 import { requestId } from './middleware/requestId.js';
+import { legacyErrorCompatibility } from './middleware/errorResponses.js';
 import { createRepositories } from './repos/memory.js';
 import { createPayPalService } from './services/paypal.js';
 import { createAIService } from './services/ai.js';
@@ -24,6 +25,7 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
 
   app.disable('x-powered-by');
   app.use(requestId);
+  app.use(legacyErrorCompatibility);
   // The existing UI relies on inline scripts/styles; helmet remains enabled without a CSP that blocks them.
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use((req, res, next) => {
