@@ -14,6 +14,11 @@ const baseConfig = {
   PAYPAL_WEBHOOK_ID: 'test-webhook-id',
   ANTHROPIC_API_KEY: 'test-anthropic-key',
   ANTHROPIC_MODEL: 'test-model',
+  LLM_PROVIDER: 'anthropic',
+  LLM_API_KEY: 'test-anthropic-key',
+  LLM_MODEL: 'test-model',
+  resolvedLLMApiKey: 'test-anthropic-key',
+  resolvedLLMModel: 'test-model',
   hasPayPal: true,
   hasAI: true,
 };
@@ -60,7 +65,10 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     assert.equal(calls.filter((call) => call.url === '/v2/checkout/orders').length, 1);
     const invalidAmount = await create('10000.01');
     assert.equal(invalidAmount.status, 400);
-    assert.equal(typeof (await invalidAmount.json()).error, 'string');
+    assert.deepEqual(await invalidAmount.json(), {
+      error: 'Enter a valid amount from 0.01 to 10,000.00 USD.',
+      code: 'LEGACY_POST_API_PAYPAL_CREATE_ORDER_400',
+    });
     assert.equal((await create('10.00', 'bad-key')).status, 400);
     const invalidOrderId = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'bad' }) });
     assert.equal(invalidOrderId.status, 400);
@@ -100,6 +108,8 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     assert.deepEqual(await ai.json(), { reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null });
     const webhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
     assert.deepEqual(await webhook.json(), { ok: true, verification: 'VERIFIED' });
+    const invalidWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-BAD' }) });
+    assert.deepEqual(await invalidWebhook.json(), { error: 'Webhook event type is missing or invalid.', code: 'LEGACY_POST_API_WEBHOOK_400' });
     const replayedWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
     assert.deepEqual(await replayedWebhook.json(), { ok: true, verification: 'VERIFIED' });
     const events = await (await fetch(`${base}/api/events`)).json();
@@ -125,7 +135,7 @@ test('AI provider error bodies and keys do not reach responses or activity logs'
       const response = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
       const responseText = await response.text();
       assert.equal(response.status, 500);
-      assert.deepEqual(JSON.parse(responseText), { error: 'AI service returned an error.' });
+      assert.deepEqual(JSON.parse(responseText), { error: 'AI service returned an error.', code: 'LEGACY_POST_API_AI_CHAT_500' });
       assert.equal(responseText.includes(secret), false);
       assert.equal(responseText.includes('at '), false);
       const activityText = await (await fetch(`${base}/api/events`)).text();
