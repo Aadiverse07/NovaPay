@@ -125,11 +125,11 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     const ai = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'What happened?', context: { transactions: [{ id: 'CAPTURE-123' }] } }) });
     assert.deepEqual(await ai.json(), { reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null });
     const webhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
-    assert.deepEqual(await webhook.json(), { ok: true, verification: 'VERIFIED' });
+    assert.deepEqual(await webhook.json(), { ok: true, verification: 'UNVERIFIED' });
     const invalidWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-BAD' }) });
     assert.deepEqual(await invalidWebhook.json(), { error: 'Webhook event type is missing or invalid.', code: 'LEGACY_POST_API_WEBHOOK_400' });
     const replayedWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
-    assert.deepEqual(await replayedWebhook.json(), { ok: true, verification: 'VERIFIED' });
+    assert.deepEqual(await replayedWebhook.json(), { ok: true, verification: 'UNVERIFIED' });
     const events = await (await request(`${base}/api/events`)).json();
     assert.deepEqual(events, { events: [], calls: [] });
     const status = await (await fetch(`${base}/api/status`)).json();

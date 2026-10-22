@@ -14,6 +14,8 @@ Supabase Auth's own signup, login, password reset, and email verification limits
 
 Apply `supabase/migrations/0001_foundation.sql` to a Supabase project using `supabase db push`. Run the SQL isolation checks with `supabase test db`. These commands require the Supabase CLI and a local Docker-compatible runtime for local database tests.
 
+Phase 2 adds `supabase/migrations/0002_financial_core.sql`. Review the migration before applying it to any project. It creates the organization-scoped ledger and PayPal persistence tables, default accounts, balance trigger, and service-only RPCs. Apply migrations in order with `npx supabase db push` only after confirming the linked project and migration target. Run `npx supabase test db` with Docker available to execute the pgTAP balance and replay checks. A live migration or PayPal Sandbox exercise is not part of offline `npm test`; record those results separately in `docs/TEST-REPORT.md`.
+
 ## AI data handling
 
 Gemini free-tier use is the default. Free-tier availability and quotas can change and are controlled by Google. Do not send real customer, payment-card, bank, or other sensitive personal data to the free-tier AI provider. The backend allow-lists transaction fields, excludes buyer names and arbitrary context, and redacts common email, phone, government-ID, and payment-number formats from questions. Avoid entering names or other identifiers that automated pattern redaction cannot reliably detect. Use synthetic or redacted data for tests and demos. Anthropic remains an optional, explicitly selected adapter and is outside the free-only default.

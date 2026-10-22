@@ -9,14 +9,15 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
   const apiKey = config.SUPABASE_SERVICE_ROLE_KEY;
   const apiUrl = config.SUPABASE_URL.replace(/\/$/, '');
   const serviceHeaders = { apikey: apiKey, ...(apiKey.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${apiKey}` }) };
-  async function request(path, { method = 'GET', token, body, publicKey = false } = {}) {
+  async function request(path, { method = 'GET', token, body, publicKey = false, prefer } = {}) {
     const headers = { ...(publicKey ? { apikey: config.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } : serviceHeaders) };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (prefer) headers.Prefer = prefer;
     let response;
     try {
       response = await fetchImpl(`${apiUrl}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(10000) });
     } catch {
-      throw new Error('Supabase service is unavailable.');
+      throw Object.assign(new Error('Supabase service is unavailable.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' });
     }
     const data = await readResponse(response);
     if (!response.ok) return { response, data, error: true };
@@ -33,7 +34,34 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       };
     },
   };
+  const database = {
+    async rpc(name, args) {
+      if (!/^[a-z][a-z0-9_]*$/.test(name)) throw new Error('Invalid database operation.');
+      const result = await request(`/rest/v1/rpc/${name}`, { method: 'POST', body: args });
+      if (result.error) throw Object.assign(new Error('Financial database operation failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      return result.data;
+    },
+    async select(table, query) {
+      if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
+      const result = await request(`/rest/v1/${table}?${query}`);
+      if (result.error) throw Object.assign(new Error('Financial database read failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      return result.data;
+    },
+    async insert(table, payload, prefer = 'return=representation') {
+      if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
+      const result = await request(`/rest/v1/${table}`, { method: 'POST', body: payload, prefer });
+      if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      return result.data;
+    },
+    async patch(table, query, payload, prefer = 'return=representation') {
+      if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
+      const result = await request(`/rest/v1/${table}?${query}`, { method: 'PATCH', body: payload, prefer });
+      if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      return result.data;
+    },
+  };
   return {
+    database,
     audit: createAuditHelper(client),
     async verifyToken(token) {
       const { response, data, error } = await request('/auth/v1/user', { token, publicKey: true });
