@@ -9,6 +9,10 @@ import { legacyErrorCompatibility } from './middleware/errorResponses.js';
 import { createRepositories } from './repos/memory.js';
 import { createPayPalService } from './services/paypal.js';
 import { createAIService } from './services/ai.js';
+import { createSupabaseServices } from './services/supabase.js';
+import { authMiddleware } from './middleware/auth.js';
+import { rateLimit } from 'express-rate-limit';
+import { onboardingRoutes } from './routes/onboarding.js';
 import { statusRoutes } from './routes/status.js';
 import { webhookRoutes } from './routes/webhook.js';
 import { aiRoutes } from './routes/ai.js';
@@ -18,7 +22,7 @@ import { paypalRoutes } from './routes/paypal.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
 
-export function createApp({ config = defaultConfig, repos = createRepositories(), paypal, askAI } = {}) {
+export function createApp({ config = defaultConfig, repos = createRepositories(), paypal, askAI, identity = createSupabaseServices(config) } = {}) {
   const app = express();
   paypal ||= createPayPalService({ config, events: repos.events });
   askAI ||= createAIService({ config, events: repos.events });
@@ -30,7 +34,7 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use((req, res, next) => {
     const started = Date.now();
-    res.on('finish', () => console.log(JSON.stringify({ level: 'info', requestId: req.id, method: req.method, path: req.originalUrl, status: res.statusCode, durationMs: Date.now() - started })));
+    res.on('finish', () => console.log(JSON.stringify({ level: 'info', requestId: req.id, method: req.method, path: String(req.originalUrl || req.path).split('?')[0], status: res.statusCode, durationMs: Date.now() - started })));
     next();
   });
   app.use(express.json({ limit: '64kb' }));
@@ -39,12 +43,20 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
     if (req.path.startsWith('/api/') && req.method === 'POST' && !requestBody.safeParse(req.body).success) return res.status(400).json({ error: 'Request body must be valid JSON.' });
     return next();
   });
+  const generalIpLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } }, skip: (req) => req.path === '/status' });
+  app.use('/api', generalIpLimit);
+  app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_IP_RATE_LIMITED', message: 'Too many onboarding attempts from this network. Try again later.' } } }));
+  app.use('/api', authMiddleware({ config, identity }));
+  app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 240, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many requests for this account. Try again later.' } }, skip: (req) => ['/status', '/public-config', '/webhook'].includes(req.path) }));
+  app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => `onboarding:${req.user.id}`, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_RATE_LIMITED', message: 'Too many onboarding attempts for this account. Try again later.' } } }));
   app.get('/', (_req, res, next) => res.sendFile(path.join(config.STATIC_DIR || root, 'preview.html'), (error) => error && next(error)));
   app.use('/api', statusRoutes({ config, paypal, repos }));
+  app.get('/api/public-config', (_req, res) => res.json({ supabaseUrl: config.hasSupabase ? config.SUPABASE_URL : null, supabaseAnonKey: config.hasSupabase ? config.SUPABASE_ANON_KEY : null }));
+  app.use('/api', onboardingRoutes({ identity }));
   app.use('/api', webhookRoutes({ paypal, repos }));
   app.use('/api', aiRoutes({ config, askAI }));
-  app.use('/api', approvalRoutes({ config, repos }));
-  app.use('/api', paypalRoutes({ config, paypal, repos }));
+  app.use('/api', approvalRoutes({ config, repos, identity }));
+  app.use('/api', paypalRoutes({ config, paypal, repos, identity }));
 
   app.use('/api', (req, res) => {
     if (req.path === '/status') return res.status(405).json({ error: 'Use GET for integration status.' });
@@ -61,7 +73,10 @@ export function createApp({ config = defaultConfig, repos = createRepositories()
     if (res.headersSent) return;
     const status = error.statusCode || error.status || (error.type === 'entity.too.large' ? 413 : 500);
     const message = error.type === 'entity.too.large' ? 'Request body is too large.' : error.type === 'entity.parse.failed' ? 'Request body must be valid JSON.' : error.message || 'The request could not be completed.';
-    if (status >= 500) repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed: ${message}`, ok: false });
+    if (status >= 500) repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed`, ok: false });
+    if (req.path === '/api/onboarding' || req.path === '/api/public-config') {
+      return res.status(status).json({ error: { code: status === 413 ? 'BODY_TOO_LARGE' : status === 400 ? 'BAD_JSON' : 'INTERNAL_ERROR', message: status >= 500 ? 'The request could not be completed.' : message } });
+    }
     return res.status(status).json({ error: message });
   });
   return app;

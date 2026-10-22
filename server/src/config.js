@@ -13,6 +13,9 @@ const schema = z.object({
   LLM_FALLBACK_MODEL: z.string().min(1).default('gemini-3.1-flash-lite'),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   ANTHROPIC_MODEL: z.string().min(1).default('claude-sonnet-5-5'),
+  SUPABASE_URL: z.string().url().optional().or(z.literal('')).default(''),
+  SUPABASE_ANON_KEY: z.string().trim().optional().default(''),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().trim().optional().default(''),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   STATIC_DIR: z.string().min(1).default(root),
 });
@@ -22,11 +25,16 @@ if (!parsed.success) {
   const details = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
   throw new Error(`Invalid NovaPay configuration: ${details}`);
 }
+const supabaseValues = [parsed.data.SUPABASE_URL, parsed.data.SUPABASE_ANON_KEY, parsed.data.SUPABASE_SERVICE_ROLE_KEY];
+if (supabaseValues.some(Boolean) && !supabaseValues.every(Boolean)) {
+  throw new Error('Invalid NovaPay configuration: SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY must be set together.');
+}
 
 export const config = Object.freeze({
   ...parsed.data,
   STATIC_DIR: path.resolve(root, parsed.data.STATIC_DIR),
   hasPayPal: Boolean(parsed.data.PAYPAL_CLIENT_ID && parsed.data.PAYPAL_CLIENT_SECRET),
+  hasSupabase: supabaseValues.every(Boolean),
   resolvedLLMApiKey: parsed.data.LLM_API_KEY || (parsed.data.LLM_PROVIDER === 'anthropic' ? parsed.data.ANTHROPIC_API_KEY : ''),
   resolvedLLMModel: parsed.data.LLM_PROVIDER === 'anthropic' && !process.env.LLM_MODEL ? parsed.data.ANTHROPIC_MODEL : parsed.data.LLM_MODEL,
   hasAI: Boolean(parsed.data.LLM_API_KEY || (parsed.data.LLM_PROVIDER === 'anthropic' && parsed.data.ANTHROPIC_API_KEY)),

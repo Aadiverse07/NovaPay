@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sanitizeAIResponse, EMPTY_REPLY, UNSAFE_REPLY } from '../src/services/ai.js';
+import { sanitizeAIResponse, EMPTY_REPLY, UNSAFE_REPLY, sanitizeAIContext, redactSensitiveText, createAIService } from '../src/services/ai.js';
 
 test('AI sanitizer safely handles malformed JSON', () => {
   assert.deepEqual(sanitizeAIResponse('{bad'), { reply: UNSAFE_REPLY, evidence: [], proposal: null });
@@ -16,4 +16,16 @@ test('AI sanitizer maps unknown proposal types to other', () => {
 
 test('AI sanitizer removes foreign evidence IDs and keeps known IDs', () => {
   assert.deepEqual(sanitizeAIResponse('{"reply":"These records show the result.","evidence":["known","foreign","known"]}', { transactions: [{ id: 'known' }] }), { reply: 'These records show the result.', evidence: ['known', 'known'], proposal: null });
+});
+
+test('AI context drops buyer and unknown fields; user text redacts common sensitive values', async () => {
+  const context = sanitizeAIContext({ transactions: [{ id: 'CAPTURE_123', type: 'Payment', status: 'COMPLETED', gross: '10.00', currency: 'USD', buyer: 'Ada Lovelace', email: 'ada@example.com', notes: 'private note' }] });
+  assert.deepEqual(context, { transactions: [{ id: 'CAPTURE_123', type: 'Payment', status: 'COMPLETED', gross: '10.00', currency: 'USD' }] });
+  const redacted = redactSensitiveText('Contact ada@example.com at +1 (415) 555-0123; card 4111 1111 1111 1111');
+  assert.doesNotMatch(redacted, /ada@example|415|4111/);
+  assert.match(redacted, /\[REDACTED_EMAIL\]/);
+  let prompt = '';
+  const askAI = createAIService({ config: {}, events: null, provider: { async generate(input) { prompt = input.prompt; return '{"reply":"safe","evidence":[],"proposal":null}'; } } });
+  await askAI('Is ada@example.com linked to this payment?', { transactions: [{ id: 'CAPTURE_123', buyer: 'Ada Lovelace' }] });
+  assert.doesNotMatch(prompt, /ada@example|Ada Lovelace/);
 });
