@@ -66,6 +66,20 @@ test('every protected route rejects a missing bearer token', async () => {
   });
 });
 
+test('unauthenticated malformed API JSON is rejected before body parsing', async () => {
+  const identity = { async verifyToken() { throw new Error('must not verify without bearer token'); }, async membership() { return null; } };
+  const app = createApp({ config, identity });
+  await withServer(app, async (base) => {
+    const response = await fetch(`${base}/api/paypal/create-order`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{',
+    });
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: { code: 'AUTH_REQUIRED', message: 'A valid Supabase bearer token is required.' } });
+  });
+});
+
 test('viewer cannot register an approval and new routes use structured error envelopes', async () => {
   const identity = {
     async verifyToken() { return { id: 'viewer' }; },
