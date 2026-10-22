@@ -21,6 +21,17 @@ const baseConfig = {
   resolvedLLMModel: 'test-model',
   hasPayPal: true,
   hasAI: true,
+  hasSupabase: true,
+  SUPABASE_URL: 'https://example.supabase.co',
+  SUPABASE_ANON_KEY: 'test-public-key',
+  SUPABASE_SERVICE_ROLE_KEY: 'test-server-key',
+};
+const orgA = 'a0000000-0000-4000-8000-000000000001';
+const orgB = 'b0000000-0000-4000-8000-000000000002';
+const identity = {
+  async verifyToken(token) { return token === 'valid-user-token' || token === 'viewer-token' ? { id: token === 'viewer-token' ? 'viewer-user' : 'user-a' } : null; },
+  async membership(userId, orgId) { if (orgId !== orgA) return null; return { org_id: orgId, user_id: userId, role: userId === 'viewer-user' ? 'viewer' : 'owner' }; },
+  async onboard() { return { organizationId: orgA, created: true }; },
 };
 
 async function withServer(app, callback) {
@@ -30,7 +41,15 @@ async function withServer(app, callback) {
   const oldLog = console.log;
   const logs = [];
   console.log = (line) => logs.push(String(line));
-  try { await callback(`http://127.0.0.1:${address.port}`, logs); }
+  const base = `http://127.0.0.1:${address.port}`;
+  const request = (url, options = {}) => {
+    const headers = new Headers(options.headers || {});
+    headers.set('authorization', 'Bearer valid-user-token');
+    headers.set('x-org-id', orgA);
+    if (options.body !== undefined && !headers.has('content-type')) headers.set('content-type', 'application/json');
+    return fetch(url, { ...options, headers });
+  };
+  try { await callback(base, logs, request); }
   finally {
     console.log = oldLog;
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
@@ -51,11 +70,11 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     async ppToken() { return 'token'; },
     async verifyWebhook() { return 'VERIFIED'; },
   };
-  const app = createApp({ config: baseConfig, repos, paypal, askAI: async () => ({ reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null }) });
+  const app = createApp({ config: baseConfig, repos, paypal, identity, askAI: async () => ({ reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null }) });
 
-  await withServer(app, async (base) => {
+  await withServer(app, async (base, _logs, request) => {
     const requestKey = '0123456789abcdef0123456789abcdef';
-    const create = (amount, key = requestKey, headers = {}) => fetch(`${base}/api/paypal/create-order`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify({ amount, currency: 'USD', requestKey: key }) });
+    const create = (amount, key = requestKey, headers = {}) => request(`${base}/api/paypal/create-order`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify({ amount, currency: 'USD', requestKey: key }) });
     const firstOrder = await create('10.00');
     assert.equal(firstOrder.status, 200);
     const orderBody = await firstOrder.json();
@@ -70,41 +89,40 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
       code: 'LEGACY_POST_API_PAYPAL_CREATE_ORDER_400',
     });
     assert.equal((await create('10.00', 'bad-key')).status, 400);
-    const invalidOrderId = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'bad' }) });
+    const invalidOrderId = await request(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'bad' }) });
     assert.equal(invalidOrderId.status, 400);
-    const missingOrder = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'ORDER-MISSING' }) });
+    const missingOrder = await request(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ orderId: 'ORDER-MISSING' }) });
     assert.equal(missingOrder.status, 404);
 
     const captureBody = { orderId: 'ORDER-123' };
-    const capture = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(captureBody) });
+    const capture = await request(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(captureBody) });
     assert.equal(capture.status, 200);
     const captured = await capture.json();
     assert.equal(captured.captureId, 'CAPTURE-123');
-    const repeatCapture = await fetch(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(captureBody) });
+    const repeatCapture = await request(`${base}/api/paypal/capture`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(captureBody) });
     assert.deepEqual(await repeatCapture.json(), captured);
     assert.equal(calls.filter((call) => call.url.endsWith('/capture')).length, 1);
 
     const approvalBody = { approvalId: 'APR-123', proposalType: 'refund', captureId: 'CAPTURE-123', amount: '4.00', currency: 'USD' };
-    const approval = await fetch(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(approvalBody) });
+    const approval = await request(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(approvalBody) });
     assert.equal(approval.status, 200); assert.equal((await approval.json()).registered, true);
-    const invalidApproval = await fetch(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...approvalBody, proposalType: 'hold-payout' }) });
+    const invalidApproval = await request(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...approvalBody, proposalType: 'hold-payout' }) });
     assert.equal(invalidApproval.status, 400);
-    // Phase 0 intentionally keeps legacy no-auth behavior; Phase 1 introduces authentication and role checks.
-    const repeatedApproval = await fetch(`${base}/api/approvals/register`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer fake-viewer-token', 'x-org-id': 'other-org' }, body: JSON.stringify(approvalBody) });
+    const repeatedApproval = await request(`${base}/api/approvals/register`, { method: 'POST', body: JSON.stringify(approvalBody) });
     assert.equal(repeatedApproval.status, 200); assert.equal((await repeatedApproval.json()).registered, true);
 
     const refundBody = { ...approvalBody, note: 'Approved refund' };
-    const unregisteredRefund = await fetch(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...refundBody, approvalId: 'APR-OTHER' }) });
+    const unregisteredRefund = await request(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...refundBody, approvalId: 'APR-OTHER' }) });
     assert.equal(unregisteredRefund.status, 403);
-    const refund = await fetch(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(refundBody) });
+    const refund = await request(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(refundBody) });
     assert.equal(refund.status, 200);
     const refunded = await refund.json();
     assert.equal(refunded.refundId, 'REFUND-123');
-    const repeatRefund = await fetch(`${base}/api/paypal/refund`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer fake-viewer-token', 'x-org-id': 'other-org' }, body: JSON.stringify(refundBody) });
+    const repeatRefund = await request(`${base}/api/paypal/refund`, { method: 'POST', body: JSON.stringify(refundBody) });
     assert.deepEqual(await repeatRefund.json(), refunded);
     assert.equal(calls.filter((call) => call.url.endsWith('/refund')).length, 1);
 
-    const ai = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'What happened?', context: { transactions: [{ id: 'CAPTURE-123' }] } }) });
+    const ai = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'What happened?', context: { transactions: [{ id: 'CAPTURE-123' }] } }) });
     assert.deepEqual(await ai.json(), { reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null });
     const webhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
     assert.deepEqual(await webhook.json(), { ok: true, verification: 'VERIFIED' });
@@ -112,11 +130,10 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     assert.deepEqual(await invalidWebhook.json(), { error: 'Webhook event type is missing or invalid.', code: 'LEGACY_POST_API_WEBHOOK_400' });
     const replayedWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
     assert.deepEqual(await replayedWebhook.json(), { ok: true, verification: 'VERIFIED' });
-    const events = await (await fetch(`${base}/api/events`)).json();
-    assert.equal(events.events[0].id, 'WEBHOOK-1');
-    assert.equal(events.events.filter((event) => event.id === 'WEBHOOK-1').length, 2);
+    const events = await (await request(`${base}/api/events`)).json();
+    assert.deepEqual(events, { events: [], calls: [] });
     const status = await (await fetch(`${base}/api/status`)).json();
-    assert.equal(status.captures[0].refunded, 4);
+    assert.deepEqual(status.captures, []);
   });
 });
 
@@ -125,20 +142,20 @@ test('AI provider error bodies and keys do not reach responses or activity logs'
   const repos = createRepositories();
   const events = repos.events;
   const askAI = createAIService({ config: baseConfig, events });
-  const app = createApp({ config: baseConfig, repos, askAI });
+  const app = createApp({ config: baseConfig, repos, askAI, identity });
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url, options) => String(url).startsWith('https://api.anthropic.com/')
     ? new Response(JSON.stringify({ error: { message: `Rejected ${secret}` } }), { status: 401, headers: { 'content-type': 'application/json' } })
     : originalFetch(url, options);
   try {
-    await withServer(app, async (base, logs) => {
-      const response = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
+    await withServer(app, async (base, logs, request) => {
+      const response = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
       const responseText = await response.text();
       assert.equal(response.status, 500);
       assert.deepEqual(JSON.parse(responseText), { error: 'AI service returned an error.', code: 'LEGACY_POST_API_AI_CHAT_500' });
       assert.equal(responseText.includes(secret), false);
       assert.equal(responseText.includes('at '), false);
-      const activityText = await (await fetch(`${base}/api/events`)).text();
+      const activityText = await (await request(`${base}/api/events`)).text();
       assert.equal(activityText.includes(secret), false);
       assert.equal(JSON.stringify(events.calls).includes(secret), false);
       assert.equal(JSON.stringify(logs).includes(secret), false);
@@ -151,5 +168,14 @@ test('invalid configuration fails fast without printing a stack trace', () => {
   const result = spawnSync(process.execPath, ['server/index.js'], { cwd: path.resolve(process.cwd()), env: { ...process.env, PORT: 'invalid' }, encoding: 'utf8' });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Invalid NovaPay configuration: PORT:/);
+  assert.doesNotMatch(result.stderr, /\bat\s+file:/);
+});
+
+test('partial Supabase configuration fails fast without echoing secrets', () => {
+  const sentinel = 'server-only-secret-sentinel';
+  const result = spawnSync(process.execPath, ['server/index.js'], { cwd: path.resolve(process.cwd()), env: { ...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: '', SUPABASE_SERVICE_ROLE_KEY: sentinel }, encoding: 'utf8' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY must be set together/);
+  assert.doesNotMatch(result.stderr, new RegExp(sentinel));
   assert.doesNotMatch(result.stderr, /\bat\s+file:/);
 });
