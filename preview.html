@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="src/hero-glass.css">
 <link rel="stylesheet" href="src/feature-logos.css">
 <link rel="stylesheet" href="src/cta-reveal.css">
+<link rel="stylesheet" href="src/hero-globe.css">
 <script src="src/novapay-logo.js"></script>
 </head>
 <body class="landing-body">
@@ -50,6 +51,11 @@
 </header>
 
 <main>
+  <div class="globe-bg" aria-hidden="true">
+    <video class="globe-video" autoplay muted loop playsinline preload="auto" poster="assets/novapay-globe-poster.jpg" tabindex="-1" disablepictureinpicture disableremoteplayback>
+      <source src="assets/novapay-globe.mp4" type="video/mp4">
+    </video>
+  </div>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
       <div class="eyebrow"><span><novapay-logo size="14" variant="mark"></novapay-logo></span> AI Bookkeeper for PayPal Merchants</div>
@@ -263,6 +269,7 @@
 <script src="src/landing.js"></script>
 <script src="src/hero-laptop.js"></script>
 <script src="src/hero-video.js"></script>
+<script src="src/hero-globe.js"></script>
 <script src="src/hero-orbit.js"></script>
 <script src="src/logo-intro.js"></script>
 <script src="src/fx-core.js"></script>
