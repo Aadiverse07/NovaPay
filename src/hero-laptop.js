@@ -97,7 +97,7 @@
     if (leaving) return; leaving = true;
     skipIntro();
     if (reduceMQ.matches || !canWAAPI || document.hidden) { navigate(href); return; }
-    if (mobileMQ.matches) { lite(href); return; }
+    if (mobileMQ.matches || !display.querySelector(".lpui")) { lite(href); return; }   // phone hero: soft fade instead of the laptop zoom
 
     var STRAIGHTEN = 280, EXPAND = 700;
     var wrap = stage.querySelector(".laptop-wrap");

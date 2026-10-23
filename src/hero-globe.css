@@ -1,0 +1,36 @@
+/* NovaPay homepage globe background (whole page).
+   Fixed behind every section, so the globe stays in place while the page scrolls over it.
+   The clip's own purple-blue backdrop is faded out with a mask, toned down with opacity and tinted with the brand
+   blue/violet so it melts into the site background. Light theme = soft pastel; dark theme = glowing (screen blend). */
+.globe-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+/* html/body paint an opaque page colour, so the globe has to sit above it (z-index 0) and every section above the globe */
+main > *:not(.globe-bg), .landing-footer { position: relative; z-index: 1; }
+.globe-video {
+  position: absolute; top: 50%; left: 50%; width: max(1100px, 88vw); height: auto; aspect-ratio: 1200 / 676;
+  transform: translate(-50%, -50%); object-fit: cover; opacity: .3;
+  filter: saturate(.9) hue-rotate(-6deg);
+  -webkit-mask-image: radial-gradient(ellipse 46% 50% at 50% 50%, #000 38%, rgba(0,0,0,.55) 62%, transparent 100%);
+          mask-image: radial-gradient(ellipse 46% 50% at 50% 50%, #000 38%, rgba(0,0,0,.55) 62%, transparent 100%);
+}
+/* brand tint + soft wash of the page colour so text and cards stay readable over the globe */
+.globe-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(55% 50% at 50% 50%, color-mix(in srgb, var(--brand-blue) 9%, transparent), transparent 72%),
+    radial-gradient(40% 40% at 80% 75%, color-mix(in srgb, var(--brand-violet) 8%, transparent), transparent 70%),
+    color-mix(in srgb, var(--bg) 22%, transparent);
+}
+[data-theme="dark"] .globe-video { opacity: .46; mix-blend-mode: screen; filter: saturate(1.05) brightness(.9); }
+[data-theme="dark"] .globe-bg::after {
+  background:
+    radial-gradient(55% 50% at 50% 50%, color-mix(in srgb, var(--brand-blue) 15%, transparent), transparent 72%),
+    radial-gradient(40% 40% at 80% 75%, color-mix(in srgb, var(--brand-violet) 13%, transparent), transparent 70%),
+    color-mix(in srgb, var(--bg) 25%, transparent);
+}
+@media (max-width: 1120px) {
+  .globe-video { width: 150vw; opacity: .24; }
+  [data-theme="dark"] .globe-video { opacity: .36; }
+}
+@media (prefers-reduced-motion: reduce) { .globe-video { animation: none; } }

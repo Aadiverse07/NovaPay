@@ -3,7 +3,7 @@
    28-slice rim) whose pastel "refraction" gradient and glossy sweep move as it turns; The DOM is created here, so the HTML only needs the script + fx.css. Requires fx-core.js. */
 (function () {
   "use strict";
-  var ENABLED = true;                 // <- set false to disable
+  var ENABLED = false;                // <- set false to disable
   var FX = window.NovaPayFX;
   var stage = document.getElementById("hero-stage");
   if (!ENABLED || !FX || !stage) return;

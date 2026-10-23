@@ -74,7 +74,7 @@ Safeguards: reduced-motion (static), touch/low-power (lighter or off), hidden ta
 ## Phase 9.12 — Animated login panel + smaller reveal ribbon
 - **Login / Sign Up replaced** with the supplied `login.html` design: diagonal sliding panels, staggered blur-slide fields, sliding-gradient button. New `src/auth-panel.css`; markup in `preview.html`; logic in `src/landing.js`.
 - Re-themed with NovaPay tokens (no cyan/Poppins): follows light + dark (dark-glow) automatically; brand gradient on the diagonal shape, NovaPay mark and display type. No external font request.
-- Demo behaviour unchanged: `demo@novapay.app` / `demo123`, Create Account, Forgot Password (enter email first, then click it), Continue with Google (simulated). `dashboard.html` still redirects to `preview.html#login`. Inactive side is `inert`; focus trap, Esc, backdrop click kept.
+- Demo behaviour unchanged: `user@novapay.app` / `novapay123`, Create Account, Forgot Password (enter email first, then click it), Continue with Google (simulated). `dashboard.html` still redirects to `preview.html#login`. Inactive side is `inert`; focus trap, Esc, backdrop click kept.
 - Under 760px the diagonal layout is replaced by a single stacked form (Login / Sign Up toggle link); reduced-motion respected.
 - **Reveal ribbon (brush mask stroke) 20% smaller:** radius 60.8 → 48.64 px, bevel 5 → 4 px (`src/theme-reveal.js`). Also applies on `dashboard.html`.
 
@@ -86,3 +86,17 @@ Safeguards: reduced-motion (static), touch/low-power (lighter or off), hidden ta
 ## Pointer animations removed
 - Removed all cursor-driven animation: the dark-theme pointer reveal ribbon (`src/theme-reveal.js`, and its script tag in `dashboard.html`), hero card tilt (`src/fx-tilt.js`), orb lean toward the pointer, aurora pointer parallax, and snow pointer parallax / wake.
 - `fx-core.js` no longer tracks the pointer.
+
+## Hero — payment animation video
+- The hero hands/phone picture (and the earlier rigged-hands animation) is replaced by the supplied video: hand enters, phone arrives, finger taps, loading ring, then "Payment Successful ₹2,500.00" with the green tick. Plays once when the hero is visible and holds the last frame; replays if you scroll away and back.
+- `assets/novapay-payment.webm` is the video with its white background removed (transparent, so it works on the light and the dark theme); `assets/novapay-payment.mp4` is the white-background fallback (used by Safari). Both are silent.
+- Markup: `.hp-video-wrap` in `preview.html`; sizing in `src/hero-phone.css` (`--hp-w`); playback in the new `src/hero-video.js`. The old hp-*.png layers were removed; `assets/novapay-hands-phone.png` (original picture) is kept.
+- Nothing else changed. Not browser-tested.
+
+## Hero video — hand update
+- Right hand now eases back beside the phone after the tap and stays there (no longer leaves the frame); generator sparkle watermark removed.
+- Dark theme: new cut with blue hands (`assets/novapay-payment-dark.webm/.mp4`); `src/hero-video.js` picks the cut from `data-theme` and swaps live on toggle.
+- Video enlarged: `--hp-w` 112% -> 130% in `src/hero-phone.css`.
+- Amounts in the video now show dollars: "$300" on the card and "$2,500.00" on the Payment Successful screen (was ₹).
+- Clicking the theme toggle now restarts the hero animation automatically with the matching (light / blue-hands) cut.
+- Hero Cash flow card now in dollars too ($84,500 in / $4,000 out / $80,500 net). The dashboard pages still use illustrative INR amounts.

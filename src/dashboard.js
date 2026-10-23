@@ -8,12 +8,12 @@
       var raw=localStorage.getItem("novapay-demo-user");
       if(raw)return JSON.parse(raw);
     }catch(e){}
-    return {name:"NovaPay Demo User",email:"demo@novapay.app"};
+    return {name:"NovaPay User",email:"user@novapay.app"};
   }
   var user=getUser();
   try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login");return;}}catch(e){location.replace("preview.html#login");return;}
-  $("user-name").textContent=user.name||"NovaPay Demo User";
-  $("user-email").textContent=user.email||"demo@novapay.app";
+  $("user-name").textContent=user.name||"NovaPay User";
+  $("user-email").textContent=user.email||"user@novapay.app";
   $("user-avatar").textContent=(user.name||"F").trim().charAt(0).toUpperCase();
 
   var THEME_KEY="novapay-theme", root=document.documentElement;
@@ -24,7 +24,7 @@
   applyTheme(currentTheme());
 
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
-  var titles={dashboard:"Dashboard",transactions:"Transactions",ledger:"Ledger",reports:"Reports","ai-assistant":"AI Assistant",anomalies:"Anomalies",settings:"Settings"};
+  var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents",fundraising:"Fundraising",maintenance:"Maintenance",transparency:"Transparency"};
   function activate(view,writeHash){
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
@@ -42,50 +42,34 @@
     window.location.href="preview.html#home";
   });
 
-  document.querySelectorAll(".table-action,.report-card .table-action,.anomaly-card .btn").forEach(function(b){
-    b.addEventListener("click",function(){showToast("Demo action selected — no live transaction is changed.");});
+  document.querySelectorAll(".table-action,.report-card .table-action").forEach(function(b){
+    b.addEventListener("click",function(){showToast("Sample action selected — no live transaction is changed.");});
   });
 
-  var answers={
-    "how much did i pay paypal in fees this month?":"Your PayPal fees for October are ₹23,500 across 1,284 transactions. Demo response — this workspace contains illustrative data only.",
-    "show my fees":"Your PayPal fees for October are ₹23,500 across 1,284 transactions. Demo response — this workspace contains illustrative data only.",
-    "find refunds":"I found 3 unusually large refunds in the illustrative October dataset. Review the Anomalies section before taking any action.",
-    "monthly report":"October demo summary: Revenue ₹8,45,000 · PayPal Fees ₹23,500 · Refunds ₹12,000 · Disputes ₹4,500 · Net Money ₹8,05,000.",
-    "detect unusual activity":"I found 3 unusually large refunds within 20 minutes in the illustrative dataset. This is a demo signal, not a live fraud determination.",
-    "why did fees increase?":"Illustrative answer: the demo dataset shows PayPal fees attached to payment activity. Review the Transactions and Ledger views for the example entries.",
-    "show unusual refunds":"I found 3 unusually large refunds in the illustrative October dataset. Review the Anomalies section before taking any action.",
-    "summarize this month":"October demo summary: Revenue ₹8,45,000 · PayPal Fees ₹23,500 · Refunds ₹12,000 · Disputes ₹4,500 · Net Money ₹8,05,000."
-  };
-  function appendAiMessage(q,answer){
-    var box=$("ai-conversation"); if(!box)return;
-    var user=document.createElement("div"); user.className="ai-bubble ai-bubble--user"; user.innerHTML="<span class='ai-user-mark'>You</span><div><p></p></div>"; user.querySelector("p").textContent=q;
-    var bot=document.createElement("div"); bot.className="ai-bubble ai-bubble--assistant"; bot.innerHTML="<span class='ai-avatar'><novapay-logo size='20' variant='mark'></novapay-logo></span><div><b>NovaPay</b><p></p></div>"; bot.querySelector("p").textContent=answer;
+  function assistantRecords(){return [].slice.call(document.querySelectorAll("#transactions-table-body tr")).map(function(r){var source=r.dataset.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data";return{id:r.dataset.txId||"Unavailable",type:r.dataset.type||"Unavailable",status:r.dataset.status||"Unavailable",date:r.dataset.date||"Unavailable",buyer:r.dataset.buyer||"Unavailable",gross:r.cells[3]?r.cells[3].textContent:"Unavailable",fee:r.cells[4]?r.cells[4].textContent:"Unavailable",net:r.cells[5]?r.cells[5].textContent:"Unavailable",currency:r.dataset.currency||"Unavailable",source:source}})}
+  function updateAiDataStatus(){var rows=assistantRecords(),hasSandbox=rows.some(function(r){return r.source==="PayPal Sandbox"}),hasDemo=rows.some(function(r){return r.source==="Illustrative sample data"}),el=$("ai-data-status");if(el)el.textContent=hasSandbox&&hasDemo?"Data available: PayPal Sandbox captures and illustrative sample examples.":hasSandbox?"Data available: PayPal Sandbox captures made in this workspace.":hasDemo?"Data available: illustrative sample data only; no live transaction records are loaded.":"No transaction data is available. Connect the backend and capture a sandbox payment to add records."}
+  window.NovaPayAssistant={refreshStatus:updateAiDataStatus};
+  function appendAiMessage(q,response){
+    var box=$("ai-conversation");if(!box)return;
+    var user=document.createElement("div"),ud=document.createElement("div"),up=document.createElement("p");user.className="ai-bubble ai-bubble--user";ud.appendChild(up);up.textContent=q;user.appendChild(ud);
+    var bot=document.createElement("div"),bd=document.createElement("div"),name=document.createElement("b"),p=document.createElement("p");bot.className="ai-bubble ai-bubble--assistant";name.textContent="NovaPay";p.textContent=response.reply;bd.appendChild(name);bd.appendChild(p);bot.appendChild(bd);
+    if(response.evidence&&response.evidence.length){var ev=document.createElement("p");ev.className="ai-evidence";ev.textContent="Evidence: "+response.evidence.join(" · ");bd.appendChild(ev)}
+    if(response.mode){var mode=document.createElement("small");mode.className="ai-answer-mode";mode.textContent=response.mode;bd.appendChild(mode)}
     box.appendChild(user);box.appendChild(bot);box.scrollTop=box.scrollHeight;
+    if(response.proposal)renderAssistantProposal(response.proposal,assistantRecords());
   }
-  function matchAnswer(q){
-    var k=q.trim().toLowerCase();
-    if(answers[k])return answers[k];
-    if(/suspicious|unusual|anomal|fraud|strange|odd/.test(k))return answers["detect unusual activity"];
-    if(/refund/.test(k))return answers["find refunds"];
-    if(/fee|charge/.test(k))return answers["show my fees"];
-    if(/report|summar|month|overview/.test(k))return answers["monthly report"];
-    return "Demo answer: I can explain fees, refunds, monthly activity, reports, or unusual transactions in this illustrative workspace. Try one of the quick actions.";
-  }
+  function localAnswer(q,records){var usable=records.filter(function(r){return r.id!=="Unavailable"}),evidence=usable.map(function(r){return r.id+" ("+r.type+", "+r.gross+", "+r.status+")"}),k=q.toLowerCase();if(!usable.length)return{reply:"I can’t answer from transaction records because none are available. Start the backend and capture a PayPal Sandbox payment, or review the illustrative examples when they are loaded.",evidence:[],mode:"Local fallback · no transaction data"};var selected;if(/fee/.test(k))selected=usable.filter(function(r){return r.fee!=="Unavailable"&&r.fee.indexOf("not returned")<0});else if(/refund/.test(k))selected=usable.filter(function(r){return /refund/i.test(r.type)});else if(/attention|unusual|explain/.test(k))selected=usable.filter(function(r){return /review|duplicate|refund/i.test(r.status+" "+r.type)});else selected=usable.slice(0,6);if(!selected.length)return{reply:"The available rows do not contain enough evidence to answer that. Try asking about a transaction ID, its displayed status, amount, or fee.",evidence:[],mode:"Local fallback · based on available workspace data"};return{reply:"I can summarize the records currently shown, but this local fallback does not determine whether activity is fraudulent or unusual. "+selected.length+" matching record(s) are available; review their details in Transactions.",evidence:selected.map(function(r){return r.id+" · "+r.gross+" · fee "+r.fee+" · "+r.status+" · "+r.source}),mode:"Local fallback · illustrative values are not live PayPal activity"}}
+  function renderAssistantProposal(proposal,records){var slot=$("ai-proposal-slot");slot.textContent="";var ref=String(proposal.txId||""),row=records.find(function(r){return r.id===ref}),knownType=["refund","dispute-evidence","hold-payout"].indexOf(proposal.type)>-1,sourceRow=row&&document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(row.id)+'"]'),sandboxRefund=!!(row&&row.source==="PayPal Sandbox"&&proposal.type==="refund"&&row.currency==="USD"&&Number(sourceRow&&sourceRow.dataset.amount)>0),card=document.createElement("article"),title=document.createElement("h4"),copy=document.createElement("p"),dl=document.createElement("dl"),button=document.createElement("button"),reason=String(proposal.reason||"No reason supplied."),canSend=!!row&&knownType&&(proposal.type!=="refund"||row.source!=="PayPal Sandbox"||sandboxRefund);card.className="ai-proposal-card";card.tabIndex=-1;title.textContent=knownType?({refund:"Refund suggestion","dispute-evidence":"Dispute evidence suggestion","hold-payout":"Payout review suggestion"}[proposal.type]):"Informational finding · simulated only";copy.textContent=reason;card.appendChild(document.createTextNode("AI suggestion for review"));var mode=document.createElement("span");mode.className="status info";mode.textContent=sandboxRefund?"PayPal Sandbox · approval required":"Simulated only";card.appendChild(mode);card.appendChild(title);card.appendChild(copy);[["Reference",ref||"Unavailable"],["Amount",row?row.gross:"Unavailable"],["Currency",row?row.currency:"Unavailable"],["Source",row?row.source:"NovaPay AI"]].forEach(function(pair){var wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=pair[0];dd.textContent=pair[1];wrap.appendChild(dt);wrap.appendChild(dd);dl.appendChild(wrap)});card.appendChild(dl);button.type="button";button.className="btn btn--primary";button.textContent="Send to Approvals";button.disabled=!canSend;button.addEventListener("click",function(){if(!canSend)return;var item={type:proposal.type,txId:row.id,title:String(proposal.title||title.textContent),reason:reason,display:row.gross,source:"NovaPay AI",simulatedOnly:true,requiresSandbox:sandboxRefund,evidence:row.id+" · "+row.type+" · "+row.gross+" · "+row.status};if(sandboxRefund){item.captureId=row.id;item.currency="USD";item.usd=Number(sourceRow.dataset.amount);item.simulatedOnly=false}NovaLive.addProposal(item);button.disabled=true;button.textContent="Sent to Approvals";$("ai-live-status").textContent="Proposal sent to Approvals. Review it there before any action."});card.appendChild(button);if(!row){var note=document.createElement("p");note.className="ai-proposal-warning";note.textContent="This proposal has no matching transaction reference in the available data, so it cannot be sent as an actionable item.";card.appendChild(note)}else if(!knownType){var note2=document.createElement("p");note2.className="ai-proposal-warning";note2.textContent="This action type is not supported and will remain informational; no action can be attempted.";card.appendChild(note2)}else if(proposal.type==="refund"&&row.source==="PayPal Sandbox"&&!sandboxRefund){var note3=document.createElement("p");note3.className="ai-proposal-warning";note3.textContent="This capture is missing a supported USD amount, so the refund suggestion cannot be sent as an actionable item.";card.appendChild(note3)}slot.appendChild(card);card.focus()}
   var aiBusy=false;
-  function ask(q){
-    q=(q||"").trim(); if(!q||aiBusy)return;
-    aiBusy=true;
-    var box=$("ai-conversation");
-    appendAiMessage(q,"Thinking…");
-    var bots=box.querySelectorAll(".ai-bubble--assistant p"), last=bots[bots.length-1];
-    setTimeout(function(){last.textContent=matchAnswer(q);box.scrollTop=box.scrollHeight;aiBusy=false;},500);
-  }
-  $("ai-send").addEventListener("click",function(){ask($("ai-input").value);$("ai-input").value=""});
-  $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){ask(e.target.value);e.target.value=""}});
+  function ask(q){q=(q||"").trim();if(!q||aiBusy)return;aiBusy=true;var records=assistantRecords(),box=$("ai-conversation"),status=$("ai-live-status"),send=$("ai-send");$("ai-proposal-slot").textContent="";status.textContent="Preparing an answer…";send.disabled=true;var pending=document.createElement("p");pending.className="ai-loading";pending.setAttribute("role","status");pending.textContent="NovaPay is reviewing the available records…";box.appendChild(pending);box.scrollTop=box.scrollHeight;var finish=function(response){pending.remove();appendAiMessage(q,response);status.textContent="Answer ready.";send.disabled=false;aiBusy=false};if(window.NovaLive&&NovaLive.live.ai){NovaLive.assistantChat(q,records).then(finish,function(){var svc=$("ai-service-status");svc.textContent="AI service unavailable · Local fallback";svc.className="status warn";finish(localAnswer(q,records))})}else{setTimeout(function(){finish(localAnswer(q,records))},250)}}
+  $("ai-send").addEventListener("click",function(){var input=$("ai-input"),q=input.value;ask(q);if(q.trim())input.value=""});
+  $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();var q=e.target.value;ask(q);if(q.trim())e.target.value=""}});
   document.querySelectorAll("[data-ai-query]").forEach(function(b){b.addEventListener("click",function(){ask(b.dataset.aiQuery)})});
+  updateAiDataStatus();
 
   /* Phase 7 — agentic action with explicit human approval and demo-only execution. */
   var actionModal=$("action-modal"), agentStatus=$("agent-status"), approve=$("agent-approve"), cancel=$("agent-cancel"), confirm=$("confirm-refund"), processing=false, lastFocus=null;
+  if(approve&&cancel&&confirm&&actionModal){
   function setStatus(cls,html){agentStatus.hidden=false;agentStatus.className="agent-status "+cls;agentStatus.innerHTML=html;}
   function openAction(){lastFocus=document.activeElement;actionModal.hidden=false;actionModal.setAttribute("aria-hidden","false");confirm.focus();}
   function closeAction(){
@@ -102,16 +86,10 @@
   function addDemoRecords(){
     var tb=$("transactions-table-body");
     if(tb&&!tb.querySelector('[data-tx-id="REF-28491"]')){
-      var r=document.createElement("tr");r.className="transaction-row";r.tabIndex=0;r.dataset.txId="REF-28491";r.dataset.type="Refund";
-      r.innerHTML='<td><span class="tx-badge refund">↩</span> Refund</td><td>₹2,000</td><td>—</td><td>-₹2,000</td><td><span class="status danger">Refunded (Demo)</span></td><td>Just now</td>';
+      var r=document.createElement("tr");r.className="transaction-row";r.tabIndex=0;r.dataset.txId="REF-28491";r.dataset.type="Refund";r.dataset.status="Refunded (Simulated)";r.dataset.amount="2000";r.dataset.currency="INR";r.dataset.source="demo";r.dataset.buyer="Unavailable";
+      ["Unavailable","↩ Refund","Unavailable","INR 2,000.00","Unavailable","-INR 2,000.00","Refunded (Simulated)","REF-28491"].forEach(function(v){var td=document.createElement("td");td.textContent=v;r.appendChild(td)});
       tb.insertBefore(r,tb.firstChild);
       if(typeof txRows!=="undefined")txRows=document.querySelectorAll("#view-transactions tbody tr");
-    }
-    var jb=document.querySelector("#view-ledger tbody");
-    if(jb){
-      var j=document.createElement("tr");
-      j.innerHTML='<td>07 Oct 2026</td><td>Refund PAY-28491 (Demo Mode)</td><td>₹2,000</td><td>₹2,000</td><td><span class="status ok">Balanced</span></td>';
-      jb.insertBefore(j,jb.firstChild);
     }
   }
   confirm.addEventListener("click",function(){
@@ -122,9 +100,9 @@
     setTimeout(function(){
       processing=false;closeAction();buttons.forEach(function(b){b.disabled=false});confirm.textContent="Confirm Refund";
       addDemoRecords();
-      setStatus("agent-status--success","<b>Refund completed in Demo Mode.</b><span>Ledger updated in the demo workspace. No PayPal request was sent.</span>");
+      setStatus("agent-status--success","<b>Simulated refund completed.</b><span>Transaction record updated in the sample workspace. No PayPal request was sent.</span>");
       approve.disabled=true;cancel.disabled=true;
-      showToast("Demo refund completed. Ledger updated.");
+      showToast("Simulated refund completed. Transaction record updated.");
     },1200);
   });
   document.addEventListener("keydown",function(e){
@@ -136,26 +114,30 @@
       else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
     }
   });
-
-  var txSearch=$("tx-search"), txType=$("tx-type"), txRows=document.querySelectorAll("#view-transactions tbody tr");
-  function filterTx(){
-    var q=txSearch.value.trim().toLowerCase(), t=txType.value, shown=0;
-    txRows.forEach(function(r){var ok=(!t||r.dataset.type===t)&&(!q||r.textContent.toLowerCase().indexOf(q)>-1);r.hidden=!ok;if(ok)shown++;});
-    $("tx-empty").hidden=shown>0;
   }
-  txSearch.addEventListener("input",filterTx);txType.addEventListener("change",filterTx);
 
-  var sugToggle=document.querySelectorAll("#view-settings input[type=checkbox]")[1], qa=document.querySelector(".ai-quick-actions");
+  var txSearch=$("tx-search"), txType=$("tx-type"), txRows=document.querySelectorAll("#transactions-table-body tr");
+  function filterTx(){
+    txRows=document.querySelectorAll("#transactions-table-body tr");
+    var q=txSearch.value.trim().toLowerCase(), t=txType.value, st=$("tx-status").value, from=$("tx-from").value, to=$("tx-to").value, min=$("tx-min").value, max=$("tx-max").value, shown=0;
+    txRows.forEach(function(r){var day=(r.dataset.date||"").slice(0,10),n=Number(r.dataset.amount),ok=(!t||r.dataset.type===t)&&(!st||r.dataset.status===st)&&(!q||r.textContent.toLowerCase().indexOf(q)>-1||r.dataset.txId.toLowerCase().indexOf(q)>-1)&&(!from||!!day&&day>=from)&&(!to||!!day&&day<=to)&&(!min||n>=Number(min))&&(!max||n<=Number(max));r.hidden=!ok;if(ok)shown++;});
+    $("tx-empty").hidden=shown>0;$("tx-result-count").textContent=shown+" transaction"+(shown===1?"":"s")+" shown";
+  }
+  [txSearch,txType,$("tx-status"),$("tx-from"),$("tx-to"),$("tx-min"),$("tx-max")].forEach(function(c){c.addEventListener(c.tagName==="INPUT"&&c.type==="search"?"input":"change",filterTx)});
+
+  var sugToggle=document.querySelectorAll("#view-sandbox .settings-card input[type=checkbox]")[1], qa=document.querySelector(".ai-quick-actions");
   if(sugToggle&&qa)sugToggle.addEventListener("change",function(){qa.hidden=!sugToggle.checked;});
   var reduce=$("reduce-motion-toggle");
   if(reduce){
     reduce.checked=matchMedia("(prefers-reduced-motion: reduce)").matches;
-    reduce.addEventListener("change",function(){showToast(reduce.checked?"Demo preference saved visually.":"Browser motion preference remains respected.")});
+    reduce.addEventListener("change",function(){showToast(reduce.checked?"Preference saved visually.":"Browser motion preference remains respected.")});
   }
 
   // Phase 5 — dashboard controls and dynamic illustrative cash-flow data.
-  var displayName=(user.name||"").trim();if(!displayName||/^novapay demo user$/i.test(displayName))displayName="Shikhar";
+  var displayName=(user.name||"").trim();if(!displayName||/^novapay (demo )?user$/i.test(displayName))displayName="there";displayName=displayName.replace(/\s*\bdemo\b\s*/i," ").trim()||"there";
   $("greeting-name").textContent=displayName.split(/\s+/)[0];
+  var greetingHour=new Date().getHours(),greetingPrefix=greetingHour<12?"Good morning":greetingHour<18?"Good afternoon":"Good evening";
+  var greeting=$("dashboard-subtitle");if(greeting&&greeting.firstChild)greeting.firstChild.textContent=greetingPrefix+", ";
   $("user-name").textContent=displayName;
   $("user-email").textContent="Business Owner";
   $("profile-name").textContent=displayName;
@@ -170,7 +152,7 @@
   if(profileButton){profileButton.addEventListener("click",function(e){e.stopPropagation();var open=profilePopover.hidden;closePopovers();profilePopover.hidden=!open;profileButton.setAttribute("aria-expanded",String(open));});}
   document.addEventListener("click",function(e){if(!e.target.closest(".popover")&&!e.target.closest("#notifications")&&!e.target.closest("#profile-button"))closePopovers();});
   document.querySelectorAll("[data-profile-action]").forEach(function(b){b.addEventListener("click",function(){var action=b.dataset.profileAction;if(action==="settings"){closePopovers();activate("settings",true);}else if(action==="logout")$("logout").click();});});
-  document.querySelectorAll(".notification-item").forEach(function(b,i){b.addEventListener("click",function(){closePopovers();if(i===0)activate("anomalies",true);else if(i===2)activate("ai-assistant",true);else showToast("Ledger is balanced in the illustrative demo.");});});
+  document.querySelectorAll(".notification-item").forEach(function(b){b.addEventListener("click",function(){closePopovers();activate(b.dataset.notificationView||"dashboard",true);});});
 
   var inr=function(n){return "₹"+Number(n).toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:2});};
   var axisInr=function(n){return n>=1e7?"₹"+(n/1e7).toFixed(1).replace(/\.0$/,"")+"Cr":n>=1e5?"₹"+(n/1e5).toFixed(1).replace(/\.0$/,"")+"L":n>=1e3?"₹"+Math.round(n/1e3)+"K":"₹"+Math.round(n);};
@@ -231,7 +213,8 @@
     });
   }
   var dateSelect=$("dashboard-date");
-  if(dateSelect){dateSelect.addEventListener("change",function(){renderKpis(dateSelect.value, true);showToast("Dashboard date set to "+dateSelect.options[dateSelect.selectedIndex].text+". Demo data remains illustrative.");});}
+  if(dateSelect){var now=new Date(),yesterday=new Date(now);yesterday.setDate(now.getDate()-1);var week=new Date(now);week.setDate(now.getDate()-6);var dateFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short",year:"numeric"}),rangeFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short"});dateSelect.options[0].textContent=dateFormat.format(now);dateSelect.options[1].textContent=dateFormat.format(yesterday);dateSelect.options[2].textContent=rangeFormat.format(week)+" – "+dateFormat.format(now);}
+  if(dateSelect){dateSelect.addEventListener("change",function(){renderKpis(dateSelect.value, true);showToast("Dashboard date set to "+dateSelect.options[dateSelect.selectedIndex].text+". Sample data remains illustrative.");});}
   renderKpis("today", false);
   applyChartTheme();
 
@@ -273,7 +256,7 @@
       if(motion.reduced()) area.style.transform="scaleX(1)"; else requestAnimationFrame(function(){area.style.transition="transform "+motion.chart.duration+"ms "+motion.easing;area.style.transform="scaleX(1)";});
     });
     $("cf-x").innerHTML=cfg.ticks.map(function(t){return "<span>"+cfg.labels(t)+"</span>";}).join("");
-    $("cf-sub").textContent=cfg.sub+" · illustrative demo data · amounts in INR";
+    $("cf-sub").textContent=cfg.sub+" · illustrative sample data · amounts in INR";
     $("cf-tip").hidden=true;$("cf-cursor").hidden=true;
     document.querySelectorAll("#cashflow-tabs button").forEach(function(b){var on=b.dataset.range===range;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.setAttribute("role","tab");});
   }
@@ -309,25 +292,28 @@
 
   /* Phase 6 — interactive transaction details + financial data polish */
   var txData={
-    "PAY-1001":{type:"Payment",ref:"PAY-1001",amount:"₹10,000",fee:"₹300",net:"₹9,700",status:"Completed",time:"2 mins ago",note:"Illustrative payment received and ready for ledger posting."},
+    "PAY-1001":{type:"Payment",ref:"PAY-1001",amount:"₹10,000",fee:"₹300",net:"₹9,700",status:"Completed",time:"2 mins ago",note:"Illustrative payment record from the sample data."},
     "PAY-1002":{type:"Payment",ref:"PAY-1002",amount:"₹7,500",fee:"₹225",net:"₹7,275",status:"Completed",time:"12 mins ago",note:"Illustrative payment with a sample PayPal fee."},
-    "REF-1003":{type:"Refund",ref:"REF-1003",amount:"₹2,000",fee:"—",net:"-₹2,000",status:"Refunded",time:"28 mins ago",note:"Illustrative refund event. Review the linked ledger entry before any action."},
+    "REF-1003":{type:"Refund",ref:"REF-1003",amount:"₹2,000",fee:"—",net:"-₹2,000",status:"Refunded",time:"28 mins ago",note:"Illustrative refund event. Additional payment-provider details are unavailable."},
     "DSP-1004":{type:"Dispute",ref:"DSP-1004",amount:"₹5,000",fee:"—",net:"-₹5,000",status:"Under Review",time:"1 hr ago",note:"Illustrative dispute requiring merchant review."},
-    "PAY-28491":{type:"Payment",ref:"PAY-28491",amount:"₹2,000",fee:"₹60",net:"₹1,940",status:"Possible duplicate",time:"45 mins ago",note:"Flagged by the demo AI as a possible duplicate payment."},
-    "REF-28491":{type:"Refund",ref:"REF-28491",amount:"₹2,000",fee:"—",net:"-₹2,000",status:"Refunded (Demo)",time:"Just now",note:"Simulated refund created through the demo approval flow."},
+    "PAY-28491":{type:"Payment",ref:"PAY-28491",amount:"₹2,000",fee:"₹60",net:"₹1,940",status:"Possible duplicate",time:"45 mins ago",note:"Flagged by NovaPay AI as a possible duplicate payment."},
+    "REF-28491":{type:"Refund",ref:"REF-28491",amount:"₹2,000",fee:"—",net:"-₹2,000",status:"Refunded (Simulated)",time:"Just now",note:"Simulated refund created through the simulated approval flow."},
     "PAY-1005":{type:"Payout",ref:"PAY-1005",amount:"₹50,000",fee:"—",net:"₹50,000",status:"Completed",time:"3 hrs ago",note:"Illustrative payout event."}
   };
-  var txModal=$("transaction-modal"),lastFocus=null;
+  var txModal=$("transaction-modal"),lastFocus=null,selectedTransaction=null;
   function openTx(id){
-    var d=txData[id]; if(!txModal)return;
+    var row=document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(id)+'"]'), d=row?{type:row.dataset.type,ref:row.dataset.txId,amount:row.cells[3].textContent,fee:row.cells[4].textContent,net:row.cells[5].textContent,status:row.dataset.status,time:row.cells[0].textContent,date:row.dataset.date,buyer:row.dataset.buyer,currency:row.dataset.currency,source:row.dataset.source,related:row.dataset.related,ledger:row.dataset.ledger,note:row.dataset.note}:txData[id]; if(!txModal)return;
     if(!d){showToast("Couldn't load that transaction. Please try again.");return;}
+    selectedTransaction=d;
     lastFocus=document.activeElement;
     $("transaction-detail-title").textContent=d.type;
-    $("transaction-detail-subtitle").textContent=d.time+" · Illustrative PayPal event";
+    $("transaction-detail-subtitle").textContent=(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data");
     $("detail-type").textContent=d.type;$("detail-reference").textContent=d.ref;
     $("detail-amount").textContent=d.amount;$("detail-fee").textContent=d.fee;
     $("detail-net").textContent=d.net;$("detail-status").textContent=d.status;
-    $("detail-note").textContent=d.note+" No live PayPal transaction is accessed or changed.";
+    $("detail-date").textContent=d.time||"Unavailable";$("detail-buyer").textContent=d.buyer||"Unavailable";$("detail-currency").textContent=d.currency||"Unavailable";$("detail-source").textContent=d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data";$("detail-related").textContent=d.related||"Unavailable";$("detail-ledger").textContent=d.ledger||"Unavailable";
+    $("detail-note").textContent=d.note||"Fields marked unavailable were not provided by the available data.";
+    $("tx-ai-question").value="";$("tx-ai-answer").textContent="";$("tx-ai-answer").dataset.finding="";
     txModal.hidden=false;txModal.setAttribute("aria-hidden","false");
     document.body.classList.add("modal-open");
     var c=txModal.querySelector(".modal-close");if(c)c.focus();
@@ -340,22 +326,19 @@
   document.addEventListener("click",function(e){var row=e.target.closest(".transaction-row");if(row&&!e.target.closest("button"))openTx(row.dataset.txId);});
   document.addEventListener("keydown",function(e){var row=e.target.closest&&e.target.closest(".transaction-row");if(row&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openTx(row.dataset.txId);}});
   document.querySelectorAll("[data-close-transaction]").forEach(function(b){b.addEventListener("click",closeTx);});
+  $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction,context=["ID: "+d.ref,"type: "+d.type,"status: "+d.status,"gross: "+d.amount,"fee: "+d.fee,"net: "+d.net,"currency: "+(d.currency||"Unavailable"),"buyer: "+(d.buyer||"Unavailable"),"source: "+(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data")].join("; ");$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.live.ai&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply;$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(){$("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context});else $("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context;});
+  $("tx-send-approval").addEventListener("click",function(){if(!selectedTransaction)return;var answer=$("tx-ai-answer"),reason=answer.textContent.trim();if(!reason||reason.indexOf("Thinking")===0){showToast("Ask the AI and review its finding first.");return}if(window.NovaLive&&NovaLive.addTransactionFinding){var p=null;try{p=JSON.parse(answer.dataset.proposal||"null")}catch(e){}if(p&&["refund","dispute-evidence","hold-payout"].indexOf(p.type)>-1){p.reason=p.reason||reason;p.txId=selectedTransaction.ref;p.display=selectedTransaction.amount;p.source=p.source||"NovaPay AI";p.simulatedOnly=true;NovaLive.addProposal(p)}else NovaLive.addTransactionFinding(selectedTransaction,reason);closeTx();location.hash="#approvals";showToast("Finding sent to Approvals for human review.")}else showToast("Approvals service is unavailable.")});
   document.addEventListener("keydown",function(e){
     if(!txModal||txModal.hidden)return;
     if(e.key==="Escape")closeTx();
     if(e.key==="Tab"){var f=txModal.querySelectorAll("button"),a=f[0],z=f[f.length-1];
       if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
   });
-  var txReset=$("tx-reset");if(txReset)txReset.addEventListener("click",function(){txSearch.value="";txType.value="";filterTx();txSearch.focus();});
+  var txReset=$("tx-reset");if(txReset)txReset.addEventListener("click",function(){txSearch.value="";txType.value="";$("tx-status").value="";$("tx-from").value="";$("tx-to").value="";$("tx-min").value="";$("tx-max").value="";filterTx();txSearch.focus();});
   var sub=$("dashboard-subtitle");
   function syncSubtitle(){if(sub)sub.hidden=!($("view-dashboard")&&!$("view-dashboard").hidden);}
   window.addEventListener("hashchange",syncSubtitle);window.addEventListener("popstate",syncSubtitle);nav.forEach(function(a){a.addEventListener("click",syncSubtitle);});
-  document.querySelectorAll("[data-go-anomalies]").forEach(function(b){b.addEventListener("click",syncSubtitle);});
   syncSubtitle();
-
-  document.querySelectorAll("[data-go-anomalies]").forEach(function(b){
-    b.addEventListener("click",function(){activate("anomalies",true);showToast("Opening the 3 illustrative anomalies for review.");});
-  });
 
   /* Keep transaction filtering usable after the richer row markup is rendered. */
   if(txSearch&&txType){filterTx();}
@@ -426,19 +409,7 @@
     if(b) showToast(b.getAttribute("data-demo-feedback"));
   });
 
-  document.querySelectorAll(".notification-item").forEach(function(b){
-    b.addEventListener("click",function(){
-      var t=b.textContent||"";
-      if(t.indexOf("anomal")>=0) activate("anomalies",true);
-      else if(t.indexOf("AI")>=0) activate("ai-assistant",true);
-      else showToast("Ledger is balanced in Demo Mode.");
-      var pop=$("notification-popover"); if(pop) pop.hidden=true;
-    });
-  });
   document.querySelectorAll(".report-card button").forEach(function(b){
-    b.addEventListener("click",function(){activate("reports",true);showToast("Report opened in Demo Mode.");});
-  });
-  document.querySelectorAll(".anomaly-card button").forEach(function(b){
-    b.addEventListener("click",function(){showToast("Reviewing illustrative anomaly in Demo Mode.");});
+    b.addEventListener("click",function(){activate("reports",true);showToast("Report opened with sample data.");});
   });
 })();

@@ -1,0 +1,27 @@
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  function toast(message){var el=$("dashboard-toast");if(!el)return;el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(function(){el.classList.remove("show");},3200);}
+  function downloadCsv(name,rows){var blob=new Blob([rows.map(function(row){return row.map(function(cell){return '"'+String(cell).replace(/"/g,'""')+'"';}).join(",");}).join("\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);}
+  document.addEventListener("click",function(event){var button=event.target.closest("[data-ui-action]");if(!button)return;var action=button.dataset.uiAction;
+    if(action==="ledger-export")downloadCsv("novapay-ledger-sample.csv",[["Date","Reference","Account","Debit","Credit"],["21 Oct 2026","PAY-1001","PayPal clearing","","9700"],["21 Oct 2026","PAY-1001","Processing fees","300",""]]);
+    else if(action==="reports-export")downloadCsv("novapay-report-sample.csv",[["Metric","INR"],["Gross receipts","845000"],["Processing fees","-23500"],["Refunds","-12000"],["Net activity","809500"]]);
+    else if(action==="invoice-create"){var customer=window.prompt("Customer or business name");if(!customer)return;var amount=window.prompt("Invoice amount in INR");if(!amount||!Number.isFinite(Number(amount))||Number(amount)<=0){toast("Enter a valid invoice amount to create a draft.");return;}var body=$("invoice-table").tBodies[0],row=body.insertRow(0),id="INV-"+(2050+body.rows.length);[id,customer,new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}),"Set due date","₹"+Number(amount).toLocaleString("en-IN")].forEach(function(value){row.insertCell().textContent=value;});var status=row.insertCell();status.innerHTML='<span class="status info">Draft · sample only</span>';var actionCell=row.insertCell(),review=document.createElement("button");review.className="table-action";review.dataset.uiAction="invoice-review";review.textContent="Review";actionCell.appendChild(review);$("invoice-draft-count").textContent=String(Number($("invoice-draft-count").textContent)+1);toast("Illustrative draft added to this page. No invoice was saved or sent.");}
+    else if(action==="invoice-review")toast("Invoice review opened in this preview. Sending requires an approver in a connected workspace.");
+    else if(action==="document-review")toast("Extraction review selected. Confirm supplier, total, date and duplicate match before drafting.");
+    else if(action==="document-draft"){location.hash="#invoices";toast("Review the invoice draft in Invoices. This preview does not save extracted data.");}
+    else if(action==="campaign-view")toast("Contribution list selected. Sample contributions are anonymized and illustrative.");
+    else if(action==="campaign-create"){var name=window.prompt("Campaign name");if(name)toast("Campaign setup started for “"+name+"”. This preview does not publish or save campaigns.");}
+    else if(action==="maintenance-new")toast("New request form selected. Connect a workspace to submit a request.");
+    else if(action==="maintenance-view")toast("Request details include quotation, approval, payment reference and completion evidence.");
+    else if(action==="report-open")toast("Report opened in preview. Totals shown are illustrative.");
+  });
+  var query=$("invoice-search"),filter=$("invoice-filter"),table=$("invoice-table");
+  function filterInvoices(){if(!table)return;var q=(query.value||"").toLowerCase(),status=filter.value;Array.prototype.forEach.call(table.tBodies[0].rows,function(row){var matchesText=row.textContent.toLowerCase().indexOf(q)>-1,matchesStatus=!status||row.cells[5].textContent.indexOf(status)>-1;row.hidden=!(matchesText&&matchesStatus);});}
+  if(query)query.addEventListener("input",filterInvoices);if(filter)filter.addEventListener("change",filterInvoices);
+  var upload=$("document-upload");if(upload)upload.addEventListener("change",function(){var file=upload.files&&upload.files[0];$("document-upload-name").textContent=file?file.name+" · ready for review":"No file selected";if(file)toast("File selected in this browser. Upload and OCR are not connected in this preview.");});
+  var demo=$("document-demo-upload");if(demo)demo.addEventListener("click",function(){$("document-upload-name").textContent="sample-invoice.pdf · sample extraction available";toast("Sample document loaded for review. No file was uploaded.");});
+  var fxAmount=$("fx-amount"),fxFrom=$("fx-from"),fxTo=$("fx-to"),fxResult=$("fx-result-value"),fxRate=$("fx-rate-note");
+  function updateFx(){if(!fxAmount||!fxFrom||!fxTo)return;var amount=Number(fxAmount.value),from=fxFrom.value,to=fxTo.value,rate=from===to?1:(from==="INR"?0.012:1/0.012),symbol=to==="INR"?"₹":"$";if(!Number.isFinite(amount)||amount<0){fxResult.textContent="Enter a valid amount";return;}fxResult.textContent=to+" "+symbol+(amount*rate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});fxRate.textContent=from===to?"No conversion · same currency":"Illustrative reference rate · 1 "+from+" = "+rate.toFixed(6)+" "+to;}
+  [fxAmount,fxFrom,fxTo].forEach(function(control){if(control)control.addEventListener("input",updateFx);if(control&&control.tagName==="SELECT")control.addEventListener("change",updateFx);});
+})();

@@ -139,6 +139,7 @@ body.modal-open{overflow:hidden}
 
 /* Phase 6 fixes */
 .dash-lower{display:grid;grid-template-columns:1.65fr .72fr;gap:16px;align-items:start}
+.dash-lower--transactions-only{grid-template-columns:1fr}
 .dash-lower>.dash-card{min-width:0}
 .check-list li{display:flex;align-items:center}.check-list li:before{content:"✓"}
 .check-list li.warn:before{content:"⚠";color:var(--danger-text)}
@@ -172,6 +173,7 @@ body.modal-open{overflow:hidden}
 .ai-bubble--assistant{background:var(--surface)}.ai-bubble--user{margin-left:auto;background:var(--info-soft);flex-direction:row-reverse}.ai-avatar,.ai-user-mark{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:var(--brand-gradient);color:#fff;font-size:11px;font-weight:800}.ai-user-mark{background:var(--surface-sunken);color:var(--text-muted)}
 .ai-quick-actions{position:relative;z-index:1;margin:0 0 12px}.ai-quick-actions button{transition:transform .2s,border-color .2s,background .2s}.ai-quick-actions button:hover{transform:translateY(-2px);border-color:var(--info-text);background:var(--info-soft)}
 .ai-chat-row{position:relative;z-index:1}.ai-demo-disclaimer{position:relative;z-index:1;margin-top:10px;font-size:10px;color:var(--text-subtle)}
+.ai-data-status{position:relative;z-index:1;margin:12px 0 0;padding:9px 11px;border-radius:10px;background:var(--surface-sunken);font-size:11px;color:var(--text-muted)}.ai-live-status{min-height:1em;margin:6px 0 0;font-size:11px;color:var(--text-subtle)}.ai-bubble .ai-evidence{padding-top:8px;border-top:1px solid var(--border);font-weight:600;color:var(--info-text)}.ai-answer-mode{display:inline-block;margin-top:6px;color:var(--text-subtle);font-size:10px}.ai-loading{padding:10px 12px;border:1px dashed var(--border);border-radius:12px;color:var(--text-subtle);font-size:12px}.ai-proposal-slot{position:relative;z-index:1}.ai-proposal-card{padding:15px;border:1px solid var(--info-text);border-radius:14px;background:var(--surface);box-shadow:var(--shadow-sm)}.ai-proposal-card>h4{margin:7px 0;font-size:15px}.ai-proposal-card>p{font-size:12px;color:var(--text-muted)}.ai-proposal-card dl{display:grid;gap:6px;margin:10px 0}.ai-proposal-card dl div{display:flex;justify-content:space-between;gap:12px}.ai-proposal-card dt{font-size:11px;color:var(--text-subtle)}.ai-proposal-card dd{margin:0;text-align:right;font-size:11px;font-weight:650;overflow-wrap:anywhere}.ai-proposal-card>button:disabled{opacity:.55;cursor:not-allowed}.ai-proposal-warning{color:var(--warn-text)!important;font-weight:600}
 .agent-card{position:relative;overflow:hidden;background:linear-gradient(150deg,var(--surface),var(--surface-sunken))}
 .agent-card:after{content:"";position:absolute;width:180px;height:180px;right:-75px;top:-75px;border-radius:50%;background:var(--info-soft);filter:blur(2px)}
 .agent-kicker{position:relative;z-index:1;display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.13em;font-weight:850;color:var(--info-text)}.agent-kicker span{font-size:17px}
@@ -187,7 +189,8 @@ body.modal-open{overflow:hidden}
 
 /* Phase 8 — calmer dashboard scene, responsive navigation and AI bottom sheet */
 .novapay-scene--dashboard { z-index:0; opacity:.65; }
-.dashboard-shell, .dashboard-main, .dashboard-sidebar { position:relative; z-index:1; }
+.dashboard-shell, .dashboard-main { position:relative; z-index:1; }
+.dashboard-sidebar { position:sticky; top:0; z-index:1; align-self:start; overflow-y:auto; }
 .dashboard-body .scene-orb { width:360px; filter:blur(70px); opacity:.08; }
 .dashboard-body .scene-cube { opacity:.12; }
 .kpi-card, .dash-card, .transaction-row, .report-card, .anomaly-card { transition:transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease), border-color .2s var(--motion-ease); }
@@ -366,3 +369,56 @@ body.modal-open{overflow:hidden}
 .report-card .report-ic{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:var(--info-soft);color:var(--info-text);margin-bottom:12px}
 .report-card .report-ic .section-icon{width:20px;height:20px}
 .empty-state .empty-icon .section-icon{width:26px;height:26px}
+
+/* NP logo inside the coloured KPI circles / section tiles */
+.kpi-icon,.section-icon-tile{display:inline-flex!important;align-items:center;justify-content:center}
+.kpi-icon .np-tile-logo,.section-icon-tile .np-tile-logo{margin:0;flex:none}
+
+/* Module logos beside navigation labels: larger, clearly visible tile in both themes */
+.dashboard-nav a span.nav-ai-logo{width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:#fff;border:1px solid var(--border);box-shadow:0 2px 8px rgba(30,60,160,.14)}
+.dashboard-nav a .nav-mod-logo{display:block;width:28px;height:auto;max-height:28px;object-fit:contain}
+.dashboard-nav a .nav-mod-logo--robot{width:28px;height:28px}
+.dashboard-nav a{min-height:54px}
+
+/* Module marks (supplied set): the artwork is its own rounded tile, so no extra frame */
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){background:transparent;border:0;box-shadow:0 2px 8px rgba(10,20,60,.28)}
+.dashboard-nav a .nav-mod-logo--tile{width:38px;height:38px;max-height:none;border-radius:11px}
+
+/* ---- Custom section icons (replace NP mark) ---- */
+.np-sec-icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.np-sec-icon .f{fill:currentColor;fill-opacity:.16}
+.kpi-icon .np-sec-icon{width:20px;height:20px}
+.health-callout .callout-icon{display:inline-grid;place-items:center;color:var(--info-text);flex:none}
+.health-callout .callout-icon .np-sec-icon{width:18px;height:18px}
+
+/* ---- AI Assistant nav logo: black background ---- */
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--robot){background:#000;border:1px solid #000;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+
+/* ---- Module icon tiles beside nav names: light tile in light mode, dark tile in dark mode ---- */
+:root{--nav-tile-bg:#eaefff;--nav-tile-border:rgba(30,60,160,.16);--nav-tile-shadow:0 2px 8px rgba(30,60,160,.14);--nav-tile-glyph:#2f4fd0}
+:root[data-theme="dark"]{--nav-tile-bg:#13142f;--nav-tile-border:rgba(255,255,255,.10);--nav-tile-shadow:0 2px 8px rgba(0,0,0,.45);--nav-tile-glyph:#aab8ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--nav-tile-bg:#13142f;--nav-tile-border:rgba(255,255,255,.10);--nav-tile-shadow:0 2px 8px rgba(0,0,0,.45);--nav-tile-glyph:#aab8ff}}
+.dashboard-nav a span.nav-ai-logo{background:var(--nav-tile-bg);border:1px solid var(--nav-tile-border);box-shadow:var(--nav-tile-shadow)}
+.dashboard-nav a span.nav-ai-logo.nav-mod-logo--glyph{color:var(--nav-tile-glyph)}
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--robot){background:var(--nav-tile-bg);border:1px solid var(--nav-tile-border);box-shadow:var(--nav-tile-shadow)}
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){background:transparent;border:0;box-shadow:var(--nav-tile-shadow)}
+/* light artwork (default); dark artwork restored under dark theme */
+.dashboard-nav a .nav-mod-logo--tile[src$="module-dashboard.png"]{content:url(../assets/module-dashboard-light.png)}
+.dashboard-nav a .nav-mod-logo--tile[src$="module-transactions.png"]{content:url(../assets/module-transactions-light.png)}
+.dashboard-nav a .nav-mod-logo--tile[src$="module-approvals.png"]{content:url(../assets/module-approvals-light.png)}
+.dashboard-nav a .nav-mod-logo--tile[src$="module-paypal.png"]{content:url(../assets/module-paypal-light.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-dashboard.png"]{content:url(../assets/module-dashboard.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-transactions.png"]{content:url(../assets/module-transactions.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-approvals.png"]{content:url(../assets/module-approvals.png)}
+:root[data-theme="dark"] .dashboard-nav a .nav-mod-logo--tile[src$="module-paypal.png"]{content:url(../assets/module-paypal.png)}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-dashboard.png"]{content:url(../assets/module-dashboard.png)}
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-transactions.png"]{content:url(../assets/module-transactions.png)}
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-approvals.png"]{content:url(../assets/module-approvals.png)}
+:root:not([data-theme="light"]) .dashboard-nav a .nav-mod-logo--tile[src$="module-paypal.png"]{content:url(../assets/module-paypal.png)}
+}
+.dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){border-radius:10px;box-shadow:none;filter:drop-shadow(0 2px 4px rgba(30,60,160,.18))}
+:root[data-theme="dark"] .dashboard-nav a span.nav-ai-logo:has(.nav-mod-logo--tile){filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.dashboard-nav a .nav-mod-logo--tile{border-radius:10px}
+.ai-command-grid{grid-template-columns:minmax(0,1fr)!important}
+.ai-live-status:empty{min-height:0;margin:0}
