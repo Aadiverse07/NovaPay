@@ -30,7 +30,7 @@
   var loginEmail = $("login-email"), loginPass = $("login-password");
   var signName = $("signup-name"), signEmail = $("signup-email"), signPass = $("signup-password");
   var loginBox = authStage.querySelector(".form-box.Login"), signBox = authStage.querySelector(".form-box.Register");
-  var DEMO_EMAIL = "demo@novapay.app", DEMO_PASSWORD = "demo123";
+  var DEMO_EMAIL = "user@novapay.app", DEMO_PASSWORD = "novapay123";
 
   function getAccounts() { try { return JSON.parse(localStorage.getItem("novapay-demo-accounts") || "{}"); } catch (e) { return {}; } }
   function saveAccounts(a) { try { localStorage.setItem("novapay-demo-accounts", JSON.stringify(a)); } catch (e) {} }
@@ -75,19 +75,19 @@
   function validateDemoLogin() {
     var e = loginEmail.value.trim().toLowerCase(), p = loginPass.value, acct = getAccounts()[e];
     if (e === DEMO_EMAIL && p === DEMO_PASSWORD) {
-      setSession({ name: "NovaPay Demo User", email: DEMO_EMAIL });
+      setSession({ name: "NovaPay User", email: DEMO_EMAIL });
     } else if (acct && acct.password === p) {
       setSession({ name: acct.name, email: e });
     } else {
-      showToast("Demo login failed. Use demo@novapay.app / demo123, or an account you created here.");
+      showToast("Login failed. Use user@novapay.app / novapay123, or an account you created here.");
       loginPass.focus();
       return;
     }
     goDashboard();
   }
   function googleDemo() {
-    setSession({ name: "Google Demo User", email: "google-demo@novapay.app" });
-    showToast("Google sign-in is simulated in demo mode.");
+    setSession({ name: "Google User", email: "google-user@novapay.app" });
+    showToast("Google sign-in is simulated.");
     setTimeout(goDashboard, 450);
   }
 
@@ -119,13 +119,13 @@
   $("signup-form").addEventListener("submit", function (e) {
     e.preventDefault();
     var addr = signEmail.value.trim().toLowerCase();
-    var name = signName.value.trim() || "NovaPay Demo User";
+    var name = signName.value.trim() || "NovaPay User";
     var password = signPass.value;
-    if (addr === DEMO_EMAIL || getAccounts()[addr]) { showToast("That email already has a demo account. Please log in."); return; }
+    if (addr === DEMO_EMAIL || getAccounts()[addr]) { showToast("That email already has an account. Please log in."); return; }
     if (password.length < 4) { showToast("Use a password with at least 4 characters."); return; }
     var all = getAccounts(); all[addr] = { name: name, password: password }; saveAccounts(all);
     setSession({ name: name, email: addr });
-    showToast("Demo account created. Opening your dashboard…");
+    showToast("Account created. Opening your dashboard…");
     setTimeout(goDashboard, 450);
   });
   $("forgot-password").addEventListener("click", function () {
@@ -133,7 +133,7 @@
     if (!addr || !loginEmail.checkValidity()) { showToast("Enter your email above, then choose Forgot Password."); loginEmail.focus(); return; }
     var accts = getAccounts();
     if (accts[addr]) { accts[addr].password = DEMO_PASSWORD; saveAccounts(accts); }
-    showToast("Demo mode: no email sent. Password reset to demo123 — you can log in now.");
+    showToast("No email sent. Password reset to novapay123 — you can log in now.");
     loginPass.focus();
   });
   $("google-demo").addEventListener("click", googleDemo);
@@ -169,7 +169,7 @@
 
   var stage = $("hero-stage");
   document.querySelectorAll("[data-demo-action]").forEach(function (b) {
-    b.addEventListener("click", function () { showToast(b.dataset.demoAction === "approve" ? "Approval selected in the demo." : "Review selected in the demo."); });
+    b.addEventListener("click", function () { showToast(b.dataset.demoAction === "approve" ? "Approval selected." : "Review selected."); });
   });
 
   var featureMap = {

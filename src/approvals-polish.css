@@ -1,0 +1,73 @@
+/* Approvals — stronger borders/contrast, larger type, clearer status + action buttons. Visual only. */
+#view-approvals .approval-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px}
+#view-approvals .approval-filters{padding:16px 18px;gap:16px;border:2px solid color-mix(in srgb,var(--text) 20%,var(--border))}
+#view-approvals .approval-filters label{font-size:13px;font-weight:700;color:var(--text)}
+#view-approvals .approval-filters select{min-height:44px;font-size:14px;border:2px solid color-mix(in srgb,var(--text) 28%,var(--border));background:var(--surface);color:var(--text)}
+#view-approvals .approval-filters>span{font-size:13px;color:var(--text-muted)}
+
+.approval-card{gap:14px;padding:22px;border:2px solid color-mix(in srgb,var(--text) 24%,var(--border));border-radius:18px;background:var(--surface);box-shadow:0 8px 24px rgba(20,28,60,.12)}
+.approval-card--pending{border-color:var(--warn-text);border-left-width:6px}
+.approval-card--failed{border-color:#e5484d;border-left-width:6px}
+.approval-card--approved,.approval-card--completed{border-color:var(--ok-text);border-left-width:6px}
+.approval-card--completed,.approval-card--rejected{opacity:1}
+.approval-card--rejected{border-left-width:6px}
+.approval-card .approval-top{gap:10px;flex-wrap:wrap}
+.approval-card .approval-top .status{font-size:12px;padding:6px 12px;border:1px solid currentColor}
+.approval-card .approval-top>span:not(.status){font-size:12px;font-weight:700;color:var(--text-muted)}
+.approval-card h3{font-size:18px;line-height:1.3;font-weight:800;color:var(--text)}
+.approval-card p{font-size:14px;line-height:1.55;opacity:1;color:var(--text-muted)}
+.approval-card dl{gap:0;border:1px solid color-mix(in srgb,var(--text) 18%,var(--border));border-radius:12px;background:var(--surface-sunken);overflow:hidden}
+.approval-card dl div{grid-template-columns:96px 1fr;gap:12px;padding:10px 14px}
+.approval-card dl div+div{border-top:1px solid color-mix(in srgb,var(--text) 14%,var(--border))}
+.approval-card dt{font-size:12px;font-weight:700;color:var(--text-muted);opacity:1}
+.approval-card dd{font-size:14px;font-weight:700;color:var(--text);text-align:left}
+.approval-card .approval-state-row{padding-top:14px;border-top:2px solid color-mix(in srgb,var(--text) 14%,var(--border));flex-wrap:wrap;gap:10px}
+.approval-card .approval-state-row .status{font-size:13px;font-weight:800;padding:7px 14px;border:1.5px solid currentColor}
+.approval-card .approval-execution-mode{font-size:12px;font-weight:600;color:var(--text-muted)}
+.approval-card>button.btn{min-height:48px;font-size:15px;font-weight:800;border-radius:12px;width:100%;justify-content:center}
+.approval-card>button.btn[data-review-proposal]{background:var(--brand-gradient);color:var(--on-brand);border:2px solid transparent;box-shadow:0 8px 20px rgba(60,80,200,.32)}
+.approval-card>button.btn[data-review-proposal]:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.approval-card--completed>button.btn[data-review-proposal],.approval-card--rejected>button.btn[data-review-proposal],.approval-card--approved>button.btn[data-review-proposal]{background:var(--surface);color:var(--text);border:2px solid color-mix(in srgb,var(--text) 45%,var(--border));box-shadow:none}
+.approval-card>button.btn:focus-visible,.approval-dialog button:focus-visible{outline:3px solid var(--info-text);outline-offset:2px}
+.approval-card>button.btn:disabled{opacity:.6;cursor:progress}
+
+/* Details / confirm dialogs */
+.approval-dialog{padding:30px;border:2px solid color-mix(in srgb,var(--text) 26%,var(--border))}
+.approval-dialog h2{font-size:24px}
+.approval-dialog>p{font-size:15px;line-height:1.55;color:var(--text)}
+.approval-detail-fields{gap:12px}
+.approval-detail-fields>div{padding:14px;border:1.5px solid color-mix(in srgb,var(--text) 22%,var(--border))}
+.approval-detail-fields dt{font-size:12px;font-weight:700;color:var(--text-muted)}
+.approval-detail-fields dd{font-size:15px;font-weight:700;color:var(--text)}
+.approval-detail-effect,.approval-confirm-target{padding:15px;border-width:2px;font-size:14px;line-height:1.5}
+.approval-detail-limits,.approval-confirm-warning,.approval-reject-reason{font-size:14px;line-height:1.5;color:var(--text)}
+.approval-reject-reason textarea{border:2px solid color-mix(in srgb,var(--text) 28%,var(--border));font-size:14px}
+.approval-dialog [role=status],.approval-dialog [role=alert]{font-size:14px;font-weight:600}
+.approval-dialog .agent-actions{gap:12px;flex-wrap:wrap}
+.approval-dialog .agent-actions button{min-height:48px;font-size:15px;font-weight:800;border-radius:12px;border:2px solid color-mix(in srgb,var(--text) 40%,var(--border));min-width:120px}
+.approval-dialog .agent-actions button.btn--primary,.approval-dialog .agent-actions button[id*="approve"],.approval-dialog .agent-actions button[id*="confirm"]{background:var(--brand-gradient);color:var(--on-brand);border-color:transparent;box-shadow:0 8px 20px rgba(60,80,200,.32)}
+
+/* Audit trail */
+.approval-audit>li{padding:14px 16px;border:2px solid color-mix(in srgb,var(--text) 18%,var(--border))}
+.approval-audit strong{font-size:14px}
+.approval-audit small{font-size:12px}
+.approval-audit p{font-size:14px}
+
+:root[data-theme="dark"] .approval-card{box-shadow:0 8px 24px rgba(0,0,0,.45)}
+:root[data-theme="dark"] .approval-card,:root[data-theme="dark"] .approval-filters,:root[data-theme="dark"] .approval-dialog{border-color:rgba(255,255,255,.38)}
+:root[data-theme="dark"] .approval-card--pending{border-color:var(--warn-text)}
+
+@media (max-width:700px){
+  #view-approvals .approval-grid{grid-template-columns:1fr;gap:16px}
+  .approval-card{padding:18px}
+  .approval-card dl div{grid-template-columns:84px 1fr}
+  .approval-dialog{padding:22px}
+  .approval-detail-fields{grid-template-columns:1fr}
+  .approval-dialog .agent-actions button{flex:1 1 100%}
+}
+
+/* The landing-page hero "approval-card" decoration shares this class name and was shrinking/tilting the queue cards. Reset it for the dashboard queue. */
+#view-approvals .approval-card{position:relative;width:auto;max-width:none;min-width:0;left:auto;top:auto;right:auto;bottom:auto;transform:none;animation:none;rotate:none}
+#view-approvals .approval-card dd{min-width:0;overflow-wrap:anywhere}
+#view-approvals .approval-filters select{width:100%;min-width:0;max-width:100%}
+@media (max-width:700px){#view-approvals .approval-filters{grid-template-columns:1fr}}

@@ -1,0 +1,208 @@
+/* Dashboard hero art — floating PayPal card, glass laptop and AI card.
+   Scoped to .hs-* so nothing else on the page is affected.
+   The whole scene is sized in em; 1em = 1/52 of the art column width. */
+
+.dashboard-hero-art[data-integration-visual]{
+  container-type:inline-size;
+  width:100%;
+  min-height:0;
+  aspect-ratio:52/29;
+  align-self:center;
+  display:block;
+  perspective:none;
+}
+
+.hs-scene{
+  --hs-ink:#0f1840;
+  --hs-muted:#6d7ba3;
+  --hs-blue:#2f6bff;
+  --hs-sky:#8cc2ff;
+  --hs-lav:#b7a6ff;
+  --hs-green:#10b27f;
+  --hs-glass:rgba(255,255,255,.78);
+  --hs-glass-edge:rgba(255,255,255,.95);
+  --hs-panel:rgba(255,255,255,.94);
+  --hs-bezel:linear-gradient(150deg,rgba(214,226,255,.85),rgba(190,206,255,.55) 55%,rgba(168,196,255,.7));
+  --hs-shadow:0 2.2em 3.6em -1.2em rgba(62,86,190,.30);
+  --hs-row-on:rgba(47,107,255,.10);
+  --hs-track:rgba(120,140,220,.22);
+  position:relative;
+  width:52em;
+  height:29em;
+  font-size:calc(100cqw / 52);
+  line-height:1.2;
+  font-family:inherit;
+  color:var(--hs-ink);
+  transform-origin:top left;
+  pointer-events:none;
+}
+
+:root[data-theme="dark"] .hs-scene{
+  --hs-ink:#eef1ff;
+  --hs-muted:#a6aed8;
+  --hs-sky:#6fb6ff;
+  --hs-glass:rgba(34,28,78,.78);
+  --hs-glass-edge:rgba(184,172,255,.34);
+  --hs-panel:rgba(30,25,70,.92);
+  --hs-bezel:linear-gradient(150deg,rgba(96,90,190,.55),rgba(60,54,140,.45) 55%,rgba(70,110,200,.5));
+  --hs-shadow:0 2.2em 3.6em -1.2em rgba(0,0,0,.55);
+  --hs-row-on:rgba(140,160,255,.16);
+  --hs-track:rgba(180,170,255,.25);
+}
+
+/* soft light behind everything */
+.hs-glow{position:absolute;inset:-4em -2em -4em -2em;background:
+  radial-gradient(34em 16em at 58% 48%,rgba(140,170,255,.30),transparent 70%),
+  radial-gradient(18em 12em at 86% 24%,rgba(190,160,255,.26),transparent 70%);
+  filter:blur(.6em)}
+
+/* orbit ring */
+.hs-orbit{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
+.hs-orbit-ring{fill:none;stroke:var(--hs-sky);stroke-width:1.4;opacity:.55}
+.hs-orbit-comet{fill:none;stroke:var(--hs-blue);stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:110 890;filter:drop-shadow(0 0 5px rgba(47,107,255,.75))}
+.hs-orbit-comet.is-2{stroke:var(--hs-lav);stroke-dasharray:70 930;filter:drop-shadow(0 0 5px rgba(160,130,255,.8))}
+
+/* generic layers: outer = placement + entrance, float = idle drift, face = look */
+.hs-layer{position:absolute}
+.hs-float{width:100%;height:100%}
+.hs-face{position:relative;width:100%;height:100%}
+
+/* ---------- laptop ---------- */
+.hs-laptop{left:17.4em;top:1.8em;width:28em;height:25em}
+.hs-laptop .hs-face{transform:perspective(70em) rotateY(-13deg) rotateX(3deg) rotateZ(-2.5deg)}
+.hs-bezel{position:absolute;left:0;top:0;width:26.4em;height:19em;border-radius:1.8em;
+  background:var(--hs-bezel);border:1px solid var(--hs-glass-edge);box-shadow:var(--hs-shadow)}
+.hs-screen{position:absolute;left:1em;top:1em;width:24.4em;height:17em;padding:1em 1.4em;border-radius:1em;
+  background:var(--hs-panel);border:1px solid var(--hs-glass-edge);box-shadow:0 1.4em 2.6em -1em rgba(60,80,190,.32);
+  overflow:hidden}
+.hs-screen::after{content:"";position:absolute;top:-30%;bottom:-30%;left:0;width:30%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:translateX(-140%) skewX(-18deg);opacity:.9}
+:root[data-theme="dark"] .hs-screen::after{background:linear-gradient(100deg,transparent,rgba(190,180,255,.18),transparent)}
+.hs-screen-head{display:flex;align-items:center;gap:.9em;margin-bottom:.8em}
+.hs-pp{width:1.9em;height:2.3em;flex:0 0 auto}
+.hs-skel{display:grid;gap:.5em;flex:1}
+.hs-skel i{display:block;height:.55em;border-radius:99px;background:linear-gradient(90deg,var(--hs-lav),rgba(183,166,255,.25))}
+.hs-skel i:first-child{width:62%}
+.hs-skel i:last-child{width:38%;opacity:.7}
+
+.hs-rows{display:grid;gap:.25em}
+.hs-row{display:grid;grid-template-columns:1.9em 1fr auto;align-items:center;gap:.9em;
+  padding:.3em .6em;border-radius:.9em;font-size:1em;font-weight:650;
+  background:transparent}
+.hs-ico{width:1.9em;height:1.9em;border-radius:.7em;display:grid;place-items:center;
+  background:rgba(120,140,220,.14);color:var(--hs-muted)}
+.hs-ico svg{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hs-row.is-pay .hs-ico{background:rgba(16,178,127,.16);color:var(--hs-green)}
+.hs-row.is-pay .hs-ico i{display:block;width:1em;height:1em;border-radius:50%;background:var(--hs-green)}
+.hs-row b{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.hs-row.is-out b{color:var(--hs-ink)}
+.hs-row.is-in b{color:var(--hs-green)}
+
+.hs-base{position:absolute;left:-1.4em;top:19.6em;width:29.4em;height:2.4em;border-radius:0 0 2.4em 2.4em / 0 0 1.4em 1.4em;
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(205,218,255,.7));
+  border:1px solid var(--hs-glass-edge);box-shadow:0 1.6em 2.6em -.8em rgba(60,80,190,.35);
+  transform:perspective(40em) rotateX(48deg);transform-origin:top center}
+:root[data-theme="dark"] .hs-base{background:linear-gradient(180deg,rgba(80,74,170,.7),rgba(46,42,110,.7))}
+.hs-base::after{content:"";position:absolute;left:38%;right:38%;top:0;height:.5em;border-radius:0 0 .6em .6em;background:rgba(120,140,220,.35)}
+
+.hs-p-front{fill:#0c2f77}
+:root[data-theme="dark"] .hs-p-front{fill:#e8eeff}
+
+/* ---------- PayPal card ---------- */
+.hs-paypal{left:2.4em;top:5.4em;width:15.4em;height:13.2em}
+.hs-paypal .hs-face{display:grid;justify-items:center;align-content:center;gap:.25em;
+  border-radius:1.8em;background:var(--hs-glass);border:1px solid var(--hs-glass-edge);
+  box-shadow:var(--hs-shadow);transform:rotate(-8deg);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hs-paypal .hs-pp-big{width:3.9em;height:4.7em}
+.hs-pp-name{font-weight:800;font-size:1.25em;color:var(--hs-ink);letter-spacing:.01em}
+.hs-recv{margin-top:.9em;display:grid;justify-items:start;gap:.15em;width:76%;position:relative}
+.hs-recv small{font-size:.92em;font-weight:600;color:var(--hs-muted)}
+.hs-recv strong{font-size:1.75em;font-weight:800;color:var(--hs-green);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hs-check{position:absolute;right:-.9em;bottom:.15em;width:2.1em;height:2.1em;border-radius:50%;
+  background:var(--hs-green);display:grid;place-items:center;box-shadow:0 .4em 1em rgba(16,178,127,.4)}
+.hs-check svg{width:1.15em;height:1.15em;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.hs-check::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--hs-green);opacity:0}
+
+/* ---------- AI card ---------- */
+.hs-ai{left:42em;top:7.6em;width:10.2em;height:6.2em}
+.hs-ai .hs-face{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:.9em;padding:0 1.2em;
+  border-radius:1.4em;background:var(--hs-glass);border:1px solid var(--hs-glass-edge);box-shadow:var(--hs-shadow);
+  transform:rotate(-2deg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hs-spark{width:2.6em;height:2.6em;grid-row:1 / span 2}
+.hs-ai-text{display:grid;gap:.1em;font-size:1em}
+.hs-ai-text b{font-size:1.05em;font-weight:800}
+.hs-ai-text span{font-size:.92em;font-weight:600;color:var(--hs-muted);white-space:nowrap}
+.hs-dots i{display:inline-block;font-style:normal}
+.hs-prog{grid-column:2;height:.45em;border-radius:99px;background:var(--hs-track);overflow:hidden;margin-top:.55em}
+.hs-prog i{display:block;height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,var(--hs-lav),var(--hs-blue));transform-origin:left center;transform:scaleX(.55)}
+
+/* ================= motion ================= */
+/* Everything idles until the art scrolls into view, and again while the tab is hidden. */
+.hs-scene *,.hs-scene *::before,.hs-scene *::after{animation-play-state:paused}
+.dashboard-hero-art.is-in-view .hs-scene *,
+.dashboard-hero-art.is-in-view .hs-scene *::before,
+.dashboard-hero-art.is-in-view .hs-scene *::after{animation-play-state:running}
+.page-paused .hs-scene *,.page-paused .hs-scene *::before,.page-paused .hs-scene *::after{animation-play-state:paused!important}
+
+@media (prefers-reduced-motion:no-preference){
+  /* one entrance, staged: laptop rises, PayPal card slides in, AI card drops in */
+  .hs-laptop{animation:hsRise 1s cubic-bezier(.22,1,.36,1) both}
+  .hs-paypal{animation:hsFromLeft 1s cubic-bezier(.22,1,.36,1) .25s both}
+  .hs-ai{animation:hsFromRight .9s cubic-bezier(.22,1,.36,1) .55s both}
+  .hs-orbit-ring{stroke-dasharray:1000;animation:hsDraw 1.6s ease-out .1s both}
+
+  /* idle drift, each element on its own tempo so they never sync up */
+  .hs-laptop .hs-float{animation:hsDrift 7s ease-in-out infinite}
+  .hs-paypal .hs-float{animation:hsDrift 5.6s ease-in-out -1.4s infinite}
+  .hs-ai .hs-float{animation:hsDriftSmall 4.6s ease-in-out -2.2s infinite}
+
+  /* orbit comets travel around the ring */
+  .hs-orbit-comet{animation:hsOrbit 7s linear infinite}
+  .hs-orbit-comet.is-2{animation:hsOrbit 7s linear -3.5s infinite}
+
+  /* the bookkeeping pass: each row lights up in turn, then a glint crosses the screen */
+  .hs-row{animation:hsRow 6s ease-in-out infinite}
+  .hs-row:nth-child(2){animation-delay:1.2s}
+  .hs-row:nth-child(3){animation-delay:2.4s}
+  .hs-row:nth-child(4){animation-delay:3.6s}
+  .hs-screen::after{animation:hsGlint 6s ease-in-out 4.6s infinite}
+
+  /* payment confirmed */
+  .hs-check{animation:hsPop 6s ease-out infinite}
+  .hs-check::after{animation:hsRipple 6s ease-out infinite}
+
+  /* AI is working */
+  .hs-spark{animation:hsSpin 6s ease-in-out infinite}
+  .hs-prog i{animation:hsProg 3.4s ease-in-out infinite}
+  .hs-dots i{animation:hsDot 1.2s ease-in-out infinite}
+  .hs-dots i:nth-child(2){animation-delay:.2s}
+  .hs-dots i:nth-child(3){animation-delay:.4s}
+}
+
+@keyframes hsRise{from{opacity:0;translate:0 3em;scale:.94}to{opacity:1;translate:0 0;scale:1}}
+@keyframes hsFromLeft{from{opacity:0;translate:-5em 1.2em;scale:.92}to{opacity:1;translate:0 0;scale:1}}
+@keyframes hsFromRight{from{opacity:0;translate:4em -1.5em;scale:.9}to{opacity:1;translate:0 0;scale:1}}
+@keyframes hsDraw{from{stroke-dashoffset:1000}to{stroke-dashoffset:0}}
+@keyframes hsDrift{0%,100%{translate:0 0}50%{translate:0 -.9em}}
+@keyframes hsDriftSmall{0%,100%{translate:0 0}50%{translate:.3em -.7em}}
+@keyframes hsOrbit{from{stroke-dashoffset:0}to{stroke-dashoffset:-1000}}
+@keyframes hsRow{0%,22%,100%{background:transparent;translate:0 0}6%,16%{background:var(--hs-row-on);translate:.35em 0}}
+@keyframes hsGlint{0%{transform:translateX(-140%) skewX(-18deg)}30%,100%{transform:translateX(420%) skewX(-18deg)}}
+@keyframes hsPop{0%{scale:.6}6%{scale:1.18}12%,100%{scale:1}}
+@keyframes hsRipple{0%{opacity:.7;transform:scale(1)}30%,100%{opacity:0;transform:scale(2.2)}}
+@keyframes hsSpin{0%,70%,100%{rotate:0deg;scale:1}35%{rotate:90deg;scale:1.15}}
+@keyframes hsProg{0%,100%{transform:scaleX(.25)}60%{transform:scaleX(.92)}}
+@keyframes hsDot{0%,100%{opacity:.25}50%{opacity:1}}
+
+@media (max-width:760px){
+  .dashboard-hero-art[data-integration-visual]{min-height:0;max-width:30em;margin-inline:auto}
+}
+@media (max-width:520px){
+  .dashboard-hero-art[data-integration-visual]{transform:none}
+}
+
+/* Remove the decorative orbit surrounding the dashboard hero laptop. */
+.dashboard-hero-art[data-integration-visual] .hs-orbit { display: none; }

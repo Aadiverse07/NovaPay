@@ -1,6 +1,6 @@
 # NovaPay v2.0 — PayPal AI Hackathon build
 
-**NovaPay is an AI bookkeeper for PayPal merchants: AI proposes financial actions, a human approves, PayPal executes, the ledger updates.**
+**NovaPay helps PayPal merchants review available activity: AI suggests actions, a human approves, and PayPal Sandbox executes supported test actions.**
 
 ## Run
 ```
@@ -16,16 +16,44 @@ Without keys or backend (e.g. opening the HTML directly) everything runs in clea
 | PayPal OAuth2 + Orders v2 (create/capture sandbox payment) | `server.js` → `/api/paypal/create-order`, `/capture` |
 | PayPal Payments v2 refund after human approval | `/api/paypal/refund` (Approvals page → Approve) |
 | PayPal Webhooks (signature verification API) | `/api/webhook`, shown in the PayPal Sandbox page |
-| AI (Claude, Anthropic Messages API) answering from ledger context and proposing actions | `/api/ai/chat` → proposals land in Approvals |
+| AI (Claude, Anthropic Messages API) answering from available transaction context and proposing actions | `/api/ai/chat` → user reviews supported suggestions and sends them to Approvals |
 
 ## Modules
-Dashboard · Transactions · Ledger · AI Assistant · **Approvals (new)** · Anomalies · **PayPal Sandbox (new, replaces Settings; toggles moved here)**.
+Dashboard · Transactions · AI Assistant · **Approvals** · **PayPal Sandbox**.
 Removed as non-essential: Reports (inert stubs), Settings page, landing Pricing and Company sections.
+
+## AI Assistant module
+
+The assistant answers questions about the transaction rows currently available to NovaPay and can return evidence references or a supported action suggestion. It sends a compact set of transaction fields (ID, type, status, displayed date, buyer when available, gross, fee, net, currency, and source) to `/api/ai/chat`; it does not retrieve a merchant's complete PayPal history. Illustrative rows are labeled as illustrative. Sandbox rows contain only the capture information provided by this app's sandbox capture flow, with missing buyer/date fields left unavailable.
+
+Configure `ANTHROPIC_API_KEY` in `.env` and run `node server.js` to enable the Anthropic-backed assistant. Without the backend or key, the assistant remains usable through an explicitly labeled local fallback that summarizes visible records and does not claim live AI analysis. The AI service status and transaction-data status are shown separately.
+
+When AI returns a supported proposal with a transaction reference that matches an available row, the assistant displays its reason and evidence fields separately. Choose **Send to Approvals** to place it in the existing queue; the assistant never executes an action. Refund suggestions are eligible for the PayPal sandbox only when their reference is an available sandbox capture; other suggestions are simulated. Missing references and unsupported action types remain non-actionable findings. Approval is still required in the Approvals module.
+
+Current limits: available records are the illustrative examples and captures made through this demo, not an imported PayPal history. PayPal capture data may omit buyer, timestamp, or fee. The local fallback avoids unsupported totals and does not detect fraud. Sandbox captures are held in server memory and disappear when the backend restarts.
+
+## Approvals module
+
+Proposals enter the queue from the AI Assistant after a user chooses **Send to Approvals** or from the session's illustrative starter proposals. The queue shows source, action type, reason, transaction reference, amount, evidence, current status, and whether an action is eligible for PayPal Sandbox or simulated only. Filters cover status, type, and source. Select **Review proposal** for the full evidence and effect details; an additional confirmation step is required before any sandbox request.
+
+Only a refund tied to an exact completed USD capture recorded by this running backend can execute against PayPal Sandbox. The backend registers that proposal ID, capture ID, amount, and currency, then independently validates the link and remaining refundable captured amount before sending a refund. It never falls back to the latest capture. Refunds are marked Completed and added to Transactions only after PayPal returns `COMPLETED`. Dispute evidence, payout holds, illustrative refunds, and unsupported or unlinked proposals are simulated only or informational; approval does not call PayPal for them.
+
+Failed requests remain in the queue with a Failed status and can be retried or rejected. If PayPal returns a non-completed or uncertain status, duplicate submission is blocked until the sandbox state has been checked. Rejection never calls PayPal and may include an optional note. The newest-first audit trail records proposal ID, action type, decision, local decision time, available demo reviewer identity, reference, PayPal result ID/status when returned, and errors. Queue and audit state are session-only in the browser; the backend's capture/approval checks are held in server memory. Reloading the page or restarting the server clears this session state. This project has no database or production PayPal integration.
+
+## PayPal Sandbox module
+
+The PayPal Sandbox page reports whether the local backend is reachable, whether Sandbox credentials are configured and can obtain an OAuth token, whether the optional AI key is configured, and whether webhook signature verification has a configured webhook ID. A configured AI key or webhook ID indicates configuration only; it does not claim that every later provider request will succeed. The page always labels the environment **PayPal Sandbox — test transactions only**.
+
+To enable payments, create a PayPal developer Sandbox REST app, copy its Sandbox client ID and secret into the root `.env` as `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`, then run `node server.js` (Node 18+; no dependency install). Never put credentials in browser code. The demo accepts USD amounts from 0.01 through 10,000.00. Create an order, open the returned PayPal approval link in a new tab, approve it with a Sandbox buyer account, return to NovaPay, and choose **I approved the order · Capture payment**. The UI reports a capture only after the API returns `COMPLETED`; the returned capture ID, order ID, amount, currency, status, and fee when provided are shown. Completed captures enter Transactions with missing fields marked unavailable and can be explicitly linked by the Approvals flow. Stable request IDs help PayPal deduplicate retries; an uncertain capture result is blocked from automatic resubmission and should be checked in Sandbox. This is an order/capture demonstration, not a full PayPal transaction-history import.
+
+For webhook testing, expose the running local server through a trusted HTTPS tunnel (for example, a development tunnel) and add that public address plus `/api/webhook` to the Sandbox app's webhook configuration. Set `PAYPAL_WEBHOOK_ID` in `.env` to the webhook's ID and restart the server. The page lists the event type, PayPal event ID, received time, and one of **Verified**, **Failed**, **Unverified**, or **Verification error**. Unverified events are display-only and are never treated as transaction records. Do not share webhook signatures or credentials.
+
+Recent provider calls and received webhook events are held in server memory and disappear when the process restarts. Created orders, captures, approval registrations, and refund idempotency state are also in memory; restart the server to clear them. A capture from an earlier server session cannot be used for a new approval/refund. The integration supports USD sandbox order creation, capture, webhook-signature verification, and the specifically approved refund route; it does not implement production payments, other currencies, payout holds, dispute evidence submission, or full-history import.
 
 ## Demo flow for judges
 1. PayPal Sandbox → Create test order → approve as sandbox buyer → Capture.
-2. AI Assistant → "Detect unusual activity" → AI adds a proposal.
-3. Approvals → Approve the refund → sandbox refund executes, transaction + ledger rows appear, audit trail logs it.
+2. AI Assistant → ask about visible activity → review any supported proposal and send it to Approvals.
+3. Approvals → Approve the refund → the sandbox refund executes, a transaction row appears, and the audit trail records it.
 
 Figures on dashboard cards are illustrative seed data; PayPal calls are sandbox only. Sandbox amounts are USD.
 
@@ -91,8 +119,8 @@ This package now includes a functional static demo navigation/auth experience.
 The package does not contain a production authentication backend. The UI is explicitly labeled **DEMO AUTHENTICATION**.
 
 Demo login:
-- Email: `demo@novapay.app`
-- Password: `demo123`
+- Email: `user@novapay.app`
+- Password: `novapay123`
 
 Successful demo login stores a local demo session and opens `dashboard.html`.
 
@@ -104,21 +132,19 @@ Forgot Password provides a demo-mode instruction rather than pretending to send 
 The demo dashboard includes functional client-side views for:
 - Dashboard
 - Transactions
-- Ledger
-- Reports
 - AI Assistant
-- Anomalies
-- Settings
+- Approvals
+- PayPal Sandbox
 
 Views are routed through the URL hash and update the dashboard content without requiring a backend.
 
 ### Important
-No credentials or financial data are sent to a server by this static preview. Transaction values and financial examples in the dashboard are illustrative demo data only. The dashboard does not connect to PayPal or execute real financial actions.
+When opened as a static preview without `server.js`, the dashboard uses illustrative data and its sandbox integrations are unavailable. When run through `node server.js` with optional credentials in the server-side `.env`, the app sends requests to Anthropic and PayPal Sandbox as described above. It does not support production PayPal payments or import a merchant's full account history.
 
 ## Phase 4 notes
 
-- Nav: Home / Features / Pricing / Company are real sections (scroll-highlighted; mobile hamburger menu added). Dashboard nav: Dashboard, Transactions, Ledger, Reports, AI Assistant, Anomalies, Settings.
-- **Demo authentication only** (localStorage, no server, not secure): `demo@novapay.app` / `demo123`. Create Account stores a demo account locally and logs in; Forgot Password resets to `demo123` (demo mode, no email); Continue with Google is simulated.
+- Nav: Home / Features / Pricing / Company are real sections (scroll-highlighted; mobile hamburger menu added). Current dashboard nav: Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox.
+- **Demo authentication only** (localStorage, no server, not secure): `user@novapay.app` / `novapay123`. Create Account stores a demo account locally and logs in; Forgot Password resets to `novapay123` (demo mode, no email); Continue with Google is simulated.
 - `dashboard.html` redirects to the login modal (`preview.html#login`) when not signed in. Log Out clears the session.
 - Transactions search/type filter work; dashboard KPIs made internally consistent.
 
@@ -138,15 +164,13 @@ All financial figures in this static package are illustrative demo data and do n
 ## Phase 5 — Main dashboard
 Dashboard header (greeting, date selector, notifications, profile, theme switch), five KPI cards with trend indicators, sparklines, hover elevation, and a Cash Flow chart (Money In / Money Out / Net) whose 7D · 30D · 3M · 1Y filters regenerate the demo series, totals, axis and hover tooltip. The date selector also changes KPI values. Fixes: greeting now uses "Shikhar", the 82% ring label is visible, the load-time toast is removed, and the profile chip layout is repaired.
 
-## Phase 6 — Ledger, Transactions + Reports
-Clickable transactions (dashboard and Transactions view) open a detail dialog with focus trap, Esc and focus return; Ledger Snapshot card on the dashboard; Financial Health checklist with a working "3 Anomalies Detected" link to Anomalies; polished empty state with Reset filters and an error toast for unavailable transaction details. Fixes: stray closing `</div>` that broke view nesting, duplicate ✓/⚠ icons, Payouts figure aligned (₹7,70,000) across views, greeting hidden outside the Dashboard.
+## Phase 6 — Transactions and dashboard interactions
+Clickable transactions (dashboard and Transactions view) open a detail dialog with Escape handling and focus return; the Transactions view includes a polished empty state with Reset filters. The standalone Ledger and Anomalies views and dashboard snapshot have since been removed. Other fixes included aligning the Payouts figure (₹7,70,000) across views and hiding the greeting outside the Dashboard.
 
 
 ## Phase 7 — NovaPay AI + Agentic Action System
-- Upgraded AI Assistant with predefined demo responses for fees, refunds, monthly reports, and unusual activity.
-- Added four requested quick actions.
-- Added a Human Approval → Confirm Action → Processing → Demo Completion workflow.
-- Demo action explicitly never contacts PayPal or executes a real financial action.
+- Original AI Assistant behavior used predefined demo responses for fees, refunds, reports, and unusual activity. See **AI Assistant module** above for the current evidence-based workspace behavior.
+- Added the original Human Approval → Confirm Action → Processing → Demo Completion workflow.
 - Added responsive AI/agent styling and reduced-motion support.
 
 
@@ -167,10 +191,10 @@ Phase 8 is the final visual/quality pass over the existing static demo. Existing
 - Added safe-area-aware mobile spacing and horizontally scrollable financial tables.
 - Fonts: Montserrat via Google Fonts (online) with local/bundled fallback; see `src/fonts.css`.
 - Preserved light/dark theme persistence through the existing `novapay-theme` localStorage key.
-- Preserved all Demo Mode disclosures. No real PayPal, AI, refund, or financial action occurs.
+- Preserved Demo Mode disclosures. PayPal calls, when configured, use sandbox credentials only; the app does not claim production support or full-history import.
 
 ### Demo-only disclaimer
-This project contains illustrative data and demo workflows only. There is no production PayPal integration, no real AI backend, and no real financial action execution. Approval/refund flows simulate the user experience and must remain labeled Demo Mode until real integrations are connected.
+This project includes illustrative demo data and optional Anthropic and PayPal Sandbox integrations. PayPal actions are sandbox-only and require an explicit approval confirmation; the project has no production PayPal support. Illustrative proposals and unsupported action types remain simulated.
 
 ## Phase 8 test report
 
@@ -196,7 +220,7 @@ A Playwright executable was not available in the sandbox. An attempt to invoke P
 - Get Started / Watch Demo
 - Cash-flow chart range changes and tooltips
 - Transaction search/filter/detail/empty states
-- Ledger / AI / approval workflow
+- Transactions / AI / Approvals workflow
 - Toasts and feedback
 - 3D non-blocking behavior
 - Mobile drawer / AI bottom sheet / 320px no-x-scroll
@@ -208,8 +232,8 @@ A Playwright executable was not available in the sandbox. An attempt to invoke P
 
 These runtime items were implemented with the existing event handlers plus targeted Phase 8 enhancements, but they were not falsely marked as browser-tested.
 
-### Intentionally demo-only
-All PayPal activity, AI answers, anomaly signals, ledger figures and refund approval/execution are illustrative. No real financial transaction is performed.
+### Demo and sandbox boundaries
+Dashboard totals and transaction flags are illustrative. AI answers use either the explicitly labeled local fallback or the configured AI backend with available workspace transaction data. PayPal order captures and refunds are sandbox-only and require sandbox credentials and human approval; production PayPal support is not provided. The standalone Ledger and Anomalies modules have been removed from dashboard navigation and views.
 
 ## Phase 9 — Cinematic laptop hero + dashboard transition
 
@@ -221,7 +245,7 @@ All PayPal activity, AI answers, anomaly signals, ledger figures and refund appr
 - Serve over http (`python3 -m http.server`) to avoid `file://` blocking the `<use href="icons.svg#…">` sprite on the dashboard (pre-existing).
 
 ## Phase 9.12 — Login panel
-The Login / Get Started modal is now the animated split Login / Sign Up panel (`src/auth-panel.css`, markup in `preview.html`, logic in `src/landing.js`), themed with NovaPay tokens in light and dark. Demo authentication is unchanged (`demo@novapay.app` / `demo123`). The pointer reveal ribbon is 20% smaller (radius 48.64 px).
+The Login / Get Started modal is now the animated split Login / Sign Up panel (`src/auth-panel.css`, markup in `preview.html`, logic in `src/landing.js`), themed with NovaPay tokens in light and dark. Demo authentication is unchanged (`user@novapay.app` / `novapay123`). The pointer reveal ribbon is 20% smaller (radius 48.64 px).
 
 
 ## Hero orbit animation (added)

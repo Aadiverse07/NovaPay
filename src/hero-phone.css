@@ -1,0 +1,22 @@
+/* NovaPay hero — payment animation video (replaces the laptop in the hero).
+   assets/novapay-payment.webm  = the supplied animation with its white background removed (transparent, so it sits on
+                                  both the light and the dark theme); assets/novapay-payment.mp4 = original white-background fallback.
+   Story (10 s, plays once, then holds the last frame): hand enters -> phone arrives -> finger taps -> loading ring ->
+   "Payment Successful ₹2,500.00" with the green tick.  After the tap the right hand eases back beside the phone and STAYS
+   there (it no longer leaves the frame).   Playback logic: src/hero-video.js.
+   Dark theme uses assets/novapay-payment-dark.webm/.mp4 — same animation with the hands recoloured blue (swapped by hero-video.js).
+   The video lives in the old .laptop-wrap box, so the orbiting cards, glow and shadow keep the footprint the laptop had.
+   Resize it with --hp-w below. */
+.laptop-wrap .lp-float { perspective: none; }                 /* gentle bob (fx-bob-l) is inherited from hero-laptop.css */
+.laptop-wrap .hp-video-wrap {
+  --hp-w: 130%;                                               /* video width relative to the box (16:9); was 112% */
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+  width: var(--hp-w); aspect-ratio: 16 / 9; pointer-events: none; user-select: none;
+}
+.laptop-wrap .hp-video {
+  display: block; width: 100%; height: 100%; object-fit: contain; background: transparent;
+  filter: drop-shadow(0 1.6cqw 2.2cqw rgba(24, 47, 120, .20));
+}
+
+/* Kept only so hero-laptop.js / hero-orbit.js (which look for #lp-display) keep running; draws nothing. */
+.laptop-wrap .lp-display-stub { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
