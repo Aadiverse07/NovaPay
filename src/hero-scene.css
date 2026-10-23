@@ -203,3 +203,6 @@
 @media (max-width:520px){
   .dashboard-hero-art[data-integration-visual]{transform:none}
 }
+
+/* Remove the decorative orbit surrounding the dashboard hero laptop. */
+.dashboard-hero-art[data-integration-visual] .hs-orbit { display: none; }

@@ -25,14 +25,15 @@
 
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
   var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents",fundraising:"Fundraising",maintenance:"Maintenance",transparency:"Transparency"};
-  function activate(view,writeHash){
+  function activate(view,writeHash,preserveScroll){
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
     title.textContent=titles[view];
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
-    window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+    if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
+  window.NovaPayActivateView=activate;
   function route(){activate(location.hash.slice(1)||"dashboard",false)}
   nav.forEach(function(a){a.addEventListener("click",function(){activate(a.dataset.view,true)})});
   window.addEventListener("hashchange",route); window.addEventListener("popstate",route); route();
