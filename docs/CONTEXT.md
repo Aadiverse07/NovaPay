@@ -2,70 +2,67 @@
 
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
-- Branch: `backend`; last commit: `d791462 WIP Phase 3 task 5: record simulated verification`.
-- Current phase/task: Phase 3 live verification, reconciling existing Sandbox invoice drafts before any further provider action.
+- Branch: `backend`; latest commit before current WIP `2bda738 WIP Phase 3: reconcile Sandbox invoice drafts`; verifier/docs changes are uncommitted and ready for checkpoint.
+- Current phase/task: Phase 3 live verification, one real sandbox order/capture/refund and report parity.
 
 ## DONE
-- Phase 2 and Phase 3 backend implementation exists in the repository; Phase 3 is not complete because real invoice payment/paid-webhook linkage and real capture/refund report comparisons are unverified.
-- User reports migrations 0001–0004 applied. Prior live checks found the expected objects and exercised the 0004 guard.
-- Phase 3 verifier and simulated invoice sending are implemented: `scripts/verify-phase3.js`, `server/src/services/invoices.js`, `server/src/routes/invoices.js`.
-- Local Phase 3 regression gate: 60 unit tests passed; migrations 0001–0004 parsed; JS syntax and frontend/secrets hygiene passed (see `docs/TEST-REPORT.md`).
-- This reconciliation used read-only Supabase queries. The supplied `P3-644ca6d7c8694695b51e` has no local invoice row. Activity markers show a prior PayPal create success followed by ID extraction failure, no send call, and a later simulated send marker.
+- Phase 2/3 implementation and Phase 3 verifier exist. Phase 3 isn't closed yet.
+- User reports migrations 0001–0004 applied. Prior live checks covered Phase 3 security, roles, FX, report/CSV routes, and simulated invoice approval.
+- Sandbox drafts are harmless. User supplied invoice number `P3-644ca6d7c8694695b51e`; no local record remains. Earlier create succeeded but ID extraction failed before `/send`.
+- Decision logged: keep invoice sending SIMULATED; local approval gate/tracking verified, real Invoicing send is a known limitation. No more PayPal Invoicing calls.
+- Phase 3 verifier adapted locally to make one real $1 order, wait for buyer approval, capture, verify/replay signed webhook, refund, compare reports to ledger, and clean exact run records.
 
 ## IN PROGRESS
-- Reconcile user's reported Sandbox drafts to verifier create attempts. The supplied value matches verifier invoice-number format (`P3-` + 20 hex chars), but no local row or activity correlation field remains to prove an exact match. Other drafts were not inspected. Sending stays SIMULATED.
+- `scripts/verify-phase3.js`: local tests pass after payment/report changes; live preflight and order creation pending. User must approve the buyer purchase before capture/refund.
+- Paid linkage: verifier will mark UNVERIFIED if simulated invoice lacks a real PayPal invoice ID. Existing tests cover simulated send with `paypalInvoiceId:null` and webhook amount mismatch handling.
 
 ## NEXT STEPS
-1. Do not call PayPal create, send, get, or delete endpoints for invoice reconciliation; retain SIMULATED mode.
-2. If the user wants exact matching, ask them to inspect each remaining draft's invoice number, item, recipient, amount, and activity. Compare only with available local records; explain that cleaned-up request IDs may make exact attribution impossible.
-3. Keep real capture/refund report totals and signed paid-webhook linkage UNVERIFIED until valid sandbox data exists.
-4. If resuming Phase 3 later, run local regression checks and only the explicitly authorized safe live checks. Never imply a draft was sent or paid.
+1. Read-only preflight: branch/status, `.env.example` placeholders, `/api/status`, Supabase fixed Org A and test-table availability/counts; never print env values.
+2. Run `NOVAPAY_PHASE3_0004_APPLIED=true node scripts/verify-phase3.js` with ignored env `NOVAPAY_PHASE3_BUYER_EMAIL` set to the supplied US buyer. The script must make no Invoicing API calls.
+3. On approval URL: print plain text and wait. After user replies `approved`, continue capture, signed webhook, raw-body replay, refund, report parity, boundaries, CSV, and safe Phase 2 subset.
+4. Confirm paid-linkage limitation, clean only this run's rows, preserve fixed identities and append-only audit/activity. Record actual leftovers.
+5. Update all three continuity files. Run all tests and migration checks. Commit locally as `Phase 3: live verification (invoice send simulated)` only if no FAIL; do not push. Report and ask whether to continue Phase 4.
 
 ## USER ACTIONS PENDING
-- No browser payment or PayPal action is requested now. User has inspected one draft and reports several others; no invoice was sent or deleted.
-- Keep invoice sending in SIMULATED mode until reconciliation is complete. Do not delete drafts without explicit instruction.
-- For exact reconciliation, user may inspect other drafts and provide their invoice numbers and visible details; do not ask them to send or pay one.
+- Open the new order approval URL, sign in as US Personal Sandbox buyer `sb-jzrsh53532685@personal.example.com`, approve $1 with Visa, then reply exactly `approved`.
+- Do not send or delete invoice drafts. No more PayPal Invoicing calls.
 
 ## LIVE STATE
-- Migrations 0001/0002 previously verified; user reports 0003/0004 applied. Tunnel/webhook configuration is user-managed and was not touched in this reconciliation.
-- Port 3000 app and separate port 34872 process were not started, stopped, or restarted in this task.
+- Migrations 0001/0002 previously verified; user reports 0003/0004 applied. Tunnel/webhook user-managed and unchanged.
+- Do not restart server/tunnel unless necessary. Previous separate process on port 34872 is unrelated.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
-- No PayPal API calls or database writes were made in this reconciliation. Read-only queries used the fixed Phase 3 verifier org and selected only exact invoice fields/stage markers.
+- No order created in this resumed run yet. Earlier fixed Phase 3 org inventory had no capture/refund or verified invoice-paid event rows.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| Branch and worktree | PASS | 2026-10-24 | `git branch --show-current`, `git status`, `git log`; branch `backend`, HEAD `d791462` |
-| Local unit suite | PASS (latest recorded) | 2026-10-24 | `npm test`; 60 passed, 0 failed, before this docs-only reconciliation |
-| Migration parser | PASS (latest recorded) | 2026-10-24 | `npm run check:migrations`; migrations 0001–0004 parsed |
-| Exact local invoice-number lookup | PASS | 2026-10-24 | Read-only Supabase query; HTTP 200, 0 matching local rows |
-| Safe invoice activity review | PASS | 2026-10-24 | Read-only Supabase query; create success, extraction failure, no send marker, later simulated marker |
-| Exact external draft attribution | UNVERIFIED | 2026-10-24 | Provider request record did not retain invoice number/ID; local verifier row was cleaned |
-| Real capture/report totals and signed paid linkage | UNVERIFIED | 2026-10-24 | Existing live inventory had no capture/refund/paid event rows |
-| PayPal API calls / writes / deletes in this task | PASS: none | 2026-10-24 | No PayPal endpoints called; Supabase queries were GET only |
+| Branch | PASS | 2026-10-24 | `git branch --show-current` = `backend`; latest commit `2bda738` |
+| Unit suite | PASS | 2026-10-24 | `npm test`; 60 passed, 0 failed |
+| Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parse |
+| Verifier syntax/hygiene | PASS | 2026-10-24 | `node --check scripts/verify-phase3.js`; `git diff --check`; frontend diff empty; `.env` ignored/untracked |
+| Local invoice simulated approval | PASS, prior run | 2026-10-24 | live verifier; no PayPal create/send call |
+| Real capture/refund/report equality | UNVERIFIED | 2026-10-24 | New gated live run pending buyer approval |
+| Real Invoicing send / invoice paid linkage | UNVERIFIED | 2026-10-24 | SIMULATED mode; no real invoice ID/event |
 
 ## KNOWN ISSUES AND RISKS
-- Several Sandbox drafts may remain. The user examined one; it was Draft for $1.00 and was not sent/deleted.
-- Supplied `P3-644ca6d7c8694695b51e` is consistent with the verifier-generated custom invoice number, but exact association is unprovable because local cleanup removed the row and safe activity contains only stage/status markers.
-- The prior live create succeeded but ID extraction failed before `/send`; no buyer URL was produced. Do not call that draft sent.
-- Real capture, refund, ledger comparison, and `INVOICING.INVOICE.PAID` linkage remain unverified.
+- Existing Sandbox drafts remain; stop reconciliation and do not call PayPal Invoicing.
+- Reports need a fresh capture/refund in fixed Phase 3 Org A.
+- `mark_invoice_paid` looks up an actual PayPal invoice ID. Simulated invoice has none; capture-to-invoice trigger only links an invoice already carrying that payment ID.
+- Cleanup must use exact run IDs. Keep fixed test identities/orgs and append-only audit/activity rows; external Sandbox order/refund remain in provider history.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant it only to service_role; prove denial using an ordinary JWT.
-- PostgREST embeds need explicit foreign-key names when two relationships exist.
-- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup deletes journal_entries first (lines cascade), then audit_log, organizations, auth.users. Reuse fixed named fixtures; cleanup SQL is manual/destructive.
-- PayPal sandbox buyer must be US Personal; seller USD; Visa at checkout; webhook URL ends `/api/webhook` and webhook ID must match.
-- Raw body is needed for PayPal signature verification.
-- PayPal invoice_number limit is 25 characters; immediate term is `DUE_ON_RECEIPT`.
-- Compare FX timestamps as instants, not serialized strings.
-- Check port-3000 process before restarting; leave unrelated port 34872 and tunnel alone.
-- Verifier-created local invoice rows are cleaned up; retain enough nonsecret correlation data if future reconciliation needs exact provider attribution.
-- Never print `.env` values, full provider responses, authorization headers, or stack traces.
+- Supabase SQL Editor is transactional; errors roll back. Never edit an applied migration; add a numbered file.
+- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated and grant only service_role; test ordinary JWT denial.
+- PostgREST embeds need explicit foreign-key names when relationships collide.
+- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup journal entries before related rows and never delete fixed fixtures.
+- Sandbox buyer must be US Personal; seller USD; Visa; webhook URL ends `/api/webhook`; webhook ID must match. Raw body is required for signature verification.
+- PayPal invoice_number max 25; immediate term `DUE_ON_RECEIPT`; compare FX timestamps as instants.
+- Check port 3000 owner before restart; leave unrelated port 34872/tunnel untouched.
+- Never print `.env` values, provider bodies, Authorization headers, or stack traces.
 
 ## DO NOT
-- Do not push; touch no frontend files; use no force; weaken tests; edit applied migrations; commit `.env`; or send/delete/create PayPal invoices while reconciliation remains incomplete.
-- Do not treat a Draft as sent or paid.
+- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or call PayPal Invoicing endpoints.
+- Never claim a simulated invoice was sent/paid.
 
 ## RESUME COMMANDS
 - `git status --short`

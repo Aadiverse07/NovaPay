@@ -22,10 +22,11 @@ const fixtures = {
   approver: { email: 'novapay-phase3-approver@example.test', role: 'approver' },
 };
 const users = {}, tokens = {}, orgs = {};
-const created = { invoices: new Set(), events: new Set(), fx: [] };
+const created = { invoices: new Set(), events: new Set(), fx: [], reconciliationIds: new Set(), finance: null };
 const results = [];
 let failed = false;
 let paused = false;
+const runStartedAt = new Date().toISOString();
 
 function record(name, status, detail = '') {
   results.push({ name, status });
@@ -297,16 +298,139 @@ async function checkReportsAndPhase2Safe() {
   const available=[];for(const t of schemas)available.push((await service('/rest/v1/'+t+'?select=id&limit=0')).status===200);
   const tb=await api('/api/ledger/trial-balance',{token:tokens.A,orgId:orgs.A});
   const recon=await api('/api/reconciliation',{token:tokens.A,orgId:orgs.A});
+  if(recon.body?.run?.id)created.reconciliationIds.add(recon.body.run.id);
   record('Safe Phase 2 verifier subset (schema, trial balance, reconciliation)',available.every(Boolean)&&tb.status===200&&recon.status===200?'PASS':'FAIL','financial tables '+available.filter(Boolean).length+'/'+available.length+'; protected reads successful');
-  record('Live report totals match Phase 2 capture+refund data','UNVERIFIED','inventory found no completed capture or refund rows in either live organization');
+  const parity=await checkRealReportParity(start,end);
+  record('Live report totals equal this run ledger totals',parity?'PASS':'FAIL',parity?'capture and refund ledger lines match all five report totals':'one or more report totals differ from ledger-derived totals');
+}
+
+function amount(value){try{return BigInt(String(value||0));}catch{return 0n;}}
+function sum(rows,fn){return rows.reduce((n,row)=>n+fn(row),0n);}
+async function checkRealReportParity(start,end){
+  const reports={};
+  for(const name of ['profit-and-loss','trial-balance','fees','refunds','cash-movement']){
+    const r=await api('/api/reports/'+name+'?from='+start+'&to='+end,{token:tokens.A,orgId:orgs.A});
+    if(r.status!==200||!Array.isArray(r.body?.rows))return false;
+    reports[name]=r.body;
+  }
+  const ledger=await api('/api/ledger/entries?limit=100&from='+start+'T00:00:00.000Z&to='+end+'T23:59:59.999Z',{token:tokens.A,orgId:orgs.A});
+  if(ledger.status!==200||!Array.isArray(ledger.body?.entries))return false;
+  const entries=ledger.body.entries.filter(e=>e.currency==='USD'&&String(e.created_at||'').slice(0,10)>=start&&String(e.created_at||'').slice(0,10)<=end);
+  const lines=entries.flatMap(e=>(e.lines||[]).map(l=>({...l,source_type:e.source_type,period:String(e.created_at).slice(0,7)+'-01'})));
+  const value=(l)=>amount(l.debit_minor)-amount(l.credit_minor);
+  const pnl=reports['profit-and-loss'].rows;
+  const pnlRevenue=sum(lines.filter(l=>l.accounts?.account_type==='revenue'),l=>-value(l));
+  const pnlRefund=sum(lines.filter(l=>l.accounts?.account_type==='contra_revenue'),value);
+  const pnlExpense=sum(lines.filter(l=>l.accounts?.account_type==='expense'),value);
+  const pnlOk=sum(pnl.filter(r=>r.account_type==='revenue'),r=>amount(r.amount_minor))===pnlRevenue&&sum(pnl.filter(r=>r.account_type==='contra_revenue'),r=>amount(r.amount_minor))===pnlRefund&&sum(pnl.filter(r=>r.account_type==='expense'),r=>amount(r.amount_minor))===pnlExpense;
+  const trial=reports['trial-balance'];
+  const trialDebit=sum(lines,l=>amount(l.debit_minor)),trialCredit=sum(lines,l=>amount(l.credit_minor));
+  const trialOk=sum(trial.rows,r=>amount(r.debit_minor))===trialDebit&&sum(trial.rows,r=>amount(r.credit_minor))===trialCredit&&trialDebit===trialCredit;
+  const fee=sum(lines.filter(l=>l.accounts?.code==='5000'),value);
+  const feeOk=sum(reports.fees.rows,r=>amount(r.fee_minor))===fee;
+  const refundEntries=entries.filter(e=>e.source_type==='refund');
+  const refund=sum(lines.filter(l=>l.source_type==='refund'&&l.accounts?.code==='4050'),value);
+  const refundOk=sum(reports.refunds.rows,r=>amount(r.refund_minor))===refund&&sum(reports.refunds.rows,r=>amount(r.refund_count))===BigInt(refundEntries.length);
+  const cash=sum(lines.filter(l=>['1000','1010'].includes(l.accounts?.code)),value);
+  const cashOk=sum(reports['cash-movement'].rows,r=>amount(r.cash_movement_minor))===cash;
+  const first=start,afterFirst=new Date(Date.parse(start+'T00:00:00Z')+86400000).toISOString().slice(0,10),last=end;
+  const atBoundary=await api('/api/reports/trial-balance?from='+first+'&to='+first,{token:tokens.A,orgId:orgs.A});
+  const pastBoundary=await api('/api/reports/trial-balance?from='+afterFirst+'&to='+last,{token:tokens.A,orgId:orgs.A});
+  const boundaryOk=atBoundary.status===200&&atBoundary.body?.rows?.length>0&&pastBoundary.status===200&&pastBoundary.body?.rows?.length===0;
+  const csv=await api('/api/reports/profit-and-loss?from='+start+'&to='+end+'&format=csv',{token:tokens.A,orgId:orgs.A});
+  const csvOk=csv.status===200&&csv.response.headers.get('content-type')?.includes('text/csv')&&csv.text.includes('account_type');
+  record('Report date boundaries are inclusive at the period start',boundaryOk?'PASS':'FAIL','start-day rows='+String(atBoundary.body?.rows?.length||0)+'; start+1-day rows='+String(pastBoundary.body?.rows?.length||0));
+  record('CSV export returned for live ledger report',csvOk?'PASS':'FAIL','content-type='+String(csv.response.headers.get('content-type')||'unavailable'));
+  return pnlOk&&trialOk&&feeOk&&refundOk&&cashOk&&boundaryOk&&csvOk&&entries.some(e=>e.source_type==='capture')&&refundEntries.length===1;
+}
+
+async function countJournalSource(sourceType,sourceId){
+  const r=await service('/rest/v1/journal_entries?'+q({select:'id',org_id:'eq.'+orgs.A,source_type:'eq.'+sourceType,source_id:'eq.'+sourceId}));
+  if(r.status!==200||!Array.isArray(r.body))throw new Error('journal-source-count-failed');
+  return r.body.length;
+}
+async function waitForCaptureEvent(captureId){
+  const deadline=Date.now()+120000;
+  while(Date.now()<deadline){
+    const r=await service('/rest/v1/paypal_events?'+q({select:'event_id,event_type,raw_body,payload,headers,verification_status,processing_status',order:'created_at.desc',limit:'100'}));
+    if(r.status===200&&Array.isArray(r.body)){
+      const event=r.body.find(e=>e.event_type==='PAYMENT.CAPTURE.COMPLETED'&&e.payload?.resource?.id===captureId);
+      if(event)return event;
+    }
+    await new Promise(resolve=>setTimeout(resolve,2000));
+  }
+  return null;
+}
+function decodeRawBody(value){
+  if(typeof value!=='string')return null;
+  if(value.startsWith('\\\\x'))return Buffer.from(value.slice(3),'hex').toString('utf8');
+  if(value.startsWith('\\x'))return Buffer.from(value.slice(2),'hex').toString('utf8');
+  return value;
+}
+async function checkLivePaymentFlow(){
+  const requestKey=randomUUID().replaceAll('-','');
+  const order=await api('/api/paypal/create-order',{method:'POST',token:tokens.A,orgId:orgs.A,body:{amount:'1.00',currency:'USD',requestKey}});
+  if(order.status!==200||!order.body?.orderId||!order.body?.approveUrl){record('Real sandbox order created','FAIL','HTTP '+order.status);return false;}
+  created.finance={requestKey,orderId:order.body.orderId};
+  console.log('\nPAYPAL SANDBOX APPROVAL URL (open this in your browser):\n'+order.body.approveUrl+'\n');
+  paused=true;
+  const rl=createInterface({input:stdin,output:stdout});
+  const answer=(await rl.question('Approve the $1.00 purchase as the US Sandbox buyer, then reply approved here: ')).trim().toLowerCase();
+  rl.close();paused=false;
+  if(answer!=='approved'){record('Real sandbox buyer approval and payment','UNVERIFIED','buyer approval not confirmed');return false;}
+  const capture=await api('/api/paypal/capture',{method:'POST',token:tokens.A,orgId:orgs.A,body:{orderId:order.body.orderId}});
+  if(capture.status!==200||capture.body?.status!=='COMPLETED'||!capture.body?.captureId){record('Real sandbox order captured','FAIL','HTTP '+capture.status+'; response body suppressed');return false;}
+  created.finance.captureId=capture.body.captureId;
+  record('Real sandbox order captured','PASS','status=COMPLETED; gross='+capture.body.amount+' '+capture.body.currency);
+  const journalCount=await countJournalSource('capture',capture.body.captureId);
+  record('Capture posted to ledger once',journalCount===1?'PASS':'FAIL','journal entries='+journalCount);
+  const event=await waitForCaptureEvent(capture.body.captureId);
+  const verified=event?.verification_status==='verified'&&event?.processing_status==='processed';
+  if(event?.event_id)created.events.add(event.event_id);
+  record('Real PayPal-signed capture webhook processed',verified?'PASS':event?'FAIL':'UNVERIFIED',event?'verification='+event.verification_status+'; processing='+event.processing_status:'no matching event within 120 seconds');
+  if(verified){
+    created.finance.eventId=event.event_id;
+    const raw=decodeRawBody(event.raw_body),headers={'Content-Type':'application/json'};
+    for(const h of ['paypal-auth-algo','paypal-cert-url','paypal-transmission-id','paypal-transmission-sig','paypal-transmission-time'])if(event.headers?.[h])headers[h]=event.headers[h];
+    if(raw){const replay=[];for(let i=0;i<5;i++)replay.push((await req(webhookUrl,{method:'POST',headers,body:raw})).status);await new Promise(resolve=>setTimeout(resolve,1200));const after=await countJournalSource('capture',capture.body.captureId);const rows=await service('/rest/v1/paypal_events?'+q({select:'event_id',event_id:'eq.'+event.event_id}));record('Signed capture raw-body replay x5 remains one event and one ledger entry',replay.every(s=>s===200)&&rows.body?.length===1&&after===1?'PASS':'FAIL','replay HTTP='+replay.join('/')+'; event rows='+(rows.body?.length||0)+'; journal entries='+after);}else record('Signed capture raw-body replay x5 remains one event and one ledger entry','UNVERIFIED','stored raw body unavailable');
+  }else record('Signed capture raw-body replay x5 remains one event and one ledger entry','UNVERIFIED','no verified event to replay');
+  const amount=String(capture.body.amount),approvalId='APR-P3-REAL-'+randomUUID().replaceAll('-','').slice(0,20);
+  const registration=await api('/api/approvals/register',{method:'POST',token:tokens.A,orgId:orgs.A,body:{proposalType:'refund',approvalId,captureId:capture.body.captureId,amount,currency:'USD'}});
+  if(registration.status!==200||registration.body?.registered!==true){record('Real sandbox refund completed','FAIL','approval registration HTTP '+registration.status);return false;}
+  created.finance.approvalId=approvalId;
+  const refund=await api('/api/approvals/'+approvalId+'/decision',{method:'POST',token:tokens.approver,orgId:orgs.A,body:{decision:'approve',note:'Phase 3 real-data report verification'}});
+  if(refund.status!==200||!refund.body?.refundId){record('Real sandbox refund completed','FAIL','approval outcome HTTP '+refund.status);return false;}
+  created.finance.refundId=refund.body.refundId;
+  const refundEntries=await countJournalSource('refund',refund.body.refundId);
+  record('Real sandbox refund completed and posted once',refund.body.status==='COMPLETED'&&refundEntries===1?'PASS':'FAIL','status='+refund.body.status+'; refund ledger entries='+refundEntries);
+  return true;
 }
 
 async function cleanup() {
   const errors=[];
+  const remove=async(path,label)=>{const r=await service(path,{method:'DELETE',headers:{Prefer:'return=minimal'}});if(![200,204].includes(r.status))errors.push(label);};
   for(const id of created.invoices){const r=await service('/rest/v1/invoices?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});if(![200,204].includes(r.status))errors.push('invoice');}
   for(const id of created.events){const r=await service('/rest/v1/paypal_events?event_id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});if(![200,204].includes(r.status))errors.push('event');}
   for(const rate of created.fx){const r=await service('/rest/v1/fx_rates?'+q({org_id:'eq.'+orgs.A,base_currency:'eq.'+rate.base,quote_currency:'eq.'+rate.quote,fetched_at:'eq.'+rate.timestamp}),{method:'DELETE',headers:{Prefer:'return=minimal'}});if(![200,204].includes(r.status))errors.push('fx');}
-  record('Run-created operational rows cleaned',errors.length?'FAIL':'PASS',errors.length?'cleanup failed for '+[...new Set(errors)].join(','):'created invoices/events/fx rows removed; fixed users/orgs, memberships, chart accounts, and append-only audit records retained');
+  for(const id of created.reconciliationIds)await remove('/rest/v1/reconciliation_runs?'+q({id:'eq.'+id,org_id:'eq.'+orgs.A}),'reconciliation');
+  const f=created.finance;
+  if(f?.captureId){
+    const related=await service('/rest/v1/paypal_events?'+q({select:'event_id,payload',org_id:'eq.'+orgs.A,created_at:'gte.'+runStartedAt,limit:'100'}));
+    if(related.status===200&&Array.isArray(related.body))for(const row of related.body){const rid=row.payload?.resource?.id||row.payload?.resource?.supplementary_data?.related_ids?.capture_id;if(rid===f.captureId||rid===f.refundId)created.events.add(row.event_id);}
+    await remove('/rest/v1/journal_entries?'+q({org_id:'eq.'+orgs.A,source_type:'eq.capture',source_id:'eq.'+f.captureId}),'capture-ledger');
+    await remove('/rest/v1/transactions?'+q({org_id:'eq.'+orgs.A,source_type:'eq.capture',source_id:'eq.'+f.captureId}),'capture-transaction');
+    if(f.refundId){
+      await remove('/rest/v1/journal_entries?'+q({org_id:'eq.'+orgs.A,source_type:'eq.refund',source_id:'eq.'+f.refundId}),'refund-ledger');
+      await remove('/rest/v1/transactions?'+q({org_id:'eq.'+orgs.A,source_type:'eq.refund',source_id:'eq.'+f.refundId}),'refund-transaction');
+    }
+    if(f.approvalId)await remove('/rest/v1/approvals?'+q({org_id:'eq.'+orgs.A,id:'eq.'+f.approvalId}),'refund-approval');
+    const unlink=await service('/rest/v1/paypal_orders?'+q({org_id:'eq.'+orgs.A,paypal_order_id:'eq.'+f.orderId}),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({capture_id:null})});
+    if(![200,204].includes(unlink.status))errors.push('order-capture-unlink');
+    await remove('/rest/v1/paypal_captures?'+q({org_id:'eq.'+orgs.A,paypal_capture_id:'eq.'+f.captureId}),'capture');
+  }
+  if(f?.orderId)await remove('/rest/v1/paypal_orders?'+q({org_id:'eq.'+orgs.A,paypal_order_id:'eq.'+f.orderId}),'order');
+  if(f?.eventId)await remove('/rest/v1/paypal_events?'+q({provider:'eq.paypal',event_id:'eq.'+f.eventId}),'capture-event');
+  record('Run-created rows cleaned',errors.length?'FAIL':'PASS',errors.length?'cleanup failed for '+[...new Set(errors)].join(','):'this run’s invoices, FX, reconciliation, event, order, capture, refund, transaction, approval, and journal rows removed; fixed users/orgs and append-only audit/activity rows retained; Sandbox payment/refund remain in provider history');
 }
 
 async function run() {
@@ -323,9 +447,9 @@ async function run() {
   const email=process.env.NOVAPAY_PHASE3_BUYER_EMAIL||'';
   const invoice=await createApiInvoice(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)?email:'phase3-pending@example.test');
   const approval=await checkInvoiceRoles(invoice);
+  await checkLivePaymentFlow();
   await checkReportsAndPhase2Safe();
-  if(email)await checkInvoicePayment(invoice,approval);
-  else record('Real invoice send and payment','UNVERIFIED','set NOVAPAY_PHASE3_BUYER_EMAIL to the US Personal Sandbox buyer before running; no invoice was sent');
+  record('Real invoice paid linkage for SIMULATED invoice','UNVERIFIED','simulated invoices have no PayPal invoice ID; real Invoicing send is a known limitation; existing unit coverage verifies simulated approval without provider calls and amount-mismatch handling');
 }
 
 try {

@@ -206,3 +206,10 @@
 - Choice: Keep invoice sending SIMULATED and make no provider create/send/delete calls. Treat `P3-644ca6d7c8694695b51e` as consistent with the verifier's invoice-number format, but not conclusively matched to a specific provider request.
 - Reason: The verifier generated `P3-` plus 20 hexadecimal characters, but cleanup removed its local invoice row after the create response failed ID extraction; the safe activity log has no invoice number or PayPal ID. Logs prove create succeeded and send was never called, while the later local send was simulated. The user reports the dashboard draft is still Draft and explicitly requested reconciliation before any new provider request.
 - Source: Read-only Supabase query and user-provided Sandbox observation, 2026-10-24. Rejected alternatives: infer an exact draft-to-request match from format alone, send/delete a draft, or issue another PayPal request.
+
+## Phase 3 live verification: invoice send limitation — 2026-10-24
+
+- Question: Should Phase 3 keep trying real PayPal Invoicing send while validating financial reports and capture linkage?
+- Choice: Keep invoice send `SIMULATED` and record real Invoicing send as a known limitation. Approval gating and local invoice tracking are verified; real send is not verified live. Do not make additional PayPal Invoicing calls.
+- Reason: A prior create succeeded but the local response parser failed before `/send`; the user has found several harmless Drafts and explicitly prohibited more Invoicing calls. A simulated invoice has no real PayPal invoice ID, so `INVOICING.INVOICE.PAID` cannot be proven against a real capture through the existing lookup keyed by `paypal_invoice_id`.
+- Source: Prior redacted `api_activity` stage markers, current verifier and migrations, and user's 2026-10-24 instruction. Rejected alternative: create/send another Sandbox invoice or claim a capture webhook proves invoice-paid linkage.
