@@ -168,7 +168,7 @@ Allowed roles: `owner`, `admin`, `accountant`. Request:
 {"invoiceNumber":"INV-1001","customerName":"Avery Customer","customerEmail":"avery@example.test","currency":"USD","lines":[{"description":"Consulting","quantity":"2","unitPrice":"50.00","taxRate":"0.0825"}],"total":"1.00"}
 ```
 
-Client totals/amounts are ignored and recalculated from line quantity, unit price, and tax rate. The response is HTTP 201 `{ "invoice": <invoice> }`; the invoice contains server-computed `subtotal`, `tax`, `total` and their minor-unit values, `state: "draft"`, and computed lines. Invalid required fields or line amounts return HTTP 400 `VALIDATION_ERROR`; invoice-number conflicts return HTTP 409.
+`invoiceNumber` is limited to 25 characters to match PayPal Invoicing. Client totals/amounts are ignored and recalculated from line quantity, unit price, and tax rate. The response is HTTP 201 `{ "invoice": <invoice> }`; the invoice contains server-computed `subtotal`, `tax`, `total` and their minor-unit values, `state: "draft"`, and computed lines. Invalid required fields or line amounts return HTTP 400 `VALIDATION_ERROR`; invoice-number conflicts return HTTP 409.
 
 ### `GET /api/invoices/:invoiceId`
 

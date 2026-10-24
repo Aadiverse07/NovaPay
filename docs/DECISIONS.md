@@ -110,3 +110,27 @@
 - Reason: PostgREST does not expose the function definition through the current application API, and a behavioral probe on an existing invoice could mutate user data. The actual mismatch assertion runs only against a verifier-created invoice after confirmation.
 - Source: Read-only inspection of 0003/0004 and live verifier safety review, 2026-10-24.
 - Rejected alternative: call the old/new RPC with a production or unrelated invoice to infer which function body is installed.
+
+## Phase 3 live server version — 2026-10-24
+
+- Question: Why did live FX and invoice API calls return generic 405/404 responses despite current routes existing in source?
+- Choice: Restart only the Node process listening on port 3000 after confirming it started before the Phase 3 route commit; leave the separate port-34872 process and ngrok untouched.
+- Reason: `ps`/`lsof` showed PID 17366 on port 3000 started at 13:40 local, before Phase 3 commit `e6e1953` at 15:16 local. Its generic fallback responses match the observed methods/routes missing from the loaded code.
+- Source: Local process list, listening-socket ownership, git commit timestamp, and verifier response statuses, checked 2026-10-24.
+- Rejected alternative: modify current route code to accommodate responses from the stale running build.
+
+## PayPal invoice request contract — 2026-10-24
+
+- Question: Which invoice fields and constraints should the backend enforce before sending to PayPal?
+- Choice: Limit invoice numbers to PayPal's documented 25-character maximum and send `detail.payment_term.term_type: DUE_ON_RECEIPT` for the verifier's immediate-payment invoice.
+- Reason: Safe PayPal activity recorded draft creation HTTP 400; the live verifier had generated a 35-character number. The current PayPal minimum-create guide lists `payment_term.term_type`, and the invoice object limits `invoice_number` to 25. These are direct, testable payload constraints.
+- Source: [PayPal Invoicing use cases](https://developer.paypal.com/invoicing/use-cases/) and [Invoice object](https://developer.paypal.com/invoicing/object/), checked 2026-10-24.
+- Rejected alternative: keep allowing 64-character numbers and truncate them only when sending, which would make PayPal's number differ from the stored invoice number.
+
+## FX cache timestamp assertion — 2026-10-24
+
+- Question: How should the verifier compare a cached FX timestamp when PostgREST and the first response serialize the same instant differently?
+- Choice: Compare `Date.parse(first.timestamp) === Date.parse(second.timestamp)` and keep exact instant equality.
+- Reason: Live checks returned HTTP 200 twice and equal rate values, while literal timestamp strings differed. The assertion should validate an identical instant rather than identical ISO formatting; do not relax rate or cache behavior checks.
+- Source: Phase 3 live verifier output, 2026-10-24.
+- Rejected alternative: compare strings or accept any timestamp within an arbitrary time window.

@@ -12,7 +12,7 @@ const lineSchema=z.object({
   unitPrice:z.string().regex(/^\d{1,10}(?:\.\d{1,2})?$/),
   taxRate:z.union([z.string(),z.number()]).optional().transform((v)=>v==null?'0':String(v)).refine((v)=>/^(?:0(?:\.\d{1,4})?|1(?:\.0{1,4})?)$/.test(v)),
 });
-const createSchema=z.object({invoiceNumber:z.string().trim().min(1).max(64),customerName:z.string().trim().min(1).max(160),customerEmail:z.string().email().max(254),currency:z.string().regex(/^[A-Za-z]{3}$/).transform((v)=>v.toUpperCase()),lines:z.array(lineSchema).min(1).max(100)});
+const createSchema=z.object({invoiceNumber:z.string().trim().min(1).max(25),customerName:z.string().trim().min(1).max(160),customerEmail:z.string().email().max(254),currency:z.string().regex(/^[A-Za-z]{3}$/).transform((v)=>v.toUpperCase()),lines:z.array(lineSchema).min(1).max(100)});
 const idSchema=z.string().uuid();
 
 export function invoiceRoutes({repos}) {

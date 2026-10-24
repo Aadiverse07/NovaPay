@@ -87,5 +87,6 @@ test('Phase 3 routes return tenant-scoped FX, report, and recalculated invoice s
     const invalidInvoice=await call('/api/invoices',{method:'POST',body:JSON.stringify({invoiceNumber:'bad',lines:[]})});assert.equal(invalidInvoice.status,400);
     const invoice=await call('/api/invoices',{method:'POST',body:JSON.stringify({invoiceNumber:'INV-T',customerName:'Test Customer',customerEmail:'customer@example.test',currency:'USD',subtotalMinor:1,totalMinor:1,lines:[{description:'Service',quantity:'1',unitPrice:'12.00'}]})});
     const invoiceBody=await invoice.json();assert.equal(invoice.status,201);assert.equal(invoiceBody.invoice.totalMinor,1200);
+    const tooLong=await call('/api/invoices',{method:'POST',body:JSON.stringify({invoiceNumber:'X'.repeat(26),customerName:'Test Customer',customerEmail:'customer@example.test',currency:'USD',lines:[{description:'Service',quantity:'1',unitPrice:'1.00'}]})});assert.equal(tooLong.status,400);
   }finally{await new Promise((resolve)=>server.close(resolve));}
 });
