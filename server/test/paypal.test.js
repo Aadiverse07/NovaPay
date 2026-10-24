@@ -41,3 +41,36 @@ test('webhook verification request embeds the exact raw event bytes', async () =
     assert.deepEqual(JSON.parse(requestBodies[0]).webhook_event,JSON.parse(raw));
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('PayPal error activity logs expose only safe issue enums, not provider messages or debug ids',async()=>{
+  const originalFetch=globalThis.fetch, calls=[];
+  globalThis.fetch=async(_url,options)=>String(options.body).includes('grant_type=client_credentials')
+    ?new Response(JSON.stringify({access_token:'test-token',expires_in:3600}),{status:200})
+    :new Response(JSON.stringify({name:'INVALID_REQUEST',debug_id:'private-debug-value',message:'private provider text',details:[{issue:'INVALID_STRING_LENGTH',description:'private detail text'}]}),{status:400});
+  try{
+    const service=createPayPalService({config:{PAYPAL_CLIENT_ID:'test',PAYPAL_CLIENT_SECRET:'test'},events:{addCall(call){calls.push(call);}}});
+    await assert.rejects(service.pp('POST','/v2/invoicing/invoices',{},'request-id','org'),{statusCode:502});
+    const message=calls.at(-1).m;
+    assert.match(message,/INVALID_REQUEST:INVALID_STRING_LENGTH/);
+    assert.doesNotMatch(message,/private|debug|provider text/);
+  }finally{globalThis.fetch=originalFetch;}
+});
+
+test('PayPal error activity keeps issue enums when provider omits name and labels unstructured bodies safely',async()=>{
+  const originalFetch=globalThis.fetch;
+  let body=JSON.stringify({details:[{issue:'INVOICE_ALREADY_EXISTS',description:'private description'}],message:'private message'});
+  globalThis.fetch=async(_url,options)=>String(options.body).includes('grant_type=client_credentials')
+    ?new Response(JSON.stringify({access_token:'test-token',expires_in:3600}),{status:200})
+    :new Response(body,{status:400});
+  try{
+    const calls=[];
+    const service=createPayPalService({config:{PAYPAL_CLIENT_ID:'test',PAYPAL_CLIENT_SECRET:'test'},events:{addCall(call){calls.push(call);}}});
+    await assert.rejects(service.pp('POST','/v2/invoicing/invoices',{},'request-id','org'),{statusCode:502});
+    assert.match(calls.at(-1).m,/PAYPAL_ERROR:INVOICE_ALREADY_EXISTS/);
+    assert.doesNotMatch(calls.at(-1).m,/private/);
+    body='<html>secretly private gateway response</html>';
+    await assert.rejects(service.pp('POST','/v2/invoicing/invoices',{},'request-id-2','org'),{statusCode:502});
+    assert.match(calls.at(-1).m,/NON_JSON_ERROR/);
+    assert.doesNotMatch(calls.at(-1).m,/secretly|private|gateway/);
+  }finally{globalThis.fetch=originalFetch;}
+});

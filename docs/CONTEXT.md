@@ -1,77 +1,72 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-10-24 (Asia/Kolkata)
-- Branch: `backend`
-- Last commit before handoff: `c453510` (`WIP Phase 3 task 2: record verification gate`)
-- Current phase/task: Phase 3 live verification; `scripts/verify-phase3.js` mid-verification, paused after live attempts and before further PayPal activity diagnostics.
+- Date/time: 2026-10-24, Asia/Kolkata.
+- Branch: `backend`; last commit before checkpoint: `00fa9be WIP-BROKEN: Phase 3 live verification handoff`.
+- Phase/task: Phase 3 live verification, Task 5 — blocked invoice send diagnosis; do not continue live invoice creation.
 
 ## DONE
-- Phase 2 and prior Phase 3 implementation are in earlier commits; Phase 2 live data inventory found no completed captures/refunds in the live project.
-- Phase 3 hardening WIP at `f531c4c`: CSV formula neutralization, invoice paid amount/currency guard migration 0004, webhook mismatch handling, tests, and verifier.
-- User reports 0004 applied; live mismatch assertion passed on a verifier-created invoice.
-- Current local test run after invoice contract changes: 54 passed; migrations 0001–0004 parsed.
-- Live checks passed: 8 invoice RPCs denied to ordinary JWT (403); service-role controlled RPC assertions 11/11; nine own/cross-tenant reads isolated; four direct writes denied; invoice totals recalculated; viewer denied create/send; accountant could create but not approve; reports/date filters/CSV and formula neutralization; 9/9 Phase 2 tables and protected trial-balance/reconciliation requests.
+- Phase 2 and Phase 3 implementation are committed through `e6e1953`; Phase 3 live verification remains incomplete.
+- User reports migrations 0001–0004 applied; read-only live probes returned HTTP 200 for Phase 3 objects and status.
+- Verifier passes ordinary-JWT denial on 8 RPCs, 11 service/mismatch assertions, cross-tenant isolation, direct-write denial, invoice arithmetic/roles, report routes/date filters/CSV, and Phase 2 schema/protected reads.
+- FX live provider/cache works (rate/timestamp instant match); provider outage returns unavailable without a stale/invented conversion.
+- Invoice validation uses PayPal's 25-character invoice-number limit and DUE_ON_RECEIPT. Safe API activity logger and tests redact provider messages/debug IDs and retain only issue enums or generic body categories.
 
 ## IN PROGRESS
-- Files changed since last checkpoint: `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `scripts/verify-phase3.js`, `server/src/routes/invoices.js`, `server/src/services/invoices.js`, `server/test/phase3-services.test.js`.
-- `scripts/verify-phase3.js` still compares FX timestamp strings literally. Latest live call returned equal rates and HTTP 200 twice, but timestamp strings differed; compare `Date.parse()` values before rerunning.
-- PayPal invoice action returned HTTP 502. Safe `api_activity` query showed invoice-create statuses 201 and 400 but did not yet identify which attempt/current stage; checking whether send endpoint failed or a draft remains in Sandbox. No browser payment step occurred.
-- PayPal draft request now uses a 23-character test invoice number, route limit is 25 characters, and `DUE_ON_RECEIPT` is included. These changes passed local tests; live success is not yet confirmed.
-- Potential external PayPal draft may exist after a 201 create response. Script cleanup removes local run-created rows, not provider-side drafts; inspect Sandbox before retrying.
+- Invoice send remains BLOCKED after repeated live HTTP 502s. Latest safe activity shows invoice create HTTP 201, no `/send` request, and no safe provider error name/issue. The service catches persistence and provider-stage failures together, so exact stage is not known.
+- `docs/TEST-REPORT.md` records latest live result. No browser payment, approval URL, signed paid webhook, or final Phase 3 gate pass exists.
+- Current WIP changes: `server/src/services/paypal.js`, `server/test/paypal.test.js`, `scripts/verify-phase3.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 
 ## NEXT STEPS
-1. Inspect only route/status text in the dedicated org's `api_activity`; determine whether `/send` failed and whether a Sandbox draft exists. Do not print provider response bodies.
-2. Fix the FX assertion to compare timestamps as instants; rerun `npm test`, migration parser, syntax, and hygiene checks.
-3. Resume the verifier with the buyer email supplied in chat only as a process environment variable. If send succeeds, provide its payer URL and wait for user to pay.
-4. After payment, verify signed webhook, 5x replay, status change, and cleanup. Append every result to `docs/TEST-REPORT.md`.
-5. Phase 3 remains incomplete while any required check is FAIL or UNVERIFIED; do not make the final phase commit or push.
+1. Do not create another live PayPal invoice until the create/persist/send boundary is diagnosed; inspect app/server safe errors and verify whether database RPC `set_invoice_paypal_draft` succeeded for the test run.
+2. Ask the user to inspect the PayPal Sandbox invoice list for drafts created by prior HTTP 201 requests; verifier removes local rows only.
+3. Resolve the HTTP 502 source with focused code/tests; preserve safe logging and never print provider bodies or keys.
+4. Real Phase 2 report totals need a surviving valid capture/refund dataset; current inventory had none, so keep UNVERIFIED absent data.
+5. After human/provider prerequisites, rerun the invoice flow, pause only if a payer URL is printed, and verify signed webhook/replay/ledger status.
+6. Run the full Phase 3 gate. Do not make a final phase commit or ask to advance while FAIL/BLOCKED/UNVERIFIED items remain. WIP local checkpoint only; never push.
 
 ## USER ACTIONS PENDING
-- If the verifier prints a Sandbox payer URL, pay the invoice as the US Personal Sandbox buyer in the browser, then return and enter `paid` at the verifier prompt.
-- Ensure the PayPal webhook remains subscribed to `INVOICING.INVOICE.PAID` and capture/refund events.
-- Keep the tunnel and port-3000 server running during webhook verification.
+- Inspect PayPal Sandbox invoice list for any drafts from prior HTTP 201 creates; report whether drafts exist. No buyer payment step is available because no payer URL was returned.
+- Keep webhook subscription (`INVOICING.INVOICE.PAID`, capture, refund), tunnel, and port-3000 server running if continuing later.
 
 ## LIVE STATE
-- Migrations 0001/0002 previously verified applied; 0003 user-reported applied and its objects previously returned HTTP 200; 0004 user-reported applied and its amount-mismatch behavior passed live.
-- User reports the tunnel/webhook are configured at the current trycloudflare URL. Ngrok/cloudflare configuration was not changed.
-- Port 3000: stale Node process was restarted; `npm start` now runs `node server/index.js` from this checkout (tool session 3735). Keep it running.
-- Port 34872: separate Node listener in the same repo checkout (PID observed as 20134); purpose not established. It did not own port 3000 and was left untouched to avoid disrupting unrelated work.
-- Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`. No key values recorded.
+- 0001/0002 previously verified applied; 0003/0004 user-reported applied and live objects/0004 mismatch behavior observed.
+- Tunnel/webhook remain user-configured; untouched. Port 3000 server is running from this checkout after safe-logger refresh. Port 34872 listener PID 20134 remains untouched.
+- Buyer setting is read from ignored `NOVAPAY_PHASE3_BUYER_EMAIL`; no email or key values recorded. Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
 
 ## TEST STATE
-| Check | Status | Date | Evidence / command |
+| Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| Unit suite | PASS | 2026-10-24 | `npm test` — 54 passed, 0 failed |
-| Migration parser | PASS | 2026-10-24 | `npm run check:migrations` — 0001–0004 parse |
-| JS syntax/diff/frontend/env hygiene | PASS | 2026-10-24 | `node --check` all server/scripts; `git diff --check`; no frontend paths; `.env` ignored/untracked |
-| Live auth/RPC/RLS/direct writes | PASS | 2026-10-24 | verifier: 8/8 JWT RPC denials, 11/11 service assertions, tenant isolation, 4/4 writes denied |
-| Invoice roles/totals and report routes | PASS | 2026-10-24 | viewer/accountant checks, server totals, five reports, date filters, CSV neutralization |
-| FX live cache | FAIL | 2026-10-24 | both HTTP 200 and rates equal; verifier's string timestamp equality failed |
-| PayPal invoice send / paid webhook | UNVERIFIED | 2026-10-24 | API returned 502; no browser payment or signed paid event |
-| Real Phase 2 capture/refund report totals | UNVERIFIED | 2026-10-24 | live inventory had zero completed captures/refunds |
-| Run cleanup | PASS, scoped | 2026-10-24 | verifier reported local invoices/events/FX removed; fixed users/orgs and audit rows retained; possible PayPal draft requires dashboard check |
+| Branch/worktree | PASS | 2026-10-24 | branch `backend`; local changes only in six backend/docs files |
+| Install | PASS | 2026-10-24 | `npm ci`; 89 packages, 0 vulnerabilities |
+| Unit suite | PASS | 2026-10-24 | `npm test`; 56 passed, 0 failed |
+| Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parse |
+| Live status/schema | PASS | 2026-10-24 | `/api/status` 200; nine Phase 3 objects HTTP 200 |
+| Live security/roles/routes/FX | PASS | 2026-10-24 | latest verifier: 8/8 JWT RPC denials, 11/11 service assertions, isolation, writes, roles, FX, reports |
+| Invoice send/paid webhook | BLOCKED | 2026-10-24 | 3 live attempts returned 502; create 201/no `/send`; no browser payment or signed event |
+| Real report totals | UNVERIFIED | 2026-10-24 | live org inventory had zero completed capture/refund rows |
+| Cleanup | PASS, scoped | 2026-10-24 | run-created local invoices/events/FX removed; fixed fixtures and audit rows retained |
+| Frontend/secrets hygiene | PASS | 2026-10-24 | frontend diff empty; `.env` ignored/untracked; no secrets in changed files |
 
 ## KNOWN ISSUES AND RISKS
-- Live verifier currently has a FAIL due to incorrect timestamp-string comparison; compare parsed instants, do not weaken the check.
-- Invoice send is not confirmed. Provider-side draft may remain after a successful create; check Sandbox before repeating.
-- The old server process initially produced generic 405/404 fallbacks because it started before the Phase 3 route commit. It was restarted. RPC 403s are expected security denials, not that stale-process issue.
-- No historical capture/refund data exists for the required real-data report comparison.
-- Continuity test reports are append-only. Audit rows and fixed fixture users/orgs remain by design.
+- Invoice send failure stage is not isolated; latest evidence is provider create 201 and no send activity. Check if `set_invoice_paypal_draft` failed or server app error surfaced safely.
+- PayPal drafts may remain in Sandbox although local verifier rows were deleted; user must inspect dashboard.
+- Historical capture/refund totals cannot be proven from this live project's current data.
+- No final Phase 3 commit is allowed while blocked/unverified criteria remain. No push.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; syntax/runtime errors roll everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER/posting RPC must revoke execute from public, anon, authenticated and grant only service_role; test with ordinary JWT.
-- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
-- `audit_log` is insert-only with ON DELETE RESTRICT; cleanup must remove journal_entries first, then audit rows/organizations/auth users in manual test cleanup. Reuse fixed test fixtures.
-- Sandbox buyer must be US Personal; seller USD; Visa; webhook URL ends `/api/webhook`; webhook ID must match. Raw body is required for PayPal signature verification.
-- Current PayPal Invoicing docs cap `invoice_number` at 25 characters; create request includes `detail.payment_term.term_type: DUE_ON_RECEIPT`.
-- FX timestamps can serialize differently while representing the same instant; compare parsed date values.
-- A local app restart can be required after route changes; verify the PID owning port 3000 and its start time. Do not kill unrelated listeners.
-- Never print `.env` values or full provider responses.
+- Supabase SQL Editor is transactional; errors roll back. Never edit applied migrations; add a numbered migration.
+- SECURITY DEFINER/posting RPCs must revoke execute from public, anon, authenticated and grant only service_role; test ordinary JWT denial.
+- PostgREST embeds need explicit FK names when multiple relationships exist.
+- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup test journal_entries before audit rows/orgs/auth users. Reuse fixed named fixtures.
+- Sandbox buyer must be US Personal, seller USD, Visa; webhook URL ends `/api/webhook`, webhook ID must match, and raw body is required for signature verification.
+- PayPal invoice_number maximum is 25 characters; immediate payment uses `DUE_ON_RECEIPT`.
+- Compare FX timestamp instants, not string serialization.
+- Check port-3000 PID before app restarts; leave unrelated port 34872 listener/tunnel untouched.
+- Never print `.env` values, complete provider responses, auth headers, or stack traces.
 
 ## DO NOT
-- Do not push; do not touch frontend source; do not use force; do not weaken tests; do not edit applied migrations; never commit `.env` or secrets.
+- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or create more Sandbox invoices until diagnosis.
 
 ## RESUME COMMANDS
 - `git status --short`

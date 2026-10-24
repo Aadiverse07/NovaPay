@@ -57,7 +57,14 @@ export function createPayPalService({ config, events }) {
       log(`${method} ${url} · network error`, false, orgId);
       throw Object.assign(new Error('PayPal Sandbox request failed. Check the connection and recent API activity.'), { requestSent: true, statusCode: 502 });
     }
-    const data = await response.json().catch(() => ({})); log(`${method} ${url} → ${response.status}`, response.ok, orgId);
+    const responseText = await response.text().catch(() => '');
+    let data = {};
+    let structuredError = false;
+    try { data = responseText ? JSON.parse(responseText) : {}; structuredError = Boolean(responseText); } catch {}
+    const providerName=String(data?.name||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,48);
+    const providerIssues=Array.isArray(data?.details)?[...new Set(data.details.map((item)=>String(item?.issue||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,48)).filter(Boolean))].slice(0,4):[];
+    const safeDiagnostic=!response.ok?` [${providerName|| (providerIssues.length?'PAYPAL_ERROR':structuredError?'UNCLASSIFIED_ERROR':'NON_JSON_ERROR')}${providerIssues.length?':'+providerIssues.join(','):''}]`:'';
+    log(`${method} ${url} → ${response.status}${safeDiagnostic}`, response.ok, orgId);
     if (!response.ok) { const error = new Error('PayPal Sandbox returned an error for this request. Check the API activity log and sandbox order state.'); error.requestSent = true; error.paypalResponse = true; error.statusCode = 502; throw error; }
     return data;
   }
