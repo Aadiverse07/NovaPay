@@ -31,7 +31,7 @@
 - Migrations 0001/0002 previously verified; user reports 0003/0004 applied.
 - Tunnel process PID 17036: `cloudflared tunnel --url http://localhost:3000`. Registered hostname does not resolve; `dig google.com` resolves. Local app was absent, then started with `npm start` and local `/api/status` returns 200. No tunnel settings changed.
 - Fixed Phase 3 Org A read-only counts before this run: orders/captures/transactions/journal entries/approvals/events all 0; 7 prior reconciliation runs.
-- One $1 `PAYER_ACTION_REQUIRED` order remains, exactly one. Four local invoices, three approvals, 14 invoice events, and one FX row from failed run were cleaned by deleting exact four invoices and FX row; cascades removed related events/approvals. Reuse the one pending order by key; no new provider order create. No PayPal Invoicing calls.
+- One $1 `PAYER_ACTION_REQUIRED` order remains, exactly one. First failed run’s four invoices/approvals/events and FX row were cleaned; second run recreated verifier rows, then exited because no TTY. Clean its exact rows before PTY rerun. Same single pending order remains reusable; no new provider create. No PayPal Invoicing calls.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
 
 ## TEST STATE
@@ -44,7 +44,7 @@
 | Local app | PASS | 2026-10-24 | `npm start`; `GET /api/status` HTTP 200 |
 | Registered webhook reachability | PASS | 2026-10-24 | Public `/api/status` HTTP 200; DNS resolves; registered webhook URL and capture/refund events match |
 | Real capture/refund/report parity | UNVERIFIED | 2026-10-24 | First run stopped after order creation due missing `createInterface`; no buyer approval |
-| Live verifier pause | FAIL then fixed | 2026-10-24 | First run `createInterface is not defined`; missing import fixed; 60/60 tests pass; pending order reusable |
+| Live verifier pause | FAIL then fixed | 2026-10-24 | Missing import fixed; then no-TTY unsettled top-level await; use PTY; no payment |
 | Failed-run local cleanup | PASS | 2026-10-24 | 4 P3 invoices/related rows and 1 FX row removed; 1 unpaid order retained for idempotent reuse |
 | Real Invoicing send/paid linkage | UNVERIFIED | 2026-10-24 | Invoice send is SIMULATED; no real provider invoice ID |
 
