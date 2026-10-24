@@ -188,18 +188,19 @@ async function checkFx() {
   if(!pair){record('FX live request and cache','UNVERIFIED','no unused rate pair in fixed test organization');return;}
   const path='/api/fx/convert?amount=1.00&base='+pair[0]+'&quote='+pair[1];
   const first=await api(path,{token:tokens.A,orgId:orgs.A});
-  if(first.status!==200||!first.body?.rate||!first.body?.source||!first.body?.timestamp){record('FX live request and cache','UNVERIFIED','provider HTTP '+first.status+'; body suppressed');return;}
+  if(first.status!==200||!first.body?.rate||!first.body?.source||!first.body?.timestamp){record('FX live request and cache','UNVERIFIED','request HTTP '+first.status+'; code='+(first.body?.error?.code||'unavailable')+'; body suppressed');return;}
   created.fx.push({base:pair[0],quote:pair[1],timestamp:first.body.timestamp});
   const second=await api(path.replace('1.00','2.00'),{token:tokens.A,orgId:orgs.A});
-  record('FX makes one provider request and serves the cached rate',second.status===200&&second.body.rate===first.body.rate&&second.body.timestamp===first.body.timestamp?'PASS':'FAIL','source='+first.body.source+'; timestamp_present='+Boolean(first.body.timestamp));
+  const sameRate=second.body?.rate===first.body.rate,sameTimestamp=second.body?.timestamp===first.body.timestamp;
+  record('FX makes one provider request and serves the cached rate',second.status===200&&sameRate&&sameTimestamp?'PASS':'FAIL','source='+first.body.source+'; first/second HTTP='+first.status+'/'+second.status+'; rate_equal='+sameRate+'; timestamp_equal='+sameTimestamp);
   let writes=0;const stale=createFxService({rates:{async get(){return{rate:'1.25',source:'stale',fetched_at:'2000-01-01T00:00:00.000Z'};},async put(){writes++;}},fetchImpl:async()=>{throw Error('simulated outage');}});
   let unavailable=false;try{await stale.convert({orgId:'test',amount:'1.00',base:'USD',quote:'EUR'});}catch(e){unavailable=e.statusCode===503&&e.code==='FX_PROVIDER_UNAVAILABLE';}
   record('Stale FX plus provider failure returns unavailable, no invented conversion',unavailable&&writes===0?'PASS':'FAIL','stale value was not returned');
 }
 
 async function createApiInvoice(email) {
-  const r=await api('/api/invoices',{method:'POST',token:tokens.accountant,orgId:orgs.A,body:{invoiceNumber:'P3-'+runId,customerName:'NovaPay Sandbox Buyer',customerEmail:email,currency:'USD',subtotalMinor:999999,taxMinor:999999,totalMinor:1,lines:[{description:'Phase 3 live invoice verification',quantity:'1',unitPrice:'1.00',taxRate:'0'}]}});
-  if(r.status!==201||!r.body?.invoice?.id)throw new Error('api-invoice-create-failed-http-'+r.status);
+  const r=await api('/api/invoices',{method:'POST',token:tokens.accountant,orgId:orgs.A,body:{invoiceNumber:'P3-'+runId.slice(0,20),customerName:'NovaPay Sandbox Buyer',customerEmail:email,currency:'USD',subtotalMinor:999999,taxMinor:999999,totalMinor:1,lines:[{description:'Phase 3 live invoice verification',quantity:'1',unitPrice:'1.00',taxRate:'0'}]}});
+  if(r.status!==201||!r.body?.invoice?.id)throw new Error('api-invoice-create-failed-http-'+r.status+'-code-'+String(r.body?.error?.code||'unavailable').replace(/[^A-Z0-9_-]/gi,''));
   created.invoices.add(r.body.invoice.id);
   record('Invoice totals are recomputed despite client totals',r.body.invoice.totalMinor===100&&r.body.invoice.subtotalMinor===100&&r.body.invoice.taxMinor===0?'PASS':'FAIL','server-computed total matches line');
   return r.body.invoice;

@@ -64,7 +64,7 @@ export async function decideInvoiceSend({repos,paypal,req,approvalId,decision,no
     if(!paypalInvoiceId) {
       const [givenName,...surnameParts]=invoice.customerName.split(/\s+/);
       const response=await paypal.pp('POST','/v2/invoicing/invoices',{
-        detail:{invoice_number:invoice.invoiceNumber,currency_code:invoice.currency,note:'Invoice issued by NovaPay'},
+        detail:{invoice_number:invoice.invoiceNumber,currency_code:invoice.currency,payment_term:{term_type:'DUE_ON_RECEIPT'},note:'Invoice issued by NovaPay'},
         invoicer:{name:{given_name:'NovaPay',surname:'Organization'}},
         primary_recipients:[{billing_info:{name:{given_name:givenName,surname:surnameParts.join(' ')||'Customer'},email_address:invoice.customerEmail}}],
         items:invoice.lines.map((line)=>({name:line.description,quantity:line.quantity,unit_amount:{currency_code:invoice.currency,value:line.unitPrice},...(Number(line.taxRate)>0?{tax:{name:'Tax',percent:percentFromRate(line.taxRate)}}:{})})),
