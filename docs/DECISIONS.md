@@ -238,3 +238,9 @@
 - Choice: Keep the linkage UNVERIFIED and close the live financial/report checks; retain invoice send as a known limitation.
 - Reason: The live capture/refund/report path passed, but simulated local invoices have no PayPal invoice ID to associate with a real signed invoice-paid event. Unit tests cover simulated approval and paid-amount mismatch behavior.
 - Source: Corrected Phase 3 live verifier output, test suite, and prior user direction to keep Invoicing send SIMULATED, 2026-10-24. Rejected alternative: fabricate a provider invoice ID or claim a simulated state transition is a real webhook.
+
+## Phase 4 deterministic routing precedence — 2026-10-24
+- Question: How should NovaPay select an AI route without asking the model to classify intent?
+- Choice: Use deterministic local rules in this order: explicit FX/arithmetic -> structured ledger query -> document/OCR -> evidence-based explanation/retrieval -> general read-only LLM. Unknown or malformed intent falls through to the LLM route with no execution capability.
+- Reason: Numeric conversions and structured record queries must avoid unnecessary model calls; explanation requires server-built evidence; uploaded documents use OCR only when clearly requested. Table-driven tests cover 61 normal, mixed-language, typo, ambiguous, and adversarial examples.
+- Source: Phase 4 user specification and `server/src/ai/router.js` tests, 2026-10-24. Rejected alternative: let the LLM choose routes or trust route/tool instructions from user text.

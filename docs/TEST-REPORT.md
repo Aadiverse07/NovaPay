@@ -344,3 +344,29 @@ Date: 2026-10-24
 - `npm test`: PASS; 61 passed, 0 failed (includes migration parser).
 - `npm run check:migrations`: PASS; migrations 0001–0004 parsed as PostgreSQL 17 SQL/PLpgSQL.
 - Phase 3 prerequisite: PASS; corrected live flow and report parity documented above; invoice-paid linkage remains the allowed SIMULATED-send limitation.
+
+## Phase 4 T1 router — focused test, first run — 2026-10-24
+- Command: `node --test server/test/ai-router.test.js`.
+- Result: FAIL, 3 passed / 1 failed. Case `Add 100 and 25` fell through to general LLM because the arithmetic rule did not recognize the word operator `and`. Fixing the classifier to recognize explicit addition phrasing, then rerunning the same test.
+
+## Phase 4 T1 router — focused test, second run — 2026-10-24
+- Command: `node --test server/test/ai-router.test.js`.
+- Result: FAIL, 3 passed / 1 failed. The prior addition case now classifies correctly. `List overdue invoices` fell through because `overdue` was missing from the invoice-state allow-list. Adding that query state and rerunning.
+
+## Phase 4 T1 router — focused test, third run — 2026-10-24
+- Command: `node --test server/test/ai-router.test.js`.
+- Result: FAIL, 3 passed / 1 failed. `Explain why this payment is pending` was misclassified as SQL because the bare pronoun `this` counted as a period filter. Narrowing period detection to actual dates/groupings; explanation with no structured query will then use retrieval.
+
+## Phase 4 T1 router — focused test, fourth run — 2026-10-24
+- Command: `node --test server/test/ai-router.test.js`.
+- Result: FAIL, 3 passed / 1 failed. Period false-positive is fixed. The mixed-language explanation `¿Por qué aumentaron las tarifas?` fell through to LLM because the explanation matcher recognized only English. Adding Spanish explanation markers.
+
+## Phase 4 T1 router — focused test, fifth run — 2026-10-24
+- Command: `node --test server/test/ai-router.test.js`.
+- Result: FAIL, 3 passed / 1 failed. The first Spanish marker patch still failed because JavaScript word-boundary behavior treats the accented final character in `qué` as non-word. Adjusting the matcher so the Spanish phrase is recognized without that trailing boundary.
+
+## Phase 4 T1 router — final local regression — 2026-10-24
+- Focused: `node --test server/test/ai-router.test.js` PASS, 4/4 tests; table contains 61 questions spanning FX/arithmetic, structured ledger queries, OCR, explanations, unknowns, mixed-language, ambiguity, typo, and adversarial cases.
+- Full suite: `npm test` PASS, 65 passed, 0 failed; migration parser still accepts 0001–0004.
+- Syntax: `node --check server/src/ai/router.js && node --check server/test/ai-router.test.js` PASS.
+- Hygiene: `git diff --check` PASS; frontend path scan empty; `.env` remains ignored and untracked.
