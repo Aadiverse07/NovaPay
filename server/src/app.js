@@ -35,9 +35,9 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
-  askAI ||= createAIService({ config, events: repos.events, repos });
-  const runAnomalyScan = createAnomalyService({ repos, config });
   const fx = createFxService({ rates: repos.fxRates });
+  askAI ||= createAIService({ config, events: repos.events, repos, fx });
+  const runAnomalyScan = createAnomalyService({ repos, config });
 
   app.disable('x-powered-by');
   app.locals.startWebhookWorker = () => startWebhookWorker({ repos, paypal });

@@ -40,9 +40,21 @@ Public PayPal callback. Request body is the raw PayPal event JSON, including str
 
 ## `POST /api/ai/chat`
 
-Requires bearer token and `X-Org-Id`; all organization roles may ask questions. Request: `{ "message": "question", "context": { "transactions": [{ "id": "..." }] } }`. Message is stringified and capped at 500 characters; context is passed through to the AI service as before.
+Requires bearer token and `X-Org-Id`; all organization roles may ask questions. Request: `{ "message": "Show refunds this month", "context": { "transactions": [] } }`. `message` must be a non-empty string up to 1,000 characters. The legacy `context` field remains accepted but is ignored; the server builds org-scoped evidence from the authenticated membership.
 
-Response HTTP 200: `{ "reply": "...", "evidence": ["known transaction ID"], "proposal": null }` or a proposal object `{ "type": "refund|dispute-evidence|hold-payout|other", "txId": "...", "title": "...", "reason": "..." }`. Empty provider reply returns `The AI returned an empty answer. Try asking about a field shown in a transaction row.`; malformed JSON returns `The AI response could not be read safely. Please retry or review the transaction records directly.` Both use empty evidence and `proposal:null`. Evidence IDs not present in `context.transactions[].id` are removed, and unsupported proposal types are mapped to `other`. The default provider is Gemini (`LLM_PROVIDER=gemini`, model from `LLM_MODEL`, retry model from `LLM_FALLBACK_MODEL`). Anthropic is used only with `LLM_PROVIDER=anthropic`; its key may be supplied as `LLM_API_KEY` or the optional legacy `ANTHROPIC_API_KEY`. Missing key returns HTTP 503 `{ "error": "LLM_API_KEY not set" }`. Provider failures return HTTP 500 `{ "error": "AI service returned an error." }`; provider response text is not forwarded. The route requires authentication and organization membership; all organization roles may ask questions.
+HTTP 200 response shape:
+
+```json
+{"answer":"Found 1 refund record(s), totaling 2.50 USD.","route":"sql","reason":"structured_refunds_query","citations":["REFUND-ID"],"usage":{"model":null,"inputTokens":0,"outputTokens":0},"cached":false}
+```
+
+`route` is `code`, `sql`, `ocr`, `retrieval`, or `llm`. Arithmetic and FX use `code`; allow-listed structured financial reads use `sql`. Both bypass the LLM and report zero model tokens. For example, `Convert 5000 INR to USD` returns a computed answer with the `indicative, not a guaranteed settlement rate` label, source and timestamp. `citations` contains stable record IDs; an FX citation has the form `fx-rate:INR/USD:<timestamp>`. `retrieval`/`llm` answers cite IDs from the server-built evidence. The safe insufficient-evidence answer includes `insufficient_evidence: true`. The `usage` object reports selected model and input/output token counts; cache hits have zero provider tokens and `cached: true`. Daily-limit and provider-unavailable responses are HTTP 200 safe answers with their corresponding explanatory text; the limit response makes no provider call.
+
+If the model proposes an action and its target is a cited, eligible record, the service creates an org-scoped `pending` approval and includes a `proposal` object with `type`, `txId`, sanitized `title`/`reason`, `approvalId`, and `status: "pending"`. Refund proposal amount is computed by the server from the exact completed capture's remaining refundable balance. Chat never calls PayPal. Only `owner`, `admin`, or `approver` can decide an approval through `POST /api/approvals/:approvalId/decision`; execution uses the existing checks and idempotent PayPal path. Unsupported, uncited, foreign, or ineligible proposals create no approval. No proposal is returned when none was persisted.
+
+Empty model reply uses `The AI returned an empty answer. Try asking about a field shown in a transaction row.`; malformed JSON uses `The AI response could not be read safely. Please retry or review the transaction records directly.` Provider bodies and credentials are never returned. Invalid input is HTTP 400 `{ "error": { "code": "AI_MESSAGE_INVALID", "message": "Provide a non-empty message of at most 1000 characters." } }`; auth/tenant errors follow the standard 401/403 envelopes and API limits use `RATE_LIMITED` or `USER_RATE_LIMITED`.
+
+The default provider is Gemini (`LLM_PROVIDER=gemini`, model from `LLM_MODEL`, fallback from `LLM_FALLBACK_MODEL`). Anthropic is used only with `LLM_PROVIDER=anthropic`; key can be `LLM_API_KEY` or optional legacy `ANTHROPIC_API_KEY`. When the provider is not configured or fails, retrieval/general questions return a safe HTTP 200 unavailable answer; deterministic code/SQL routes remain usable.
 
 ## `POST /api/approvals/register`
 
@@ -193,3 +205,17 @@ Allowed roles: `owner`, `admin`. No request body. Only a draft or reviewed invoi
 ### Invoice payment updates
 
 The public `POST /api/webhook` endpoint keeps its existing immediate inbox response. Once verified, `INVOICING.INVOICE.PAID` updates a matching sent invoice. It records the invoice's PayPal payment ID and links it to a matching organization capture when present; that capture's existing journal entry remains the ledger source. Configure the PayPal Sandbox webhook to subscribe to `INVOICING.INVOICE.PAID` as well as the existing capture/refund events.
+
+## Phase 4 notifications and AI controls
+
+### `GET /api/notifications`
+
+Requires bearer token and `X-Org-Id`; all organization roles can read their organization's notifications. Optional query: `limit` (1–100, default 50), `offset` (default 0), `status=unread|read|dismissed`. Returns `{ "notifications": [...], "page": { "limit": 50, "offset": 0 } }`. Notification rows contain their ID, organization/anomaly references, rule, severity, evidence IDs, status and timestamps; they do not contain raw payer identifiers.
+
+### `POST /api/notifications/:id/read` and `POST /api/notifications/:id/dismiss`
+
+Requires bearer token and `X-Org-Id`; updates only the matching organization's notification and returns `{ "notification": <notification> }`. Missing IDs return HTTP 404 `NOTIFICATION_NOT_FOUND`; invalid actions/filters return HTTP 400 `VALIDATION_ERROR`.
+
+### `POST /api/anomalies/run`
+
+Requires bearer token and `X-Org-Id`; roles `owner`, `admin`, and `accountant` may run a deterministic scan. Returns scan time, transaction/event counts, finding/created counts, and newly persisted findings. Duplicate findings are deduplicated by organization/rule/evidence/day. Re-running does not create duplicate notifications. Scan/database errors use the standard structured error shape.

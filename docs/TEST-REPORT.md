@@ -465,3 +465,84 @@ Date: 2026-10-24
 ## Phase 4 T7 — full regression — 2026-10-24
 - Command: `npm test`.
 - Result: PASS, 103 passed / 0 failed; the migration parser accepted 0001–0005. Migration grant/RLS static tests passed.
+
+## Phase 4 live migration preflight — 2026-10-24
+- User reported applying `0005_ai.sql`; beginning read-only Supabase checks. Result pending; no live write/provider calls have been made in this pass.
+- First preflight attempt: FAIL for `ai_cache` only; the probe selected nonexistent `id` (cache uses `(org_id, cache_key)`), while the other three table probes and `list_anomaly_org_ids` RPC returned HTTP 200. Corrected the read-only probe to select `cache_key`; no database changes.
+- Corrected read-only preflight: PASS. Supabase REST returned HTTP 200 for `ai_usage`, `ai_cache`, `anomalies`, and `notifications`; `list_anomaly_org_ids` returned HTTP 200 with an array (4 organizations). This confirms 0005's tables and this RPC are live; no row values or credentials were printed.
+
+## Phase 4 T8 first focused regression — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/routes.test.js`.
+- Result: FAIL, 21 passed / 1 failed. The prompt-injection test used “Summarize this capture,” which now correctly classifies as structured SQL and bypasses the provider, so its provider-prompt assertion had no prompt. Corrected the fixture question to an explanation intent; production routing remains unchanged.
+- Corrected rerun: `node --test server/test/ai.test.js server/test/routes.test.js` PASS, 22 passed / 0 failed. Explanation fixture now intentionally enters the retrieval/LLM route; FX/structured refund fixtures prove zero fake-provider calls.
+
+## Phase 4 T8 full regression, first run — 2026-10-24
+- Command: `npm test`.
+- Result: FAIL, 103 passed / 1 failed. The existing LLM adapter test asserted the old AI-service response object and did not expect the new token-usage metadata required by the Phase 4 API. Updating the assertion to verify usage fields and values; no production behavior will be weakened.
+- Focused fix verification: `node --test server/test/llm.test.js` PASS, 7 passed / 0 failed; the usage assertion now checks a positive input estimate, selected model, and zero fake output tokens.
+
+## Phase 4 T8 local regression after deterministic routing/contract — 2026-10-24
+- Command: `npm test`.
+- Result: PASS, 104 passed / 0 failed; migration parser accepted 0001–0005. Includes new no-provider-call FX/structured refund tests and updated chat response/usage contract.
+
+## Phase 4 continuation — local baseline — 2026-10-24
+- `npm ci`: PASS; installed 89 packages, audit reported 0 vulnerabilities. npm noted one dependency install script is not yet approved; no allow-script setting was changed.
+- `npm test`: PASS, 104 passed / 0 failed; migration parser accepted 0001–0005.
+- `npm run check:migrations`: PASS; all five migrations parsed by PostgreSQL 17 parser.
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check`: PASS.
+
+## Phase 4 live verifier preparation — 2026-10-24
+- `node --check scripts/verify-phase4.js && git diff --check`: PASS; new verifier parses and diff whitespace is clean.
+- Live run is pending. It will reuse fixed Phase 3 identities/orgs, make at most one Gemini API request, make no PayPal requests, and clean only rows created by its unique run marker.
+
+## Phase 4 live verifier — first attempt — 2026-10-24
+- Command: `node scripts/verify-phase4.js`.
+- Result: FAIL, 8 PASS / 1 FAIL / 0 UNVERIFIED. Fixed users/orgs reused; all four tables readable by service, service RPCs worked, anomaly creation deduped, all eight RPCs denied ordinary JWT (403), cross-tenant reads empty, and direct authenticated writes denied (401/403). Run-owned rows were cleaned.
+- Failure: tiny-budget reservation expected the first reservation to be allowed, but the fixed owner's existing same-day usage already met the test limit. This reflects existing usage, not an application regression. Adjusting the test to derive a one-request test limit from the current count, then verify the immediately following reservation is blocked.
+- Fix validation before rerun: `node --check scripts/verify-phase4.js && git diff --check` PASS. The tiny-budget limit now uses the observed current UTC-day usage count plus one, so existing rows do not invalidate the reservation test; the subsequent call must still be denied.
+
+## Phase 4 live verifier — second attempt — 2026-10-24
+- Command: `node scripts/verify-phase4.js`.
+- Result: FAIL, 9 PASS / 1 FAIL / 0 UNVERIFIED. The dynamic one-more-request budget test passed. Four-table RLS, all RPC privilege tests, write denial, service operations, and anomaly dedupe passed. Run-owned rows were cleaned.
+- Failure: the API SQL chat contract probe failed at `/api/ai/chat`; response details were not logged to avoid exposing record content. Narrowing diagnostics to status/route/shape booleans and checking whether port 3000 is serving a stale process before deciding on a restart.
+- Diagnostic-only script update: SQL chat failure now reports HTTP status and response-shape booleans only (no answer/citations/body). `node --check scripts/verify-phase4.js` PASS.
+
+## Phase 4 live verifier — third attempt — 2026-10-24
+- Command: `node scripts/verify-phase4.js`.
+- Result: FAIL, 9 PASS / 1 FAIL / 0 UNVERIFIED. The API probe returned HTTP 200 with legacy `reply` and no `answer`/`usage`, while checked-in code returns the new T8 contract. Port 3000 is owned by `node server/index.js` PID 41223, started at 20:25; this confirms the API process is serving an older loaded app. All run-owned database rows were cleaned.
+- Root cause identified: stale process on port 3000 predates the T8 route changes. Will restart only the NovaPay server on port 3000, leave the tunnel and unrelated process on port 34872 untouched, then rerun the verifier.
+- Runtime correction: stopped stale PID 41223 and launched checked-in code with `npm start` in managed session 25217. `/api/status` returned HTTP 200, mode `authenticated`; port 3000 now belongs to node PID 61530. No tunnel or port 34872 change.
+
+## Phase 4 live verifier filter correction — 2026-10-24
+- Review found the capture availability query used nonexistent `transactions.type` rather than the actual `source_type` column. Its HTTP 400 was incorrectly interpreted as no capture evidence. Corrected the query, added same-question cache verification after one successful live provider answer, and made provider unavailable/cache cases explicitly UNVERIFIED. The request includes hostile client-sent context to verify it is ignored; this does not claim a database-description injection test.
+- `node --check scripts/verify-phase4.js && git diff --check`: PASS. Rerunning the live verifier; prior run-owned rows were cleaned.
+
+## Phase 4 live verifier — corrected run — 2026-10-24
+- Command: `node scripts/verify-phase4.js`.
+- Result: 12 PASS / 0 FAIL / 1 UNVERIFIED. PASS: reused fixed Phase 3 identities/orgs; all four 0005 tables accessible; all eight service-role RPCs work and deny ordinary JWTs (403); owner sees own rows and Org B sees zero Org A rows; direct ordinary-JWT writes denied (401/403); one-more-request daily reservation is blocked before provider call; authenticated SQL chat returned route=sql and zero tokens while ignoring client org context; live INR→USD FX came from Frankfurter with source/timestamp and zero LLM tokens; viewer anomaly run denied (403), accountant run succeeded (200), repeat created zero; run-owned rows cleaned.
+- UNVERIFIED: live Gemini fee explanation/cache/injection. The corrected `transactions.source_type=capture,status=COMPLETED` query returned no capture rows in the fixed Phase 3 verifier org, so no provider call was made and no real transaction description was available for live injection. No cross-tenant test data was read.
+- Cleanup: removed this run's three AI usage rows, one cache key, one pending proposal, one anomaly, its notification, and the INR/USD FX rate created during the run. Fixed users/orgs and existing financial data were untouched.
+
+## Phase 4 runtime dependency audit — 2026-10-24
+- Command: `npm audit --omit=dev`.
+- Result: PASS; 0 vulnerabilities in runtime dependencies. No audit fix command was run.
+
+## Phase 4 prior-phase live verifier safety review — 2026-10-24
+- Read-only inspection: `scripts/verify-phase2.js` unconditionally creates a PayPal Sandbox order and waits for buyer approval; `scripts/verify-phase3.js` performs invoice/order operations and can trigger a browser step. Neither exposes a safe/read-only subset flag.
+- Result: UNVERIFIED; intentionally not executed to avoid additional PayPal Sandbox side effects. Existing unit/regression tests remain the safe subset.
+
+## Phase 4 final unit regression — 2026-10-24
+- Command: `npm test`.
+- Result: PASS, 104 passed / 0 failed. Includes router, redaction, sanitizer, budgets/cache/proposals, anomaly, role, service RPC static security, API response contract, provider resilience, and prior phase unit tests; all migrations 0001–0005 parsed.
+
+## Phase 4 final migration/syntax/hygiene checks — 2026-10-24
+- `npm run check:migrations`: PASS; PostgreSQL 17 parser accepted 0001–0005.
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check`: PASS.
+- Verifier transparency update: now separately reports the live HTTP-budget check and live cache/injection checks as UNVERIFIED when they cannot be reached with the available real data; records a client-context injection result only when a Gemini answer is actually produced. `node --check scripts/verify-phase4.js && git diff --check`: PASS. Rerunning for the final redacted table.
+
+## Phase 4 final live verifier table — 2026-10-24
+- Command: `node scripts/verify-phase4.js`.
+- Result: 12 PASS / 0 FAIL / 3 UNVERIFIED. The three unverified checks are: live API budget denial with the server configured to a tiny limit; one real Gemini fee explanation plus repeated-answer cache hit; and database-description prompt injection. No completed capture exists in the fixed test org, and the running server's limits were not changed. No Gemini request was made.
+- PASS evidence: service-role RPCs work; ordinary JWT is denied by all eight RPCs (403); cross-org reads are empty and direct JWT writes denied on all four tables; tiny-limit reservation is denied before provider execution; SQL chat is deterministic with zero tokens; live FX returned a Frankfurter source and timestamp; viewer scan denied, accountant scan allowed and rerun created zero duplicates; run-owned rows were cleaned.
+- Cleanup result: three `ai_usage` rows, one `ai_cache` key, one pending approval, one anomaly, its notification, and one verifier-created FX rate were deleted. No users, organizations, financial records, or append-only audit rows were removed.
+- Final gate rerun: `npm test` PASS 104/104; `npm run check:migrations` PASS (0001–0005); `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check` PASS.

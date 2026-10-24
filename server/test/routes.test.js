@@ -123,7 +123,7 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     assert.equal(calls.filter((call) => call.url.endsWith('/refund')).length, 1);
 
     const ai = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'What happened?', context: { transactions: [{ id: 'CAPTURE-123' }] } }) });
-    assert.deepEqual(await ai.json(), { reply: 'Grounded answer.', evidence: ['CAPTURE-123'], proposal: null });
+    assert.deepEqual(await ai.json(), { answer: 'Grounded answer.', route: 'llm', reason: 'general_read_only_question', citations: ['CAPTURE-123'], usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
     const webhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
     assert.deepEqual(await webhook.json(), { ok: true, verification: 'UNVERIFIED' });
     const invalidWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-BAD' }) });
@@ -210,7 +210,7 @@ test('AI provider error bodies and keys do not reach responses or activity logs'
       const response = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
       const responseText = await response.text();
       assert.equal(response.status, 200);
-      assert.deepEqual(JSON.parse(responseText), { reply: 'AI temporarily unavailable. Please try again later.', evidence: [], proposal: null, unavailable: true, route: 'llm', reason: 'general_read_only_question' });
+      assert.deepEqual(JSON.parse(responseText), { answer: 'AI temporarily unavailable. Please try again later.', route: 'llm', reason: 'general_read_only_question', citations: [], usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
       assert.equal(responseText.includes(secret), false);
       assert.equal(responseText.includes('at '), false);
       const activityText = await (await request(`${base}/api/events`)).text();
