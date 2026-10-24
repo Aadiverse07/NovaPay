@@ -30,6 +30,31 @@ test('Postgres repositories scope tenant data and transactional calls by organiz
   assert.deepEqual(calls.at(-1),{kind:'rpc',name:'get_org_trial_balance',args:{p_org:'org-a',p_currency:'USD'}});
 });
 
+test('capture reads disambiguate the order foreign key in PostgREST embeds', async () => {
+  const calls = [];
+  const database = {
+    async select(table, query) { calls.push({ table, query }); return []; },
+  };
+  const repos = createPostgresRepositories(database);
+  await repos.captures.get('CAP-1', 'org-a');
+  await repos.captures.all('org-a');
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    const params = new URLSearchParams(call.query);
+    assert.equal(call.table, 'paypal_captures');
+    assert.equal(params.get('select'), '*,paypal_orders!paypal_captures_org_id_order_id_fkey(paypal_order_id)');
+  }
+});
+
+test('approval repository exposes its public approvalId field for persistence checks', async () => {
+  const database = {
+    async select(table) { return table === 'approvals' ? [{ id:'APR-RESTORED', org_id:'org-a', proposal_type:'refund', capture_id:'CAP-1', amount_minor:100, currency:'USD', status:'pending' }] : []; },
+  };
+  const repos = createPostgresRepositories(database);
+  const [approval] = await repos.approvals.list('org-a');
+  assert.equal(approval.approvalId, 'APR-RESTORED');
+});
+
 test('capture and refund persistence send the pure ledger mapping into atomic database RPCs', async () => {
   const calls = [];
   const database = { async rpc(name, args) { calls.push({ name, args }); return { capture: { paypal_capture_id: 'CAP-1', amount_minor: 1000, currency: 'USD', status: 'COMPLETED' }, approval: { id: 'APR-1', amount_minor: 1000, currency: 'USD', status: 'completed' } }; } };
