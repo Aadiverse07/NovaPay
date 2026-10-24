@@ -5,21 +5,21 @@
   var THEMES = {
     light: {
       background: "#ffffff",
-      axisText: "#53627f",
-      grid: "#dfe5f2",
-      series: { in: "#149b73", out: "#d94a63", net: "#416bd8" },
-      tooltip: { background: "#ffffff", text: "#0b1b4b", border: "#d8e0ef", shadow: "rgba(20,36,72,.14)" },
-      area: { in: "#18b68a", net: "#4e76e9" },
-      cursor: "rgba(65,107,216,.42)"
+      axisText: "#52667d",
+      grid: "#d8e2ee",
+      series: { in: "#138c62", out: "#d84354", net: "#2563eb" },
+      tooltip: { background: "#ffffff", text: "#14263d", border: "#d8e2ee", shadow: "rgba(21,57,99,.14)" },
+      area: { in: "#31b887", net: "#5c8df0" },
+      cursor: "rgba(37,99,235,.42)"
     },
     dark: {
-      background: "#120d2a",
-      axisText: "#c4b9ea",
-      grid: "rgba(210,170,255,.16)",
-      series: { in: "#5dffb4", out: "#ff6fa8", net: "#8fdcff" },
-      tooltip: { background: "#0e0922", text: "#fbf7ff", border: "#5a4296", shadow: "rgba(190,130,255,.35)" },
-      area: { in: "#5dffb4", net: "#8fdcff" },
-      cursor: "rgba(240,198,255,.6)"
+      background: "#0d1d30",
+      axisText: "#afc1d5",
+      grid: "rgba(160,190,220,.16)",
+      series: { in: "#35c98a", out: "#f06472", net: "#79aaff" },
+      tooltip: { background: "#0b1a2b", text: "#eef5fc", border: "#29415a", shadow: "rgba(0,0,0,.35)" },
+      area: { in: "#35c98a", net: "#79aaff" },
+      cursor: "rgba(121,170,255,.6)"
     }
   };
 
