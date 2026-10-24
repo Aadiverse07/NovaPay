@@ -2,7 +2,7 @@
 
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
-- Branch: `backend`; last commit before checkpoint: `00fa9be WIP-BROKEN: Phase 3 live verification handoff`.
+- Branch: `backend`; last implementation checkpoint: `5724723 WIP Phase 3 task 5: simulated invoice send` (earlier checkpoint `130874a`).
 - Phase/task: Phase 3 live verification, Task 5 — simulated send fallback and remaining checks after the single live attempt.
 
 ## DONE
@@ -15,7 +15,7 @@
 ## IN PROGRESS
 - User identified likely cause: v2 create returns an invoice link href, while code required response.id. Official docs checked 2026-10-24 confirm 201 href with invoice ID and also document an `id` field. Fix and focused tests are in progress.
 - `docs/TEST-REPORT.md` records latest live result. No browser payment, approval URL, signed paid webhook, or final Phase 3 gate pass exists.
-- Current WIP changes: response-link parser broadened, simulated mode in config/approval route/service, verifier expectations, tests, API contract and continuity docs. Final local gate passed; checkpoint pending.
+- Current WIP changes: response-link parser broadened, simulated mode in config/approval route/service, verifier expectations, tests, API contract and continuity docs. Final local gate passed; WIP checkpoint `5724723` committed locally.
 
 ## NEXT STEPS
 1. Do not create another live PayPal invoice until the create/persist/send boundary is diagnosed; inspect app/server safe errors and verify whether database RPC `set_invoice_paypal_draft` succeeded for the test run.
@@ -50,7 +50,7 @@
 
 ## KNOWN ISSUES AND RISKS
 - Prior send failure likely came from create response href vs `response.id`; extractor is being fixed with strict href validation. Only one additional live attempt is authorized.
-- PayPal drafts may remain in Sandbox although local verifier rows were deleted; user must inspect dashboard.
+- PayPal drafts may remain in Sandbox although local verifier rows were deleted; latest attempt added one 201 create to the four earlier creates the user reported. User must inspect dashboard.
 - Historical capture/refund totals cannot be proven from this live project's current data.
 - No final Phase 3 commit is allowed while blocked/unverified criteria remain. No push.
 
