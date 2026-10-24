@@ -16,10 +16,15 @@ const views = {
   'cash-movement':'report_cash_movement',
 };
 
+export function reportCsvCell(value) {
+  const text=String(value??'');
+  const safe=/^[\u0000-\u0020]*[=+\-@]/.test(text)?`'${text}`:text;
+  return `"${safe.replaceAll('"','""')}"`;
+}
+
 function csv(rows) {
   const fields=[...new Set(rows.flatMap((row)=>Object.keys(row)))];
-  const quote=(value)=>`"${String(value??'').replaceAll('"','""')}"`;
-  return [fields.map(quote).join(','),...rows.map((row)=>fields.map((field)=>quote(row[field])).join(','))].join('\r\n');
+  return [fields.map(reportCsvCell).join(','),...rows.map((row)=>fields.map((field)=>reportCsvCell(row[field])).join(','))].join('\r\n');
 }
 
 export function reportTotals(report,rows) {

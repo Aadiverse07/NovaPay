@@ -169,3 +169,28 @@ Date: 2026-10-24
 - Final Phase 3 verification hygiene: PASS, 2026-10-24 09:46:12 UTC. `npm run check:migrations`: all three migrations parse. `node --check` across server/scripts: PASS. `git diff --check`: PASS. `.env.example` placeholder scan: true; `git check-ignore .env`: ignored; `git ls-files .env`: not tracked. Frontend diff scan: no paths. No test invoices or payments were created.
 - Phase 3 live gaps: UNVERIFIED — ordinary authenticated-user JWT execution-denial and cross-tenant RLS were not proved because no ordinary test-user access token/fixture exists; live invoice send and INVOICING.INVOICE.PAID-to-capture/ledger reconciliation were not exercised because that would create/send/pay an external Sandbox invoice. Migration object exposure (nine tables/views HTTP 200), anon RPC denial (eight HTTP 401), unauthenticated API denial (four HTTP 401), and Frankfurter live response (HTTP 200 with rate/date fields) were verified.
 - FX throttle race: fixed by reserving provider slots before awaits; regression test and full suite pass. No database or provider state was changed during this verification.
+
+## Phase 3 live verification — verifier implementation checkpoint
+
+Date: 2026-10-24
+
+- Preflight: PASS, branch is backend, HEAD was 5e8a827 (Phase 3 implementation plus continuity docs), worktree was clean. No live mutations have occurred in this pass.
+- Current task: implement scripts/verify-phase3.js with fixed fixture identities, run-tag cleanup, redacted results, tenant/RPC checks, report/FX checks, invoice lifecycle and replay checks, and Phase 2 regression subset.
+- Existing Phase 3 live state: user reports migration 0003 applied and INVOICING.INVOICE.PAID subscribed; previous read-only probes verified nine table/view endpoints. Full authenticated/RLS and invoice paid event remain unverified.
+
+- Before read-only historical-data inventory (2026-10-24 09:53:03 UTC): probing organization/capture/refund counts using the service API. The probe prints counts only (no IDs, emails, or amounts) and performs no writes.
+
+- Read-only live data inventory: PASS, 2026-10-24 09:54:09 UTC. Service-role script found 2 organizations, 0 completed captures, 0 completed refunds, and 0 organizations with both; output contained counts only. Therefore Phase 2 report comparisons on a surviving real capture/refund dataset are unavailable and will be UNVERIFIED unless another dataset is found without exposing/altering user data. Local server /api/status returned HTTP 200.
+- Code-review findings to fix before the verifier: CSV cells were quoted but not formula-neutralized; migration 0003's mark_invoice_paid accepted a PAID event without comparing payment amount/currency to the invoice. No data mutation was used to identify these issues.
+
+- Before Phase 3 defect fixes: implementation changes in progress: CSV formula neutralization in reports route/tests; migration 0004 replaces mark_invoice_paid with payment-amount/currency validation and a paid.amount_mismatch event. 0003 remains untouched and no migration was applied to the live project.
+
+- Defect-fix validation checkpoint (2026-10-24 09:56:08 UTC): CSV sanitizer, webhook mismatch-posting result, mismatch regression test, and new migration 0004 drafted. The live database still has only 0003; do not run migration-dependent write checks until the user applies 0004.
+
+- Before verifier syntax/regression checks (2026-10-24): `scripts/verify-phase3.js` was completed with fixed named fixtures, service-role RPC probes, ordinary-user JWT checks, report/FX checks, invoice role/send/payment flow, replay checks, and tracked operational cleanup. No live verifier mutation has run. The user has not yet provided the US Personal Sandbox buyer email, and migration 0004 has not been applied.
+
+- Before local rerun (2026-10-24): verifier safety review changed migration preflight to require explicit user confirmation (avoids probing a real invoice with the old paid RPC) and narrowed FX cleanup to the exact newly cached pair and timestamp. Next commands: `node --check scripts/verify-phase3.js`, `npm test`, `npm run check:migrations`, and repository hygiene checks. No live write is part of this run.
+
+- Local regression/hygiene rerun: PASS, 2026-10-24. `node --check scripts/verify-phase3.js`; `npm test` = 54 passed, 0 failed; `npm run check:migrations` = migrations 0001–0004 parse; all `server` and `scripts` JS `node --check`; `git diff --check`; no frontend paths in diff; `.env` ignored and untracked; `.env.example` sensitive entries placeholders only. An earlier broad placeholder heuristic returned false because it incorrectly treated non-secret model defaults as credentials; corrected check scopes only credential fields and passes. No live write was made.
+- Before verifier read-only gate (2026-10-24): will call local `/api/status` and check the explicit 0004 confirmation flag only; no identities, tables, invoices, or provider APIs will be mutated.
+- Read-only verifier gate: UNVERIFIED for live Phase 3, 2026-10-24. `node scripts/verify-phase3.js` returned `/api/status` HTTP 200 and stopped before fixture setup because the 0004 confirmation flag was absent. Exit 2 (UNVERIFIED). No Supabase rows or PayPal resources were changed. The user must apply 0004 and provide/configure the US Personal Sandbox buyer email before the live run can continue.

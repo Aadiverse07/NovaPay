@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { convertMinorUnits, createFxService } from '../src/services/fx.js';
 import { buildInvoiceDraft, decideInvoiceSend } from '../src/services/invoices.js';
-import { reportTotals } from '../src/routes/reports.js';
+import { reportCsvCell, reportTotals } from '../src/routes/reports.js';
 import { createApp } from '../src/app.js';
 import { createRepositories } from '../src/repos/memory.js';
 
@@ -51,6 +51,12 @@ test('report totals computed from ledger views balance and match the underlying 
     {debit_minor:'0',credit_minor:'10000'},
   ]);
   assert.equal(pnl.netIncomeMinor,'9600');assert.deepEqual(trial,{debitMinor:'10000',creditMinor:'10000',balanced:true});
+});
+
+test('CSV cells neutralize formula injection while preserving CSV quoting',()=>{
+  assert.equal(reportCsvCell('=1+1'),"\"'=1+1\"");
+  assert.equal(reportCsvCell('\t@SUM(A1:A2)'),"\"'\t@SUM(A1:A2)\"");
+  assert.equal(reportCsvCell('Sales "North"'), '"Sales ""North"""');
 });
 
 test('invoice cannot be sent unless a send-invoice approval record exists',async()=>{

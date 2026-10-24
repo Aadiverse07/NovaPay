@@ -87,3 +87,26 @@
 - Choice: Reserve each provider-call slot synchronously before awaiting, so concurrent requests receive distinct launch slots.
 - Reason: The prior last-call timestamp calculation let simultaneous misses share one delay and exceed the intended provider rate limit. Regression test added for simultaneous pairs.
 - Source: Local code review and test in server/test/phase3-services.test.js. Rejected alternative: rely on an in-flight map, which deduplicates only identical pairs.
+
+## Phase 3 live verifier fixture policy — 2026-10-24
+
+- Question: How should the live Phase 3 verifier handle persistent identity and historical records?
+- Choice: Use fixed, named test users and orgs, reuse existing records, and delete only run-tagged operational rows. Never reset or delete unrelated test-org rows as a cleanup shortcut; retain append-only audit entries.
+- Reason: Phase 2 cleanup demonstrated restrictive audit-log foreign keys and the need to preserve non-run history. Historical Phase 2 records are discovered read-only; if none remain, report those comparisons UNVERIFIED instead of manufacturing data.
+- Source: User's Phase 3 live-verification instructions and docs/TEST-REPORT.md cleanup incident. Rejected alternative: run the whole Phase 2 verifier and create another Sandbox capture/refund.
+
+## Phase 3 verifier security findings — 2026-10-24
+
+- Question: How to handle CSV formula injection and PayPal invoice payment mismatches?
+- Choice: Prefix CSV cells whose first non-whitespace character is `=`, `+`, `-`, or `@` (also control-prefixed formulas) with an apostrophe; add database migration 0004 that compares verified invoice payment amount/currency against stored total and records a mismatch event instead of marking paid.
+- Reason: CSV quoting alone does not stop spreadsheet formula evaluation. Official PayPal Invoicing webhook docs show amount and currency in the paid-event resource, and paid events may represent partial payment, so status alone is insufficient.
+- Source: [PayPal Invoicing Webhooks](https://developer.paypal.com/api/invoicing/webhooks/) and [Invoicing webhooks reference](https://developer.paypal.com/platforms/invoicing/reference/invoicing-webhooks/), checked 2026-10-24; local inspection of server/src/routes/reports.js and migration 0003.
+- Rejected alternative: trust PayPal's PAID string and accept quoted CSV formula cells.
+
+## Phase 3 live verifier safety gate — 2026-10-24
+
+- Question: How should the verifier confirm the mismatch-guard migration before testing a PAID webhook?
+- Choice: Require explicit user confirmation that migration 0004 was applied; do not probe an arbitrary invoice with `mark_invoice_paid` because 0003's implementation could mark it paid.
+- Reason: PostgREST does not expose the function definition through the current application API, and a behavioral probe on an existing invoice could mutate user data. The actual mismatch assertion runs only against a verifier-created invoice after confirmation.
+- Source: Read-only inspection of 0003/0004 and live verifier safety review, 2026-10-24.
+- Rejected alternative: call the old/new RPC with a production or unrelated invoice to infer which function body is installed.
