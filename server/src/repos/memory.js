@@ -1,3 +1,5 @@
+import { AIUsageRepo, AICacheRepo, makeMemoryAIVersion } from './aiMemory.js';
+
 export class OrdersRepo {
   constructor() { this.byId = new Map(); this.byRequest = new Map(); }
   key(orgId, id) { return `${orgId}:${id}`; }
@@ -83,6 +85,17 @@ export function createRepositories() {
   const orders = new OrdersRepo();
   captures.orders = orders;
   const repos = { orders, captures, approvals: new ApprovalsRepo(captures), events: new EventsRepo() };
+  repos.ai = {
+    usage: new AIUsageRepo(),
+    cache: new AICacheRepo(),
+    async dataVersion(orgId) {
+      return makeMemoryAIVersion({
+        orders: [...orders.byId.values()].filter((row) => row.orgId === orgId).map(({ id, state, status, amount }) => ({ id, state, status, amount })),
+        captures: captures.all(orgId).map(({ id, status, value, fee, net, refunded, reserved }) => ({ id, status, value, fee, net, refunded, reserved })),
+        approvals: repos.approvals.list(orgId).map(({ approvalId, status, proposalType, amount, captureId, invoiceId }) => ({ approvalId, status, proposalType, amount, captureId, invoiceId })),
+      });
+    },
+  };
   repos.listTransactions = async (orgId, filters) => repos.captures.all(orgId).slice(filters.offset, filters.offset + filters.limit).map((capture) => ({ id: capture.id, org_id: orgId, source_type: 'capture', source_id: capture.id, status: capture.status, amount_minor: Math.round(Number(capture.value) * 100), fee_minor: capture.fee == null ? null : Math.round(Number(capture.fee) * 100), net_minor: capture.net == null ? null : Math.round(Number(capture.net) * 100), currency: capture.currency, occurred_at: capture.occurredAt || new Date().toISOString() }));
   repos.listLedgerEntries = async () => [];
   repos.trialBalance = async (orgId, currency = 'USD') => ({ currency, accounts: [], totals: { debitMinor: 0, creditMinor: 0, debits: '0.00', credits: '0.00' }, balanced: true });

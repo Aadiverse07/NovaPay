@@ -74,3 +74,27 @@ test('capture and refund persistence send the pure ledger mapping into atomic da
     { account_code: '5000', debit_minor: 25, credit_minor: 0, currency: 'USD' },
   ]);
 });
+
+test('AI usage reservations and cache persistence stay scoped to the verified organization', async () => {
+  const calls = [];
+  const database = {
+    async rpc(name, args) { calls.push({ kind: 'rpc', name, args }); return name === 'reserve_ai_usage' ? { allowed: true, usageId: 'usage-1' } : 'version-1'; },
+    async select(table, query) { calls.push({ kind: 'select', table, query }); return [{ answer: { reply: 'safe' }, data_version: 'version-1', expires_at: '2026-10-25T00:00:00Z' }]; },
+    async upsert(table, payload, conflict) { calls.push({ kind: 'upsert', table, payload, conflict }); return [payload]; },
+  };
+  const repos = createPostgresRepositories(database);
+  const reservation = await repos.ai.usage.reserve({ orgId: 'org-a', userId: 'user-a', route: 'retrieval', model: 'gemini-3.5-flash-lite', inputTokens: 50, userLimit: 5, orgLimit: 20 });
+  assert.deepEqual(reservation, { allowed: true, usageId: 'usage-1', reason: null });
+  assert.deepEqual(calls[0], { kind: 'rpc', name: 'reserve_ai_usage', args: { p_org: 'org-a', p_user: 'user-a', p_route: 'retrieval', p_model: 'gemini-3.5-flash-lite', p_input_tokens: 50, p_user_limit: 5, p_org_limit: 20 } });
+  await repos.ai.usage.complete('usage-1', { inputTokens: 45, outputTokens: 10, latencyMs: 250, model: 'gemini-3.5-flash-lite', status: 'completed' });
+  assert.equal(calls[1].name, 'complete_ai_usage');
+  assert.equal(calls[1].args.p_usage_id, 'usage-1');
+  assert.equal(calls[1].args.p_input_tokens, 45);
+  const cached = await repos.ai.cache.get('org-a', 'hash-1');
+  assert.equal(cached.answer.reply, 'safe');
+  assert.match(calls[2].query, /org_id=eq\.org-a/);
+  assert.match(calls[2].query, /cache_key=eq\.hash-1/);
+  await repos.ai.cache.put({ orgId: 'org-a', cacheKey: 'hash-1', dataVersion: 'version-1', answer: { reply: 'safe' }, expiresAt: '2026-10-25T00:00:00Z' });
+  assert.equal(calls[3].payload.org_id, 'org-a');
+  assert.equal(calls[3].conflict, 'org_id,cache_key');
+});

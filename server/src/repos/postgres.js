@@ -219,8 +219,36 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const ai = {
+    async dataVersion(orgId) {
+      return database.rpc('get_ai_data_version', { p_org: orgId });
+    },
+    usage: {
+      async reserve({ orgId, userId, route, model, inputTokens, userLimit, orgLimit }) {
+        const result = await database.rpc('reserve_ai_usage', { p_org: orgId, p_user: userId, p_route: route, p_model: model, p_input_tokens: inputTokens, p_user_limit: userLimit, p_org_limit: orgLimit });
+        return { allowed: Boolean(result?.allowed), usageId: result?.usageId || result?.usage_id || null, reason: result?.reason || null };
+      },
+      async complete(usageId, { inputTokens, outputTokens = 0, latencyMs = 0, model, status = 'completed' }) {
+        return database.rpc('complete_ai_usage', { p_usage_id: usageId, p_input_tokens: inputTokens ?? null, p_output_tokens: outputTokens, p_latency_ms: latencyMs, p_model: model || null, p_status: status });
+      },
+      async recordCacheHit({ orgId, userId, route, model = null }) {
+        return database.rpc('record_ai_cache_hit', { p_org: orgId, p_user: userId, p_route: route, p_model: model });
+      },
+    },
+    cache: {
+      async get(orgId, cacheKey, now = new Date()) {
+        const rows = await database.select('ai_cache', q({ select: 'answer,data_version,expires_at', org_id: `eq.${orgId}`, cache_key: `eq.${cacheKey}`, expires_at: `gt.${new Date(now).toISOString()}`, limit: '1' }));
+        return rows?.[0] ? { answer: rows[0].answer, dataVersion: rows[0].data_version, expiresAt: rows[0].expires_at } : null;
+      },
+      async put({ orgId, cacheKey, dataVersion, answer, expiresAt }) {
+        const rows = await database.upsert('ai_cache', { org_id: orgId, cache_key: cacheKey, data_version: dataVersion, answer, expires_at: expiresAt }, 'org_id,cache_key');
+        return rows?.[0] || null;
+      },
+    },
+  };
+
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

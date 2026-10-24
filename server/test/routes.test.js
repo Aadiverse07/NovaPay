@@ -171,7 +171,7 @@ test('AI provider error bodies and keys do not reach responses or activity logs'
       const response = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
       const responseText = await response.text();
       assert.equal(response.status, 200);
-      assert.deepEqual(JSON.parse(responseText), { reply: 'AI temporarily unavailable. Please try again later.', evidence: [], proposal: null, unavailable: true });
+      assert.deepEqual(JSON.parse(responseText), { reply: 'AI temporarily unavailable. Please try again later.', evidence: [], proposal: null, unavailable: true, route: 'llm', reason: 'general_read_only_question' });
       assert.equal(responseText.includes(secret), false);
       assert.equal(responseText.includes('at '), false);
       const activityText = await (await request(`${base}/api/events`)).text();

@@ -59,12 +59,12 @@ test('AI service rejects numeric claims absent from evidence and labels missing 
   const provider = { async generate() { return JSON.stringify({ reply: 'The fee was $99.00.', evidence: ['CAP-1'], proposal: null }); } };
   const askAI = createAIService({ config: {}, repos, provider });
   assert.deepEqual(await askAI('Why did our fee change?', { orgId: 'org-a' }), {
-    reply: INSUFFICIENT_EVIDENCE_REPLY, evidence: ['CAP-1'], proposal: null, insufficientEvidence: true,
+    reply: INSUFFICIENT_EVIDENCE_REPLY, evidence: ['CAP-1'], proposal: null, insufficientEvidence: true, route: 'retrieval', reason: 'evidence_based_explanation',
   });
 
   const noRows = createAIService({ config: {}, repos: { async listTransactions() { return []; } }, provider: { async generate() { throw new Error('must not call'); } } });
   assert.deepEqual(await noRows('Why did our fee change?', { orgId: 'org-a' }), {
-    reply: INSUFFICIENT_EVIDENCE_REPLY, evidence: [], proposal: null, insufficientEvidence: true,
+    reply: INSUFFICIENT_EVIDENCE_REPLY, evidence: [], proposal: null, insufficientEvidence: true, route: 'retrieval', reason: 'evidence_based_explanation',
   });
 });
 
