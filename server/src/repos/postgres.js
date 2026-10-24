@@ -58,11 +58,11 @@ export function createPostgresRepositories(database) {
 
   const captures = {
     async all(orgId) {
-      const rows = await database.select('paypal_captures', q({ select: '*,paypal_orders(paypal_order_id)', org_id: `eq.${orgId}`, order: 'created_at.desc' }));
+      const rows = await database.select('paypal_captures', q({ select: '*,paypal_orders!paypal_captures_org_id_order_id_fkey(paypal_order_id)', org_id: `eq.${orgId}`, order: 'created_at.desc' }));
       return (rows || []).map((row) => ({ ...mapCapture(row), orderId: row.paypal_orders?.paypal_order_id || null }));
     },
     async get(id, orgId) {
-      const rows = await database.select('paypal_captures', q({ select: '*,paypal_orders(paypal_order_id)', org_id: `eq.${orgId}`, paypal_capture_id: `eq.${id}`, limit: '1' }));
+      const rows = await database.select('paypal_captures', q({ select: '*,paypal_orders!paypal_captures_org_id_order_id_fkey(paypal_order_id)', org_id: `eq.${orgId}`, paypal_capture_id: `eq.${id}`, limit: '1' }));
       const row = rows?.[0];
       return row ? { ...mapCapture(row), orderId: row.paypal_orders?.paypal_order_id || null } : null;
     },

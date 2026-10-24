@@ -22,7 +22,9 @@ const webhookUrl = process.env.NOVAPAY_WEBHOOK_URL || `${apiBase}/api/webhook`;
 const suffix = randomUUID();
 const startedAt = new Date().toISOString();
 const runId = suffix.replaceAll('-', '');
-const artifacts = { users: [], orgs: [], webhookEvents: [], extraOrgs: [], extraEvent: `phase2-security-${runId}`, captureId: null, orderId: null };
+const fixtureEmails = { A:'novapay-phase2-a@example.test', B:'novapay-phase2-b@example.test' };
+const fixtureOrgNames = { A:'NovaPay Phase 2 Verification A', B:'NovaPay Phase 2 Verification B' };
+const artifacts = { orgs: [], webhookEvents: [], extraEvent: `phase2-security-${runId}`, captureId: null, orderId: null, refundCompleted: false };
 const results = [];
 let serverProcess;
 let helperProcess;
@@ -86,14 +88,43 @@ async function ensureMainApi() {
   await waitForApi(apiBase, serverProcess);
 }
 
+async function checkRegisteredWebhook() {
+  try {
+    const webhook = await (await import('../server/src/services/paypal.js')).createPayPalService({config,events:{addCall:async()=>{}}}).pp('GET',`/v1/notifications/webhooks/${encodeURIComponent(config.PAYPAL_WEBHOOK_ID)}`);
+    let valid = false;
+    try { const target = new URL(webhook.url); valid = target.protocol === 'https:' && target.pathname.replace(/\/$/,'') === '/api/webhook' && (webhook.event_types || []).some((event) => event.name === 'PAYMENT.CAPTURE.COMPLETED'); } catch {}
+    record('Configured PayPal webhook targets the backend /api/webhook route',valid,valid?'registered endpoint path verified':'registered endpoint path does not match /api/webhook');
+    if (!valid) throw new Error('paypal-webhook-target-mismatch');
+  } catch (error) {
+    if (error.message === 'paypal-webhook-target-mismatch') throw error;
+    record('Configured PayPal webhook targets the backend /api/webhook route',false,'webhook registration could not be verified; provider details omitted');
+    throw new Error('paypal-webhook-registration-unavailable');
+  }
+}
+
 async function adminCreateUser(email, password) {
   const result = await request(`${config.SUPABASE_URL}/auth/v1/admin/users`, {
     method: 'POST', headers: serviceHeaders,
     body: JSON.stringify({ email, password, email_confirm: true }),
   });
   if (![200, 201].includes(result.status) || !result.body?.id) throw new Error('throwaway-user-create-failed');
-  artifacts.users.push(result.body.id);
   return result.body.id;
+}
+
+async function ensureFixtureUser(email, password) {
+  let user;
+  for (let page = 1; page <= 20; page += 1) {
+    const result = await request(`${config.SUPABASE_URL}/auth/v1/admin/users?page=${page}&per_page=100`, { headers: serviceHeaders });
+    if (result.status !== 200 || !Array.isArray(result.body?.users)) throw new Error('fixture-user-list-failed');
+    user = result.body.users.find((candidate) => candidate.email?.toLowerCase() === email.toLowerCase());
+    if (user || result.body.users.length < 100) break;
+  }
+  if (!user) return adminCreateUser(email, password);
+  const updated = await request(`${config.SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+    method:'PUT', headers:serviceHeaders, body:JSON.stringify({password,email_confirm:true}),
+  });
+  if (updated.status !== 200) throw new Error('fixture-user-password-reset-failed');
+  return user.id;
 }
 
 async function signIn(email, password) {
@@ -106,9 +137,71 @@ async function signIn(email, password) {
 
 async function onboard(token, label) {
   const result = await api('/api/onboarding', { token, method: 'POST', body: { organizationName: `Phase 2 ${label} ${runId.slice(0, 8)}` } });
-  if (![200, 201].includes(result.status) || !result.body?.organizationId) throw new Error(`throwaway-org-${label}-create-failed`);
+  if (![200, 201].includes(result.status) || !result.body?.organizationId) throw new Error(`throwaway-org-${label}-create-failed-http-${result.status}`);
   artifacts.orgs.push(result.body.organizationId);
   return result.body.organizationId;
+}
+
+async function ensureFixtureOrg(token, label, userId) {
+  const orgName = fixtureOrgNames[label];
+  const result = await serviceRequest(`/rest/v1/organizations?${new URLSearchParams({select:'id,name',name:`eq.${orgName}`,limit:'2'})}`);
+  if (result.status !== 200 || !Array.isArray(result.body)) throw new Error('fixture-org-lookup-failed');
+  if (result.body.length > 1) throw new Error('duplicate-fixture-orgs-found');
+  if (result.body.length === 1) {
+    const orgId = result.body[0].id;
+    const memberships = await serviceRequest(`/rest/v1/memberships?${new URLSearchParams({select:'role',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,limit:'2'})}`);
+    if (memberships.status !== 200 || memberships.body?.length !== 1 || memberships.body[0]?.role !== 'owner') throw new Error(`fixture-org-${label}-owner-membership-invalid`);
+    return orgId;
+  }
+  const created = await api('/api/onboarding',{token,method:'POST',body:{organizationName:orgName}});
+  if (![200,201].includes(created.status) || !created.body?.organizationId) throw new Error(`fixture-org-${label}-create-failed-http-${created.status}`);
+  const createdOrg = await serviceRequest(`/rest/v1/organizations?${new URLSearchParams({select:'name',id:`eq.${created.body.organizationId}`,limit:'1'})}`);
+  const createdMembership = await serviceRequest(`/rest/v1/memberships?${new URLSearchParams({select:'role',org_id:`eq.${created.body.organizationId}`,user_id:`eq.${userId}`,limit:'1'})}`);
+  if (createdOrg.status !== 200 || createdOrg.body?.[0]?.name !== orgName || createdMembership.status !== 200 || createdMembership.body?.[0]?.role !== 'owner') throw new Error(`fixture-org-${label}-onboarding-target-mismatch`);
+  return created.body.organizationId;
+}
+
+async function deleteRows(path, label) {
+  const result = await serviceRequest(path,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+  if (![200,204].includes(result.status)) throw new Error(`cleanup-${label}-delete-failed-http-${result.status}`);
+}
+
+async function countOrgRows(table, orgId) {
+  const query = new URLSearchParams({select:'id',org_id:`eq.${orgId}`});
+  const result = await serviceRequest(`/rest/v1/${table}?${query}`,{headers:{Prefer:'count=exact',Range:'0-0'}});
+  if (result.status !== 200) throw new Error(`cleanup-${table}-count-failed`);
+  return Number((result.response.headers.get('content-range') || '*/0').split('/').at(-1));
+}
+
+async function cleanupFixtureData(orgIds) {
+  const cleanupErrors = [];
+  for (const prefix of ['P2-BADSIG-','phase2-security-']) {
+    try { await deleteRows(`/rest/v1/paypal_events?event_id=like.${encodeURIComponent(`${prefix}*`)}`,'probe-event'); }
+    catch { cleanupErrors.push('probe-event'); }
+  }
+  for (const orgId of orgIds) {
+    for (const [table,label] of [
+      ['paypal_events','events'],['transactions','transactions'],['approvals','approvals'],
+      ['journal_entries','journal-entries'],['paypal_orders','orders'],
+      ['reconciliation_runs','reconciliation-runs'],['api_activity','api-activity'],
+    ]) {
+      try { await deleteRows(`/rest/v1/${table}?org_id=eq.${encodeURIComponent(orgId)}`,label); }
+      catch { cleanupErrors.push(label); }
+    }
+  }
+  const remaining = {};
+  for (const orgId of orgIds) {
+    for (const table of ['paypal_events','transactions','approvals','journal_entries','paypal_orders','paypal_captures','reconciliation_runs','api_activity']) {
+      try { remaining[table] = (remaining[table] || 0) + await countOrgRows(table,orgId); }
+      catch { cleanupErrors.push(`${table}-count`); }
+    }
+  }
+  if (cleanupErrors.length || Object.values(remaining).some(Boolean)) {
+    record('Dedicated verifier organizations contain no run data after cleanup',false,`delete/count failures=${[...new Set(cleanupErrors)].join(',')||'none'}; residual rows=${Object.values(remaining).reduce((sum,n)=>sum+n,0)}`);
+    outcome = 'FAIL';
+  } else {
+    record('Dedicated verifier organizations contain no run data after cleanup',true,'events, transactions, approvals, journal entries, orders/captures, reconciliation, and API activity are empty; chart accounts and append-only audit rows are retained');
+  }
 }
 
 async function checkPhase2Objects() {
@@ -180,6 +273,20 @@ async function countCaptureEntries(orgId, captureId) {
   return result.body.length;
 }
 
+async function countEventRows(eventId) {
+  const query = new URLSearchParams({ select:'id', provider:'eq.paypal', event_id:`eq.${eventId}` });
+  const result = await serviceRequest(`/rest/v1/paypal_events?${query}`);
+  if (result.status !== 200 || !Array.isArray(result.body)) throw new Error('webhook-event-count-query-failed');
+  return result.body.length;
+}
+
+async function countRefundEntries(orgId, refundId) {
+  const query = new URLSearchParams({ select:'id', org_id:`eq.${orgId}`, source_type:'eq.refund', source_id:`eq.${refundId}` });
+  const result = await serviceRequest(`/rest/v1/journal_entries?${query}`);
+  if (result.status !== 200 || !Array.isArray(result.body)) throw new Error('refund-ledger-count-query-failed');
+  return result.body.length;
+}
+
 async function waitForCaptureWebhook(captureId, timeoutMs = 120000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -213,6 +320,7 @@ async function replayWebhookFiveTimes(row) {
     if (row.headers[name]) headers[name] = row.headers[name];
   }
   const before = await countCaptureEntries(orgA, artifacts.captureId);
+  const eventsBefore = await countEventRows(row.event_id);
   const statuses = [];
   for (let i = 0; i < 5; i += 1) {
     const result = await request(webhookUrl, { method:'POST',headers,body:rawBody });
@@ -220,7 +328,28 @@ async function replayWebhookFiveTimes(row) {
   }
   await new Promise((resolve) => setTimeout(resolve, 1000));
   const after = await countCaptureEntries(orgA, artifacts.captureId);
-  record('Same verified webhook replayed five times produces exactly one capture journal entry', statuses.every((status) => status === 200) && before === 1 && after === 1, `HTTP ${statuses.join('/')} · entries ${before}→${after}`);
+  const eventsAfter = await countEventRows(row.event_id);
+  record('Same verified webhook replayed five times leaves one event row and one capture journal entry', statuses.every((status) => status === 200) && eventsBefore === 1 && eventsAfter === 1 && before === 1 && after === 1, `HTTP ${statuses.join('/')} · events ${eventsBefore}→${eventsAfter} · entries ${before}→${after}`);
+}
+
+async function checkBadSignatureEvent(orgId, captureId) {
+  const eventId = `P2-BADSIG-${runId}`;
+  artifacts.webhookEvents.push(eventId);
+  const payload = { id:eventId, event_type:'PAYMENT.CAPTURE.COMPLETED', resource:{ id:captureId, status:'COMPLETED' } };
+  const rawBody = JSON.stringify(payload);
+  const before = await countCaptureEntries(orgId,captureId);
+  const response = await request(webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:rawBody});
+  let event;
+  const deadline=Date.now()+30000;
+  while(Date.now()<deadline){
+    const result=await serviceRequest(`/rest/v1/paypal_events?${new URLSearchParams({select:'event_id,verification_status,processing_status',provider:'eq.paypal',event_id:`eq.${eventId}`,limit:'1'})}`);
+    event=result.status===200?result.body?.[0]:null;
+    if(event&&event.verification_status!=='unverified'&&event.processing_status!=='queued'&&event.processing_status!=='processing')break;
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
+  const after=await countCaptureEntries(orgId,captureId);
+  const rejected=event&&['failed','error'].includes(event.verification_status)&&event.processing_status!=='processed';
+  record('Bad-signature webhook is stored as unverified/rejected and never posts',response.status===200&&rejected&&before===1&&after===1,`HTTP ${response.status}; verification=${event?.verification_status||'missing'}; ledger entries ${before}→${after}`);
 }
 
 async function startHelperServer(port) {
@@ -239,37 +368,46 @@ async function assertPersistentState(url, token, orgId, orderRequestKey, orderId
   const entries = await request(`${url}/api/ledger/entries?limit=100`, { headers:userHeaders(token,orgId) });
   const captureQuery = new URLSearchParams({select:'paypal_capture_id',org_id:`eq.${orgId}`,paypal_capture_id:`eq.${captureId}`,limit:'1'});
   const captures = await serviceRequest(`/rest/v1/paypal_captures?${captureQuery}`);
-  return reloadedOrder.status === 200 && reloadedOrder.body?.orderId === orderId
-    && transactions.status === 200 && transactions.body?.transactions?.some((row) => row.captureId === captureId)
-    && captures.status === 200 && captures.body?.length === 1
-    && approvals.status === 200 && approvals.body?.approvals?.some((row) => row.id === approvalId)
-    && entries.status === 200 && entries.body?.entries?.some((row) => row.source_type === 'capture' && row.source_id === captureId);
+  const checks = {
+    order:reloadedOrder.status === 200 && reloadedOrder.body?.orderId === orderId,
+    transaction:transactions.status === 200 && transactions.body?.transactions?.some((row) => row.captureId === captureId),
+    capture:captures.status === 200 && captures.body?.length === 1,
+    approval:approvals.status === 200 && approvals.body?.approvals?.some((row) => row.approvalId === approvalId),
+    ledger:entries.status === 200 && entries.body?.entries?.some((row) => row.source_type === 'capture' && row.source_id === captureId),
+  };
+  return checks;
 }
 
 async function checkRestartPersistence(token, orgId, requestKey, orderId, captureId, approvalId) {
   const port = 34871;
   helperProcess = await startHelperServer(port);
-  let ok = await assertPersistentState(`http://127.0.0.1:${port}`,token,orgId,requestKey,orderId,captureId,approvalId);
+  const first = await assertPersistentState(`http://127.0.0.1:${port}`,token,orgId,requestKey,orderId,captureId,approvalId);
   helperProcess.kill('SIGTERM'); await once(helperProcess,'exit'); helperProcess = null;
   helperProcess = await startHelperServer(port);
-  ok &&= await assertPersistentState(`http://127.0.0.1:${port}`,token,orgId,requestKey,orderId,captureId,approvalId);
+  const second = await assertPersistentState(`http://127.0.0.1:${port}`,token,orgId,requestKey,orderId,captureId,approvalId);
   helperProcess.kill('SIGTERM'); await once(helperProcess,'exit'); helperProcess = null;
-  record('Capture and ledger data survive a backend process restart', ok);
+  const ok = Object.values(first).every(Boolean) && Object.values(second).every(Boolean);
+  const detail = `first restart ${Object.entries(first).map(([k,v])=>`${k}=${v?'yes':'no'}`).join(', ')}; second restart ${Object.entries(second).map(([k,v])=>`${k}=${v?'yes':'no'}`).join(', ')}`;
+  record('Orders, captures, approvals, transactions, and ledger survive backend restarts', ok, detail);
 }
 
 async function run() {
   await checkPhase2Objects();
+  await checkRegisteredWebhook();
   await ensureMainApi();
-  const userAEmail = `novapay-phase2-a-${suffix}@example.test`;
-  const userBEmail = `novapay-phase2-b-${suffix}@example.test`;
+  const userAEmail = fixtureEmails.A;
+  const userBEmail = fixtureEmails.B;
   const passA = randomBytes(32).toString('base64url');
   const passB = randomBytes(32).toString('base64url');
-  const userA = await adminCreateUser(userAEmail, passA);
-  const userB = await adminCreateUser(userBEmail, passB);
+  const userA = await ensureFixtureUser(userAEmail, passA);
+  const userB = await ensureFixtureUser(userBEmail, passB);
   const [tokenA, tokenB] = await Promise.all([signIn(userAEmail,passA),signIn(userBEmail,passB)]);
-  orgA = await onboard(tokenA,'A');
-  const orgB = await onboard(tokenB,'B');
-  record('Throwaway Phase 2 test organizations prepared', true);
+  orgA = await ensureFixtureOrg(tokenA,'A',userA);
+  const orgB = await ensureFixtureOrg(tokenB,'B',userB);
+  artifacts.orgs.push(orgA,orgB);
+  await cleanupFixtureData(artifacts.orgs);
+  if (outcome === 'FAIL') throw new Error('pre-run-test-data-cleanup-failed');
+  record('Fixed Phase 2 verifier users and organizations reused', true, 'two named fixture users and organizations; no per-run users or orgs created');
 
   await checkRpcPermissions(userA,tokenA,orgA);
   await checkCrossTenant(tokenB,orgA);
@@ -291,13 +429,12 @@ async function run() {
 
   const captureEntries = await countCaptureEntries(orgA,artifacts.captureId);
   record('Capture posted exactly once to the live ledger',captureEntries === 1,`entries=${captureEntries}`);
-  await checkRestartPersistence(tokenA,orgA,artifacts.captureId);
-
   const webhook = await waitForCaptureWebhook(artifacts.captureId);
   const verified = webhook?.verification_status === 'verified' && webhook?.processing_status === 'processed';
   record('PayPal capture webhook verified and processed',webhook ? verified : 'UNVERIFIED',webhook ? `verification=${webhook.verification_status}; processing=${webhook.processing_status}` : 'no matching event observed within 120 seconds');
   if (verified) await replayWebhookFiveTimes(webhook);
   else record('Same verified webhook replayed five times produces exactly one capture journal entry','UNVERIFIED','No verified webhook event available to replay.');
+  await checkBadSignatureEvent(orgA,artifacts.captureId);
 
   const overId = `APR-OVER-${runId.slice(0,16)}`;
   const over = await api('/api/approvals/register',{token:tokenA,orgId:orgA,method:'POST',body:{proposalType:'refund',approvalId:overId,captureId:artifacts.captureId,amount:(Number(capture.body.amount)+0.01).toFixed(2),currency:'USD'}});
@@ -318,7 +455,9 @@ async function run() {
   const refundCalls = (logs.body || []).filter((row) => String(row.message).includes(`/v2/payments/captures/${artifacts.captureId}/refund`)).length;
   const savedApproval = await serviceRequest(`/rest/v1/approvals?${new URLSearchParams({select:'status,result',org_id:`eq.${orgA}`,id:`eq.${approvalId}`,limit:'1'})}`);
   const refundId = savedApproval.body?.[0]?.result?.id;
-  record('Double Approve produces one completed PayPal Sandbox refund',refundCalls === 1 && Boolean(refundId) && decisions.some((r) => r.status === 200),`providerCalls=${refundCalls}; HTTP=${decisions.map((r)=>r.status).join('/')}`);
+  const refundEntries = refundId ? await countRefundEntries(orgA,refundId) : 0;
+  artifacts.refundCompleted = refundCalls === 1 && Boolean(refundId) && savedApproval.body?.[0]?.status === 'completed' && refundEntries === 1;
+  record('Double Approve produces one PayPal refund and one ledger entry',artifacts.refundCompleted && decisions.some((r) => r.status === 200),`providerCalls=${refundCalls}; refundLedgerEntries=${refundEntries}; HTTP=${decisions.map((r)=>r.status).join('/')}`);
 
   const trial = await api('/api/ledger/trial-balance',{token:tokenA,orgId:orgA});
   record('Trial balance debits equal credits',trial.status === 200 && trial.body?.balanced === true && trial.body?.totals?.debitMinor === trial.body?.totals?.creditMinor);
@@ -328,18 +467,10 @@ async function run() {
 }
 
 async function cleanup() {
-  for (const eventId of new Set([artifacts.extraEvent,...artifacts.webhookEvents])) {
-    try { await serviceRequest(`/rest/v1/paypal_events?event_id=eq.${encodeURIComponent(eventId)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}}); } catch {}
-  }
-  for (const orgId of new Set([...artifacts.orgs,...artifacts.extraOrgs])) {
-    try { await serviceRequest(`/rest/v1/organizations?id=eq.${encodeURIComponent(orgId)}`,{method:'DELETE',headers:{Prefer:'return=minimal'}}); } catch {}
-  }
-  for (const userId of artifacts.users) {
-    try { const result=await request(`${config.SUPABASE_URL}/auth/v1/admin/users/${userId}`,{method:'DELETE',headers:serviceHeaders}); if (!result.response.ok) outcome='FAIL'; } catch { outcome='FAIL'; }
-  }
+  if (artifacts.orgs.length) await cleanupFixtureData(artifacts.orgs);
   if (helperProcess) { const exited=once(helperProcess,'exit'); helperProcess.kill('SIGTERM'); await exited.catch(()=>{}); helperProcess=null; }
   if (serverProcess) { const exited=once(serverProcess,'exit'); serverProcess.kill('SIGTERM'); await exited.catch(()=>{}); serverProcess=null; }
-  console.log(`Cleanup complete: ${artifacts.users.length} throwaway users, ${artifacts.orgs.length} organizations, and tracked probe events removed.`);
+  console.log('Cleanup retains the two named fixture users, their organizations, chart accounts, and append-only audit rows; verifier-owned operational rows are deleted and counted.');
 }
 
 let orgA;
