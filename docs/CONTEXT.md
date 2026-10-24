@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-24 09:46:12 UTC
 - Branch: backend
-- Last commit: e295a2b (Phase 2: live verification passed); Phase 3 changes pending local commit.
+- Last implementation commit: e6e1953 (Phase 3: FX reports and invoices); branch backend.
 - Current phase/task: Phase 3 complete locally; final report and commit checkpoint.
 
 ## DONE
@@ -13,14 +13,12 @@
 - Fixed concurrent FX rate-provider throttle race; regression test in server/test/phase3-services.test.js.
 
 ## IN PROGRESS
-- Commit verified Phase 3 changes locally on backend; do not push.
+- Phase 3 implementation is committed locally. No Phase 4 work has started.
 - Ordinary-user JWT/RLS and full invoice-send/paid-webhook live cycle remain unverified and are disclosed in TEST-REPORT.md.
 
 ## NEXT STEPS
-1. Confirm staged changes contain no .env/secrets or frontend files.
-2. Commit Phase 3 locally if there are no failing checks.
-3. Report PASS/UNVERIFIED accurately and ask whether to continue to Phase 4.
-4. If user requests deeper live verification, obtain a throwaway ordinary-user JWT and perform an approved Sandbox invoice send/payment; cleanup any test data safely.
+1. Await user direction whether to continue to Phase 4.
+2. If deeper live verification is requested, obtain a throwaway ordinary-user JWT and perform an approved Sandbox invoice send/payment; clean up test data safely.
 
 ## USER ACTIONS PENDING
 - None required to finish the current local implementation.
@@ -47,7 +45,7 @@
 ## KNOWN ISSUES AND RISKS
 - Live ordinary-user RLS and invoice-send/webhook linkage are not proven end to end.
 - Frankfurter provider was live reachable; application route was tested locally with fixtures, not a live user JWT.
-- Phase 3 diff is not yet committed.
+- Phase 3 implementation committed locally as e6e1953; not pushed.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
