@@ -229,7 +229,7 @@ cross join (values
 ) as seed(code,name,account_type)
 on conflict (org_id,code) do nothing;
 
-alter table public.create_organization_for_user(uuid,text,text) rename to create_organization_for_user_phase1;
+alter function public.create_organization_for_user(uuid,text,text) rename to create_organization_for_user_phase1;
 create or replace function public.create_organization_for_user(p_user_id uuid, p_name text, p_request_id text)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_result jsonb; v_org uuid;
