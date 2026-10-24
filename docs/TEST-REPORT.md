@@ -275,3 +275,15 @@ Date: 2026-10-24
 - Evidence: activity markers show `paypal_create_ok` at 2026-10-24 11:10 UTC, preceded by `invoice_id_extraction_failed` and `failed_at_invoice_id_extract`; there was no `paypal_send_called`. The later latest marker is `invoice_send:simulated_send` at 11:14 UTC. The verifier generates invoice numbers as `P3-` plus 20 hexadecimal characters, and the supplied value matches that format, but the verifier's cleanup removed its local invoice row and the create response ID was not persisted. Therefore the supplied draft is consistent with the failed create attempt, but cannot be uniquely matched to it or to any other draft. No PayPal API call, Supabase write, invoice send, or deletion was performed for this reconciliation.
 - Limitation: existing `api_activity` stores stage/status markers only, not PayPal invoice number/ID. Other dashboard drafts were not opened, so their IDs/content remain unknown. Invoice sending stays SIMULATED; real capture and paid-webhook linkage remain UNVERIFIED.
 - `npm test` was not rerun because this task made no code changes; the latest recorded suite is 60 passed, 0 failed (2026-10-24, final Phase 3 local gate).
+
+## Phase 3 live financial verification — preflight — 2026-10-24
+
+- No live payment request has been issued yet. Reviewing current verifier and endpoint scope before adapting it to one real sandbox order/capture/refund in the fixed Phase 3 org. User explicitly prohibits further PayPal Invoicing calls; invoice send remains SIMULATED. No draft will be sent/deleted.
+- Planned buyer step: after creating one $1.00 USD order, print the PayPal approval URL plainly and pause; proceed only after user replies `approved`.
+
+## Phase 3 payment/report verifier adaptation — local regression — 2026-10-24
+
+- PASS: `node --check scripts/verify-phase3.js`; `npm test` = 60 passed, 0 failed; `npm run check:migrations` parsed migrations 0001–0004; `git diff --check` passed; frontend path diff empty; `.env` ignored and untracked.
+- Verifier now has a gated real order/capture/refund path in fixed Phase 3 Org A, prints the approval URL and waits for explicit `approved`, checks real signed capture event/replay, computes each report from ledger lines, verifies report date boundaries/CSV, and cleans only exact run IDs plus temporary verifier rows. No live order has been created yet.
+- No PayPal Invoicing call is made by the new financial path. Invoice paid linkage remains UNVERIFIED for the simulated invoice because it has no real PayPal invoice ID; existing tests cover simulated approval with no provider call and verified amount mismatch handling.
+- Post-adaptation rerun: PASS, 2026-10-24. `node --check scripts/verify-phase3.js`; `npm test` = 60 passed, 0 failed; `npm run check:migrations` parsed 0001–0004; `git diff --check` passed; no frontend files changed; `.env` remains ignored/untracked. No live provider request was part of these checks.
