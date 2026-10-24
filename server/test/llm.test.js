@@ -8,7 +8,8 @@ test('AI service calls the provider interface and preserves sanitization guardra
   const repos = { async listTransactions(orgId) { assert.equal(orgId, 'org-a'); return [{ id: 'CAP-1', source_id: 'PAYPAL-CAP-1', source_type: 'capture', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', occurred_at: '2026-10-01T00:00:00Z' }]; }, async trialBalance() { return { balanced: true, totals: {} }; } };
   const askAI = createAIService({ config: {}, repos, provider });
   const result = await askAI('What happened?', { orgId: 'org-a', transactions: [{ id: 'CLIENT-ORG-B-RECORD' }] });
-  assert.deepEqual(result, { reply: 'A supported result.', evidence: ['CAP-1'], proposal: null, insufficientEvidence: false, model: 'fake-model', cached: false, cacheHit: false, route: 'llm', reason: 'general_read_only_question' });
+  assert.deepEqual(result, { reply: 'A supported result.', evidence: ['CAP-1'], proposal: null, insufficientEvidence: false, model: 'fake-model', usage: { model: 'fake-model', inputTokens: result.usage.inputTokens, outputTokens: 0 }, cached: false, cacheHit: false, route: 'llm', reason: 'general_read_only_question' });
+  assert.ok(result.usage.inputTokens > 0);
   assert.equal(provider.calls.length, 1);
   assert.match(provider.calls[0].prompt, /What happened\?/);
   assert.match(provider.calls[0].prompt, /PAYPAL-CAP-1/);

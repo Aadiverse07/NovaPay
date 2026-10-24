@@ -2,78 +2,65 @@
 
 ## HEADER
 - Date/time: 2026-10-24 Asia/Kolkata.
-- Branch: `backend`; last commit `41eb9b7 WIP Phase 4 task 6: pending AI proposals`.
-- Current phase/task: Phase 4, T7 complete; waiting for migration application before live verification/T8.
+- Branch: `backend`; last committed checkpoint before this session: `317a580 WIP Phase 4 task 7: AI persistence migration`; Phase 4 final commit pending.
+- Current phase/task: Phase 4, T8 gate passed locally; final commit pending.
 
 ## DONE
-- Phase 3 completed and backed up at `0dbbdc8`; invoice send remains simulated.
-- Phase 4 T0–T2 checkpoint commits: `e6cd524`, `574253a`, `f68996e`.
-- Phase 4 T3 checkpoint: `eef73a9 WIP Phase 4 task 3: LLM guardrails`.
-- Phase 4 T4 checkpoint: `90fb767 WIP Phase 4 task 4: budgets and cache`.
-- Phase 4 T5 checkpoint: `ba413c0 WIP Phase 4 task 5: anomalies and notifications`.
-- T1 deterministic route classifier and 61-question table test: `server/src/ai/router.js`, `server/test/ai-router.test.js`.
-- T2 org-scoped read-only evidence tools, data minimization and bounded calls: `server/src/ai/evidence.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/ai-evidence.test.js` and related service/route tests.
+- Phase 3 completed; invoice sending remains SIMULATED.
+- Phase 4 T0–T7 completed in commits `e6cd524`, `574253a`, `f68996e`, `eef73a9`, `90fb767`, `b755e89`, `ba413c0`, `41eb9b7`, `317a580`.
+- T8 deterministic code/FX and SQL routes bypass LLM; `/api/ai/chat` now returns `answer`, `route`, `reason`, `citations`, `usage`, and `cached`. Files: `server/src/services/ai.js`, `server/src/app.js`, `server/src/routes/ai.js`.
+- Updated tests/docs: `server/test/{ai,llm,routes}.test.js`, `docs/FRONTEND-CONTRACT.md`, `docs/API.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`.
+- Added live verifier `scripts/verify-phase4.js`; fixed identities/orgs only, per-run cleanup only.
+- Live verifier latest: 12 PASS / 0 FAIL / 3 UNVERIFIED. Service RPC grants/RLS, tenant isolation, direct-write denial, deterministic SQL, FX, anomaly idempotency and run-owned cleanup passed. No Gemini call: fixed org has no completed capture evidence.
 
 ## IN PROGRESS
-- T7 complete: `supabase/migrations/0005_ai.sql` adds `ai_usage`, `ai_cache`, `anomalies`, `notifications`, member-read RLS, and service-role-only SECURITY DEFINER RPCs for budgets, cache hits, data version, anomaly persistence/actions, org scanning, and pending proposals. Parser PASS; static RLS/grant tests PASS 2/2; full suite PASS 103/103. Not applied to Supabase.
-- T6 complete: `server/src/services/ai.js` persists eligible proposals as sanitized, org-scoped pending approvals through memory/Postgres repository interfaces; refund proposals require an exact completed capture and compute remaining amount server-side. Approval decisions retain existing RBAC and refund path. Focused tests 29/29; full suite 101/101. T7 migration will add the Postgres RPC.
-- T5 complete: rule engine `server/src/ai/anomalies.js`, service/scheduler `server/src/services/anomalies.js`, repo interfaces in `server/src/repos/{memory,postgres,aiMemory}.js`, route `server/src/routes/notifications.js`, app/index wiring and tests. Focused suite PASS 19/19; full suite PASS 97/97; migrations/syntax/hygiene pass. Checkpoint `ba413c0`; DB tables/RPCs are for T7.
-- T4 complete: org/user daily reservation budgets, token/latency usage tracking, safe-answer cache keyed by org/question/route/data-version, and no-provider-call guards. `npm test` 89/89; migrations, syntax and hygiene pass. Checkpoint `90fb767`.
+- Final checks PASS: 104/104 tests, migration parser 0001–0005, all JS syntax and diff checks. `npm audit --omit=dev`: zero. Frontend diff empty; `.env` ignored. Commit pending. No PayPal call made.
 
 ## NEXT STEPS
-1. Ask the user to apply `supabase/migrations/0005_ai.sql` in the Supabase Dashboard SQL Editor and reply `applied`.
-2. After confirmation, verify live RLS/RPC behavior, then finish T8 API/docs and `scripts/verify-phase4.js`.
-3. Run Phase 4 gate; commit only with no FAIL; never push; ask before Phase 5.
+1. Finish final `npm test`, `npm run check:migrations`, JS syntax, diff/hygiene checks.
+2. Check staged file list contains no `.env`, secrets, or frontend paths; commit locally on `backend` as `Phase 4: AI assistant and orchestration (live verified)` because no current check is FAIL.
+3. Report PASS/UNVERIFIED evidence, then ask whether to continue to Phase 5. Never push.
 
 ## USER ACTIONS PENDING
-- Apply `supabase/migrations/0005_ai.sql` in the Supabase Dashboard SQL Editor, then reply exactly `applied`. Paste the complete contents of that file into a new SQL Editor query and click Run once; stop and share the error if it fails. A real Gemini smoke test needs the configured key and available quota; never display its value.
+- None to finish this phase. To verify remaining live Gemini/cache/injection checks later, the fixed Phase 3 test organization needs a completed capture with non-sensitive evidence; do not create one without an explicitly authorized Sandbox flow.
 
 ## LIVE STATE
-- User reports Phase 3 migrations 0001–0004 applied. Phase 4 `0005_ai.sql` is written and parser-tested, but not yet applied.
+- Migrations 0001–0005 reported applied by user; read-only probes confirmed 0005 tables and RPCs.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
-- No live provider or database call during Phase 4 yet.
-- Invoice delivery remains SIMULATED; do not call PayPal Invoicing APIs.
+- NovaPay on port 3000 was restarted to load current T8 code; `/api/status` HTTP 200 authenticated. Tunnel and unrelated port 34872 untouched.
+- No Gemini API request made in final verifier; no PayPal request made. Invoice sending remains SIMULATED.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| Branch/status | PASS | 2026-10-24 | `git branch --show-current`, `git status --short`; branch `backend`, clean at T3 start |
-| T0 install | PASS | 2026-10-24 | `npm ci`; 89 packages, zero vulnerabilities |
-| T0 suite | PASS | 2026-10-24 | `npm test`; 61 passed |
-| T0 migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parsed |
-| T1 suite | PASS | 2026-10-24 | `npm test`; 65 passed; focused router 4/4 |
-| T2 suite | PASS | 2026-10-24 | `npm test`; 73 passed; focused T2 tests 24/24 |
-| T2 migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parsed |
-| T3 focused AI/LLM tests | PASS | 2026-10-24 | `node --test server/test/ai.test.js server/test/llm.test.js`; 19 passed |
-| T3 full suite | PASS | 2026-10-24 | `npm test`; 83 passed, 0 failed |
-| T3 migrations/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; all migrations parsed; `find server scripts ... node --check`; `git diff --check`; no frontend paths changed; `.env` ignored |
-| T4 focused tests | PASS | 2026-10-24 | `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js`; 18 passed |
-| T4 full test suite | PASS | 2026-10-24 | `npm test`; 89 passed, 0 failed |
-| T4 migrations/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; `node --check` all JS; `git diff --check`; no frontend paths changed; `.env` ignored |
-| T5 focused | PASS | 2026-10-24 | `node --test server/test/anomalies.test.js server/test/postgres-repos.test.js server/test/routes.test.js`; 19 passed |
-| T5 full suite | PASS | 2026-10-24 | `npm test`; 97 passed, 0 failed |
-| T5 migration/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; JS `node --check`; `git diff --check`; frontend diff empty; `.env` ignored |
-| Phase 3 live gate | PASS with limitation | 2026-10-24 | Signed webhook/replay, capture/refund and reports passed; real invoice-paid linkage UNVERIFIED because sending is simulated |
+| `npm ci` | PASS | 2026-10-24 | 89 packages; npm audit at install 0 vulnerabilities |
+| `npm test` | PASS | 2026-10-24 | 104 passed, 0 failed |
+| `npm run check:migrations` | PASS | 2026-10-24 | 0001–0005 parsed by PostgreSQL 17 parser |
+| JS syntax + diff | PASS | 2026-10-24 | `find server scripts -name '*.js' ... node --check`; `git diff --check` |
+| `npm audit --omit=dev` | PASS | 2026-10-24 | 0 runtime vulnerabilities |
+| Phase 4 live verifier | PASS / UNVERIFIED | 2026-10-24 | 12 PASS, 0 FAIL, 3 UNVERIFIED; see `docs/TEST-REPORT.md` |
+| Final gate rerun | PASS | 2026-10-24 | `npm test` 104/104; migration check 0001–0005; JS syntax and diff check |
+| Phase 2/3 safe live subset | UNVERIFIED | 2026-10-24 | No safe mode; scripts create PayPal Sandbox side effects, not run |
+| Frontend diff | PASS | 2026-10-24 | `git diff --name-only -- preview.html dashboard.html src assets tailwind.novapay.preset.*` empty |
+| `.env` hygiene | PASS | 2026-10-24 | ignored by Git; no `.env` in status/staged list |
 
 ## KNOWN ISSUES AND RISKS
-- Gemini free quotas are project-specific and can change; Google may use free-tier inputs to improve products. Send minimal evidence.
-- Phase 4 live checks wait on `0005_ai.sql` application; provider smoke can be UNVERIFIED if key/quota unavailable.
-- Duplicate payer and payout rules have only fixture coverage: current financial schema stores no payer reference and disallows payout transaction source types.
-- Phase 3 simulated invoice limitation remains.
+- Live Gemini smoke, grounded fee answer/cache replay, database-text injection, and API-level tiny-budget denial remain UNVERIFIED because the fixed test org has no completed capture evidence. Unit tests cover budget no-call, cache, and injection behavior.
+- Phase 2/3 live verifier safe subset remains UNVERIFIED because those scripts have no read-only mode and trigger PayPal Sandbox operations.
+- Gemini free quotas can vary; minimized evidence only. Duplicate-payer and payout anomaly cases remain fixture-limited by available schema data.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs transactionally; never edit an applied migration; add a new numbered file.
-- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated; grant service_role only or enforce membership; prove ordinary JWT denial.
-- PostgREST embeds need explicit FK names when relationships collide.
-- `audit_log` is insert-only and ON DELETE RESTRICT; delete journal entries before related rows; reuse fixed named test identities.
-- Sandbox buyer is US Personal, seller USD, Visa; webhook ID must match; raw body is required for signature verification.
-- PayPal invoice number max is 25 characters; use `DUE_ON_RECEIPT`; compare FX timestamps as instants. Invoice send remains SIMULATED.
-- Webhook inbox insertion precedes async verification; poll terminal status.
-- Check port 3000 owner; leave unrelated port 34872 and tunnel untouched.
+- Supabase SQL Editor is transactional; never edit an applied migration; add a new numbered file.
+- SECURITY DEFINER/posting RPCs must revoke public/anon/authenticated execute, grant only service_role (or enforce membership), and be tested with ordinary JWTs.
+- PostgREST embeds need explicit FK names when multiple relationships exist.
+- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup financial test data in dependency order; reuse fixed identities/orgs.
+- PayPal sandbox buyer must be US Personal, seller USD, Visa; webhook ID must match; signature verification needs raw bytes.
+- PayPal invoice number max is 25 chars; use `DUE_ON_RECEIPT`; compare FX timestamps as instants; invoice sending stays SIMULATED.
+- Check port 3000 process freshness after source edits; leave unrelated tunnel/processes untouched.
 - Never print `.env` values, provider bodies, Authorization headers, stack traces, or sensitive evidence.
 
 ## DO NOT
-- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, call PayPal Invoicing APIs, or run a live AI request before one explicitly planned smoke test.
+- Do not push, touch frontend files, use `--force`, weaken tests, edit applied migrations, commit `.env`, call PayPal Invoicing, or invent financial evidence.
 
 ## RESUME COMMANDS
 - `git status --short`

@@ -283,3 +283,33 @@
 - Choice: Add `ai_usage`, `ai_cache`, `anomalies`, and `notifications` in new migration `0005_ai.sql`; enable RLS with membership-only reads and grant authenticated users SELECT only. All new SECURITY DEFINER functions revoke execution from public, anon, and authenticated and grant it only to service_role. Server RPCs still validate organization membership for user-attributed writes.
 - Reason: The backend repository uses service-role PostgREST/RPCs, while JWT clients should have no direct write path. The migration is syntax-checked locally, but must be applied by the user before live checks.
 - Source: Phase 4 T7 requirements, repository RPC call sites and migration parser/security tests, 2026-10-24. Rejected alternative: let the browser write AI usage, cache, anomaly, notification, or proposal records directly.
+
+## Phase 4 migration application — 2026-10-24
+- Question: Who applies the new Phase 4 migration before live verification?
+- Choice: User applied `supabase/migrations/0005_ai.sql` in the Supabase SQL Editor; proceed with read-only migration-state confirmation before any live test writes.
+- Reason: Dashboard access and application are user-controlled; repository state alone cannot prove the live schema.
+- Source: User confirmation, 2026-10-24. Rejected alternative: assume the SQL Editor application succeeded without querying the live schema.
+
+## Phase 4 chat route execution and response contract — 2026-10-24
+- Question: Should deterministic code/FX and structured SQL intents call the LLM, and what should the chat API return?
+- Choice: Handle arithmetic/FX and allow-listed structured reads in server code with zero provider calls; reserve the provider for retrieval/general explanation. `/api/ai/chat` uses the Phase 4 response fields `answer`, `route`, `reason`, `citations`, `proposal`, `usage`, and `cached` (plus documented optional flags).
+- Reason: Avoid provider tokens for deterministic work and return stable route/citation metadata required by the Phase 4 UI contract.
+- Source: Phase 4 T1/T8 and acceptance requirements, current AI route implementation review, 2026-10-24. Rejected alternative: keep route metadata cosmetic while sending every question to the LLM.
+
+## Phase 4 live verifier fixture policy — 2026-10-24
+- Question: How should Phase 4 live checks provision identities and isolate cleanup?
+- Choice: Reuse only the existing fixed Phase 3 users and organizations; fail closed if any is missing. Generate a per-run marker and delete only usage/cache/approval/anomaly/notification/FX rows recorded as created by that run.
+- Reason: Preserve stable tenant identity and avoid accumulating throwaway accounts or deleting unrelated financial data. Do not change memberships or organization records.
+- Source: Phase 4 live verification constraints and current fixed Phase 3 verifier identities, 2026-10-24. Rejected alternative: create new users/orgs per verifier run or broadly truncate Phase 4 tables.
+
+## Phase 4 live evidence availability — 2026-10-24
+- Question: Should the verifier fabricate financial data or inspect other tenants to force a live Gemini smoke test?
+- Choice: No. The live fee explanation, provider cache replay, and database-text injection remain UNVERIFIED when the fixed verifier org has no completed capture; the verifier makes no provider request and reads no unrelated org data.
+- Reason: The Phase 4 live smoke must use non-sensitive sandbox evidence from its fixed org. Synthetic rows or another tenant's records would not prove the requested behavior safely.
+- Source: Corrected read-only live REST query on `transactions.source_type=capture,status=COMPLETED` returned zero rows for `NovaPay Phase 3 Verification A`, 2026-10-24. Rejected alternative: create synthetic/financial records or query across tenant boundaries.
+
+## Phase 4 prior-phase verifier execution boundary — 2026-10-24
+- Question: Should the earlier live verifiers be run as part of Phase 4 regression when they lack a safe-only mode?
+- Choice: Do not run them; mark their live safe-subset checks UNVERIFIED and rely on the complete unit regression for payment-independent coverage.
+- Reason: Inspection shows Phase 2 unconditionally creates a Sandbox PayPal order and pauses for buyer approval; Phase 3 invokes invoice/payment flow. Running them would create provider-side effects outside Phase 4 scope.
+- Source: `scripts/verify-phase2.js` and `scripts/verify-phase3.js` control flow inspection, 2026-10-24. Rejected alternative: trigger an additional payment/invoice flow solely for regression.
