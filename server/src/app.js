@@ -33,7 +33,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
-  askAI ||= createAIService({ config, events: repos.events });
+  askAI ||= createAIService({ config, events: repos.events, repos });
   const fx = createFxService({ rates: repos.fxRates });
 
   app.disable('x-powered-by');

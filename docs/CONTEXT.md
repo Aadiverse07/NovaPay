@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
 - Branch: `backend`; last commit `0dbbdc8 Phase 3 Completed By Dev`.
-- Current phase/task: Phase 4 AI assistant and orchestration, T1 complete; next T2 evidence/tools.
+- Current phase/task: Phase 4 AI assistant and orchestration, T2 complete; next T3 LLM guardrails/model verification.
 
 ## DONE
 - Phase 3 passed its live gate and was pushed at user request. Commit `0dbbdc8`; no `.env` in tracked history.
@@ -37,7 +37,7 @@
 |---|---|---|---|
 | Branch/status | PASS | 2026-10-24 | `backend`; clean worktree at start |
 | Install | PASS | 2026-10-24 | `npm ci`; 89 packages, 0 vulnerabilities |
-| Unit suite after T1 | PASS | 2026-10-24 | `npm test`; 65 passed, 0 failed; router focused tests 4/4 |
+| Unit suite after T2 | PASS | 2026-10-24 | `npm test`; 73 passed, 0 failed; T2 focused tests 24/24 |
 | Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parsed |
 | Phase 3 gate | PASS | 2026-10-24 | live signed webhook, replay, refund, ledger/report parity; invoice linkage limitation recorded |
 
