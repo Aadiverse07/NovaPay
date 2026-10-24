@@ -2,27 +2,28 @@
 
 ## HEADER
 - Date/time: 2026-10-24 Asia/Kolkata.
-- Branch: `backend`; last commit `b755e89 WIP Phase 4 task 4: sync handoff`.
-- Current phase/task: Phase 4, T5 complete; local checkpoint pending.
+- Branch: `backend`; last commit `ba413c0 WIP Phase 4 task 5: anomalies and notifications`.
+- Current phase/task: Phase 4, T6 complete; next T7 migration.
 
 ## DONE
 - Phase 3 completed and backed up at `0dbbdc8`; invoice send remains simulated.
 - Phase 4 T0–T2 checkpoint commits: `e6cd524`, `574253a`, `f68996e`.
 - Phase 4 T3 checkpoint: `eef73a9 WIP Phase 4 task 3: LLM guardrails`.
 - Phase 4 T4 checkpoint: `90fb767 WIP Phase 4 task 4: budgets and cache`.
+- Phase 4 T5 checkpoint: `ba413c0 WIP Phase 4 task 5: anomalies and notifications`.
 - T1 deterministic route classifier and 61-question table test: `server/src/ai/router.js`, `server/test/ai-router.test.js`.
 - T2 org-scoped read-only evidence tools, data minimization and bounded calls: `server/src/ai/evidence.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/ai-evidence.test.js` and related service/route tests.
 
 ## IN PROGRESS
-- T5 complete: rule engine `server/src/ai/anomalies.js`, service/scheduler `server/src/services/anomalies.js`, repo interfaces in `server/src/repos/{memory,postgres,aiMemory}.js`, route `server/src/routes/notifications.js`, app/index wiring and tests. Focused suite PASS 19/19; full suite PASS 97/97; migrations/syntax/hygiene pass. T5 checkpoint pending; DB tables/RPCs are for T7.
+- T6 complete: `server/src/services/ai.js` persists eligible proposals as sanitized, org-scoped pending approvals through memory/Postgres repository interfaces; refund proposals require an exact completed capture and compute remaining amount server-side. Approval decisions retain existing RBAC and refund path. Focused tests 29/29; full suite 101/101. T7 migration will add the Postgres RPC.
+- T5 complete: rule engine `server/src/ai/anomalies.js`, service/scheduler `server/src/services/anomalies.js`, repo interfaces in `server/src/repos/{memory,postgres,aiMemory}.js`, route `server/src/routes/notifications.js`, app/index wiring and tests. Focused suite PASS 19/19; full suite PASS 97/97; migrations/syntax/hygiene pass. Checkpoint `ba413c0`; DB tables/RPCs are for T7.
 - T4 complete: org/user daily reservation budgets, token/latency usage tracking, safe-answer cache keyed by org/question/route/data-version, and no-provider-call guards. `npm test` 89/89; migrations, syntax and hygiene pass. Checkpoint `90fb767`.
 
 ## NEXT STEPS
-1. Finish T5 full regression, migration/syntax/hygiene, secret/frontend checks; checkpoint if clean.
-2. T6 create AI proposals only as pending Approvals; tests/docs/checkpoint.
-3. T7 add next migration `0005_ai.sql`, run migration parser/security checks, document exact SQL Editor steps and wait for user `applied` before live DB checks.
-4. T8 API/docs and `scripts/verify-phase4.js`; live checks only after migration is applied.
-5. Run Phase 4 gate; commit only with no FAIL; never push; ask before Phase 5.
+1. Checkpoint T6 locally after verifying no secrets or frontend changes.
+2. T7 add next migration `0005_ai.sql`, run migration parser/security checks, document exact SQL Editor steps and wait for user `applied` before live DB checks.
+3. T8 API/docs and `scripts/verify-phase4.js`; live checks only after migration is applied.
+4. Run Phase 4 gate; commit only with no FAIL; never push; ask before Phase 5.
 
 ## USER ACTIONS PENDING
 - None now. Later: apply `0005_ai.sql` in Supabase SQL Editor and reply `applied`. A real Gemini smoke test needs the configured key and available quota; never display its value.

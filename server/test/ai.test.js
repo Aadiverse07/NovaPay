@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { sanitizeAIResponse, EMPTY_REPLY, UNSAFE_REPLY, INSUFFICIENT_EVIDENCE_REPLY, AI_TEMPORARILY_UNAVAILABLE_REPLY, sanitizeAIContext, redactSensitiveText, createAIService } from '../src/services/ai.js';
+import { createRepositories } from '../src/repos/memory.js';
 
 test('AI sanitizer safely handles malformed JSON', () => {
   assert.deepEqual(sanitizeAIResponse('{bad'), { reply: UNSAFE_REPLY, evidence: [], proposal: null });
@@ -97,4 +98,35 @@ test('provider failure becomes a safe temporary-unavailable response without exp
   assert.equal(result.reply, AI_TEMPORARILY_UNAVAILABLE_REPLY);
   assert.equal(result.unavailable, true);
   assert.doesNotMatch(JSON.stringify(result), /private-key|provider body/);
+});
+
+test('an AI refund proposal creates only a pending org-scoped approval and never calls PayPal', async () => {
+  const repos = createRepositories();
+  repos.captures.add({ id: 'CAP-AI-1', value: '10.00', fee: '0.59', net: '9.41', currency: 'USD', status: 'COMPLETED', refunded: 2, reserved: 1 }, 'org-a');
+  let paypalCalls = 0;
+  const provider = { async generate() { return JSON.stringify({ reply: 'A refund can be reviewed.', evidence: ['CAP-AI-1'], proposal: { type: 'refund', txId: 'CAP-AI-1', title: 'Review refund', reason: 'The completed capture is available.' } }); } };
+  const askAI = createAIService({ config: {}, repos, provider });
+  const result = await askAI('Review this payment for a refund', { orgId: 'org-a', userId: 'user-a' });
+  const proposal = result.proposal;
+  assert.equal(proposal.status, 'pending');
+  assert.equal(proposal.type, 'refund');
+  assert.equal(proposal.amount, '7.00');
+  assert.equal(proposal.currency, 'USD');
+  const stored = await repos.approvals.get(proposal.approvalId, 'org-a');
+  assert.equal(stored.status, 'pending');
+  assert.equal(stored.captureId, 'CAP-AI-1');
+  assert.equal(stored.amount, '7.00');
+  assert.deepEqual(stored.requestPayload.evidenceIds, ['CAP-AI-1']);
+  assert.equal(await repos.approvals.get(proposal.approvalId, 'org-b'), undefined);
+  assert.equal(paypalCalls, 0);
+});
+
+test('an uncited AI proposal does not create an approval', async () => {
+  const repos = createRepositories();
+  repos.captures.add({ id: 'CAP-AI-2', value: '10.00', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  const provider = { async generate() { return JSON.stringify({ reply: 'Review it.', evidence: [], proposal: { type: 'refund', txId: 'CAP-AI-2' } }); } };
+  const askAI = createAIService({ config: {}, repos, provider });
+  const result = await askAI('Review this payment', { orgId: 'org-a', userId: 'user-a' });
+  assert.equal(result.proposal, null);
+  assert.equal(repos.approvals.items.size, 0);
 });

@@ -55,6 +55,18 @@ test('approval repository exposes its public approvalId field for persistence ch
   assert.equal(approval.approvalId, 'APR-RESTORED');
 });
 
+test('AI proposal persistence uses the scoped pending-approval RPC with minor-unit amounts', async () => {
+  const calls = [];
+  const database = { async rpc(name, args) { calls.push({ name, args }); return { id: 'AI-APR-1', org_id: args.p_org, proposal_type: args.p_proposal_type, capture_id: args.p_capture_id, amount_minor: args.p_amount_minor, currency: args.p_currency, status: 'pending', created_by: args.p_created_by, request_payload: args.p_request_payload }; } };
+  const repos = createPostgresRepositories(database);
+  const approval = await repos.approvals.createAIProposal({ orgId: 'org-a', actorId: 'user-a', proposalType: 'refund', captureId: 'CAP-1', amount: '7.00', currency: 'USD', requestPayload: { source: 'ai', evidenceIds: ['TRX-1'] } });
+  assert.equal(calls[0].name, 'create_ai_proposal');
+  assert.deepEqual(calls[0].args, { p_org: 'org-a', p_created_by: 'user-a', p_proposal_type: 'refund', p_capture_id: 'CAP-1', p_amount_minor: 700, p_currency: 'USD', p_request_payload: { source: 'ai', evidenceIds: ['TRX-1'] } });
+  assert.equal(approval.approvalId, 'AI-APR-1');
+  assert.equal(approval.amount, '7.00');
+  assert.equal(approval.status, 'pending');
+});
+
 test('capture and refund persistence send the pure ledger mapping into atomic database RPCs', async () => {
   const calls = [];
   const database = { async rpc(name, args) { calls.push({ name, args }); return { capture: { paypal_capture_id: 'CAP-1', amount_minor: 1000, currency: 'USD', status: 'COMPLETED' }, approval: { id: 'APR-1', amount_minor: 1000, currency: 'USD', status: 'completed' } }; } };
