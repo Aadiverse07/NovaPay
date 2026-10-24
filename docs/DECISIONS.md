@@ -271,3 +271,9 @@
 - Choice: Configure fee spike as current rate >= 2x the trailing mean with at least 3 prior fee-bearing captures; duplicate window 10 minutes; refund-rate spike 25% of captured gross over 30 days; large payout threshold USD 10,000; stale webhook age 10 minutes. Persist only evidence IDs and metrics. Detect duplicate amount+payer only when a provider payer reference is available; never persist or notify with the raw payer identifier.
 - Reason: Existing transactions do not include payer identifiers. The detector must not invent an identity or add PII to anomaly/notification rows; incomplete evidence yields no duplicate-payer finding.
 - Source: Phase 4 task requirements and inspection of `transactions`, `paypal_captures`, and `paypal_events` schemas in migrations 0002–0003, 2026-10-24. Rejected alternative: use amount alone as a duplicate, or store raw payer IDs.
+
+## Phase 4 AI proposal persistence — 2026-10-24
+- Question: How should AI suggestions enter Approvals without granting execution capability?
+- Choice: Persist only a sanitizer-approved, evidence-cited proposal as a tenant-scoped `pending` approval. A refund proposal must point to a cited completed capture; the server derives its amount from that capture's unreserved refundable balance. The model cannot supply org, amount, execution arguments, or reviewer. Approval and PayPal execution remain on the existing RBAC-protected refund path.
+- Reason: This preserves the explicit human approval gate and existing exact-capture, remaining-amount and idempotency checks. Uncited or ineligible proposals create no row; proposal answers are never cached.
+- Source: Phase 4 T6 requirements and `server/src/services/ai.js` / proposal tests, checked 2026-10-24. Rejected alternative: accept model-selected refund amounts or call PayPal during chat.

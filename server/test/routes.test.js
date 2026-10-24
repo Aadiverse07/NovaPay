@@ -156,6 +156,45 @@ test('AI route accepts legacy context fields but supplies only verified membersh
   });
 });
 
+test('AI proposals stay pending until an approver uses the existing refund path exactly once', async () => {
+  const repos = createRepositories();
+  repos.captures.add({ id: 'CAPTURE-AI-1', value: '10.00', fee: '0.59', net: '9.41', currency: 'USD', status: 'COMPLETED' }, orgA);
+  let refundCalls = 0;
+  const paypal = { async pp(method, url) {
+    if (url.endsWith('/refund')) { refundCalls += 1; return { id: 'REFUND-AI-1', status: 'COMPLETED' }; }
+    throw new Error('Unexpected PayPal operation');
+  } };
+  const askAI = createAIService({
+    config: baseConfig,
+    repos,
+    provider: { async generate() { return JSON.stringify({ reply: 'This completed capture can be reviewed.', evidence: ['CAPTURE-AI-1'], proposal: { type: 'refund', txId: 'CAPTURE-AI-1', title: 'Review refund', reason: 'The capture is completed.' } }); } },
+  });
+  const app = createApp({ config: baseConfig, repos, paypal, identity, askAI });
+  await withServer(app, async (base, _logs, request) => {
+    const chat = await request(`${base}/api/ai/chat`, { method: 'POST', body: JSON.stringify({ message: 'Why should this payment be reviewed?' }) });
+    assert.equal(chat.status, 200);
+    const chatBody = await chat.json();
+    assert.equal(chatBody.proposal.status, 'pending');
+    assert.equal(chatBody.proposal.amount, '10.00');
+    const approvalId = chatBody.proposal.approvalId;
+    const stored = await repos.approvals.get(approvalId, orgA);
+    assert.equal(stored.status, 'pending');
+    assert.equal(refundCalls, 0);
+
+    const viewer = await fetch(`${base}/api/approvals/${approvalId}/decision`, { method: 'POST', headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA, 'content-type': 'application/json' }, body: JSON.stringify({ decision: 'approve' }) });
+    assert.equal(viewer.status, 403);
+    assert.equal(refundCalls, 0);
+
+    const decisionUrl = `${base}/api/approvals/${approvalId}/decision`;
+    const approved = await request(decisionUrl, { method: 'POST', body: JSON.stringify({ decision: 'approve', note: 'Approved after review' }) });
+    assert.equal(approved.status, 200);
+    assert.equal((await approved.json()).refundId, 'REFUND-AI-1');
+    const repeated = await request(decisionUrl, { method: 'POST', body: JSON.stringify({ decision: 'approve' }) });
+    assert.equal(repeated.status, 200);
+    assert.equal(refundCalls, 1);
+  });
+});
+
 test('AI provider error bodies and keys do not reach responses or activity logs', async () => {
   const secret = 'provider-secret-sentinel';
   const repos = createRepositories();

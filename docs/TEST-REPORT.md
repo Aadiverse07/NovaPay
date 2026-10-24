@@ -441,3 +441,15 @@ Date: 2026-10-24
 - `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS. `git diff --check`: PASS.
 - Frontend path diff: PASS, no changes under `preview.html`, `dashboard.html`, `src/`, `assets/`, or Tailwind presets. `.env` remains ignored; `.env.example` contains placeholder/configuration values only.
 - Live anomaly/Supabase tests: UNVERIFIED; Phase 4 migration 0005 has not been created or applied. Current stored schema has no payer reference or payout transactions, so those rules only have fixture coverage at this point.
+## Phase 4 T6 — proposal/approval focused tests — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/routes.test.js`.
+- Result: PASS, 21 passed / 0 failed. New coverage proves pending-only AI approval creation, exact remaining-refund amount, org scoping, no PayPal call during proposal creation, viewer decision denial, and repeated approver submission makes one mock PayPal refund.
+
+
+## Phase 4 T6 — repository and approval integration tests — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/routes.test.js server/test/postgres-repos.test.js`.
+- Result: PASS, 29 passed / 0 failed. Added Postgres RPC mapping coverage (`create_ai_proposal`, org/actor/capture scope and integer minor units); pending approval role and one-time execution coverage remains green.
+
+## Phase 4 T6 — full regression — 2026-10-24
+- Command: `npm test`.
+- Result: PASS, 101 passed / 0 failed; migration parser passed for 0001–0004.

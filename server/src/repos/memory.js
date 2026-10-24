@@ -1,4 +1,5 @@
 import { AIUsageRepo, AICacheRepo, MemoryAnomaliesRepo, MemoryNotificationsRepo, makeMemoryAIVersion } from './aiMemory.js';
+import { randomUUID } from 'node:crypto';
 
 const toMinor = (value) => value == null ? null : Math.round(Number(value) * 100);
 
@@ -40,6 +41,12 @@ export class ApprovalsRepo {
   key(orgId, id) { return `${orgId}:${id}`; }
   get(id, orgId) { return this.items.get(this.key(orgId, id)); }
   save(id, registration, orgId) { registration.orgId = orgId; this.items.set(this.key(orgId, id), registration); return registration; }
+  async createAIProposal({ orgId, actorId, proposalType, captureId = null, amount = null, currency = null, requestPayload }) {
+    const approvalId = `AI-${randomUUID()}`;
+    const approval = { approvalId, orgId, proposalType, captureId, amount, currency, status: 'pending', requestPayload, createdBy: actorId, createdAt: new Date().toISOString() };
+    this.items.set(this.key(orgId, approvalId), approval);
+    return approval;
+  }
   list(orgId, { status, limit = 50, offset = 0 } = {}) { return [...this.items.values()].filter((item) => item.orgId === orgId && (!status || item.status?.toLowerCase() === status)).slice(offset, offset + limit); }
   countPending(orgId) { return this.list(orgId, { status: 'pending' }).length; }
   decide(id, orgId, decision, note, reviewerId) {
