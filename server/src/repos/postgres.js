@@ -148,6 +148,9 @@ export function createPostgresRepositories(database) {
       return row;
     },
     async pending() { return database.rpc('list_pending_paypal_events', {}); },
+    async anomalyCandidates(orgId) {
+      return database.select('paypal_events', q({ select: 'event_id,processing_status,created_at', org_id: `eq.${orgId}`, processing_status: 'in.(queued,retry,processing,dead_letter)', order: 'created_at.asc', limit: '100' }));
+    },
     async complete(id, verification, orgId, status, error = null) { return database.rpc('complete_paypal_event', { p_id: id, p_verification: verification, p_org: orgId, p_status: status, p_error: error }); },
     async snapshot(orgId) {
       const [rows, calls] = await Promise.all([
@@ -220,6 +223,7 @@ export function createPostgresRepositories(database) {
   };
 
   const ai = {
+    async listOrgIds() { return database.rpc('list_anomaly_org_ids', {}); },
     async dataVersion(orgId) {
       return database.rpc('get_ai_data_version', { p_org: orgId });
     },
@@ -247,8 +251,29 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const anomalies = {
+    async record(orgId, finding) {
+      const result = await database.rpc('record_anomaly', { p_org: orgId, p_finding: finding });
+      return { anomaly: result?.anomaly || result, inserted: Boolean(result?.inserted) };
+    },
+    async list(orgId, { limit = 100, offset = 0 } = {}) {
+      return database.select('anomalies', q({ select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(limit), offset: String(offset) }));
+    },
+  };
+
+  const notifications = {
+    async list(orgId, { status, limit = 50, offset = 0 } = {}) {
+      const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(limit), offset: String(offset) };
+      if (status) params.status = `eq.${status}`;
+      return database.select('notifications', q(params));
+    },
+    async setStatus(orgId, id, status) {
+      return database.rpc('set_notification_status', { p_org: orgId, p_notification_id: id, p_status: status });
+    },
+  };
+
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

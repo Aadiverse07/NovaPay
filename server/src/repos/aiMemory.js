@@ -47,6 +47,46 @@ export class AICacheRepo {
   }
 }
 
+export class MemoryNotificationsRepo {
+  constructor() { this.rows = new Map(); this.sequence = 0; }
+  key(orgId, id) { return `${orgId}:${id}`; }
+  addForAnomaly(orgId, anomaly) {
+    const id = `NTF-${++this.sequence}`;
+    const row = { id, orgId, anomalyId: anomaly.id, rule: anomaly.rule, severity: anomaly.severity, evidenceIds: anomaly.evidenceIds, status: 'unread', createdAt: anomaly.createdAt };
+    this.rows.set(this.key(orgId, id), row);
+    return row;
+  }
+  async list(orgId, { status, limit = 50, offset = 0 } = {}) {
+    return [...this.rows.values()].filter((row) => row.orgId === orgId && (!status || row.status === status))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(offset, offset + limit);
+  }
+  async setStatus(orgId, id, status, now = new Date()) {
+    const row = this.rows.get(this.key(orgId, id));
+    if (!row) return null;
+    row.status = status;
+    if (status === 'read') row.readAt = now.toISOString();
+    if (status === 'dismissed') row.dismissedAt = now.toISOString();
+    return row;
+  }
+}
+
+export class MemoryAnomaliesRepo {
+  constructor(notifications) { this.rows = new Map(); this.sequence = 0; this.notifications = notifications; }
+  key(orgId, dedupeKey) { return `${orgId}:${dedupeKey}`; }
+  async record(orgId, finding, now = new Date()) {
+    const key = this.key(orgId, finding.dedupeKey);
+    const existing = this.rows.get(key);
+    if (existing) return { anomaly: existing, inserted: false };
+    const anomaly = { id: `ANM-${++this.sequence}`, orgId, ...finding, createdAt: now.toISOString() };
+    this.rows.set(key, anomaly);
+    this.notifications.addForAnomaly(orgId, anomaly);
+    return { anomaly, inserted: true };
+  }
+  async list(orgId, { limit = 100, offset = 0 } = {}) {
+    return [...this.rows.values()].filter((row) => row.orgId === orgId).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(offset, offset + limit);
+  }
+}
+
 export function makeMemoryAIVersion(value) {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
 }

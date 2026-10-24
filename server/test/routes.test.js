@@ -183,6 +183,35 @@ test('AI provider error bodies and keys do not reach responses or activity logs'
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test('notifications are organization scoped, read/dismiss only, and anomaly scans require an authorized role', async () => {
+  const repos = createRepositories();
+  await repos.anomalies.record(orgA, { rule: 'refund_rate_spike', severity: 'warning', evidenceIds: ['REF-1'], details: { currency: 'USD' }, dedupeKey: 'finding-1', status: 'open' }, new Date('2026-10-24T10:00:00Z'));
+  const app = createApp({ config: baseConfig, repos, identity });
+  await withServer(app, async (base, _logs, request) => {
+    const listed = await request(`${base}/api/notifications`);
+    assert.equal(listed.status, 200);
+    const body = await listed.json();
+    assert.equal(body.notifications.length, 1);
+    assert.equal(body.notifications[0].orgId, orgA);
+    assert.equal(body.notifications[0].status, 'unread');
+
+    const marked = await request(`${base}/api/notifications/${body.notifications[0].id}/read`, { method: 'POST', body: '{}' });
+    assert.equal(marked.status, 200);
+    assert.equal((await marked.json()).notification.status, 'read');
+    const invalid = await request(`${base}/api/notifications?status=all`);
+    assert.equal(invalid.status, 400);
+    assert.deepEqual(Object.keys(await invalid.json()), ['error']);
+
+    const scan = await request(`${base}/api/anomalies/run`, { method: 'POST', body: '{}' });
+    assert.equal(scan.status, 200);
+    const viewer = await fetch(`${base}/api/anomalies/run`, { method: 'POST', headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA, 'content-type': 'application/json' }, body: '{}' });
+    assert.equal(viewer.status, 403);
+    assert.deepEqual(await viewer.json(), { error: { code: 'ROLE_FORBIDDEN', message: 'Your organization role cannot perform this action.' } });
+    const foreign = await fetch(`${base}/api/notifications`, { headers: { authorization: 'Bearer valid-user-token', 'x-org-id': orgB } });
+    assert.equal(foreign.status, 403);
+  });
+});
+
 test('invalid configuration fails fast without printing a stack trace', () => {
   const result = spawnSync(process.execPath, ['server/index.js'], { cwd: path.resolve(process.cwd()), env: { ...process.env, PORT: 'invalid' }, encoding: 'utf8' });
   assert.notEqual(result.status, 0);

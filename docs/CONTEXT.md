@@ -2,8 +2,8 @@
 
 ## HEADER
 - Date/time: 2026-10-24 Asia/Kolkata.
-- Branch: `backend`; last commit `90fb767 WIP Phase 4 task 4: budgets and cache`.
-- Current phase/task: Phase 4, T4 complete; T5 anomaly detection is next.
+- Branch: `backend`; last commit `b755e89 WIP Phase 4 task 4: sync handoff`.
+- Current phase/task: Phase 4, T5 complete; local checkpoint pending.
 
 ## DONE
 - Phase 3 completed and backed up at `0dbbdc8`; invoice send remains simulated.
@@ -14,11 +14,11 @@
 - T2 org-scoped read-only evidence tools, data minimization and bounded calls: `server/src/ai/evidence.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/ai-evidence.test.js` and related service/route tests.
 
 ## IN PROGRESS
+- T5 complete: rule engine `server/src/ai/anomalies.js`, service/scheduler `server/src/services/anomalies.js`, repo interfaces in `server/src/repos/{memory,postgres,aiMemory}.js`, route `server/src/routes/notifications.js`, app/index wiring and tests. Focused suite PASS 19/19; full suite PASS 97/97; migrations/syntax/hygiene pass. T5 checkpoint pending; DB tables/RPCs are for T7.
 - T4 complete: org/user daily reservation budgets, token/latency usage tracking, safe-answer cache keyed by org/question/route/data-version, and no-provider-call guards. `npm test` 89/89; migrations, syntax and hygiene pass. Checkpoint `90fb767`.
-- T5 not started: inspect event/order/capture/invoice repositories and worker lifecycle, then implement rules, persistence, notifications and schedule in server files only.
 
 ## NEXT STEPS
-1. T5 implement rule-based anomalies, idempotent persistence, notifications and scheduled/on-demand runs; tests/docs/checkpoint.
+1. Finish T5 full regression, migration/syntax/hygiene, secret/frontend checks; checkpoint if clean.
 2. T6 create AI proposals only as pending Approvals; tests/docs/checkpoint.
 3. T7 add next migration `0005_ai.sql`, run migration parser/security checks, document exact SQL Editor steps and wait for user `applied` before live DB checks.
 4. T8 API/docs and `scripts/verify-phase4.js`; live checks only after migration is applied.
@@ -30,7 +30,7 @@
 ## LIVE STATE
 - User reports Phase 3 migrations 0001–0004 applied. Phase 4 migration not written/applied.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
-- No live provider or database call during T3.
+- No live provider or database call during Phase 4 yet.
 - Invoice delivery remains SIMULATED; do not call PayPal Invoicing APIs.
 
 ## TEST STATE
@@ -49,11 +49,15 @@
 | T4 focused tests | PASS | 2026-10-24 | `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js`; 18 passed |
 | T4 full test suite | PASS | 2026-10-24 | `npm test`; 89 passed, 0 failed |
 | T4 migrations/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; `node --check` all JS; `git diff --check`; no frontend paths changed; `.env` ignored |
+| T5 focused | PASS | 2026-10-24 | `node --test server/test/anomalies.test.js server/test/postgres-repos.test.js server/test/routes.test.js`; 19 passed |
+| T5 full suite | PASS | 2026-10-24 | `npm test`; 97 passed, 0 failed |
+| T5 migration/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; JS `node --check`; `git diff --check`; frontend diff empty; `.env` ignored |
 | Phase 3 live gate | PASS with limitation | 2026-10-24 | Signed webhook/replay, capture/refund and reports passed; real invoice-paid linkage UNVERIFIED because sending is simulated |
 
 ## KNOWN ISSUES AND RISKS
 - Gemini free quotas are project-specific and can change; Google may use free-tier inputs to improve products. Send minimal evidence.
 - Phase 4 live checks wait on `0005_ai.sql` application; provider smoke can be UNVERIFIED if key/quota unavailable.
+- Duplicate payer and payout rules have only fixture coverage: current financial schema stores no payer reference and disallows payout transaction source types.
 - Phase 3 simulated invoice limitation remains.
 
 ## LESSONS LEARNED

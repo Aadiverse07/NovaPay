@@ -1,4 +1,6 @@
-import { AIUsageRepo, AICacheRepo, makeMemoryAIVersion } from './aiMemory.js';
+import { AIUsageRepo, AICacheRepo, MemoryAnomaliesRepo, MemoryNotificationsRepo, makeMemoryAIVersion } from './aiMemory.js';
+
+const toMinor = (value) => value == null ? null : Math.round(Number(value) * 100);
 
 export class OrdersRepo {
   constructor() { this.byId = new Map(); this.byRequest = new Map(); }
@@ -78,13 +80,16 @@ export class EventsRepo {
   async claim(id) { const event = this.events.find((row) => row.id === id); if (!event || !['queued','retry'].includes(event.processingStatus)) return null; event.processingStatus = 'processing'; event.attempts += 1; return event; }
   async pending() { return this.events.filter((row) => ['queued','retry'].includes(row.processingStatus)); }
   async complete(id, verification, orgId, status, error) { const event = this.events.find((row) => row.id === id); if (event) Object.assign(event, { verification, orgId, processingStatus: status, lastError: error }); }
+  async anomalyCandidates(orgId) { return this.events.filter((row) => row.orgId === orgId); }
 }
 
 export function createRepositories() {
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
-  const repos = { orders, captures, approvals: new ApprovalsRepo(captures), events: new EventsRepo() };
+  const notifications = new MemoryNotificationsRepo();
+  const repos = { orders, captures, approvals: new ApprovalsRepo(captures), events: new EventsRepo(), notifications };
+  repos.anomalies = new MemoryAnomaliesRepo(notifications);
   repos.ai = {
     usage: new AIUsageRepo(),
     cache: new AICacheRepo(),
@@ -95,8 +100,27 @@ export function createRepositories() {
         approvals: repos.approvals.list(orgId).map(({ approvalId, status, proposalType, amount, captureId, invoiceId }) => ({ approvalId, status, proposalType, amount, captureId, invoiceId })),
       });
     },
+    async listOrgIds() {
+      return [...new Set([
+        ...[...orders.byId.values()].map((row) => row.orgId),
+        ...captures.items.map((row) => row.orgId),
+        ...repos.events.events.map((row) => row.orgId),
+      ].filter(Boolean))];
+    },
   };
-  repos.listTransactions = async (orgId, filters) => repos.captures.all(orgId).slice(filters.offset, filters.offset + filters.limit).map((capture) => ({ id: capture.id, org_id: orgId, source_type: 'capture', source_id: capture.id, status: capture.status, amount_minor: Math.round(Number(capture.value) * 100), fee_minor: capture.fee == null ? null : Math.round(Number(capture.fee) * 100), net_minor: capture.net == null ? null : Math.round(Number(capture.net) * 100), currency: capture.currency, occurred_at: capture.occurredAt || new Date().toISOString() }));
+  repos.listTransactions = async (orgId, filters = {}) => {
+    const rows = repos.captures.all(orgId).map((capture) => ({ id: capture.id, org_id: orgId, source_type: 'capture', source_id: capture.id, status: capture.status, amount_minor: toMinor(capture.value), fee_minor: toMinor(capture.fee), net_minor: toMinor(capture.net), currency: capture.currency, occurred_at: capture.occurredAt || new Date().toISOString() }));
+    for (const approval of repos.approvals.items.values()) {
+      if (approval.orgId !== orgId || approval.status?.toLowerCase() !== 'completed' || !approval.result) continue;
+      const refund = approval.result;
+      const breakdown = refund.seller_payable_breakdown || {};
+      rows.push({ id: String(refund.id || approval.approvalId), org_id: orgId, source_type: 'refund', source_id: String(refund.id || approval.approvalId), paypal_capture_id: approval.captureId, paypal_refund_id: refund.id || null, status: String(refund.status || 'COMPLETED'), amount_minor: toMinor(refund.amount?.value || approval.amount), fee_minor: toMinor(breakdown.paypal_fee?.value), net_minor: toMinor(breakdown.net_amount?.value), currency: String(refund.amount?.currency_code || approval.currency || 'USD'), occurred_at: refund.create_time || refund.update_time || approval.createdAt || new Date().toISOString() });
+    }
+    const parsed = rows.filter((row) => (!filters.type || row.source_type === filters.type) && (!filters.status || row.status === filters.status)
+      && (!filters.from || Date.parse(row.occurred_at) >= Date.parse(filters.from)) && (!filters.to || Date.parse(row.occurred_at) <= Date.parse(filters.to)));
+    parsed.sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at));
+    return parsed.slice(Number(filters.offset || 0), Number(filters.offset || 0) + Number(filters.limit || 50));
+  };
   repos.listLedgerEntries = async () => [];
   repos.trialBalance = async (orgId, currency = 'USD') => ({ currency, accounts: [], totals: { debitMinor: 0, creditMinor: 0, debits: '0.00', credits: '0.00' }, balanced: true });
   repos.reconcile = async (orgId, currency = 'USD') => ({ org_id: orgId, status: 'clean', currency, details: {} });
