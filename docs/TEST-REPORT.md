@@ -430,3 +430,14 @@ Date: 2026-10-24
 - T4 focused: `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js` PASS, 18 passed / 0 failed.
 - Covers atomic per-user/org reservation behavior, no provider call after limit, concurrent org cap, UTC reset, cache hit accounting, normalization, cross-org isolation, data-version invalidation, TTL, and exclusion of proposals/errors/insufficient evidence.
 - `npm run check:migrations`: PASS; 0001–0004 parsed. `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS. `git diff --check`: PASS; frontend paths unchanged and `.env` ignored.
+
+## Phase 4 T5 — focused anomaly/route tests — 2026-10-24
+- Command: `node --test server/test/anomalies.test.js server/test/postgres-repos.test.js server/test/routes.test.js`.
+- Result: PASS, 19 passed / 0 failed. Covers fee/refund thresholds and boundaries, payer-required duplicate detection without payer retention, payout threshold, stale/dead-letter and reconciliation rules, dedupe/one notification, scheduled scan lifecycle, org scoping, notification actions, and viewer denial for scan execution.
+
+## Phase 4 T5 — final local regression — 2026-10-24
+- `npm test`: PASS, 97 passed / 0 failed.
+- `npm run check:migrations`: PASS; 0001–0004 parsed as PostgreSQL 17 SQL/PLpgSQL.
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS. `git diff --check`: PASS.
+- Frontend path diff: PASS, no changes under `preview.html`, `dashboard.html`, `src/`, `assets/`, or Tailwind presets. `.env` remains ignored; `.env.example` contains placeholder/configuration values only.
+- Live anomaly/Supabase tests: UNVERIFIED; Phase 4 migration 0005 has not been created or applied. Current stored schema has no payer reference or payout transactions, so those rules only have fixture coverage at this point.

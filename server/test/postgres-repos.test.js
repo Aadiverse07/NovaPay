@@ -98,3 +98,26 @@ test('AI usage reservations and cache persistence stay scoped to the verified or
   assert.equal(calls[3].payload.org_id, 'org-a');
   assert.equal(calls[3].conflict, 'org_id,cache_key');
 });
+
+test('anomaly records, notification actions, webhook inputs and scheduled org scans are scoped', async () => {
+  const calls = [];
+  const database = {
+    async rpc(name, args) { calls.push({ kind: 'rpc', name, args }); if (name === 'record_anomaly') return { inserted: true, anomaly: { id: 'ANM-1', org_id: args.p_org } }; if (name === 'set_notification_status') return { id: args.p_notification_id, org_id: args.p_org, status: args.p_status }; return ['org-a']; },
+    async select(table, query) { calls.push({ kind: 'select', table, query }); return table === 'notifications' ? [{ id: 'NTF-1', org_id: 'org-a', status: 'unread' }] : [{ event_id: 'EV-1', processing_status: 'retry' }]; },
+  };
+  const repos = createPostgresRepositories(database);
+  const record = await repos.anomalies.record('org-a', { rule: 'stale_webhook', evidenceIds: ['EV-1'], dedupeKey: 'dedupe-1', details: {} });
+  assert.equal(record.inserted, true);
+  assert.equal(calls[0].args.p_org, 'org-a');
+  const events = await repos.events.anomalyCandidates('org-a');
+  assert.equal(events[0].event_id, 'EV-1');
+  assert.match(calls[1].query, /org_id=eq\.org-a/);
+  const notifications = await repos.notifications.list('org-a', { status: 'unread', limit: 10, offset: 0 });
+  assert.equal(notifications[0].org_id, 'org-a');
+  assert.match(calls[2].query, /org_id=eq\.org-a/);
+  const updated = await repos.notifications.setStatus('org-a', 'NTF-1', 'dismissed');
+  assert.equal(updated.status, 'dismissed');
+  assert.deepEqual(await repos.ai.listOrgIds(), ['org-a']);
+  assert.equal(calls[3].args.p_org, 'org-a');
+  assert.equal(calls[4].name, 'list_anomaly_org_ids');
+});
