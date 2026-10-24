@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
 - Branch: `backend`; last commit `a710e83 WIP Phase 3 task 2: live report verifier`.
-- Current phase/task: Phase 3 live verification, blocked before order creation by unresolved registered webhook host.
+- Current phase/task: Phase 3 live verification, rechecking user-restored tunnel before order creation.
 
 ## DONE
 - Phase 2/3 implementation and Phase 3 verifier exist. Phase 3 is not closed.
@@ -14,17 +14,16 @@
 - PayPal read-only webhook GET confirms registration endpoint `https://relevant-quick-vbulletin-inclusion.trycloudflare.com/api/webhook` and capture/refund/invoice-paid events.
 
 ## IN PROGRESS
-- `scripts/verify-phase3.js`: payment/report verifier is locally ready, but no order was created. The registered webhook hostname has no DNS address, so signed webhook delivery cannot be verified yet.
+- `scripts/verify-phase3.js`: new tunnel preflight passed. First run passed security/tenant/FX/roles and created one $1 order, but exited after printing approval URL because `createInterface` was missing; no approval/capture/refund happened. `paused` prevented cleanup. Fix import/pause ordering, inventory this run’s rows and reuse its pending order if safe.
 
 ## NEXT STEPS
-1. User restores DNS for `relevant-quick-vbulletin-inclusion.trycloudflare.com` or updates Sandbox webhook to the current active tunnel hostname, ending `/api/webhook`, with capture/refund completion events.
-2. Confirm the registered host resolves and webhook path responds; backend currently runs on port 3000.
-3. Rerun `NOVAPAY_PHASE3_0004_APPLIED=true node scripts/verify-phase3.js` with ignored `NOVAPAY_PHASE3_BUYER_EMAIL` set. This path makes no PayPal Invoicing calls.
-4. When order URL appears, user opens it, signs in as US Personal buyer `sb-jzrsh53532685@personal.example.com`, approves $1 with Visa, replies `approved`; continue capture, signed event/replay, refund, reports, date boundaries, CSV, safe Phase 2 subset.
+1. Verify new public `/api/status`, DNS and registered webhook URL/event types using GET only.
+2. If they match, run `NOVAPAY_PHASE3_0004_APPLIED=true node scripts/verify-phase3.js` with ignored `NOVAPAY_PHASE3_BUYER_EMAIL` and public `NOVAPAY_WEBHOOK_URL`. This path makes no PayPal Invoicing calls.
+3. When order URL appears, user opens it, signs in as US Personal buyer `sb-jzrsh53532685@personal.example.com`, approves $1 with Visa, replies `approved`; continue capture, signed event/replay, refund, reports, date boundaries, CSV, safe Phase 2 subset.
 5. Mark simulated invoice paid linkage UNVERIFIED, clean only exact run rows, preserve fixed users/orgs and append-only audit/activity. Run final tests/migration check; update docs. Commit final locally only if no FAIL. Never push. Ask whether to continue Phase 4.
 
 ## USER ACTIONS PENDING
-- Restore DNS for registered webhook host or update PayPal Sandbox webhook to the active tunnel URL and ensure capture/refund events remain subscribed.
+- User reports tunnel and webhook URL updated. Verify this first.
 - After a new approval URL is generated, approve the $1 order in browser and reply `approved`.
 - Do not send/delete existing invoice drafts.
 
@@ -32,7 +31,7 @@
 - Migrations 0001/0002 previously verified; user reports 0003/0004 applied.
 - Tunnel process PID 17036: `cloudflared tunnel --url http://localhost:3000`. Registered hostname does not resolve; `dig google.com` resolves. Local app was absent, then started with `npm start` and local `/api/status` returns 200. No tunnel settings changed.
 - Fixed Phase 3 Org A read-only counts before this run: orders/captures/transactions/journal entries/approvals/events all 0; 7 prior reconciliation runs.
-- No new order/capture/refund in this resumed run. No PayPal Invoicing call. Webhook registration was checked with a read-only non-Invoicing GET.
+- One $1 `PAYER_ACTION_REQUIRED` order remains, exactly one. Four local invoices, three approvals, 14 invoice events, and one FX row from the failed run are scheduled for exact cleanup. Reuse order by request key; no new order create. No PayPal Invoicing calls.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
 
 ## TEST STATE
@@ -43,12 +42,13 @@
 | Migrations | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parsed |
 | Verifier syntax/hygiene | PASS | 2026-10-24 | `node --check scripts/verify-phase3.js`, `git diff --check`, frontend diff empty, `.env` ignored/untracked |
 | Local app | PASS | 2026-10-24 | `npm start`; `GET /api/status` HTTP 200 |
-| Registered webhook delivery | UNVERIFIED | 2026-10-24 | PayPal read-only webhook GET has expected route/events; hostname DNS fails and curl gives status 000 |
-| Real capture/refund/report parity | UNVERIFIED | 2026-10-24 | Stopped before order to avoid payment without webhook proof |
+| Registered webhook reachability | PASS | 2026-10-24 | Public `/api/status` HTTP 200; DNS resolves; registered webhook URL and capture/refund events match |
+| Real capture/refund/report parity | UNVERIFIED | 2026-10-24 | First run stopped after order creation due missing `createInterface`; no buyer approval |
+| Live verifier pause | FAIL then fixed | 2026-10-24 | First run `createInterface is not defined`; missing import fixed; 60/60 tests pass; reuse pending order |
 | Real Invoicing send/paid linkage | UNVERIFIED | 2026-10-24 | Invoice send is SIMULATED; no real provider invoice ID |
 
 ## KNOWN ISSUES AND RISKS
-- Live financial verification is blocked before payment because the registered webhook hostname does not resolve. No buyer URL exists yet.
+- Live financial verification is blocked before payment because the registered webhook hostname does not resolve. An unapproved buyer URL was printed; wait for fixed verifier before using it.
 - Reports need a fresh capture/refund in fixed Phase 3 Org A.
 - `mark_invoice_paid` looks up an actual PayPal invoice ID. A simulated invoice has none; capture-to-invoice trigger only links a matching pre-existing payment ID.
 - Exact run cleanup preserves fixed fixtures and append-only audit/activity. External Sandbox order/refund remain in provider history.
