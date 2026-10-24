@@ -199,3 +199,10 @@
 - Choice: Keep the local href parser broad but origin/path/ID validated, run only local realistic-response tests, and leave live-mode revalidation unverified while defaulting delivery to SIMULATED.
 - Reason: Server-side markers showed create success then extraction failure, before any send call. The actual response body was not retained; guessing at its link relation or ID shape and making another PayPal draft would violate the one-create limit.
 - Source: Live `api_activity` stage messages and PayPal current v2 quickstart/object docs, checked 2026-10-24. Rejected alternative: log the full provider response or make another external invoice.
+
+## Reconcile existing Sandbox invoice drafts — 2026-10-24
+
+- Question: Can the reported Sandbox draft be safely identified as one of the verifier's prior create attempts, and should it be sent or deleted?
+- Choice: Keep invoice sending SIMULATED and make no provider create/send/delete calls. Treat `P3-644ca6d7c8694695b51e` as consistent with the verifier's invoice-number format, but not conclusively matched to a specific provider request.
+- Reason: The verifier generated `P3-` plus 20 hexadecimal characters, but cleanup removed its local invoice row after the create response failed ID extraction; the safe activity log has no invoice number or PayPal ID. Logs prove create succeeded and send was never called, while the later local send was simulated. The user reports the dashboard draft is still Draft and explicitly requested reconciliation before any new provider request.
+- Source: Read-only Supabase query and user-provided Sandbox observation, 2026-10-24. Rejected alternatives: infer an exact draft-to-request match from format alone, send/delete a draft, or issue another PayPal request.
