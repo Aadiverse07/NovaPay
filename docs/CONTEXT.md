@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
 - Branch: `backend`; last commit before checkpoint: `00fa9be WIP-BROKEN: Phase 3 live verification handoff`.
-- Phase/task: Phase 3 live verification, Task 5 — blocked invoice send diagnosis; do not continue live invoice creation.
+- Phase/task: Phase 3 live verification, Task 5 — extract PayPal invoice IDs from the documented create response; one controlled live attempt is authorized.
 
 ## DONE
 - Phase 2 and Phase 3 implementation are committed through `e6e1953`; Phase 3 live verification remains incomplete.
@@ -13,9 +13,9 @@
 - Invoice validation uses PayPal's 25-character invoice-number limit and DUE_ON_RECEIPT. Safe API activity logger and tests redact provider messages/debug IDs and retain only issue enums or generic body categories.
 
 ## IN PROGRESS
-- Invoice send remains BLOCKED after repeated live HTTP 502s. Latest safe activity shows invoice create HTTP 201, no `/send` request, and no safe provider error name/issue. The service catches persistence and provider-stage failures together, so exact stage is not known.
+- User identified likely cause: v2 create returns an invoice link href, while code required response.id. Official docs checked 2026-10-24 confirm 201 href with invoice ID and also document an `id` field. Fix and focused tests are in progress.
 - `docs/TEST-REPORT.md` records latest live result. No browser payment, approval URL, signed paid webhook, or final Phase 3 gate pass exists.
-- Current WIP changes: `server/src/services/paypal.js`, `server/test/paypal.test.js`, `scripts/verify-phase3.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
+- Current WIP changes: `server/src/services/invoices.js`, `server/test/phase3-services.test.js`, plus continuity docs. The one-live-attempt ceiling is enforced.
 
 ## NEXT STEPS
 1. Do not create another live PayPal invoice until the create/persist/send boundary is diagnosed; inspect app/server safe errors and verify whether database RPC `set_invoice_paypal_draft` succeeded for the test run.
@@ -39,17 +39,17 @@
 |---|---|---|---|
 | Branch/worktree | PASS | 2026-10-24 | branch `backend`; local changes only in six backend/docs files |
 | Install | PASS | 2026-10-24 | `npm ci`; 89 packages, 0 vulnerabilities |
-| Unit suite | PASS | 2026-10-24 | `npm test`; 56 passed, 0 failed |
+| Unit suite | PASS | 2026-10-24 | `npm test`; 59 passed, 0 failed |
 | Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parse |
 | Live status/schema | PASS | 2026-10-24 | `/api/status` 200; nine Phase 3 objects HTTP 200 |
 | Live security/roles/routes/FX | PASS | 2026-10-24 | latest verifier: 8/8 JWT RPC denials, 11/11 service assertions, isolation, writes, roles, FX, reports |
-| Invoice send/paid webhook | BLOCKED | 2026-10-24 | 3 live attempts returned 502; create 201/no `/send`; no browser payment or signed event |
+| Invoice send/paid webhook | UNVERIFIED pending single retry | 2026-10-24 | ID/href fix passes local tests; one live attempt not yet run |
 | Real report totals | UNVERIFIED | 2026-10-24 | live org inventory had zero completed capture/refund rows |
 | Cleanup | PASS, scoped | 2026-10-24 | run-created local invoices/events/FX removed; fixed fixtures and audit rows retained |
 | Frontend/secrets hygiene | PASS | 2026-10-24 | frontend diff empty; `.env` ignored/untracked; no secrets in changed files |
 
 ## KNOWN ISSUES AND RISKS
-- Invoice send failure stage is not isolated; latest evidence is provider create 201 and no send activity. Check if `set_invoice_paypal_draft` failed or server app error surfaced safely.
+- Prior send failure likely came from create response href vs `response.id`; extractor is being fixed with strict href validation. Only one additional live attempt is authorized.
 - PayPal drafts may remain in Sandbox although local verifier rows were deleted; user must inspect dashboard.
 - Historical capture/refund totals cannot be proven from this live project's current data.
 - No final Phase 3 commit is allowed while blocked/unverified criteria remain. No push.
@@ -66,7 +66,7 @@
 - Never print `.env` values, complete provider responses, auth headers, or stack traces.
 
 ## DO NOT
-- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or create more Sandbox invoices until diagnosis.
+- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or create more than one Sandbox invoice in this retry.
 
 ## RESUME COMMANDS
 - `git status --short`

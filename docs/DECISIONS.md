@@ -171,3 +171,10 @@
 - Choice: Stop live retries and mark invoice send BLOCKED pending diagnosis of the create/persist/send boundary.
 - Reason: Three controlled live attempts have failed to reach a confirmed send/payment, and each can leave a PayPal draft. Latest activity proves create HTTP 201 but no `/send`; continuing would create more provider-side state without narrowing the cause.
 - Source: Live verifier output and read-only api_activity status probe, 2026-10-24. Rejected alternative: create repeated invoices or expose full provider response bodies.
+
+## PayPal invoice create response ID extraction — 2026-10-24
+
+- Question: Which create-response forms should the v2 invoice sender accept?
+- Choice: Accept a valid `id` or derive the ID from a self `href`; require HTTPS, the configured PayPal API origin, the exact `/v2/invoicing/invoices/{id}` path, and the documented `INV2-…` ID format. Log create-success, ID-extracted, send-called and failure-stage markers without invoice IDs or provider payloads.
+- Reason: Current PayPal quickstart says HTTP 201 returns an `href` containing the invoice ID, while the API reference/object also documents a top-level `id`. Handling both forms preserves compatibility and prevents arbitrary URLs from influencing outbound request paths.
+- Source: PayPal [Invoicing API quickstart](https://developer.paypal.com/api/invoicing), [Invoices v2 reference](https://developer.paypal.com/api/invoicing/v2/), and [Invoice object](https://developer.paypal.com/invoicing/object/), checked 2026-10-24. Rejected alternative: assume only `response.id` or trust any `href` host/path.
