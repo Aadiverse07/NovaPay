@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { convertMinorUnits, createFxService } from '../src/services/fx.js';
-import { buildInvoiceDraft, decideInvoiceSend } from '../src/services/invoices.js';
+import { buildInvoiceDraft, decideInvoiceSend, extractPayPalInvoiceId } from '../src/services/invoices.js';
 import { reportCsvCell, reportTotals } from '../src/routes/reports.js';
 import { createApp } from '../src/app.js';
 import { createRepositories } from '../src/repos/memory.js';
@@ -36,6 +36,48 @@ test('invoice draft recalculates line, tax, and grand totals while ignoring clie
     subtotalMinor:1,taxMinor:1,totalMinor:1,lines:[{description:'Service',quantity:'1.250',unitPrice:'10.00',taxRate:'0.0825'}]},'user');
   assert.equal(draft.invoice.subtotal_minor,1250);assert.equal(draft.invoice.tax_minor,103);assert.equal(draft.invoice.total_minor,1353);
   assert.deepEqual(draft.lines.map((line)=>line.line_total_minor),[1353]);
+});
+
+test('PayPal invoice create response extracts and validates the invoice id from its self href',()=>{
+  const id='INV2-W44B-KRGF-JM6R-26VU';
+  const createResponse={links:[{href:`https://api-m.sandbox.paypal.com/v2/invoicing/invoices/${id}`,rel:'self',method:'GET'}]};
+  assert.equal(extractPayPalInvoiceId(createResponse),id);
+  assert.equal(extractPayPalInvoiceId({id}),id);
+  assert.equal(extractPayPalInvoiceId({links:[{href:`https://evil.example/v2/invoicing/invoices/${id}`,rel:'self'}]}),null);
+  assert.equal(extractPayPalInvoiceId({links:[{href:`https://api-m.sandbox.paypal.com/v2/invoicing/invoices/not-an-invoice-id`,rel:'self'}]}),null);
+});
+
+test('invoice send logs create, id extraction, and send stages without exposing the invoice id',async()=>{
+  const id='INV2-W44B-KRGF-JM6R-26VU', logs=[], paypalPaths=[];
+  const approval={proposalType:'send-invoice',status:'pending',invoiceId:'invoice-row-1'};
+  const invoice={id:'invoice-row-1',state:'reviewed',invoiceNumber:'N-1',currency:'USD',customerName:'Test Customer',customerEmail:'test@example.test',lines:[{description:'Service',quantity:'1',unitPrice:'1.00',taxRate:'0'}]};
+  const repos={
+    approvals:{async get(){return approval;},async decideInvoiceSend(){return{result:'decided',approval};}},
+    invoices:{async get(){return invoice;},async setPayPalDraft(_org,_id,paypalId){assert.equal(paypalId,id);},async completeSend(){return{};},async failSend(){throw new Error('unexpected failure');}},
+    events:{async addCall(call){logs.push(call.m);}},
+  };
+  const paypal={async pp(_method,path){paypalPaths.push(path);return path.endsWith('/send')?{}:{links:[{href:`https://api-m.sandbox.paypal.com/v2/invoicing/invoices/${id}`,rel:'self',method:'GET'}]};}};
+  const result=await decideInvoiceSend({repos,paypal,req:{orgId:'org-1',user:{id:'reviewer-1'},id:'request-1'},approvalId:'approval-1',decision:'approve'});
+  await new Promise((resolve)=>setImmediate(resolve));
+  assert.equal(result.status,200);
+  assert.deepEqual(paypalPaths,['/v2/invoicing/invoices',`/v2/invoicing/invoices/${id}/send`]);
+  assert.ok(logs.includes('invoice_send:paypal_create_ok'));
+  assert.ok(logs.includes('invoice_send:invoice_id_extracted'));
+  assert.ok(logs.includes('invoice_send:paypal_send_called'));
+  assert.ok(logs.every((message)=>!message.includes(id)));
+});
+
+test('invalid PayPal invoice create response keeps the client error structured',async()=>{
+  const logs=[];
+  const approval={proposalType:'send-invoice',status:'pending',invoiceId:'invoice-row-1'};
+  const invoice={id:'invoice-row-1',state:'reviewed',customerName:'Test Customer',customerEmail:'test@example.test',lines:[]};
+  const repos={approvals:{async get(){return approval;},async decideInvoiceSend(){return{result:'decided',approval};}},invoices:{async get(){return invoice;},async failSend(){}},events:{async addCall(call){logs.push(call.m);}}};
+  const result=await decideInvoiceSend({repos,paypal:{async pp(){return{links:[{href:'https://evil.example/invoice/INV2-W44B-KRGF-JM6R-26VU',rel:'self'}]};}},req:{orgId:'org-1',user:{id:'reviewer-1'},id:'request-1'},approvalId:'approval-1',decision:'approve'});
+  await new Promise((resolve)=>setImmediate(resolve));
+  assert.equal(result.status,502);
+  assert.deepEqual(result.body,{error:{code:'INVOICE_SEND_FAILED',message:'PayPal could not send the invoice. Check the Sandbox invoice before retrying.'}});
+  assert.ok(logs.includes('invoice_send:invoice_id_extraction_failed'));
+  assert.ok(logs.includes('invoice_send:failed_at_invoice_id_extract'));
 });
 
 test('report totals computed from ledger views balance and match the underlying ledger fixture',()=>{

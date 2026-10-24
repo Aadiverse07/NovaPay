@@ -1,5 +1,35 @@
 import { moneyToMinor, minorToMoney } from '../repos/postgres.js';
-import { paypalRequestId } from './paypal.js';
+import { PAYPAL_API, paypalRequestId } from './paypal.js';
+
+const PAYPAL_INVOICE_ID = /^INV2-(?:[A-Z0-9]{4,5}-){2,3}[A-Z0-9]{4,5}$/;
+const PAYPAL_INVOICE_PATH = /^\/v2\/invoicing\/invoices\/([^/]+)$/;
+
+export function extractPayPalInvoiceId(response) {
+  const directId = typeof response?.id === 'string' ? response.id : '';
+  if (PAYPAL_INVOICE_ID.test(directId)) return directId;
+
+  const hrefs = [
+    ...(typeof response?.href === 'string' ? [response.href] : []),
+    ...(Array.isArray(response?.links) ? response.links.filter((link) => link?.rel === 'self').map((link) => link.href) : []),
+  ];
+  const api = new URL(PAYPAL_API);
+  for (const href of hrefs) {
+    if (typeof href !== 'string' || !href) continue;
+    try {
+      const url = new URL(href, api);
+      if (url.protocol !== 'https:' || url.origin !== api.origin || url.search || url.hash || url.username || url.password) continue;
+      const match = PAYPAL_INVOICE_PATH.exec(url.pathname);
+      if (!match) continue;
+      const id = decodeURIComponent(match[1]);
+      if (PAYPAL_INVOICE_ID.test(id)) return id;
+    } catch {}
+  }
+  return null;
+}
+
+function logInvoiceSendStage(repos, req, stage, ok = true) {
+  Promise.resolve(repos.events?.addCall({ t: new Date().toISOString(), m: `invoice_send:${stage}`, ok }, req.orgId)).catch(() => {});
+}
 
 function scaledInteger(value, scale, label) {
   const text=String(value);
@@ -59,6 +89,7 @@ export async function decideInvoiceSend({repos,paypal,req,approvalId,decision,no
     await repos.invoices.failSend(req.orgId,approvalId,'Invoice is not in reviewed state.');
     return {status:409,body:{error:{code:'INVOICE_NOT_REVIEWED',message:'Only a reviewed invoice can be sent.'}}};
   }
+  let stage = 'paypal_create';
   try {
     let paypalInvoiceId=invoice.paypalInvoiceId;
     if(!paypalInvoiceId) {
@@ -69,14 +100,26 @@ export async function decideInvoiceSend({repos,paypal,req,approvalId,decision,no
         primary_recipients:[{billing_info:{name:{given_name:givenName,surname:surnameParts.join(' ')||'Customer'},email_address:invoice.customerEmail}}],
         items:invoice.lines.map((line)=>({name:line.description,quantity:line.quantity,unit_amount:{currency_code:invoice.currency,value:line.unitPrice},...(Number(line.taxRate)>0?{tax:{name:'Tax',percent:percentFromRate(line.taxRate)}}:{})})),
       },paypalRequestId('invoice-create',`${req.orgId}:${invoice.id}`),req.orgId);
-      if(!response.id) throw Object.assign(new Error('PayPal did not return an invoice ID.'),{statusCode:502});
-      paypalInvoiceId=String(response.id);
+      logInvoiceSendStage(repos,req,'paypal_create_ok');
+      stage = 'invoice_id_extract';
+      paypalInvoiceId=extractPayPalInvoiceId(response);
+      if(!paypalInvoiceId) {
+        logInvoiceSendStage(repos,req,'invoice_id_extraction_failed',false);
+        throw Object.assign(new Error('PayPal did not return a valid invoice ID.'),{statusCode:502});
+      }
+      logInvoiceSendStage(repos,req,'invoice_id_extracted');
+      stage = 'persist_paypal_draft';
       await repos.invoices.setPayPalDraft(req.orgId,invoice.id,paypalInvoiceId);
+      logInvoiceSendStage(repos,req,'paypal_draft_persisted');
     }
+    stage = 'paypal_send';
+    logInvoiceSendStage(repos,req,'paypal_send_called');
     await paypal.pp('POST',`/v2/invoicing/invoices/${encodeURIComponent(paypalInvoiceId)}/send`,{send_to_recipient:true,send_to_invoicer:true},paypalRequestId('invoice-send',`${req.orgId}:${approvalId}`),req.orgId);
+    logInvoiceSendStage(repos,req,'paypal_send_ok');
     await repos.invoices.completeSend(req.orgId,approvalId,paypalInvoiceId,{id:paypalInvoiceId,status:'SENT'});
     return {status:200,body:{approvalId,status:'completed',invoiceId:invoice.id,paypalInvoiceId,state:'sent'}};
   } catch {
+    logInvoiceSendStage(repos,req,`failed_at_${stage}`,false);
     await repos.invoices.failSend(req.orgId,approvalId,'PayPal invoice delivery failed; verify the Sandbox invoice before retrying.');
     return {status:502,body:{error:{code:'INVOICE_SEND_FAILED',message:'PayPal could not send the invoice. Check the Sandbox invoice before retrying.'}}};
   }
