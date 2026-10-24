@@ -237,6 +237,11 @@ async function checkInvoicePayment(invoice, approvalId) {
   // The invoice email is fixed at creation time, so this guard prevents sending to the placeholder.
   if(invoice.customerEmail!==email){record('Invoice send and signed paid webhook','UNVERIFIED','buyer email differs from the address used when creating invoice; rerun with NOVAPAY_PHASE3_BUYER_EMAIL set before creation');return;}
   const approved=await api('/api/approvals/'+approvalId+'/decision',{method:'POST',token:tokens.approver,orgId:orgs.A,body:{decision:'approve',note:'Phase 3 live verification'}});
+  if(approved.status===200&&approved.body?.sendMode==='SIMULATED'&&approved.body?.simulated===true){
+    record('Invoice approval uses explicit local SIMULATED send mode','PASS','no PayPal create/send call was made; local approval and invoice state recorded');
+    record('Real signed invoice paid webhook linkage','UNVERIFIED','live PayPal send is a known limitation; no buyer payment or signed paid event exists');
+    return;
+  }
   if(approved.status!==200||approved.body?.status!=='completed'||!approved.body?.paypalInvoiceId){record('Invoice send and signed paid webhook','UNVERIFIED','PayPal Sandbox send unavailable; HTTP '+approved.status);return;}
   const paypalId=approved.body.paypalInvoiceId;
   const {createPayPalService}=await import('../server/src/services/paypal.js');

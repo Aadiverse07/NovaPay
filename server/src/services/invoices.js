@@ -1,7 +1,7 @@
 import { moneyToMinor, minorToMoney } from '../repos/postgres.js';
 import { PAYPAL_API, paypalRequestId } from './paypal.js';
 
-const PAYPAL_INVOICE_ID = /^INV2-(?:[A-Z0-9]{4,5}-){2,3}[A-Z0-9]{4,5}$/;
+const PAYPAL_INVOICE_ID = /^INV2-(?:[A-Z0-9]{4,5}-){1,3}[A-Z0-9]{4,5}$/i;
 const PAYPAL_INVOICE_PATH = /^\/v2\/invoicing\/invoices\/([^/]+)$/;
 
 export function extractPayPalInvoiceId(response) {
@@ -10,14 +10,14 @@ export function extractPayPalInvoiceId(response) {
 
   const hrefs = [
     ...(typeof response?.href === 'string' ? [response.href] : []),
-    ...(Array.isArray(response?.links) ? response.links.filter((link) => link?.rel === 'self').map((link) => link.href) : []),
+    ...(Array.isArray(response?.links) ? response.links.map((link) => link?.href) : []),
   ];
   const api = new URL(PAYPAL_API);
   for (const href of hrefs) {
     if (typeof href !== 'string' || !href) continue;
     try {
       const url = new URL(href, api);
-      if (url.protocol !== 'https:' || url.origin !== api.origin || url.search || url.hash || url.username || url.password) continue;
+      if (url.protocol !== 'https:' || url.origin !== api.origin || url.hash || url.username || url.password) continue;
       const match = PAYPAL_INVOICE_PATH.exec(url.pathname);
       if (!match) continue;
       const id = decodeURIComponent(match[1]);
@@ -76,7 +76,7 @@ function percentFromRate(rate) {
   return rem?`${integer}.${String(rem).padStart(4,'0').replace(/0+$/,'')}`:String(integer);
 }
 
-export async function decideInvoiceSend({repos,paypal,req,approvalId,decision,note=''}) {
+export async function decideInvoiceSend({repos,paypal,req,approvalId,decision,note='',simulate=false}) {
   const current=await repos.approvals.get(approvalId,req.orgId);
   if(!current||current.proposalType!=='send-invoice') return {status:404,body:{error:{code:'INVOICE_APPROVAL_NOT_FOUND',message:'The invoice approval was not found.'}}};
   if(current.status==='completed') return {status:200,body:{approvalId,status:'completed',invoiceId:current.invoiceId}};
@@ -88,6 +88,16 @@ export async function decideInvoiceSend({repos,paypal,req,approvalId,decision,no
   if(!invoice||invoice.state!=='reviewed') {
     await repos.invoices.failSend(req.orgId,approvalId,'Invoice is not in reviewed state.');
     return {status:409,body:{error:{code:'INVOICE_NOT_REVIEWED',message:'Only a reviewed invoice can be sent.'}}};
+  }
+  if(simulate) {
+    try {
+      logInvoiceSendStage(repos,req,'simulated_send');
+      await repos.invoices.completeSend(req.orgId,approvalId,invoice.paypalInvoiceId||null,{status:'SIMULATED',simulated:true});
+      return {status:200,body:{approvalId,status:'completed',invoiceId:invoice.id,paypalInvoiceId:invoice.paypalInvoiceId||null,state:'sent',sendMode:'SIMULATED',simulated:true}};
+    } catch {
+      await repos.invoices.failSend(req.orgId,approvalId,'Simulated invoice send could not be recorded locally.');
+      return {status:503,body:{error:{code:'INVOICE_SEND_FAILED',message:'The simulated invoice send could not be recorded.'}}};
+    }
   }
   let stage = 'paypal_create';
   try {

@@ -7,6 +7,7 @@ const schema = z.object({
   PAYPAL_CLIENT_ID: z.string().optional().default(''),
   PAYPAL_CLIENT_SECRET: z.string().optional().default(''),
   PAYPAL_WEBHOOK_ID: z.string().optional().default(''),
+  PAYPAL_INVOICE_SEND_MODE: z.enum(['simulated', 'live']).default('simulated'),
   LLM_PROVIDER: z.enum(['gemini', 'anthropic']).default('gemini'),
   LLM_API_KEY: z.string().optional().default(''),
   LLM_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
