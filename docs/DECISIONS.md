@@ -220,3 +220,9 @@
 - Choice: Stop before order creation; ask the user to restore the registered hostname or update the webhook to the active tunnel URL, then recheck resolution and delivery before creating an order.
 - Reason: A payment could be captured/refunded through the API, but the required PayPal-signed webhook and resulting ledger proof could not be observed. Avoid creating financial test data that cannot satisfy the verification objective.
 - Source: Read-only PayPal webhook GET, DNS/curl, local app status, 2026-10-24. Rejected alternative: capture/refund without a verifiable signed event and report the webhook leg as successful.
+
+## Capture webhook verifier polling — 2026-10-24
+- Question: When should the Phase 3 verifier evaluate a newly received webhook inbox row?
+- Choice: Wait until `processing_status` reaches a terminal state (`processed`, `unverified`, `failed`, `error`, or `dead_letter`) before judging signature verification or replay eligibility.
+- Reason: Live run returned the row's initial `unverified/processing` state while the asynchronous PayPal signature worker was still running; cleanup then removed the row before its final state was recorded. This is a verifier race, not evidence of a bad PayPal signature.
+- Source: Redacted live run output on 2026-10-24. Rejected alternative: count the initial inbox state as a completed signature check.

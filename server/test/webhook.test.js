@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import express from 'express';
 import { webhookRoutes } from '../src/routes/webhook.js';
 import { captureJournalLines, isJournalBalanced } from '../src/services/ledger.js';
-import { processPayPalEvent } from '../src/services/webhookProcessor.js';
+import { isWebhookEventTerminal, processPayPalEvent } from '../src/services/webhookProcessor.js';
+
+test('webhook verifier waits past the inbox initial state until processing is terminal', () => {
+  assert.equal(isWebhookEventTerminal({ verification_status: 'unverified', processing_status: 'processing' }), false);
+  assert.equal(isWebhookEventTerminal({ verification_status: 'verified', processing_status: 'retry' }), false);
+  assert.equal(isWebhookEventTerminal({ verification_status: 'verified', processing_status: 'processed' }), true);
+  assert.equal(isWebhookEventTerminal({ verification_status: 'failed', processing_status: 'unverified' }), true);
+});
 
 function makeHarness(verification = 'VERIFIED') {
   const rows = new Map();
