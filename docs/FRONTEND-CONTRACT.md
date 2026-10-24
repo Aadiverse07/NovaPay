@@ -131,3 +131,65 @@ Available to all organization roles. Optional query `currency=USD`. Runs and per
 ## Shared request errors
 
 After required authentication and organization checks, malformed JSON returns HTTP 400 `{ "error": "Request body must be valid JSON.", "code": "LEGACY_<METHOD>_<PATH>_400" }` on legacy routes; onboarding returns structured code `BAD_JSON`. Body size over 64 KiB returns HTTP 413 with the legacy string plus sibling code, or structured onboarding code `BODY_TOO_LARGE`. Public routes (`GET /api/status`, `GET /api/public-config`, and `POST /api/webhook`) are exempt from API rate limits and bearer authentication. Other API requests have a 300-request/IP limit per 15 minutes. Authenticated API requests have an additional 240-request/user limit per 15 minutes. Onboarding is additionally limited to 5 requests per IP and 5 per user per hour. Rate-limit responses use the structured error object. API IP and user limits and bearer authentication run before JSON parsing, so an unauthenticated malformed protected request returns 401. After required authentication and organization checks, unknown POST routes return HTTP 404 `{ "error": "unknown route" }` when PayPal credentials exist, or the existing missing-credentials 503 otherwise. After required authentication and organization checks, non-POST API requests return HTTP 405 `{ "error": "Use POST for this API request." }` except the GET-only routes described above.
+
+## Phase 3 FX, reports, and invoices
+
+All routes below require `Authorization: Bearer <Supabase access token>` and `X-Org-Id`. Reads are available to all organization roles. Invoice creation and approval use the role rules listed per route. New errors use `{ "error": { "code": "...", "message": "..." } }`.
+
+### `GET /api/fx/convert`
+
+Query: `amount` (positive decimal string with up to two fractional digits), `base` and `quote` (three-letter ISO currency codes). The server uses a tenant-cached rate from PayPal capture conversion data when available, otherwise Frankfurter. Response:
+
+```json
+{"amount":"10.00","baseCurrency":"USD","convertedAmount":"9.20","quoteCurrency":"EUR","rate":"0.92","source":"Frankfurter","timestamp":"2026-10-24T12:00:00.000Z","label":"indicative, not a guaranteed settlement rate","fees":[]}
+```
+
+The FX rate is indicative; it is not the PayPal settlement quote. Fees are separate in `fees` and are currently an empty array. Invalid input returns HTTP 400 `VALIDATION_ERROR` or `FX_AMOUNT_INVALID`. Provider outages return HTTP 503 `FX_PROVIDER_UNAVAILABLE`.
+
+### `GET /api/reports/:report`
+
+Supported `:report`: `profit-and-loss`, `trial-balance`, `fees`, `refunds`, `cash-movement`. Optional query `from=YYYY-MM-DD`, `to=YYYY-MM-DD`, `currency=USD`, and `format=json|csv` (default `json`). Views aggregate the selected tenant's journal lines by accounting month and honor the requested period. Example:
+
+```json
+{"report":"profit-and-loss","from":"2026-10-01","to":"2026-10-31","rows":[{"org_id":"<uuid>","period":"2026-10-01","currency":"USD","code":"4000","name":"Sales Revenue","account_type":"revenue","amount_minor":10000}],"totals":{"revenueMinor":"10000","refundsMinor":"0","netRevenueMinor":"10000","expensesMinor":"300","netIncomeMinor":"9700"}}
+```
+
+Trial-balance rows include account code/name/type, debit, credit, and balance minor units; totals include debit/credit and a `balanced` boolean. Fee rows include `fee_minor`; refund rows include `refund_count` and `refund_minor`; cash-movement rows include `cash_movement_minor`. With `format=csv`, the same filtered report is returned as `text/csv` attachment named `<report>.csv`. Invalid date ranges return HTTP 400 `VALIDATION_ERROR`; unsupported reports return HTTP 404 `REPORT_NOT_FOUND`.
+
+### `GET /api/invoices`
+
+Available to all organization roles. Optional `limit` (default 50, max 100), `offset` (default 0), and `state=draft|reviewed|sent|paid|void`. Returns `{ "invoices": [<invoice>], "page": { "limit": 50, "offset": 0 } }`.
+
+### `POST /api/invoices`
+
+Allowed roles: `owner`, `admin`, `accountant`. Request:
+
+```json
+{"invoiceNumber":"INV-1001","customerName":"Avery Customer","customerEmail":"avery@example.test","currency":"USD","lines":[{"description":"Consulting","quantity":"2","unitPrice":"50.00","taxRate":"0.0825"}],"total":"1.00"}
+```
+
+Client totals/amounts are ignored and recalculated from line quantity, unit price, and tax rate. The response is HTTP 201 `{ "invoice": <invoice> }`; the invoice contains server-computed `subtotal`, `tax`, `total` and their minor-unit values, `state: "draft"`, and computed lines. Invalid required fields or line amounts return HTTP 400 `VALIDATION_ERROR`; invoice-number conflicts return HTTP 409.
+
+### `GET /api/invoices/:invoiceId`
+
+Available to all organization roles. Returns `{ "invoice": <invoice> }`; missing or cross-tenant ID returns HTTP 404 `INVOICE_NOT_FOUND`.
+
+### `POST /api/invoices/:invoiceId/review`
+
+Allowed roles: `owner`, `admin`, `approver`. No request body. Changes a draft to reviewed and returns `{ "invoice": <invoice> }`. Other state transitions return HTTP 400.
+
+### `POST /api/invoices/:invoiceId/send-approval`
+
+Allowed roles: `owner`, `admin`, `accountant`. No request body. Registers or reuses a pending `send-invoice` approval and returns HTTP 201 `{ "approval": <approval> }`. The invoice must already be reviewed.
+
+### `POST /api/approvals/:approvalId/decision` for `send-invoice`
+
+Uses the existing approval endpoint and request `{ "decision": "approve", "note": "Reviewed" }` or `{ "decision": "reject", "note": "Needs changes" }`. Allowed roles remain `owner`, `admin`, `approver`. A rejection returns `{ "approvalId": "APR-INV-...", "status": "rejected", "reviewerId": "<uuid>", "decisionNote": "Needs changes" }`. Approval creates a PayPal draft and sends it through the PayPal Invoicing API; success returns `{ "approvalId": "APR-INV-...", "status": "completed", "invoiceId": "<uuid>", "paypalInvoiceId": "INV2-...", "state": "sent" }`. A missing send approval cannot call PayPal. If provider delivery fails, the response is HTTP 502 `INVOICE_SEND_FAILED`; check the Sandbox invoice before retrying. The current server-side check confirmed read access for this Sandbox app (HTTP 200); the send operation has not been live-exercised.
+
+### `POST /api/invoices/:invoiceId/void`
+
+Allowed roles: `owner`, `admin`. No request body. Only a draft or reviewed invoice can be voided. Returns `{ "invoice": <invoice> }`.
+
+### Invoice payment updates
+
+The public `POST /api/webhook` endpoint keeps its existing immediate inbox response. Once verified, `INVOICING.INVOICE.PAID` updates a matching sent invoice. It records the invoice's PayPal payment ID and links it to a matching organization capture when present; that capture's existing journal entry remains the ledger source. Configure the PayPal Sandbox webhook to subscribe to `INVOICING.INVOICE.PAID` as well as the existing capture/refund events.

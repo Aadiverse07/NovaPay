@@ -88,5 +88,16 @@ export function createRepositories() {
   repos.trialBalance = async (orgId, currency = 'USD') => ({ currency, accounts: [], totals: { debitMinor: 0, creditMinor: 0, debits: '0.00', credits: '0.00' }, balanced: true });
   repos.reconcile = async (orgId, currency = 'USD') => ({ org_id: orgId, status: 'clean', currency, details: {} });
   repos.listReconciliations = async () => [];
+  const storedRates = new Map();
+  repos.fxRates = {
+    async get(orgId, base, quote) { return storedRates.get(`${orgId}:${base}:${quote}`) || null; },
+    async put(row) { storedRates.set(`${row.org_id}:${row.base_currency}:${row.quote_currency}`,row); return row; },
+  };
+  repos.invoices = {
+    async list() { return []; }, async get() { return null; }, async createDraft() { throw Object.assign(new Error('Invoice persistence requires Supabase.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'}); },
+    async setState() { return null; }, async setPayPalDraft() { return null; }, async requestSendApproval() { return null; }, async completeSend() { return null; }, async failSend() { return null; }, async markPaid() { return {updated:false}; },
+  };
+  repos.approvals.decideInvoiceSend = async () => ({result:'missing',approval:null});
+  repos.reports = { async rows() { return []; } };
   return repos;
 }

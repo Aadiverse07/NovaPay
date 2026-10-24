@@ -64,3 +64,26 @@
 - Environment limitation: the Phase 2 migration has not been applied to the live project. No live data was changed. Local Supabase SQL verification requires Docker, which is unavailable in this environment; database-specific checks remain UNVERIFIED until `npx supabase test db` is run with a local Supabase stack or against an approved test database.
 
 - Migration parser (2026-10-23): add pinned, dev-only `@libpg-query/parser` 17.6.10 (MIT, WASM PostgreSQL 17 parser) and `npm run check:migrations`. It parses every numbered migration's SQL and PL/pgSQL syntax without database access; it does not resolve Supabase schemas, extensions, grants, object dependencies, or execute migrations.
+
+## Phase 3 currency, reports, and invoices decisions (2026-10-24)
+
+- FX provider: Frankfurter (`https://api.frankfurter.dev/v1`) is the default free, keyless reference-rate API. The official license/terms page states blended rates are free for commercial use, daily central-bank/reference data may be delayed or revised, and API requests are rate-limited to prevent abuse (no monthly/daily quota). Cache each tenant's pair for 24 hours and locally space outbound provider calls by at least one second. Use decimal strings and integer minor-unit rounding. Every conversion response says `indicative, not a guaranteed settlement rate`; fees are returned separately. PayPal seller-receivable exchange-rate data overrides Frankfurter when present on a capture.
+- Sources checked 2026-10-24: [Frankfurter API and FAQ](https://frankfurter.dev/) and [Frankfurter license and data terms](https://frankfurter.dev/license/).
+- Reports: SQL views aggregate journal lines by accounting period/account. Report routes filter the selected organization and date range before returning JSON or CSV; trial balance totals are calculated from the same ledger lines.
+- Invoice send: current PayPal Invoicing v2 docs list sandbox create/send endpoints and require an invoicing-enabled business account. A read-only `GET /v2/invoicing/invoices?page=1&page_size=1` using this project's Sandbox app returned HTTP 200 on 2026-10-24, confirming list access for this account. No invoice was created or sent in that probe. The application creates a PayPal draft and sends it only after an authorized `send-invoice` approval decision; local state changes to `sent` only after PayPal's send call succeeds. Verified `INVOICING.INVOICE.PAID` webhook events link a payment ID to a matching capture/ledger entry when one exists.
+- Sources checked 2026-10-24: [PayPal Invoicing API quick start](https://developer.paypal.com/api/invoicing), [Invoices v2 reference](https://developer.paypal.com/api/invoicing/v2/), [Sandbox invoice send endpoint](https://developer.paypal.com/api/invoicing/v2/invoices-send/), and [Invoicing webhook events](https://developer.paypal.com/platforms/invoicing/reference/invoicing-webhooks/). The PayPal webhook configuration must include `INVOICING.INVOICE.PAID` for invoice status updates; configuration remains a dashboard action.
+- Migration 0003 adds tenant-scoped FX cache, invoice tables, reporting views, and service-role-only RPCs. The migration is not applied to the live database by this phase run; apply it only after review and the migration parser check.
+
+## Phase 3 live deployment recheck — 2026-10-24
+
+- Question: How should live deployment state be recorded after the user reports applying migration 0003?
+- Choice: Treat 0003 as deployed only after independent read-only probes; nine expected tables/views returned HTTP 200 through PostgREST. Continue security and behavior verification before calling Phase 3 complete.
+- Reason: Prior probes were before migration application; the current live state has changed. Do not edit 0003 after application; any SQL correction belongs in 0004.
+- Source: User report in this conversation plus read-only probe recorded in docs/TEST-REPORT.md. Rejected alternative: assume the user report alone proves all objects and grants are correct.
+
+## FX provider throttle concurrency — 2026-10-24
+
+- Question: How should the one-second provider-call interval handle concurrent conversions for different currency pairs?
+- Choice: Reserve each provider-call slot synchronously before awaiting, so concurrent requests receive distinct launch slots.
+- Reason: The prior last-call timestamp calculation let simultaneous misses share one delay and exceed the intended provider rate limit. Regression test added for simultaneous pairs.
+- Source: Local code review and test in server/test/phase3-services.test.js. Rejected alternative: rely on an in-flight map, which deduplicates only identical pairs.

@@ -5,7 +5,7 @@ import { rbac } from '../middleware/auth.js';
 import { auditApiAction } from '../services/audit.js';
 import { decideApproval } from '../services/refunds.js';
 
-export function paypalRoutes({ config, paypal, repos, identity }) {
+export function paypalRoutes({ config, paypal, repos, identity, fx }) {
   const router = Router();
   router.post('/paypal/create-order', rbac(['owner', 'admin', 'accountant', 'approver']), async (req, res, next) => {
     try {
@@ -69,6 +69,7 @@ export function paypalRoutes({ config, paypal, repos, identity }) {
       }
       const record = { id: String(capture.id), orderId, value: gross, currency, status: String(capture.status || 'UNKNOWN'), fee: breakdown.paypal_fee?.value == null ? undefined : String(breakdown.paypal_fee.value), net: breakdown.net_amount?.value == null ? undefined : String(breakdown.net_amount.value), occurredAt: capture.update_time || capture.create_time, providerPayload: { seller_receivable_breakdown: breakdown } };
       const stored = await repos.captures.add(record, req.orgId);
+      if (breakdown.exchange_rate && fx) await fx.recordPayPalRate(req.orgId,breakdown.exchange_rate).catch(()=>{});
       const response = { captureId: stored.id, orderId, status: record.status, amount: record.value, currency: record.currency, ...(record.fee === undefined ? {} : { fee: record.fee }), refunded: stored.refunded || 0 };
       if (record.status === 'COMPLETED') {
         if (!identity?.database) { order.capture = response; order.state = record.status; }
