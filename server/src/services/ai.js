@@ -165,7 +165,7 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
   if (!proposal || !repos?.approvals?.createAIProposal || !context?.orgId || !context?.userId) return null;
   const record = records.find((item) => [item.id, item.sourceId].map(String).includes(String(proposal.txId)));
   if (!record || !citations.includes(String(record.id))) return null;
-  let captureId = null, amount = null, currency = null;
+  let captureId = null, invoiceId = null, amount = null, currency = null;
   if (proposal.type === 'refund') {
     if (record.recordType !== 'transaction' || String(record.type).toLowerCase() !== 'capture' || String(record.status).toUpperCase() !== 'COMPLETED') return null;
     captureId = String(record.sourceId || record.id);
@@ -176,7 +176,12 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
     amount = remaining.toFixed(2);
     currency = String(capture.currency || record.currency || 'USD');
     if (currency !== 'USD') return null;
-  } else if (proposal.type === 'send-invoice' && record.recordType !== 'invoice') return null;
+  } else if (proposal.type === 'send-invoice') {
+    if (record.recordType !== 'invoice') return null;
+    const invoice = await repos.invoices?.get(record.id, context.orgId);
+    if (!invoice || invoice.state !== 'reviewed') return null;
+    invoiceId = record.id;
+  }
   else if (proposal.type === 'hold-payout' && String(record.type).toLowerCase() !== 'payout') return null;
 
   const approval = await repos.approvals.createAIProposal({
@@ -184,6 +189,7 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
     actorId: context.userId,
     proposalType: proposal.type,
     captureId,
+    invoiceId,
     amount,
     currency,
     requestPayload: {

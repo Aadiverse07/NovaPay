@@ -41,9 +41,9 @@ export class ApprovalsRepo {
   key(orgId, id) { return `${orgId}:${id}`; }
   get(id, orgId) { return this.items.get(this.key(orgId, id)); }
   save(id, registration, orgId) { registration.orgId = orgId; this.items.set(this.key(orgId, id), registration); return registration; }
-  async createAIProposal({ orgId, actorId, proposalType, captureId = null, amount = null, currency = null, requestPayload }) {
+  async createAIProposal({ orgId, actorId, proposalType, captureId = null, invoiceId = null, amount = null, currency = null, requestPayload }) {
     const approvalId = `AI-${randomUUID()}`;
-    const approval = { approvalId, orgId, proposalType, captureId, amount, currency, status: 'pending', requestPayload, createdBy: actorId, createdAt: new Date().toISOString() };
+    const approval = { approvalId, orgId, proposalType, captureId, invoiceId, amount, currency, status: 'pending', requestPayload, createdBy: actorId, createdAt: new Date().toISOString() };
     this.items.set(this.key(orgId, approvalId), approval);
     return approval;
   }

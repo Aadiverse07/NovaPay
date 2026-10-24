@@ -277,3 +277,9 @@
 - Choice: Persist only a sanitizer-approved, evidence-cited proposal as a tenant-scoped `pending` approval. A refund proposal must point to a cited completed capture; the server derives its amount from that capture's unreserved refundable balance. The model cannot supply org, amount, execution arguments, or reviewer. Approval and PayPal execution remain on the existing RBAC-protected refund path.
 - Reason: This preserves the explicit human approval gate and existing exact-capture, remaining-amount and idempotency checks. Uncited or ineligible proposals create no row; proposal answers are never cached.
 - Source: Phase 4 T6 requirements and `server/src/services/ai.js` / proposal tests, checked 2026-10-24. Rejected alternative: accept model-selected refund amounts or call PayPal during chat.
+
+## Phase 4 persistence migration and RPC boundary — 2026-10-24
+- Question: How should AI state and anomaly notifications be persisted without enabling browser-side writes?
+- Choice: Add `ai_usage`, `ai_cache`, `anomalies`, and `notifications` in new migration `0005_ai.sql`; enable RLS with membership-only reads and grant authenticated users SELECT only. All new SECURITY DEFINER functions revoke execution from public, anon, and authenticated and grant it only to service_role. Server RPCs still validate organization membership for user-attributed writes.
+- Reason: The backend repository uses service-role PostgREST/RPCs, while JWT clients should have no direct write path. The migration is syntax-checked locally, but must be applied by the user before live checks.
+- Source: Phase 4 T7 requirements, repository RPC call sites and migration parser/security tests, 2026-10-24. Rejected alternative: let the browser write AI usage, cache, anomaly, notification, or proposal records directly.

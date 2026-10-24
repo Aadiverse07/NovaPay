@@ -453,3 +453,15 @@ Date: 2026-10-24
 ## Phase 4 T6 — full regression — 2026-10-24
 - Command: `npm test`.
 - Result: PASS, 101 passed / 0 failed; migration parser passed for 0001–0004.
+
+## Phase 4 T7 — migration parser — 2026-10-24
+- Command: `npm run check:migrations`.
+- Result: PASS; PostgreSQL 17 parser accepted 0001–0005, including the new AI migration.
+
+## Phase 4 T7 — migration security-definition tests — 2026-10-24
+- Command: `node --test server/test/phase4-migration.test.js`.
+- Result: PASS, 2 passed / 0 failed. Static checks assert all four new tables enable RLS with membership-scoped reads and no client write grants; all eight SECURITY DEFINER RPCs revoke public/anon/authenticated execute and grant service_role.
+
+## Phase 4 T7 — full regression — 2026-10-24
+- Command: `npm test`.
+- Result: PASS, 103 passed / 0 failed; the migration parser accepted 0001–0005. Migration grant/RLS static tests passed.

@@ -61,7 +61,7 @@ test('AI proposal persistence uses the scoped pending-approval RPC with minor-un
   const repos = createPostgresRepositories(database);
   const approval = await repos.approvals.createAIProposal({ orgId: 'org-a', actorId: 'user-a', proposalType: 'refund', captureId: 'CAP-1', amount: '7.00', currency: 'USD', requestPayload: { source: 'ai', evidenceIds: ['TRX-1'] } });
   assert.equal(calls[0].name, 'create_ai_proposal');
-  assert.deepEqual(calls[0].args, { p_org: 'org-a', p_created_by: 'user-a', p_proposal_type: 'refund', p_capture_id: 'CAP-1', p_amount_minor: 700, p_currency: 'USD', p_request_payload: { source: 'ai', evidenceIds: ['TRX-1'] } });
+  assert.deepEqual(calls[0].args, { p_org: 'org-a', p_created_by: 'user-a', p_proposal_type: 'refund', p_capture_id: 'CAP-1', p_invoice_id: null, p_amount_minor: 700, p_currency: 'USD', p_request_payload: { source: 'ai', evidenceIds: ['TRX-1'] } });
   assert.equal(approval.approvalId, 'AI-APR-1');
   assert.equal(approval.amount, '7.00');
   assert.equal(approval.status, 'pending');

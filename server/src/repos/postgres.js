@@ -111,12 +111,13 @@ export function createPostgresRepositories(database) {
       const row = await database.rpc('register_refund_approval', { p_org: orgId, p_approval_id: id, p_capture_id: registration.captureId, p_amount_minor: moneyToMinor(registration.amount), p_currency: registration.currency, p_created_by: actorId, p_request_payload: registration });
       return mapApproval(row);
     },
-    async createAIProposal({ orgId, actorId, proposalType, captureId = null, amount = null, currency = null, requestPayload }) {
+    async createAIProposal({ orgId, actorId, proposalType, captureId = null, invoiceId = null, amount = null, currency = null, requestPayload }) {
       const row = await database.rpc('create_ai_proposal', {
         p_org: orgId,
         p_created_by: actorId,
         p_proposal_type: proposalType,
         p_capture_id: captureId,
+        p_invoice_id: invoiceId,
         p_amount_minor: amount == null ? null : moneyToMinor(amount),
         p_currency: currency,
         p_request_payload: requestPayload,

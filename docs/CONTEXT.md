@@ -2,8 +2,8 @@
 
 ## HEADER
 - Date/time: 2026-10-24 Asia/Kolkata.
-- Branch: `backend`; last commit `ba413c0 WIP Phase 4 task 5: anomalies and notifications`.
-- Current phase/task: Phase 4, T6 complete; next T7 migration.
+- Branch: `backend`; last commit `41eb9b7 WIP Phase 4 task 6: pending AI proposals`.
+- Current phase/task: Phase 4, T7 complete; waiting for migration application before live verification/T8.
 
 ## DONE
 - Phase 3 completed and backed up at `0dbbdc8`; invoice send remains simulated.
@@ -15,21 +15,21 @@
 - T2 org-scoped read-only evidence tools, data minimization and bounded calls: `server/src/ai/evidence.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/ai-evidence.test.js` and related service/route tests.
 
 ## IN PROGRESS
+- T7 complete: `supabase/migrations/0005_ai.sql` adds `ai_usage`, `ai_cache`, `anomalies`, `notifications`, member-read RLS, and service-role-only SECURITY DEFINER RPCs for budgets, cache hits, data version, anomaly persistence/actions, org scanning, and pending proposals. Parser PASS; static RLS/grant tests PASS 2/2; full suite PASS 103/103. Not applied to Supabase.
 - T6 complete: `server/src/services/ai.js` persists eligible proposals as sanitized, org-scoped pending approvals through memory/Postgres repository interfaces; refund proposals require an exact completed capture and compute remaining amount server-side. Approval decisions retain existing RBAC and refund path. Focused tests 29/29; full suite 101/101. T7 migration will add the Postgres RPC.
 - T5 complete: rule engine `server/src/ai/anomalies.js`, service/scheduler `server/src/services/anomalies.js`, repo interfaces in `server/src/repos/{memory,postgres,aiMemory}.js`, route `server/src/routes/notifications.js`, app/index wiring and tests. Focused suite PASS 19/19; full suite PASS 97/97; migrations/syntax/hygiene pass. Checkpoint `ba413c0`; DB tables/RPCs are for T7.
 - T4 complete: org/user daily reservation budgets, token/latency usage tracking, safe-answer cache keyed by org/question/route/data-version, and no-provider-call guards. `npm test` 89/89; migrations, syntax and hygiene pass. Checkpoint `90fb767`.
 
 ## NEXT STEPS
-1. Checkpoint T6 locally after verifying no secrets or frontend changes.
-2. T7 add next migration `0005_ai.sql`, run migration parser/security checks, document exact SQL Editor steps and wait for user `applied` before live DB checks.
-3. T8 API/docs and `scripts/verify-phase4.js`; live checks only after migration is applied.
-4. Run Phase 4 gate; commit only with no FAIL; never push; ask before Phase 5.
+1. Ask the user to apply `supabase/migrations/0005_ai.sql` in the Supabase Dashboard SQL Editor and reply `applied`.
+2. After confirmation, verify live RLS/RPC behavior, then finish T8 API/docs and `scripts/verify-phase4.js`.
+3. Run Phase 4 gate; commit only with no FAIL; never push; ask before Phase 5.
 
 ## USER ACTIONS PENDING
-- None now. Later: apply `0005_ai.sql` in Supabase SQL Editor and reply `applied`. A real Gemini smoke test needs the configured key and available quota; never display its value.
+- Apply `supabase/migrations/0005_ai.sql` in the Supabase Dashboard SQL Editor, then reply exactly `applied`. Paste the complete contents of that file into a new SQL Editor query and click Run once; stop and share the error if it fails. A real Gemini smoke test needs the configured key and available quota; never display its value.
 
 ## LIVE STATE
-- User reports Phase 3 migrations 0001–0004 applied. Phase 4 migration not written/applied.
+- User reports Phase 3 migrations 0001–0004 applied. Phase 4 `0005_ai.sql` is written and parser-tested, but not yet applied.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 - No live provider or database call during Phase 4 yet.
 - Invoice delivery remains SIMULATED; do not call PayPal Invoicing APIs.
