@@ -2,67 +2,59 @@
 
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
-- Branch: `backend`; last commit `0f73288 WIP Phase 3 task 4: wait for webhook completion`.
-- Current phase/task: Phase 3 live verification, webhook async-state race fix and rerun.
+- Branch: `backend`; last commit `8a58723 WIP Phase 3 task 5: confirm webhook preflight`.
+- Current phase/task: Phase 3 live verification, gate passed; final local phase commit recorded in `git log`.
 
 ## DONE
-- Phase 2/3 implementation and migration set 0001–0004 exist; user reports 0003/0004 applied.
-- Invoice sending remains SIMULATED; no more PayPal Invoicing calls.
-- Public tunnel preflight: `/api/status` HTTP 200, DNS resolves, PayPal webhook URL matches; actual event names include `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.REFUND.COMPLETED`, `INVOICING.INVOICE.PAID`.
-- Latest full live run passed auth/RPC/RLS, roles, direct-write denial, FX, invoice recalculation/approval gate, PayPal capture/refund, five reports, date boundaries, CSV neutralization, Phase 2 safe subset, and cleanup.
-- In this run: capture completed, exactly one capture journal entry; refund completed, exactly one refund journal entry; report totals matched capture/refund ledger totals.
+- Phase 3 verifier waits for terminal webhook state (`scripts/verify-phase3.js`, `server/src/services/webhookProcessor.js`); unit test covers initial/retry/terminal states (`server/test/webhook.test.js`).
+- Refreshed public preflight passed: public `/api/status` 200; PayPal webhook URL matches; registered events include capture-completed, refund-completed, and invoice-paid.
+- Corrected live run: real $1 USD order/capture, PayPal signature verified and event processed, raw body replayed 5x with one event row/one capture journal entry, refund completed with one refund journal entry.
+- Five reports matched ledger; date boundary, CSV export/formula neutralization, safe Phase 2 subset, roles, RLS, RPC rights, tenant isolation, direct-write denials, FX checks passed.
+- Cleanup removed this run's local operational rows; fixed fixtures and append-only audit/activity rows remain. Sandbox payment/refund remain in provider history.
+- Invoice send remains SIMULATED; invoice-paid linkage is UNVERIFIED because no PayPal invoice ID exists.
 
 ## IN PROGRESS
-- `scripts/verify-phase3.js:waitForCaptureEvent`: now changed to wait for terminal webhook processing state via `isWebhookEventTerminal` in `server/src/services/webhookProcessor.js`.
-- `server/test/webhook.test.js`: added unit coverage for the initial processing state, retry state and terminal states. Local suite 61/61; migrations and syntax/hygiene checks pass. Retry the live flow with one new order; buyer approval is required.
-- Previous run returned the inbox row too early (`verification=unverified; processing=processing`), then cleanup removed it. Final signature result and replay proof are unavailable.
+- Final regression and hygiene gate, documentation update, then final local Phase 3 commit. No live action pending.
 
 ## NEXT STEPS
-1. Run `node --check scripts/verify-phase3.js`, `npm test`, `npm run check:migrations`, full backend JS syntax checks, `git diff --check`, and confirm no frontend or `.env` changes.
-2. Record results in this file and TEST-REPORT; checkpoint commit if local suite passes and secrets are absent.
-3. Preflight PASS: public `/api/status` is 200; read-only PayPal webhook lookup confirms URL and exact event names.
-4. Run the verifier without pending-order reuse to create one new $1 Sandbox order. Print only its approval URL; wait for user approval.
-5. Confirm the event polling waits for terminal state; replay the stored real raw body x5 only if verification is `verified` and processing is `processed`. Recompute reports, cleanup only this run's rows.
-6. Re-run final gate. Since the prior live attempt had a FAIL and linkage remains UNVERIFIED, do not final-commit Phase 3 unless all required checks pass; never push.
+1. Phase gate complete: no FAIL items; only invoice-paid linkage is UNVERIFIED by the documented SIMULATED-send limitation.
+2. Commit locally as `Phase 3: live verification (invoice send simulated)`. Do not push.
+3. Report PASS/UNVERIFIED evidence, explain the invoice paid linkage limitation, ask whether to continue to Phase 4, and stop.
 
 ## USER ACTIONS PENDING
-- Approve the next $1 Sandbox order in browser as US Personal buyer `sb-jzrsh53532685@personal.example.com` using Visa; reply `approved`.
-- Keep tunnel and port 3000 server running. Webhook registered to `https://extension-italia-taken-emma.trycloudflare.com/api/webhook`; capture/refund events enabled.
+- None. Buyer approved the new order. Keep the tunnel and local server running if desired.
 
 ## LIVE STATE
-- Migrations 0001–0004 reported applied; 0004 guard was exercised live.
-- Cloudflare tunnel hostname and PayPal webhook were confirmed by user; preflight previously returned public `/api/status` 200.
-- App listens on port 3000. Separate process on port 34872 is unrelated and was not modified.
-- Latest live run's order, capture, refund and associated local rows were cleaned; provider Sandbox payment/refund remain in provider history.
+- Migrations 0001–0004 reported applied; 0004 mismatch guard exercised.
+- Tunnel hostname: `extension-italia-taken-emma.trycloudflare.com`; PayPal webhook points to `/api/webhook` and is subscribed to `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.REFUND.COMPLETED`, `INVOICING.INVOICE.PAID`.
+- App listens on port 3000. Separate process on port 34872 was not modified.
+- Latest run's local invoice/FX/reconciliation/event/order/capture/refund/transaction/approval/journal rows cleaned. Fixed fixtures and append-only audit/activity rows retained. External Sandbox payment/refund remain in provider history.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| Branch/worktree | PASS | 2026-10-24 | `git branch --show-current` = `backend`; no initial worktree changes |
-| Prior unit suite/migrations | PASS | 2026-10-24 | `npm test` 60/60 and `npm run check:migrations` 0001–0004 before latest run |
-| Public status/webhook preflight | PASS | 2026-10-24 | public `/api/status` 200; URL matches; capture/refund/invoice-paid event names confirmed |
-| Live auth/RLS/roles/FX/invoice gate | PASS | 2026-10-24 | verifier: 8/8 RPC denials; 9 tenant tables/views; 4 direct writes denied; provider cache/failure; role gates |
-| Real capture/refund and reports | PASS | 2026-10-24 | capture and refund COMPLETED; one journal row each; five reports matched ledger; date/CSV checks passed |
-| Real signed capture webhook | FAIL | 2026-10-24 | verifier saw initial `unverified/processing`; premature polling |
-| Raw-body replay x5 | UNVERIFIED | 2026-10-24 | no terminal verified event retained for replay |
-| Simulated invoice paid linkage | UNVERIFIED | 2026-10-24 | known limitation: simulated invoice lacks PayPal invoice ID |
-| Latest local checks after race fix | PASS | 2026-10-24 | `npm test` 61/61; migration check 0001–0004; node checks, diff/hygiene pass |
+| Live webhook preflight | PASS | 2026-10-24 | public status 200; exact URL/event list confirmed by read-only PayPal lookup |
+| Phase 3 corrected live flow | PASS | 2026-10-24 | approved new order, capture COMPLETED, signed webhook verified/processed, refund COMPLETED |
+| Webhook replay | PASS | 2026-10-24 | identical raw body/headers x5: HTTP 200 each; one event row, one capture journal entry |
+| Reports/date/CSV | PASS | 2026-10-24 | five report totals matched ledger; period boundary and formula neutralization passed |
+| Security/tenant/FX/roles/Phase 2 safe subset | PASS | 2026-10-24 | 8 RPC denies; 9 tenant tables/views; 4 direct write denies; service checks and Phase 2 subset passed |
+| Invoice paid linkage | UNVERIFIED | 2026-10-24 | invoice send SIMULATED; no PayPal invoice ID; unit coverage exists |
+| Local tests/migrations final rerun | PASS | 2026-10-24 | `npm test` 61/61; migration parse 0001–0004; all server/scripts syntax; hygiene pass |
 
 ## KNOWN ISSUES AND RISKS
-- Must rerun the live order to establish terminal signed-webhook result and replay count; requires another buyer approval.
-- Invoice send is SIMULATED. Real Invoicing send and signed paid linkage are not verified.
-- Cleanup removes local run rows but cannot remove payment/refund from Sandbox provider history; append-only audit/activity rows and fixed fixtures remain.
+- Real PayPal Invoicing send and signed `INVOICING.INVOICE.PAID` linkage remain unverified; sending stays SIMULATED.
+- Cleanup cannot remove the Sandbox payment/refund from PayPal provider history; fixed test identities and append-only records remain.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs transactionally; never edit applied migrations.
+- Supabase SQL Editor is transactional; never edit an applied migration.
 - SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated; grant only service_role; prove ordinary JWT denial.
 - PostgREST embeds need explicit FK names when relationships collide.
 - `audit_log` is insert-only and ON DELETE RESTRICT; cleanup deletes journal entries first; reuse fixed fixtures.
 - US Personal Sandbox buyer, USD seller, Visa; webhook ID must match; raw body required for signature verification.
-- PayPal invoice_number limit is 25 characters; immediate term uses `DUE_ON_RECEIPT`; compare FX timestamps as instants.
-- PayPal create response ID extraction previously failed; invoice sending remains simulated.
-- Webhook inbox insertion precedes async verification; poll terminal status before evaluating signature.
+- PayPal invoice_number limit is 25 characters; immediate term is `DUE_ON_RECEIPT`; compare FX timestamps as instants.
+- PayPal invoice create response ID extraction previously failed; invoice sending remains simulated.
+- Webhook inbox insertion precedes async verification; poll terminal state before evaluating signature.
 - Check port 3000 owner; leave unrelated port 34872 process and tunnel untouched.
 - Never print `.env` values, provider response bodies, Authorization headers, or stack traces.
 
