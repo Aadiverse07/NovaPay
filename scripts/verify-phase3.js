@@ -191,7 +191,8 @@ async function checkFx() {
   if(first.status!==200||!first.body?.rate||!first.body?.source||!first.body?.timestamp){record('FX live request and cache','UNVERIFIED','request HTTP '+first.status+'; code='+(first.body?.error?.code||'unavailable')+'; body suppressed');return;}
   created.fx.push({base:pair[0],quote:pair[1],timestamp:first.body.timestamp});
   const second=await api(path.replace('1.00','2.00'),{token:tokens.A,orgId:orgs.A});
-  const sameRate=second.body?.rate===first.body.rate,sameTimestamp=second.body?.timestamp===first.body.timestamp;
+  const firstTimestamp=Date.parse(first.body.timestamp),secondTimestamp=Date.parse(second.body?.timestamp);
+  const sameRate=second.body?.rate===first.body.rate,sameTimestamp=Number.isFinite(firstTimestamp)&&firstTimestamp===secondTimestamp;
   record('FX makes one provider request and serves the cached rate',second.status===200&&sameRate&&sameTimestamp?'PASS':'FAIL','source='+first.body.source+'; first/second HTTP='+first.status+'/'+second.status+'; rate_equal='+sameRate+'; timestamp_equal='+sameTimestamp);
   let writes=0;const stale=createFxService({rates:{async get(){return{rate:'1.25',source:'stale',fetched_at:'2000-01-01T00:00:00.000Z'};},async put(){writes++;}},fetchImpl:async()=>{throw Error('simulated outage');}});
   let unavailable=false;try{await stale.convert({orgId:'test',amount:'1.00',base:'USD',quote:'EUR'});}catch(e){unavailable=e.statusCode===503&&e.code==='FX_PROVIDER_UNAVAILABLE';}

@@ -134,3 +134,40 @@
 - Reason: Live checks returned HTTP 200 twice and equal rate values, while literal timestamp strings differed. The assertion should validate an identical instant rather than identical ISO formatting; do not relax rate or cache behavior checks.
 - Source: Phase 3 live verifier output, 2026-10-24.
 - Rejected alternative: compare strings or accept any timestamp within an arbitrary time window.
+
+## Phase 3 continuation checkpoint — 2026-10-24
+
+- Question: What is the authoritative resume state after the previous handoff?
+- Choice: Use actual Git state (branch `backend`, clean HEAD `00fa9be`) and record handoff discrepancies; read-only preflight confirms Phase 3 tables/views exist. Configure the user-provided invoice buyer email only in ignored `.env` under `NOVAPAY_PHASE3_BUYER_EMAIL`.
+- Reason: The handoff's listed last commit and uncommitted files were stale; current repository had the WIP handoff commit and a clean tree. Live object probes were all HTTP 200. Buyer email must be consumed from an ignored env variable and never logged.
+- Source: `git status`, `git log`, read-only PostgREST probes and env-presence check, 2026-10-24.
+- Rejected alternative: trust stale handoff file metadata or put buyer email in source/docs/command output.
+
+## Safe PayPal error diagnostics — 2026-10-24
+
+- Question: How can a live PayPal invoice failure be distinguished without exposing provider responses?
+- Choice: Record only sanitized provider `name` and `details[].issue` enum values with the existing HTTP status in API activity; never record messages, descriptions, or debug IDs.
+- Reason: Live invoice API returned generic HTTP 502 and activity contained only route/status; that does not distinguish malformed request from account capability. Enum-only detail is sufficient for root diagnosis and the regression test verifies redaction.
+- Source: PayPal response shape observed in API contract and local implementation/test, 2026-10-24.
+- Rejected alternative: log or print the full PayPal error response.
+
+## Continuation verification status — 2026-10-24
+
+- Question: Should the Phase 3 gate treat the earlier passing route checks as completion despite the failed/unverified PayPal invoice send and missing historical capture/refund data?
+- Choice: Keep Phase 3 incomplete, rerun read-only live preflight, activate the safe provider diagnostic, and report invoice/send and real-ledger gaps as UNVERIFIED until proved.
+- Reason: The acceptance criteria require an invoice paid via a real signed webhook and report parity on real capture/refund data; neither was evidenced in the prior run.
+- Source: `docs/TEST-REPORT.md` live verifier records and the 2026-10-24 user request. Rejected alternative: treat route-level/unit tests as proof of real Sandbox delivery.
+
+## PayPal error logging without provider name — 2026-10-24
+
+- Question: How should invoice API failures be diagnosed if PayPal omits the top-level `name`?
+- Choice: Always record safe issue enums when present; otherwise emit only `UNCLASSIFIED_ERROR` for structured JSON or `NON_JSON_ERROR` for unstructured/empty error bodies.
+- Reason: The live 400 activity had no logged provider name, and the previous logger suppressed issue enums in that case. This captures non-sensitive diagnostic category without provider message, descriptions, debug IDs, or response body.
+- Source: Read-only live `api_activity` route/status probe and regression tests in `server/test/paypal.test.js`, 2026-10-24. Rejected alternative: print/store the raw provider response.
+
+## Phase 3 invoice send live retry limit — 2026-10-24
+
+- Question: Should another live invoice be created after repeated HTTP 502 results with no provider-send call or safe provider error category?
+- Choice: Stop live retries and mark invoice send BLOCKED pending diagnosis of the create/persist/send boundary.
+- Reason: Three controlled live attempts have failed to reach a confirmed send/payment, and each can leave a PayPal draft. Latest activity proves create HTTP 201 but no `/send`; continuing would create more provider-side state without narrowing the cause.
+- Source: Live verifier output and read-only api_activity status probe, 2026-10-24. Rejected alternative: create repeated invoices or expose full provider response bodies.
