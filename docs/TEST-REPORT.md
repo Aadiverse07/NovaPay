@@ -320,3 +320,20 @@ Date: 2026-10-24
 - Public `GET https://extension-italia-taken-emma.trycloudflare.com/api/status`: PASS, HTTP 200; backend and webhook configuration reported present.
 - Read-only PayPal webhook lookup by configured ID: PASS, URL exactly matches the public `/api/webhook`; subscribed events include `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.REFUND.COMPLETED`, and `INVOICING.INVOICE.PAID`.
 - DNS lookup returned Cloudflare addresses. The initial local assertion looked for the wrong refund event name (`PAYMENT.CAPTURE.REFUNDED`); inspection confirmed PayPal's actual configured name is `PAYMENT.REFUND.COMPLETED`. No payment was created during this preflight.
+
+## Phase 3 live verification — corrected terminal webhook polling — 2026-10-24
+- Command: `NOVAPAY_PHASE3_0004_APPLIED=true NOVAPAY_PHASE3_REUSE_PENDING_ORDER=false NOVAPAY_WEBHOOK_URL=https://extension-italia-taken-emma.trycloudflare.com/api/webhook node scripts/verify-phase3.js` (interactive PTY; user approved the new $1 order).
+- Result: UNVERIFIED overall; 23 PASS, 0 FAIL, 1 UNVERIFIED. The only UNVERIFIED item is real invoice-paid linkage for a SIMULATED invoice, which has no PayPal invoice ID.
+- Signed webhook: PASS, PayPal verification `verified`, processing `processed`. Replayed the identical stored raw body and signature headers 5 times: all HTTP 200; exactly one `paypal_events` row and one capture journal entry.
+- Financial flow: PASS; new Sandbox order captured for $1.00 USD, exactly one capture journal entry, approved refund COMPLETED with exactly one refund journal entry.
+- Reports: PASS; P&L, trial balance, fee summary, refunds summary, and cash movement matched this run's ledger lines. Inclusive date boundary and CSV export passed; formula-injection prefixes were neutralized. Safe Phase 2 subset passed; all 9 financial tables/views responded and protected trial-balance/reconciliation reads succeeded.
+- Security/regression within live verifier: 8/8 ordinary-JWT RPC denials; 11/11 controlled service-role/mismatch assertions; 9 tenant-scoped tables/views, Org B isolation, 4/4 direct-write denials; viewer/accountant/approver gates passed. FX fresh/cache and unavailable-on-provider-failure checks passed.
+- Cleanup: verifier removed this run's local invoice, FX, reconciliation, webhook event, order, capture, refund, transaction, approval, and journal rows. Fixed test users/orgs/memberships and append-only audit/activity rows remain. Sandbox payment/refund remain in PayPal provider history.
+- Follow-up: earlier same-day live attempt falsely failed because the verifier read the webhook's initial `unverified/processing` state; fixed by terminal-state polling and covered by a unit test. The corrected run reached the actual `verified/processed` state.
+
+## Phase 3 final local completion gate — 2026-10-24
+- `npm test`: PASS, 61 passed, 0 failed.
+- `npm run check:migrations`: PASS; 0001–0004 parse as PostgreSQL 17 SQL/PLpgSQL.
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS.
+- `git diff --check`: PASS; frontend path scan empty; `.env` ignored, untracked, and absent from staged paths.
+- Phase 3 gate: no FAIL items. Real Invoicing send / paid linkage remains the explicitly documented UNVERIFIED limitation because send mode is SIMULATED.
