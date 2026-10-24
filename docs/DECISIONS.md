@@ -213,3 +213,10 @@
 - Choice: Keep invoice send `SIMULATED` and record real Invoicing send as a known limitation. Approval gating and local invoice tracking are verified; real send is not verified live. Do not make additional PayPal Invoicing calls.
 - Reason: A prior create succeeded but the local response parser failed before `/send`; the user has found several harmless Drafts and explicitly prohibited more Invoicing calls. A simulated invoice has no real PayPal invoice ID, so `INVOICING.INVOICE.PAID` cannot be proven against a real capture through the existing lookup keyed by `paypal_invoice_id`.
 - Source: Prior redacted `api_activity` stage markers, current verifier and migrations, and user's 2026-10-24 instruction. Rejected alternative: create/send another Sandbox invoice or claim a capture webhook proves invoice-paid linkage.
+
+## Do not create a payment while the registered webhook host is unresolved — 2026-10-24
+
+- Question: Should a new sandbox payment be created while PayPal's registered webhook hostname does not resolve?
+- Choice: Stop before order creation; ask the user to restore the registered hostname or update the webhook to the active tunnel URL, then recheck resolution and delivery before creating an order.
+- Reason: A payment could be captured/refunded through the API, but the required PayPal-signed webhook and resulting ledger proof could not be observed. Avoid creating financial test data that cannot satisfy the verification objective.
+- Source: Read-only PayPal webhook GET, DNS/curl, local app status, 2026-10-24. Rejected alternative: capture/refund without a verifiable signed event and report the webhook leg as successful.
