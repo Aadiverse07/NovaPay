@@ -2,67 +2,66 @@
 
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
-- Branch: `backend`; last commit `8a58723 WIP Phase 3 task 5: confirm webhook preflight`.
-- Current phase/task: Phase 3 live verification, gate passed; final local phase commit recorded in `git log`.
+- Branch: `backend`; last commit `0dbbdc8 Phase 3 Completed By Dev`.
+- Current phase/task: Phase 4 AI assistant and orchestration, Step 0 complete; next T1 router.
 
 ## DONE
-- Phase 3 verifier waits for terminal webhook state (`scripts/verify-phase3.js`, `server/src/services/webhookProcessor.js`); unit test covers initial/retry/terminal states (`server/test/webhook.test.js`).
-- Refreshed public preflight passed: public `/api/status` 200; PayPal webhook URL matches; registered events include capture-completed, refund-completed, and invoice-paid.
-- Corrected live run: real $1 USD order/capture, PayPal signature verified and event processed, raw body replayed 5x with one event row/one capture journal entry, refund completed with one refund journal entry.
-- Five reports matched ledger; date boundary, CSV export/formula neutralization, safe Phase 2 subset, roles, RLS, RPC rights, tenant isolation, direct-write denials, FX checks passed.
-- Cleanup removed this run's local operational rows; fixed fixtures and append-only audit/activity rows remain. Sandbox payment/refund remain in provider history.
-- Invoice send remains SIMULATED; invoice-paid linkage is UNVERIFIED because no PayPal invoice ID exists.
+- Phase 3 passed its live gate and was pushed at user request. Commit `0dbbdc8`; no `.env` in tracked history.
+- Phase 4 Step 0: `npm ci` PASS (89 packages, 0 vulnerabilities); `npm test` PASS (61/61); migration check PASS for 0001–0004. Worktree was clean at start.
+- Phase 3 limitation: invoice send remains SIMULATED; real invoice-paid linkage is UNVERIFIED because no PayPal invoice ID exists.
 
 ## IN PROGRESS
-- Final regression and hygiene gate, documentation update, then final local Phase 3 commit. No live action pending.
+- Phase 4 T1: implement deterministic intent router at `server/src/ai/router.js`; inspect current AI route/service/LLM/repositories first, then add a 40+ case table-driven router test. No Phase 4 source code changes yet.
 
 ## NEXT STEPS
-1. Phase gate complete: no FAIL items; only invoice-paid linkage is UNVERIFIED by the documented SIMULATED-send limitation.
-2. Commit locally as `Phase 3: live verification (invoice send simulated)`. Do not push.
-3. Report PASS/UNVERIFIED evidence, explain the invoice paid linkage limitation, ask whether to continue to Phase 4, and stop.
+1. Inspect current AI chat route, `services/ai.js`, `services/llm.js`, repositories, app wiring, migrations, docs, and existing tests.
+2. T1 deterministic router and 40+ question tests; run tests and checkpoint commit.
+3. T2 evidence builder, read-only org-scoped tools, redaction and bounded tool loop; test and checkpoint.
+4. T3 provider prompt/sanitizer/fallback handling and current Gemini free-tier model verification; record source/date/decision; test and checkpoint.
+5. T4 usage budgets, race-safe accounting, data-version cache; test and checkpoint.
+6. T5 anomaly rules/tables/notifications/job; T6 proposal queue integration; test and checkpoint each.
+7. T7 add next migration `0005_ai.sql` (0001–0004 already exist), validate parser/security; document exact SQL Editor steps and wait for `applied` before live migration checks.
+8. T8 API/docs and `scripts/verify-phase4.js`; after migration application, live verification.
+9. Run full completion gate, update docs, commit only if no FAIL; do not push; ask before Phase 5.
 
 ## USER ACTIONS PENDING
-- None. Buyer approved the new order. Keep the tunnel and local server running if desired.
+- None currently. Phase 4 live Supabase checks will require the user to apply the new migration and reply `applied`. Gemini smoke test requires a configured key/quota; use ignored env only, never record its value.
 
 ## LIVE STATE
-- Migrations 0001–0004 reported applied; 0004 mismatch guard exercised.
-- Tunnel hostname: `extension-italia-taken-emma.trycloudflare.com`; PayPal webhook points to `/api/webhook` and is subscribed to `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.REFUND.COMPLETED`, `INVOICING.INVOICE.PAID`.
-- App listens on port 3000. Separate process on port 34872 was not modified.
-- Latest run's local invoice/FX/reconciliation/event/order/capture/refund/transaction/approval/journal rows cleaned. Fixed fixtures and append-only audit/activity rows retained. External Sandbox payment/refund remain in provider history.
-- Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`.
+- Phase 3 migrations 0001–0004 are present and user reports applied; Phase 4 migration not created/applied.
+- Supabase and Gemini key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
+- Invoice delivery remains SIMULATED; no PayPal Invoicing calls in Phase 4.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| Live webhook preflight | PASS | 2026-10-24 | public status 200; exact URL/event list confirmed by read-only PayPal lookup |
-| Phase 3 corrected live flow | PASS | 2026-10-24 | approved new order, capture COMPLETED, signed webhook verified/processed, refund COMPLETED |
-| Webhook replay | PASS | 2026-10-24 | identical raw body/headers x5: HTTP 200 each; one event row, one capture journal entry |
-| Reports/date/CSV | PASS | 2026-10-24 | five report totals matched ledger; period boundary and formula neutralization passed |
-| Security/tenant/FX/roles/Phase 2 safe subset | PASS | 2026-10-24 | 8 RPC denies; 9 tenant tables/views; 4 direct write denies; service checks and Phase 2 subset passed |
-| Invoice paid linkage | UNVERIFIED | 2026-10-24 | invoice send SIMULATED; no PayPal invoice ID; unit coverage exists |
-| Local tests/migrations final rerun | PASS | 2026-10-24 | `npm test` 61/61; migration parse 0001–0004; all server/scripts syntax; hygiene pass |
+| Branch/status | PASS | 2026-10-24 | `backend`; clean worktree at start |
+| Install | PASS | 2026-10-24 | `npm ci`; 89 packages, 0 vulnerabilities |
+| Unit suite | PASS | 2026-10-24 | `npm test`; 61 passed, 0 failed |
+| Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parsed |
+| Phase 3 gate | PASS | 2026-10-24 | live signed webhook, replay, refund, ledger/report parity; invoice linkage limitation recorded |
 
 ## KNOWN ISSUES AND RISKS
-- Real PayPal Invoicing send and signed `INVOICING.INVOICE.PAID` linkage remain unverified; sending stays SIMULATED.
-- Cleanup cannot remove the Sandbox payment/refund from PayPal provider history; fixed test identities and append-only records remain.
+- Free-tier model/quota status changes; verify current official Gemini docs before selecting model and record dated source.
+- Supabase live Phase 4 migration verification is blocked until migration is applied by user.
+- Phase 3 simulated invoice limitation remains.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor is transactional; never edit an applied migration.
-- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated; grant only service_role; prove ordinary JWT denial.
+- Supabase SQL Editor is transactional; never edit an applied migration; add the next numbered migration.
+- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated; grant service_role only or enforce membership; prove ordinary JWT denial.
 - PostgREST embeds need explicit FK names when relationships collide.
-- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup deletes journal entries first; reuse fixed fixtures.
-- US Personal Sandbox buyer, USD seller, Visa; webhook ID must match; raw body required for signature verification.
-- PayPal invoice_number limit is 25 characters; immediate term is `DUE_ON_RECEIPT`; compare FX timestamps as instants.
-- PayPal invoice create response ID extraction previously failed; invoice sending remains simulated.
-- Webhook inbox insertion precedes async verification; poll terminal state before evaluating signature.
-- Check port 3000 owner; leave unrelated port 34872 process and tunnel untouched.
-- Never print `.env` values, provider response bodies, Authorization headers, or stack traces.
+- `audit_log` is insert-only and ON DELETE RESTRICT; delete journal entries before related rows; reuse fixed named test identities.
+- Sandbox buyer is US Personal, seller USD, Visa; webhook ID must match; raw body is required for signature verification.
+- PayPal invoice number max is 25 characters; `DUE_ON_RECEIPT`; compare FX timestamps as instants. Invoice send remains SIMULATED.
+- Webhook inbox insertion precedes async verification; poll terminal status.
+- Check port 3000 owner; leave unrelated port 34872 and tunnel untouched.
+- Never print `.env` values, provider bodies, Authorization headers, stack traces, or sensitive evidence.
 
 ## DO NOT
-- Do not push, edit frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or call PayPal Invoicing APIs.
+- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or call PayPal Invoicing APIs.
 
 ## RESUME COMMANDS
 - `git status --short`
 - `npm test`
 - `npm run check:migrations`
-- `node --check scripts/verify-phase3.js`
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`

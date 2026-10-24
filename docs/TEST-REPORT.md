@@ -337,3 +337,10 @@ Date: 2026-10-24
 - `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS.
 - `git diff --check`: PASS; frontend path scan empty; `.env` ignored, untracked, and absent from staged paths.
 - Phase 3 gate: no FAIL items. Real Invoicing send / paid linkage remains the explicitly documented UNVERIFIED limitation because send mode is SIMULATED.
+
+## Phase 4 Step 0 — orientation baseline — 2026-10-24
+- Branch/status/log: PASS; current branch `backend`, initial worktree clean, Phase 3 commit `0dbbdc8` present.
+- `npm ci`: PASS; 89 packages installed, 0 vulnerabilities. npm reported one package postinstall script not yet allowed; installation and checks succeeded.
+- `npm test`: PASS; 61 passed, 0 failed (includes migration parser).
+- `npm run check:migrations`: PASS; migrations 0001–0004 parsed as PostgreSQL 17 SQL/PLpgSQL.
+- Phase 3 prerequisite: PASS; corrected live flow and report parity documented above; invoice-paid linkage remains the allowed SIMULATED-send limitation.
