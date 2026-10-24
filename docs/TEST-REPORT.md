@@ -546,3 +546,8 @@ Date: 2026-10-24
 - PASS evidence: service-role RPCs work; ordinary JWT is denied by all eight RPCs (403); cross-org reads are empty and direct JWT writes denied on all four tables; tiny-limit reservation is denied before provider execution; SQL chat is deterministic with zero tokens; live FX returned a Frankfurter source and timestamp; viewer scan denied, accountant scan allowed and rerun created zero duplicates; run-owned rows were cleaned.
 - Cleanup result: three `ai_usage` rows, one `ai_cache` key, one pending approval, one anomaly, its notification, and one verifier-created FX rate were deleted. No users, organizations, financial records, or append-only audit rows were removed.
 - Final gate rerun: `npm test` PASS 104/104; `npm run check:migrations` PASS (0001–0005); `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check` PASS.
+
+## Phase 4 local delivery commit — 2026-10-24
+- Commit: `cc018ed Phase 4: AI assistant and orchestration (live verified)` on `backend`.
+- `git status --short`: clean immediately after commit; `.env` ignored and not staged; staged frontend-path diff was empty.
+- Phase closes with 0 FAIL and 3 UNVERIFIED live checks as detailed above.
