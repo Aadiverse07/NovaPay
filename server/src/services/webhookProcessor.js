@@ -1,5 +1,9 @@
 function asMoney(value) { return value == null ? null : String(value); }
 
+export function isWebhookEventTerminal(event) {
+  return Boolean(event && ['processed', 'unverified', 'failed', 'error', 'dead_letter'].includes(event.processing_status));
+}
+
 export async function processPayPalEvent({ eventId, repos, paypal }) {
   const row = await repos.events.claim(eventId);
   if (!row) return { claimed: false };

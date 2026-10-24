@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createFxService } from '../server/src/services/fx.js';
 import { reportCsvCell } from '../server/src/routes/reports.js';
+import { isWebhookEventTerminal } from '../server/src/services/webhookProcessor.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { config } = await import('../server/src/config.js');
@@ -357,7 +358,10 @@ async function waitForCaptureEvent(captureId){
     const r=await service('/rest/v1/paypal_events?'+q({select:'event_id,event_type,raw_body,payload,headers,verification_status,processing_status',order:'created_at.desc',limit:'100'}));
     if(r.status===200&&Array.isArray(r.body)){
       const event=r.body.find(e=>e.event_type==='PAYMENT.CAPTURE.COMPLETED'&&e.payload?.resource?.id===captureId);
-      if(event)return event;
+      // Webhook insertion returns before the async verifier/processor finishes.
+      // Only return once the inbox row is terminal, otherwise the default
+      // unverified/processing state can be mistaken for a signature failure.
+      if(isWebhookEventTerminal(event))return event;
     }
     await new Promise(resolve=>setTimeout(resolve,2000));
   }
