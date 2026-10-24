@@ -41,7 +41,7 @@ async function fetchWithTimeout(fetchImpl, url, options, timeoutMs) {
   }
 }
 
-export function createGeminiAdapter({ apiKey, model, fallbackModel, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS, sleep = delay }) {
+export function createGeminiAdapter({ apiKey, model, fallbackModel, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS, sleep = delay, maxOutputTokens = 400 }) {
   async function generateForModel(selectedModel, system, prompt) {
     if (!apiKey) throw providerError('LLM_API_KEY not set');
     const url = `${GEMINI_ENDPOINT}/${encodeURIComponent(selectedModel)}:generateContent`;
@@ -53,7 +53,7 @@ export function createGeminiAdapter({ apiKey, model, fallbackModel, events, fetc
         body: JSON.stringify({
           system_instruction: { parts: [{ text: system }] },
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 600 },
+          generationConfig: { responseMimeType: 'application/json', maxOutputTokens },
         }),
       }, timeoutMs);
     } catch (error) {
@@ -70,7 +70,7 @@ export function createGeminiAdapter({ apiKey, model, fallbackModel, events, fetc
     try { data = await readJson(response); } catch { throw providerError('LLM provider returned an invalid response.'); }
     const text = extractGeminiText(data);
     if (!text.trim()) throw providerError('LLM provider returned an empty response.');
-    return { text, model: selectedModel };
+    return { text, model: selectedModel, usage: { inputTokens: Number(data.usageMetadata?.promptTokenCount || 0), outputTokens: Number(data.usageMetadata?.candidatesTokenCount || 0) } };
   }
 
   async function generateBounded(selectedModel, system, prompt) {
@@ -94,7 +94,7 @@ export function createGeminiAdapter({ apiKey, model, fallbackModel, events, fetc
   };
 }
 
-export function createAnthropicAdapter({ apiKey, model, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS }) {
+export function createAnthropicAdapter({ apiKey, model, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS, maxOutputTokens = 400 }) {
   return {
     async generate({ system, prompt }) {
       if (!apiKey) throw providerError('LLM_API_KEY not set');
@@ -103,7 +103,7 @@ export function createAnthropicAdapter({ apiKey, model, events, fetchImpl = fetc
         response = await fetchWithTimeout(fetchImpl, 'https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-          body: JSON.stringify({ model, max_tokens: 600, system, messages: [{ role: 'user', content: prompt }] }),
+          body: JSON.stringify({ model, max_tokens: maxOutputTokens, system, messages: [{ role: 'user', content: prompt }] }),
         }, timeoutMs);
       } catch {
         logCall(events, 'POST anthropic /v1/messages · request failed', false);
@@ -115,7 +115,7 @@ export function createAnthropicAdapter({ apiKey, model, events, fetchImpl = fetc
       try { data = await readJson(response); } catch { throw providerError('LLM provider returned an invalid response.'); }
       const text = (data.content || []).map((item) => item.text || '').join('');
       if (!text.trim()) throw providerError('LLM provider returned an empty response.');
-      return { text, model };
+      return { text, model, usage: { inputTokens: Number(data.usage?.input_tokens || 0), outputTokens: Number(data.usage?.output_tokens || 0) } };
     },
   };
 }
@@ -134,12 +134,13 @@ export function createFakeLLMAdapter({ response = '', error, onGenerate } = {}) 
 }
 
 export function createLLMAdapter({ config, events, fetchImpl = fetch }) {
+  const maxOutputTokens = config.AI_MAX_OUTPUT_TOKENS || 400;
   const apiKey = config.resolvedLLMApiKey || config.LLM_API_KEY || (config.LLM_PROVIDER === 'anthropic' ? config.ANTHROPIC_API_KEY : '');
   const model = config.resolvedLLMModel || config.LLM_MODEL || (config.LLM_PROVIDER === 'anthropic' ? config.ANTHROPIC_MODEL : 'gemini-3.5-flash-lite');
-  if (config.LLM_PROVIDER === 'anthropic') return createAnthropicAdapter({ apiKey, model, events, fetchImpl });
+  if (config.LLM_PROVIDER === 'anthropic') return createAnthropicAdapter({ apiKey, model, events, fetchImpl, maxOutputTokens });
   const fallbackModel = config.LLM_FALLBACK_MODEL || '';
   if (!FREE_GEMINI_MODELS.includes(model) || (fallbackModel && !FREE_GEMINI_MODELS.includes(fallbackModel))) {
     throw new Error('Configured Gemini models are not in the verified free-tier allow-list.');
   }
-  return createGeminiAdapter({ apiKey, model, fallbackModel, events, fetchImpl });
+  return createGeminiAdapter({ apiKey, model, fallbackModel, events, fetchImpl, maxOutputTokens });
 }

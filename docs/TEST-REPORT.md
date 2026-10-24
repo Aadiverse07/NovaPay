@@ -407,3 +407,26 @@ Date: 2026-10-24
 - `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS.
 - `git diff --check`: PASS. Changed paths are docs and server service/tests only; no frontend paths changed. `.env` is ignored and not staged.
 - Gemini model verification: PASS via official docs checked 2026-10-24. Primary `gemini-3.5-flash-lite` and fallback `gemini-3.1-flash-lite` are currently free tier. No real provider request in this local task.
+
+## Phase 4 T4 — budget/cache tests, first run — 2026-10-24
+- Command: `node --test server/test/ai-control.test.js`.
+- Result: FAIL, 3 passed / 2 failed. The data-version test correctly received an insufficient-evidence response after its fixture's fee changed, so it did not include the success-only `cached` marker; the assertion was corrected to require insufficient evidence while verifying a provider call occurred. The TTL fixture used an ungrounded amount and therefore was correctly not cached; changed it to the fixture-backed amount. Production logic was not relaxed.
+
+## Phase 4 T4 — focused control/repository tests, first run — 2026-10-24
+- Command: `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js`.
+- Result: FAIL, 17 passed / 1 failed. An existing test expected the pre-T4 response and omitted the documented route metadata, model, and cache fields. Updated its exact expected shape to include those additive fields.
+
+## Phase 4 T4 — focused control/repository tests, rerun — 2026-10-24
+- Command: `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js`.
+- Result: PASS, 18 passed / 0 failed. Verifies per-user/org budgets, concurrent reservation limit, UTC reset, cache normalization/org isolation/data-version invalidation/TTL, proposal and error exclusions, too-long input, and org-scoped Postgres persistence calls.
+
+## Phase 4 T4 — full suite, first run — 2026-10-24
+- Command: `npm test`.
+- Result: FAIL, 87 passed / 2 failed. T4 added route metadata to safe insufficient-evidence and provider-failure replies; two exact-shape tests had not been updated. Updated both expectations to require the new route and reason metadata.
+- Concurrent checks: migration parser PASS for 0001–0004; backend JS syntax PASS; `git diff --check` PASS.
+
+## Phase 4 T4 — final local regression — 2026-10-24
+- `npm test`: PASS, 89 passed / 0 failed.
+- T4 focused: `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js` PASS, 18 passed / 0 failed.
+- Covers atomic per-user/org reservation behavior, no provider call after limit, concurrent org cap, UTC reset, cache hit accounting, normalization, cross-org isolation, data-version invalidation, TTL, and exclusion of proposals/errors/insufficient evidence.
+- `npm run check:migrations`: PASS; 0001–0004 parsed. `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS. `git diff --check`: PASS; frontend paths unchanged and `.env` ignored.

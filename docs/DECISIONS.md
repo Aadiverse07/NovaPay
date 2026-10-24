@@ -257,3 +257,10 @@
 - Choice: Keep `gemini-3.5-flash-lite` as primary and `gemini-3.1-flash-lite` as the free fallback for now; retry only throttling/network/timeout once with short bounded backoff, then try the fallback at most once. Enforce request timeout and strict output schema/grounding.
 - Reason: Current Google pricing lists both models as free of charge on the Free Tier; model docs list them as available. Google currently lists a May 7, 2027 shutdown for 3.1 Flash-Lite, so revisit the fallback before then. Free-tier prompts may be used to improve products; send minimized evidence only.
 - Source: Google [Gemini models](https://ai.google.dev/gemini-api/docs/models), [pricing](https://ai.google.dev/gemini-api/docs/pricing), [deprecations](https://ai.google.dev/gemini-api/docs/deprecations), checked 2026-10-24. Rejected alternative: use a paid model or retry indefinitely.
+
+## Phase 4 AI budgets and answer cache — 2026-10-24
+
+- Question: How should AI usage be bounded and safe repeatable answers cached?
+- Choice: Default to 5 provider calls per user and 20 per organization per UTC day, cap input at 1,000 characters and output at 400 tokens, and use a five-minute cache keyed by org, normalized question, route and current data version. Cache hits write usage records; proposals, insufficient-evidence answers and provider errors are never cached. Usage reservations are atomic in Postgres and synchronous in memory tests.
+- Reason: Small explicit limits reduce accidental free-tier quota exhaustion; a ledger/invoice data version prevents serving stale answers after financial changes. Google states limits are project-specific and not guaranteed, so administrators should set lower limits if AI Studio shows a lower active quota.
+- Source: Phase 4 requirements and Google [Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits), checked 2026-10-24. Rejected alternative: depend only on provider throttling or cache across organizations.
