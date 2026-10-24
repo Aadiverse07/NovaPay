@@ -13,6 +13,7 @@ export async function processPayPalEvent({ eventId, repos, paypal }) {
     }
 
     let orgId = null;
+    let posted = false;
     const resource = payload.resource || {};
     if (payload.event_type === 'PAYMENT.CAPTURE.COMPLETED' && resource.status === 'COMPLETED') {
       const orderId = resource.supplementary_data?.related_ids?.order_id;
@@ -29,6 +30,7 @@ export async function processPayPalEvent({ eventId, repos, paypal }) {
         providerPayload: { seller_receivable_breakdown: breakdown },
       });
       orgId = stored.orgId;
+      posted = Boolean(orgId);
       const exchange = breakdown.exchange_rate;
       if (exchange && repos.fxRates) {
         const base=String(exchange.source_currency||'').toUpperCase(),quote=String(exchange.target_currency||'').toUpperCase(),rate=String(exchange.value||'');
@@ -39,9 +41,10 @@ export async function processPayPalEvent({ eventId, repos, paypal }) {
     } else if (payload.event_type === 'INVOICING.INVOICE.PAID' && resource.id && repos.invoices?.markPaid) {
       const result=await repos.invoices.markPaid(String(resource.id),payload);
       orgId=result?.orgId||null;
+      posted=result?.updated===true;
     }
     await repos.events.complete(row.id || eventId, 'verified', orgId, 'processed');
-    return { claimed: true, verification: 'verified', posted: Boolean(orgId) };
+    return { claimed: true, verification: 'verified', posted };
   } catch (error) {
     const maxAttempts = 5;
     const state = Number(row.attempts || 1) >= maxAttempts ? 'dead_letter' : 'retry';

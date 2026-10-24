@@ -1,65 +1,66 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-10-24 09:46:12 UTC
+- Date/time: 2026-10-24 09:52:51 UTC
 - Branch: backend
-- Last implementation commit: e6e1953 (Phase 3: FX reports and invoices); branch backend.
-- Current phase/task: Phase 3 complete locally; final report and commit checkpoint.
+- Last commit hash: 5e8a827 (continuity docs); implementation commit e6e1953.
+- Current phase/task: Phase 3 live verification, Task 3 — await user applying 0004 and supplying Sandbox buyer email; read-only gate ran.
 
 ## DONE
-- Phase 2 live verification/cleanup committed: scripts/verify-phase2.js, scripts/cleanup-phase2-test-data.sql, docs/TEST-REPORT.md.
-- Phase 3 backend implemented: FX, SQL reports, invoices, approval-gated send, paid webhook linkage, migrations, API docs, and fixture tests.
-- User reports migration 0003 applied and INVOICING.INVOICE.PAID subscribed; nine expected live tables/views returned HTTP 200.
-- Fixed concurrent FX rate-provider throttle race; regression test in server/test/phase3-services.test.js.
+- Phase 2 is committed and its previous live checks/cleanup are recorded in docs/TEST-REPORT.md.
+- Phase 3 FX, reports, invoices, webhook linkage, migration 0003, contract, and 52 local tests are committed.
+- User reports 0003 applied and INVOICING.INVOICE.PAID subscribed; read-only probes previously saw nine expected tables/views.
 
 ## IN PROGRESS
-- Phase 3 implementation is committed locally. No Phase 4 work has started.
-- Ordinary-user JWT/RLS and full invoice-send/paid-webhook live cycle remain unverified and are disclosed in TEST-REPORT.md.
+- CSV formula neutralization, webhook mismatch result handling, migration 0004, and scripts/verify-phase3.js are drafted; first local suite passed (54/54), then verifier preflight/cleanup safety was tightened and needs rerun.
+- Read-only gate: `/api/status` returned HTTP 200. Migration 0004 is not confirmed; verifier stopped before creating users or rows.
+- No live data has been changed in this pass.
 
 ## NEXT STEPS
-1. Await user direction whether to continue to Phase 4.
-2. If deeper live verification is requested, obtain a throwaway ordinary-user JWT and perform an approved Sandbox invoice send/payment; clean up test data safely.
+1. Apply the displayed `0004_fix_invoice_paid_amount.sql` in Supabase SQL Editor and reply `applied`.
+2. Provide the US Personal Sandbox buyer email; set it locally as `NOVAPAY_PHASE3_BUYER_EMAIL` without sharing secrets.
+3. Run the verifier with `NOVAPAY_PHASE3_0004_APPLIED=true`; follow its printed buyer URL and return `paid` after browser payment.
+4. Review the redacted results, cleanup report, and update docs after each run.
+5. Commit Phase 3 verification only if there are no FAIL or UNVERIFIED items; never push.
 
 ## USER ACTIONS PENDING
-- None required to finish the current local implementation.
-- Optional for live proof: provide/authorize a throwaway ordinary test-user session; approve/pay a Sandbox invoice in browser after the backend creates and sends it.
+- Apply `supabase/migrations/0004_fix_invoice_paid_amount.sql` in the SQL Editor and reply `applied`.
+- Provide the US Personal PayPal Sandbox buyer email; configure it locally as `NOVAPAY_PHASE3_BUYER_EMAIL` before verifier invoice creation.
+- If invoice send succeeds, open the printed Sandbox payer URL, pay with Visa, then return and type `paid` in the verifier.
 
 ## LIVE STATE
-- 0001 and 0002 previously verified applied.
-- 0003: user reports applied; expected tables/views independently returned HTTP 200 on 2026-10-24.
-- Tunnel/webhook: user reports active and registered, with INVOICING.INVOICE.PAID.
-- Credential key names only: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID.
+- 0001/0002 previously verified applied; 0003 user-reported applied, with nine objects previously returning HTTP 200.
+- Tunnel/server reportedly running. User reports INVOICING.INVOICE.PAID subscribed.
+- Key names only: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID.
 
 ## TEST STATE
 | Check | Status | Date | Command |
+| Live inventory | PASS | 2026-10-24 | 2 orgs, 0 completed captures/refunds, 0 candidate orgs |
 |---|---|---|---|
-| Unit suite | PASS | 2026-10-24 | npm test — 52 passed |
-| Migration parser | PASS | 2026-10-24 | npm run check:migrations — 0001/0002/0003 |
-| Backend JS syntax/diff | PASS | 2026-10-24 | node --check; git diff --check |
-| Frontend hygiene and .env | PASS | 2026-10-24 | diff scan empty; .env ignored/untracked |
-| Live migration objects | PASS | 2026-10-24 | nine tables/views HTTP 200 |
-| Anon access denial | PASS | 2026-10-24 | eight RPCs and four protected GETs HTTP 401 |
-| Ordinary-user JWT/RLS | UNVERIFIED | 2026-10-24 | no ordinary user token available |
-| Live invoice paid cycle | UNVERIFIED | 2026-10-24 | no invoice created/sent/paid |
+| Phase 3 unit suite | PASS | 2026-10-24 | npm test — 52 passed |
+| Migration syntax | PASS | 2026-10-24 | npm run check:migrations — 0001–0003 |
+| Live Phase 3 full verifier | UNVERIFIED | 2026-10-24 | not yet implemented/run this turn |
+| Ordinary-user JWT and invoice paid webhook | UNVERIFIED | 2026-10-24 | requires live verifier/human Sandbox step |
 
 ## KNOWN ISSUES AND RISKS
-- Live ordinary-user RLS and invoice-send/webhook linkage are not proven end to end.
-- Frankfurter provider was live reachable; application route was tested locally with fixtures, not a live user JWT.
-- Phase 3 implementation committed locally as e6e1953; not pushed.
+- 0003 is applied; never edit it. Database corrections require new 0004 and user application.
+- audit_log is insert-only and retained; remove only operational rows tagged/identified as created during this run.
+- A real PayPal invoice send/payment is an external Sandbox side effect; use the fixed test buyer and pause for the human payment step.
+- Existing Phase 2 capture/refund rows are absent from the live project; report comparisons against them cannot pass without a safe source dataset.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant it only to service_role; prove it by calling with an ordinary user JWT (expect 403).
-- PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only and has ON DELETE RESTRICT; cleanup deletes journal_entries first, then audit_log, organizations, auth.users via scripts/cleanup-phase2-test-data.sql. Reuse fixed named test users/orgs.
-- PayPal sandbox buyer must be a US Personal account; seller USD only; use Visa; webhook URL ends /api/webhook and PAYPAL_WEBHOOK_ID matches.
-- Raw body is needed for PayPal signature verification.
-- Never print .env values; use key names only.
+- Supabase SQL Editor runs inside one transaction; errors roll back everything. Never edit an applied migration; use a new numbered file.
+- SECURITY DEFINER/posting RPCs must deny public, anon, authenticated and grant only service_role; test with an ordinary user JWT.
+- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
+- audit_log is insert-only and ON DELETE RESTRICT; delete journal_entries before audit rows if manual fixture-org cleanup is required. Reuse fixed users/orgs; retain append-only audit rows.
+- Sandbox buyer must be US Personal, seller USD; Visa; webhook URL ends /api/webhook and PAYPAL_WEBHOOK_ID matches.
+- PayPal signature verification requires exact raw request bytes.
+- Never print .env values.
 
 ## DO NOT
-- Do not push, touch frontend files, use --force, run npm audit fix --force, weaken tests, edit applied migrations, or commit .env/secrets.
+- Do not push; do not touch frontend files; no force operations; no weakening tests; no editing 0003; never commit .env/secrets.
 
 ## RESUME COMMANDS
-- `git status --short`
-- `npm test`
-- `npm run check:migrations`
+- git status --short
+- npm test
+- npm run check:migrations

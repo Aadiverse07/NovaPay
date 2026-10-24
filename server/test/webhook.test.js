@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import express from 'express';
 import { webhookRoutes } from '../src/routes/webhook.js';
 import { captureJournalLines, isJournalBalanced } from '../src/services/ledger.js';
+import { processPayPalEvent } from '../src/services/webhookProcessor.js';
 
 function makeHarness(verification = 'VERIFIED') {
   const rows = new Map();
@@ -84,4 +85,16 @@ test('unverified webhook events are retained but never reach the posting path', 
     assert.equal(h.captureCalls, 0);
     assert.equal(h.journalEntries.size, 0);
   });
+});
+
+test('verified invoice amount mismatch is handled without claiming a paid posting',async()=>{
+  let completed;
+  const repos={
+    events:{async claim(){return {id:'event-row',event_id:'EVENT-MISMATCH',event_type:'INVOICING.INVOICE.PAID',payload:{id:'EVENT-MISMATCH',event_type:'INVOICING.INVOICE.PAID',resource:{id:'INV-1',status:'PAID',amount:{value:'1.00',currency_code:'USD'}}},attempts:1};},async complete(...args){completed=args;}},
+    invoices:{async markPaid(){return {updated:false,mismatch:true,orgId:'org-a'};}}
+  };
+  const result=await processPayPalEvent({eventId:'EVENT-MISMATCH',repos,paypal:{async verifyWebhook(){return 'VERIFIED';}}});
+  assert.deepEqual(result,{claimed:true,verification:'verified',posted:false});
+  assert.equal(completed[2],'org-a');
+  assert.equal(completed[3],'processed');
 });
