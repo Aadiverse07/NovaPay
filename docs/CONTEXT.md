@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
 - Branch: `backend`; last commit `0dbbdc8 Phase 3 Completed By Dev`.
-- Current phase/task: Phase 4 AI assistant and orchestration, Step 0 complete; next T1 router.
+- Current phase/task: Phase 4 AI assistant and orchestration, T1 complete; next T2 evidence/tools.
 
 ## DONE
 - Phase 3 passed its live gate and was pushed at user request. Commit `0dbbdc8`; no `.env` in tracked history.
@@ -11,11 +11,11 @@
 - Phase 3 limitation: invoice send remains SIMULATED; real invoice-paid linkage is UNVERIFIED because no PayPal invoice ID exists.
 
 ## IN PROGRESS
-- Phase 4 T1: implement deterministic intent router at `server/src/ai/router.js`; inspect current AI route/service/LLM/repositories first, then add a 40+ case table-driven router test. No Phase 4 source code changes yet.
+- Phase 4 T1: implementing `classifyAIIntent` and `createAIRouter` in `server/src/ai/router.js`; added 60-question table and dispatch/priority tests in `server/test/ai-router.test.js`. Focused and full tests pending.
 
 ## NEXT STEPS
-1. Inspect current AI chat route, `services/ai.js`, `services/llm.js`, repositories, app wiring, migrations, docs, and existing tests.
-2. T1 deterministic router and 40+ question tests; run tests and checkpoint commit.
+1. Fix Spanish `por qué` matching without a trailing JavaScript word boundary; rerun focused and full suite.
+2. Record the T1 test run and routing precedence decision, update docs, then checkpoint commit.
 3. T2 evidence builder, read-only org-scoped tools, redaction and bounded tool loop; test and checkpoint.
 4. T3 provider prompt/sanitizer/fallback handling and current Gemini free-tier model verification; record source/date/decision; test and checkpoint.
 5. T4 usage budgets, race-safe accounting, data-version cache; test and checkpoint.
@@ -37,12 +37,12 @@
 |---|---|---|---|
 | Branch/status | PASS | 2026-10-24 | `backend`; clean worktree at start |
 | Install | PASS | 2026-10-24 | `npm ci`; 89 packages, 0 vulnerabilities |
-| Unit suite | PASS | 2026-10-24 | `npm test`; 61 passed, 0 failed |
+| Unit suite after T1 | PASS | 2026-10-24 | `npm test`; 65 passed, 0 failed; router focused tests 4/4 |
 | Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parsed |
 | Phase 3 gate | PASS | 2026-10-24 | live signed webhook, replay, refund, ledger/report parity; invoice linkage limitation recorded |
 
 ## KNOWN ISSUES AND RISKS
-- Free-tier model/quota status changes; verify current official Gemini docs before selecting model and record dated source.
+- Free-tier model/quota status changes; T3 must verify current official Gemini docs before selecting model and record dated source.
 - Supabase live Phase 4 migration verification is blocked until migration is applied by user.
 - Phase 3 simulated invoice limitation remains.
 
