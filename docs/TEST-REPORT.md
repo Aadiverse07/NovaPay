@@ -315,3 +315,8 @@ Date: 2026-10-24
 - `npm run check:migrations`: PASS; 0001–0004 parsed as PostgreSQL 17 SQL/PLpgSQL.
 - `node --check scripts/verify-phase3.js && node --check server/src/services/webhookProcessor.js && node --check server/test/webhook.test.js`: PASS.
 - `git diff --check`: PASS. Frontend diff scan returned no paths. `.env` is ignored and not tracked.
+
+## Phase 3 refreshed tunnel/webhook preflight — 2026-10-24
+- Public `GET https://extension-italia-taken-emma.trycloudflare.com/api/status`: PASS, HTTP 200; backend and webhook configuration reported present.
+- Read-only PayPal webhook lookup by configured ID: PASS, URL exactly matches the public `/api/webhook`; subscribed events include `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.REFUND.COMPLETED`, and `INVOICING.INVOICE.PAID`.
+- DNS lookup returned Cloudflare addresses. The initial local assertion looked for the wrong refund event name (`PAYMENT.CAPTURE.REFUNDED`); inspection confirmed PayPal's actual configured name is `PAYMENT.REFUND.COMPLETED`. No payment was created during this preflight.

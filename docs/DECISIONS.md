@@ -226,3 +226,9 @@
 - Choice: Wait until `processing_status` reaches a terminal state (`processed`, `unverified`, `failed`, `error`, or `dead_letter`) before judging signature verification or replay eligibility.
 - Reason: Live run returned the row's initial `unverified/processing` state while the asynchronous PayPal signature worker was still running; cleanup then removed the row before its final state was recorded. This is a verifier race, not evidence of a bad PayPal signature.
 - Source: Redacted live run output on 2026-10-24. Rejected alternative: count the initial inbox state as a completed signature check.
+
+## PayPal refund webhook preflight event name — 2026-10-24
+- Question: Which configured refund event should the live verifier expect on the registered webhook?
+- Choice: Expect PayPal's registered `PAYMENT.REFUND.COMPLETED` event name alongside `PAYMENT.CAPTURE.COMPLETED`.
+- Reason: Read-only lookup of the configured Sandbox webhook ID showed the exact event list and matching public URL; the preliminary check used an incorrect refund event string.
+- Source: PayPal Sandbox webhook GET response observed 2026-10-24; user confirmed capture-completed and refund-completed subscriptions. Rejected alternative: change webhook configuration or infer from an unrelated event alias.
