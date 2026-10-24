@@ -127,3 +127,45 @@ Date: 2026-10-24
 - Added `scripts/cleanup-phase2-test-data.sql`, a manual destructive test-data-only cleanup script. It deletes transactions, approvals, then journal entries before events, orders, audit rows, organizations, and auth users. The file warns against production use and preserves no unrelated organization data.
 - The fixed fixture users and organizations do not currently exist; the live count of zero is the verified post-cleanup state. A future full verifier run will create the two named fixtures once, then reuse them. That interactive full run was not repeated because it creates a new Sandbox payment and requires buyer approval.
 - Local after-change checks: `npm test` PASS (45 tests); `node --check scripts/verify-phase2.js` PASS. The new cleanup script has not been applied to the live database; the user performed the cleanup manually. Phase 2 live payment evidence above remains valid; no new payment was created in this cleanup pass.
+
+## Phase 3 implementation gate
+
+Date: 2026-10-24
+
+- `npm test`: PASS, 51 tests, 0 failures. Includes fixture tests for decimal FX arithmetic, rate caching/output metadata, report totals, server-side invoice totals despite tampered client totals, approval-gated sends, and authenticated route shapes/validation/role denial.
+- `npm ci`: PASS; 89 packages installed, 0 vulnerabilities reported. `node --check` on all backend/scripts JavaScript and `git diff --check`: PASS.
+- `npm run check:migrations`: PASS; numbered migrations 0001, 0002, and 0003 parse as PostgreSQL 17 SQL/PLpgSQL. `node --check` on backend/scripts JavaScript and `git diff --check`: PASS.
+- Frontend hygiene: no paths under `preview.html`, `dashboard.html`, `src/`, `assets/`, or `tailwind.novapay.preset.*` appear in the diff.
+- Live database migration state: UNVERIFIED/APPLY REQUIRED. Read-only REST probes returned HTTP 404 for the new `fx_rates`, `invoices`, `invoice_lines`, `invoice_events`, `report_trial_balance`, and `report_profit_and_loss` objects. Migration 0003 has not been applied; do not use the new API against the live project until it is.
+- Frankfurter live API smoke: UNVERIFIED. A direct read request did not return before the diagnostic was interrupted; the unit tests use a deterministic fake adapter. Free usage/terms and intended API schema were checked against the provider's official pages and recorded in `DECISIONS.md`.
+- PayPal Invoicing support: PASS for read access on this Sandbox account; `GET /v2/invoicing/invoices?page=1&page_size=1` returned HTTP 200. No invoice was created or sent. End-to-end create/send and invoice-paid webhook linkage remain UNVERIFIED; subscribe the configured PayPal webhook to `INVOICING.INVOICE.PAID` before verifying payment updates.
+- The migration parser cannot prove live object grants, RPC behavior, trigger behavior, RLS, provider invoice creation/send, or report results against live ledger data. The Phase 3 gate is therefore PARTIAL and Phase 3 files remain uncommitted.
+
+## Phase 3 live deployment recheck
+
+Date: 2026-10-24
+
+- Preflight state: UNVERIFIED before querying. User reports migration 0003 was applied and the webhook was updated with INVOICING.INVOICE.PAID. This entry is a checkpoint before read-only live probes; no database mutation is authorized or planned.
+
+- Live migration object probe: PASS, 2026-10-24 09:43:14 UTC. Command used local dotenv/config with service credentials and printed only HTTP status codes: `node --input-type=module -e 'import "dotenv/config"; ... GET /rest/v1/<object>?select=*&limit=0'`. HTTP 200 for fx_rates, invoices, invoice_lines, invoice_events, report_profit_and_loss, report_fee_summary, report_trial_balance, report_refunds_summary, report_cash_movement. This confirms 0003 objects are exposed; it does not prove grants, RLS, function security, or data correctness.
+
+- Before local Phase 3 gate rerun: status recorded as pending; protected GET and anon RPC probes are read-only and will not create invoices, payments, or database rows.
+
+- Diagnostic command wrapper: FAIL, 2026-10-24 09:43:52 UTC. Read-only RPC calls returned HTTP 401 for seven invoice RPCs; decide_invoice_send_approval returned 404 because the diagnostic omitted its required p_request_id argument, so that result is inconclusive. The trailing zsh curl loop did not run: curl was unavailable in that shell and zsh reserves the variable name status. No file/database changes occurred from this diagnostic. Rerun with the full signature and Node fetch.
+
+- Corrected read-only authorization probes: PASS for unauthenticated protection, 2026-10-24 09:44:09 UTC. Full-signature anon RPC POSTs to all eight Phase 3 invoice functions returned HTTP 401. Running server GETs for valid FX, malformed FX, trial-balance report, and invoices returned HTTP 401. No response bodies or credentials printed; no rows changed. Ordinary authenticated user JWT/RLS cross-tenant isolation remains UNVERIFIED because no test-user access token was available.
+
+- Local Phase 3 gate: PASS, 2026-10-24 09:44:20 UTC. `npm test`: 51 passed, 0 failed. `npm run check:migrations`: 0001, 0002, 0003 parse as PostgreSQL 17 SQL/PLpgSQL. Backend/scripts `node --check` and `git diff --check`: PASS. Frontend diff scan for preview.html, dashboard.html, src/, assets/, and tailwind.novapay.preset.*: no paths.
+
+- Pre-live-provider smoke checkpoint: UNVERIFIED pending one read-only Frankfurter latest-rate request (10 second timeout); no local files or provider state will be changed.
+
+- Frankfurter read-only live smoke: PASS, 2026-10-24 09:45:05 UTC. GET https://api.frankfurter.dev/v1/latest?base=USD&symbols=EUR returned HTTP 200 with both a rate and provider date present. Rate value was intentionally not printed. This confirms current provider reachability and response fields, not authenticated application route behavior.
+
+- FX concurrency check: FAIL found by code review at 2026-10-24 09:45:22 UTC. The interval throttle calculates concurrent waits from one shared last-call timestamp, so requests for different pairs can start together. Fix in progress; no live provider state or database data was changed.
+
+- FX throttle regression verification: PASS, 2026-10-24 09:45:45 UTC. `node --test server/test/phase3-services.test.js`: 7 passed, 0 failed; `npm test`: 52 passed, 0 failed, all three migrations parsed.
+- Documentation checkpoint subcommand preceding those tests: FAIL (shell-embedded Python quoting syntax error). No documentation write occurred in that subcommand; this note records the scripting error. Test commands ran independently and succeeded because the shell did not stop on that subcommand.
+
+- Final Phase 3 verification hygiene: PASS, 2026-10-24 09:46:12 UTC. `npm run check:migrations`: all three migrations parse. `node --check` across server/scripts: PASS. `git diff --check`: PASS. `.env.example` placeholder scan: true; `git check-ignore .env`: ignored; `git ls-files .env`: not tracked. Frontend diff scan: no paths. No test invoices or payments were created.
+- Phase 3 live gaps: UNVERIFIED — ordinary authenticated-user JWT execution-denial and cross-tenant RLS were not proved because no ordinary test-user access token/fixture exists; live invoice send and INVOICING.INVOICE.PAID-to-capture/ledger reconciliation were not exercised because that would create/send/pay an external Sandbox invoice. Migration object exposure (nine tables/views HTTP 200), anon RPC denial (eight HTTP 401), unauthenticated API denial (four HTTP 401), and Frankfurter live response (HTTP 200 with rate/date fields) were verified.
+- FX throttle race: fixed by reserving provider slots before awaits; regression test and full suite pass. No database or provider state was changed during this verification.

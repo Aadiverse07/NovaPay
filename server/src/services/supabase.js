@@ -53,6 +53,12 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
       return result.data;
     },
+    async upsert(table, payload, onConflict) {
+      if (!/^[a-z][a-z0-9_]*$/.test(table) || !/^[a-z][a-z0-9_,]*$/.test(onConflict)) throw new Error('Invalid database operation.');
+      const result = await request(`/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`, { method: 'POST', body: payload, prefer: 'resolution=merge-duplicates,return=representation' });
+      if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      return result.data;
+    },
     async patch(table, query, payload, prefer = 'return=representation') {
       if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
       const result = await request(`/rest/v1/${table}?${query}`, { method: 'PATCH', body: payload, prefer });

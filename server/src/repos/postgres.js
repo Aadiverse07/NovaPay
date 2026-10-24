@@ -25,7 +25,20 @@ function mapCapture(row) {
 }
 
 function mapApproval(row) {
-  return row && ({ approvalId: row.id, orgId: row.org_id, proposalType: row.proposal_type, captureId: row.capture_id, amount: row.amount_minor == null ? null : minorToMoney(row.amount_minor), amountMinor: row.amount_minor == null ? null : Number(row.amount_minor), currency: row.currency, status: row.status, decisionNote: row.decision_note, reviewerId: row.reviewer_id, result: row.result || null, createdAt: row.created_at, createdBy: row.created_by });
+  return row && ({ approvalId: row.id, orgId: row.org_id, proposalType: row.proposal_type, captureId: row.capture_id, invoiceId: row.invoice_id || null, amount: row.amount_minor == null ? null : minorToMoney(row.amount_minor), amountMinor: row.amount_minor == null ? null : Number(row.amount_minor), currency: row.currency, status: row.status, decisionNote: row.decision_note, reviewerId: row.reviewer_id, result: row.result || null, createdAt: row.created_at, createdBy: row.created_by });
+}
+
+function mapInvoice(row, lines = []) {
+  return row && ({ id: row.id, orgId: row.org_id, invoiceNumber: row.invoice_number, state: row.state,
+    customerName: row.customer_name, customerEmail: row.customer_email, currency: row.currency,
+    subtotalMinor: Number(row.subtotal_minor), taxMinor: Number(row.tax_minor), totalMinor: Number(row.total_minor),
+    subtotal: minorToMoney(row.subtotal_minor), tax: minorToMoney(row.tax_minor), total: minorToMoney(row.total_minor),
+    paypalInvoiceId: row.paypal_invoice_id || null, paypalCaptureId: row.paypal_capture_id || null,
+    createdBy: row.created_by, createdAt: row.created_at, updatedAt: row.updated_at,
+    lines: lines.map((line) => ({ id: line.id, description: line.description, quantity: String(line.quantity),
+      unitPriceMinor: Number(line.unit_price_minor), unitPrice: minorToMoney(line.unit_price_minor), taxRate: String(line.tax_rate),
+      subtotalMinor: Number(line.line_subtotal_minor), taxMinor: Number(line.tax_minor), totalMinor: Number(line.line_total_minor),
+      subtotal: minorToMoney(line.line_subtotal_minor), tax: minorToMoney(line.tax_minor), total: minorToMoney(line.line_total_minor) })) });
 }
 
 export function createPostgresRepositories(database) {
@@ -111,6 +124,10 @@ export function createPostgresRepositories(database) {
       const result = await database.rpc('decide_refund_approval', { p_org: orgId, p_approval_id: id, p_decision: decision, p_note: note, p_reviewer: reviewerId, p_request_id: requestId });
       return { result: result?.result, approval: mapApproval(result?.approval) };
     },
+    async decideInvoiceSend(id, orgId, decision, note, reviewerId, requestId) {
+      const result = await database.rpc('decide_invoice_send_approval', { p_org: orgId, p_approval_id: id, p_decision: decision, p_note: note, p_reviewer: reviewerId, p_request_id: requestId });
+      return { result: result?.result, approval: mapApproval(result?.approval) };
+    },
     async finishRefund(id, orgId, refund) {
       return mapApproval(await database.rpc('finish_refund', { p_org: orgId, p_approval_id: id, p_refund: refund, p_lines: journalLinesPayload(refundJournalLines(refund)) }));
     },
@@ -145,8 +162,65 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const fxRates = {
+    async get(orgId, base, quote) {
+      const rows = await database.select('fx_rates', q({ select:'*',org_id:`eq.${orgId}`,base_currency:`eq.${base}`,quote_currency:`eq.${quote}`,limit:'1' }));
+      return rows?.[0] || null;
+    },
+    async put(row) {
+      const rows = await database.upsert('fx_rates',row,'org_id,base_currency,quote_currency');
+      return rows?.[0] || row;
+    },
+  };
+
+  const invoices = {
+    async list(orgId,{limit=50,offset=0,state}={}) {
+      const params={select:'*,invoice_lines(*)',org_id:`eq.${orgId}`,order:'created_at.desc',limit:String(limit),offset:String(offset)};
+      if(state) params.state=`eq.${state}`;
+      return (await database.select('invoices',q(params))||[]).map((row)=>mapInvoice(row,row.invoice_lines||[]));
+    },
+    async get(orgId,id) {
+      const rows=await database.select('invoices',q({select:'*',org_id:`eq.${orgId}`,id:`eq.${id}`,limit:'1'}));
+      if(!rows?.[0]) return null;
+      const lines=await database.select('invoice_lines',q({select:'*',org_id:`eq.${orgId}`,invoice_id:`eq.${id}`,order:'created_at.asc'}));
+      return mapInvoice(rows[0],lines||[]);
+    },
+    async createDraft(orgId,invoice,lines) {
+      const row=await database.rpc('create_invoice_draft',{p_org:orgId,p_invoice:invoice,p_lines:lines});
+      return this.get(orgId,row.id);
+    },
+    async setState(orgId,id,state,actorId,details={}) {
+      const row=await database.rpc('set_invoice_state',{p_org:orgId,p_invoice_id:id,p_state:state,p_actor:actorId,p_details:details});
+      return this.get(orgId,row.id);
+    },
+    async setPayPalDraft(orgId,id,paypalInvoiceId) {
+      await database.rpc('set_invoice_paypal_draft',{p_org:orgId,p_invoice_id:id,p_paypal_invoice_id:paypalInvoiceId});
+      return this.get(orgId,id);
+    },
+    async requestSendApproval(orgId,id,approvalId,actorId,payload) {
+      return mapApproval(await database.rpc('request_invoice_send_approval',{p_org:orgId,p_invoice_id:id,p_approval_id:approvalId,p_actor:actorId,p_payload:payload}));
+    },
+    async completeSend(orgId,approvalId,paypalInvoiceId,result) {
+      return mapApproval(await database.rpc('complete_invoice_send',{p_org:orgId,p_approval_id:approvalId,p_paypal_invoice_id:paypalInvoiceId,p_result:result}));
+    },
+    async failSend(orgId,approvalId,error) {
+      return mapApproval(await database.rpc('fail_invoice_send',{p_org:orgId,p_approval_id:approvalId,p_error:{message:String(error).slice(0,200)}}));
+    },
+    async markPaid(paypalInvoiceId,event) { return database.rpc('mark_invoice_paid',{p_paypal_invoice_id:paypalInvoiceId,p_event:event}); },
+  };
+
+  const reports = {
+    async rows(view,orgId,{from,to,limit=1000}={}) {
+      const params={select:'*',org_id:`eq.${orgId}`,order:'period.asc',limit:String(limit)};
+      if(from) params.period=`gte.${from.slice(0,10)}`;
+      if(to) params.period=from?undefined:`lte.${to.slice(0,10)}`;
+      if(from&&to) params.and=`(period.gte.${from.slice(0,10)},period.lte.${to.slice(0,10)})`;
+      return database.select(view,q(Object.fromEntries(Object.entries(params).filter(([,v])=>v!==undefined))));
+    },
+  };
+
   return {
-    orders, captures, approvals, events,
+    orders, captures, approvals, events, fxRates, invoices, reports,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;
