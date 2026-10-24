@@ -2,21 +2,21 @@
 
 ## HEADER
 - Date/time: 2026-10-24 Asia/Kolkata.
-- Branch: `backend`; last commit `f68996e WIP Phase 4 task 2: org-scoped evidence tools`.
-- Current phase/task: Phase 4, T3 complete; next T4 budgets/cache.
+- Branch: `backend`; last commit `eef73a9 WIP Phase 4 task 3: LLM guardrails`.
+- Current phase/task: Phase 4, T3 complete; T4 budgets/cache is next and not started.
 
 ## DONE
 - Phase 3 completed and backed up at `0dbbdc8`; invoice send remains simulated.
 - Phase 4 T0–T2 checkpoint commits: `e6cd524`, `574253a`, `f68996e`.
+- Phase 4 T3 checkpoint: `eef73a9 WIP Phase 4 task 3: LLM guardrails`.
 - T1 deterministic route classifier and 61-question table test: `server/src/ai/router.js`, `server/test/ai-router.test.js`.
 - T2 org-scoped read-only evidence tools, data minimization and bounded calls: `server/src/ai/evidence.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/ai-evidence.test.js` and related service/route tests.
 
 ## IN PROGRESS
-- T3: Gemini model allow-list, bounded retry/fallback/timeout, untrusted evidence block, strict Zod sanitizer, evidence/numeric grounding, safe unavailable response in `server/src/services/llm.js` and `server/src/services/ai.js`; tests in `server/test/llm.test.js`, `server/test/ai.test.js`, and `server/test/routes.test.js`. Focused suite 19/19; full suite 83/83; migration/syntax/hygiene checks pass. Local checkpoint pending.
+- T3 complete and checkpointed: Gemini model allow-list, bounded retry/fallback/timeout, untrusted evidence block, strict Zod sanitizer, evidence/numeric grounding, safe unavailable response in `server/src/services/llm.js` and `server/src/services/ai.js`; tests in `server/test/llm.test.js`, `server/test/ai.test.js`, and `server/test/routes.test.js`. Focused suite 19/19; full suite 83/83; migration/syntax/hygiene checks pass.
 
 ## NEXT STEPS
-1. Check current diff, secret/frontend hygiene; commit T3 checkpoint if clean.
-2. T4 AI usage budgets, concurrency-safe accounting and data-version cache; test/docs/checkpoint.
+1. T4 AI usage budgets, concurrency-safe accounting and data-version cache; test/docs/checkpoint.
 3. T5 anomalies and notifications; T6 approval-only AI proposals; test/docs/checkpoint each.
 4. T7 add next migration `0005_ai.sql`, run migration parser/security checks, document exact SQL Editor steps and wait for user `applied` before live DB checks.
 5. T8 API/docs and `scripts/verify-phase4.js`; live checks only after migration is applied.
