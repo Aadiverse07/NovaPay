@@ -378,3 +378,32 @@ Date: 2026-10-24
 - Syntax: `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check` PASS.
 - Hygiene: `git diff --check` PASS; frontend diff scan empty; `.env` ignored and untracked.
 - Coverage: tool calls are org-closure scoped even with a supplied `orgId`, unknown/duplicate/over-limit tools are rejected, per-call timeout and result size are bounded, invoice PII/descriptions are omitted, dates become explicit filters, client context is ignored by the route, and redaction covers Unicode names, addresses, phones, account/card numbers, tokens, and near-match names.
+
+## Phase 4 T3 — focused AI/LLM tests, first run — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/llm.test.js`.
+- Result: FAIL, 15 passed / 1 failed. Existing fake-provider test expected the prior response shape and omitted the additive `insufficientEvidence: false` field; updated the expectation to the explicit grounding status. No production behavior was weakened.
+
+## Phase 4 T3 — focused AI/LLM tests, second run — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/llm.test.js`.
+- Result: FAIL, 15 passed / 1 failed. The hardened prompt preserved the no-execution meaning but changed a phrase asserted by the existing regression test. Restored the exact “Never execute or call financial APIs” wording and rerunning.
+
+## Phase 4 T3 — focused AI/LLM tests, third run — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/llm.test.js`.
+- Result: FAIL, 18 passed / 1 failed. Prompt fencing escaped `<` and `>` but not `/`; the new test incorrectly required slash escaping too. Corrected the assertion to check the actual safety property: evidence cannot form a literal closing delimiter. No code change was needed for this failure.
+
+## Phase 4 T3 — focused AI/LLM tests, final — 2026-10-24
+- Command: `node --test server/test/ai.test.js server/test/llm.test.js`.
+- Result: PASS, 19 passed / 0 failed. Covers malformed/empty/oversized/extra-field responses, proposal allow-list, foreign evidence and record references, grounded numbers, missing evidence, injection delimiter escaping, temporary provider failure, safe logs, bounded 429/timeout retry and fallback, model allow-list, and explicit Anthropic opt-in.
+- Provider smoke: UNVERIFIED by design; no real Gemini request was made in T3. The single tiny live smoke belongs to Phase 4 live verification after the migration.
+
+## Phase 4 T3 — full suite, first run — 2026-10-24
+- Command: `npm test`.
+- Result: FAIL, 82 passed / 1 failed. Existing route regression expected provider failures as HTTP 500, but Phase 4 now requires the safe “AI temporarily unavailable” answer after bounded retry/fallback. Updated the test to require that response and continue checking logs/responses for provider secrets.
+- Concurrent checks: `npm run check:migrations` PASS (0001–0004); `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check` PASS; `git diff --check` PASS; no frontend paths changed; `.env` ignored.
+
+## Phase 4 T3 — final local regression — 2026-10-24
+- `npm test`: PASS, 83 passed / 0 failed.
+- `npm run check:migrations`: PASS; 0001–0004 parsed as PostgreSQL 17 SQL/PLpgSQL.
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`: PASS.
+- `git diff --check`: PASS. Changed paths are docs and server service/tests only; no frontend paths changed. `.env` is ignored and not staged.
+- Gemini model verification: PASS via official docs checked 2026-10-24. Primary `gemini-3.5-flash-lite` and fallback `gemini-3.1-flash-lite` are currently free tier. No real provider request in this local task.
