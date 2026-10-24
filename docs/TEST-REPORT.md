@@ -370,3 +370,11 @@ Date: 2026-10-24
 - Full suite: `npm test` PASS, 65 passed, 0 failed; migration parser still accepts 0001–0004.
 - Syntax: `node --check server/src/ai/router.js && node --check server/test/ai-router.test.js` PASS.
 - Hygiene: `git diff --check` PASS; frontend path scan empty; `.env` remains ignored and untracked.
+
+## Phase 4 T2 — server-built evidence/tools — 2026-10-24
+- Focused: `node --test server/test/ai-evidence.test.js server/test/ai.test.js server/test/ai-router.test.js server/test/llm.test.js server/test/routes.test.js` PASS, 24 passed, 0 failed.
+- Full suite: `npm test` PASS, 73 passed, 0 failed; migration parser accepted 0001–0004.
+- Migration check: `npm run check:migrations` PASS; 0001–0004 parsed.
+- Syntax: `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check` PASS.
+- Hygiene: `git diff --check` PASS; frontend diff scan empty; `.env` ignored and untracked.
+- Coverage: tool calls are org-closure scoped even with a supplied `orgId`, unknown/duplicate/over-limit tools are rejected, per-call timeout and result size are bounded, invoice PII/descriptions are omitted, dates become explicit filters, client context is ignored by the route, and redaction covers Unicode names, addresses, phones, account/card numbers, tokens, and near-match names.

@@ -5,11 +5,14 @@ import { createFakeLLMAdapter, createGeminiAdapter, createLLMAdapter } from '../
 
 test('AI service calls the provider interface and preserves sanitization guardrails', async () => {
   const provider = createFakeLLMAdapter({ response: JSON.stringify({ reply: 'A supported result.', evidence: ['CAP-1', 'foreign'], proposal: null }) });
-  const askAI = createAIService({ config: {}, provider });
-  const result = await askAI('What happened?', { transactions: [{ id: 'CAP-1' }] });
+  const repos = { async listTransactions(orgId) { assert.equal(orgId, 'org-a'); return [{ id: 'CAP-1', source_id: 'PAYPAL-CAP-1', source_type: 'capture', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', occurred_at: '2026-10-01T00:00:00Z' }]; }, async trialBalance() { return { balanced: true, totals: {} }; } };
+  const askAI = createAIService({ config: {}, repos, provider });
+  const result = await askAI('What happened?', { orgId: 'org-a', transactions: [{ id: 'CLIENT-ORG-B-RECORD' }] });
   assert.deepEqual(result, { reply: 'A supported result.', evidence: ['CAP-1'], proposal: null });
   assert.equal(provider.calls.length, 1);
   assert.match(provider.calls[0].prompt, /What happened\?/);
+  assert.match(provider.calls[0].prompt, /PAYPAL-CAP-1/);
+  assert.doesNotMatch(provider.calls[0].prompt, /CLIENT-ORG-B-RECORD/);
   assert.match(provider.calls[0].system, /Never execute or call financial APIs/);
 });
 

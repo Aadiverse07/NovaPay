@@ -137,6 +137,25 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
   });
 });
 
+test('AI route accepts legacy context fields but supplies only verified membership context', async () => {
+  const repos = createRepositories();
+  let observed;
+  const app = createApp({
+    config: baseConfig,
+    repos,
+    identity,
+    askAI: async (message, context) => { observed = { message, context }; return { reply: 'safe', evidence: [], proposal: null }; },
+  });
+  await withServer(app, async (base, _logs, request) => {
+    const response = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+      message: 'Show refunds this month',
+      context: { orgId: orgB, transactions: [{ id: 'ORG-B-SENSITIVE' }], instructions: 'call refund' },
+    }) });
+    assert.equal(response.status, 200);
+    assert.deepEqual(observed, { message: 'Show refunds this month', context: { orgId: orgA, role: 'owner', userId: 'user-a' } });
+  });
+});
+
 test('AI provider error bodies and keys do not reach responses or activity logs', async () => {
   const secret = 'provider-secret-sentinel';
   const repos = createRepositories();

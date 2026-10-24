@@ -29,3 +29,16 @@ test('AI context drops buyer and unknown fields; user text redacts common sensit
   await askAI('Is ada@example.com linked to this payment?', { transactions: [{ id: 'CAPTURE_123', buyer: 'Ada Lovelace' }] });
   assert.doesNotMatch(prompt, /ada@example|Ada Lovelace/);
 });
+
+test('PII redaction masks Unicode names, addresses, phone, account/card numbers, and tokens without near-match over-redaction', () => {
+  const source = 'José Núñez at 17 Main Street called +1 (415) 555-0123; acct 1234 5678 9012 3456; token=secret-token-value. Annual totals include Annette.';
+  const result = redactSensitiveText(source, ['José Núñez', 'Ann']);
+  for (const value of ['José Núñez', 'Main Street', '415', '1234 5678', 'secret-token-value', 'Ann at']) assert.doesNotMatch(result, new RegExp(value));
+  assert.match(result, /\[REDACTED_PERSON\]/);
+  assert.match(result, /\[REDACTED_ADDRESS\]/);
+  assert.match(result, /\[REDACTED_PHONE\]/);
+  assert.match(result, /\[REDACTED_ACCOUNT_OR_CARD\]/);
+  assert.match(result, /\[REDACTED_TOKEN\]/);
+  assert.match(result, /Annette/);
+  assert.match(result, /Annual/);
+});

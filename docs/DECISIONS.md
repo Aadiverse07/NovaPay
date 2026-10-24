@@ -244,3 +244,9 @@
 - Choice: Use deterministic local rules in this order: explicit FX/arithmetic -> structured ledger query -> document/OCR -> evidence-based explanation/retrieval -> general read-only LLM. Unknown or malformed intent falls through to the LLM route with no execution capability.
 - Reason: Numeric conversions and structured record queries must avoid unnecessary model calls; explanation requires server-built evidence; uploaded documents use OCR only when clearly requested. Table-driven tests cover 61 normal, mixed-language, typo, ambiguous, and adversarial examples.
 - Source: Phase 4 user specification and `server/src/ai/router.js` tests, 2026-10-24. Rejected alternative: let the LLM choose routes or trust route/tool instructions from user text.
+
+## Phase 4 evidence boundary and tool execution — 2026-10-24
+- Question: What may the assistant send to the provider, and how do data tools establish tenant scope?
+- Choice: Build evidence on the server using only allow-listed read-only repository methods. Take `orgId` only from authenticated membership context; ignore legacy request `context`. Cap calls at three, reject repeats/unknown names, time out each call, and bound result rows/bytes. Exclude names, emails, and free-text invoice descriptions; use a per-org one-way customer reference only for grouping.
+- Reason: Free-tier inputs may be used by Google, and DB/user text is untrusted. Minimal curated evidence prevents raw client context, cross-tenant selection, and PII/injection text from reaching the provider.
+- Source: Phase 4 requirements and `server/src/ai/evidence.js` tests, 2026-10-24. Rejected alternative: accept model/request org IDs, send invoice/customer fields, or pass client-supplied context to the LLM.
