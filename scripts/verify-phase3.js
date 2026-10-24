@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { createInterface } from 'node:readline/promises';
+import { stdin, stdout } from 'node:process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createFxService } from '../server/src/services/fx.js';
@@ -368,13 +370,20 @@ function decodeRawBody(value){
   return value;
 }
 async function checkLivePaymentFlow(){
-  const requestKey=randomUUID().replaceAll('-','');
+  let requestKey=randomUUID().replaceAll('-','');
+  if(process.env.NOVAPAY_PHASE3_REUSE_PENDING_ORDER==='true'){
+    const recent=await service('/rest/v1/paypal_orders?'+q({select:'request_key,paypal_order_id,amount_minor,currency,status,state,approve_url,created_at',org_id:'eq.'+orgs.A,amount_minor:'eq.100',currency:'eq.USD',status:'eq.PAYER_ACTION_REQUIRED',state:'eq.Created',approve_url:'not.is.null',created_at:'gte.'+new Date(Date.now()-2*60*60*1000).toISOString(),order:'created_at.desc',limit:'2'}));
+    if(recent.status!==200||!Array.isArray(recent.body)||recent.body.length!==1){record('Reuse pending sandbox order without creating another',recent.status===200&&recent.body?.length===0?'UNVERIFIED':'FAIL','expected exactly one recent $1 pending order');return false;}
+    requestKey=recent.body[0].request_key;
+    created.finance={requestKey,orderId:recent.body[0].paypal_order_id};
+  }
   const order=await api('/api/paypal/create-order',{method:'POST',token:tokens.A,orgId:orgs.A,body:{amount:'1.00',currency:'USD',requestKey}});
   if(order.status!==200||!order.body?.orderId||!order.body?.approveUrl){record('Real sandbox order created','FAIL','HTTP '+order.status);return false;}
-  created.finance={requestKey,orderId:order.body.orderId};
+  created.finance={...(created.finance||{}),requestKey,orderId:order.body.orderId};
+  record('Real sandbox order created or reused',process.env.NOVAPAY_PHASE3_REUSE_PENDING_ORDER==='true'?'PASS':'PASS',process.env.NOVAPAY_PHASE3_REUSE_PENDING_ORDER==='true'?'existing unapproved order reused by idempotency key':'one new sandbox order created');
   console.log('\nPAYPAL SANDBOX APPROVAL URL (open this in your browser):\n'+order.body.approveUrl+'\n');
-  paused=true;
   const rl=createInterface({input:stdin,output:stdout});
+  paused=true;
   const answer=(await rl.question('Approve the $1.00 purchase as the US Sandbox buyer, then reply approved here: ')).trim().toLowerCase();
   rl.close();paused=false;
   if(answer!=='approved'){record('Real sandbox buyer approval and payment','UNVERIFIED','buyer approval not confirmed');return false;}
