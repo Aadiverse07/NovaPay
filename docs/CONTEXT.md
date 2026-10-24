@@ -2,22 +2,24 @@
 
 ## HEADER
 - Date/time: 2026-10-24 Asia/Kolkata.
-- Branch: `backend`; last commit `b57c054 WIP Phase 4 task 3: update continuity state`.
-- Current phase/task: Phase 4, T4 complete; final hygiene/checkpoint pending.
+- Branch: `backend`; last commit `90fb767 WIP Phase 4 task 4: budgets and cache`.
+- Current phase/task: Phase 4, T4 complete; T5 anomaly detection is next.
 
 ## DONE
 - Phase 3 completed and backed up at `0dbbdc8`; invoice send remains simulated.
 - Phase 4 T0–T2 checkpoint commits: `e6cd524`, `574253a`, `f68996e`.
 - Phase 4 T3 checkpoint: `eef73a9 WIP Phase 4 task 3: LLM guardrails`.
+- Phase 4 T4 checkpoint: `90fb767 WIP Phase 4 task 4: budgets and cache`.
 - T1 deterministic route classifier and 61-question table test: `server/src/ai/router.js`, `server/test/ai-router.test.js`.
 - T2 org-scoped read-only evidence tools, data minimization and bounded calls: `server/src/ai/evidence.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/ai-evidence.test.js` and related service/route tests.
 
 ## IN PROGRESS
-- T4: implemented org/user daily reservation budgets, token/latency usage tracking, safe-answer cache keyed by organization/question/route/data-version, and no-provider-call guards. Code: `server/src/repos/aiMemory.js`, `server/src/repos/memory.js`, `server/src/repos/postgres.js`, `server/src/services/ai.js`, `server/src/services/llm.js`, `server/src/config.js`, `.env.example`; tests `server/test/ai-control.test.js`, `server/test/postgres-repos.test.js`, and `server/test/llm.test.js`. `npm test` passes 89/89; final migration/syntax/hygiene checks and local checkpoint remain.
+- T4 complete: org/user daily reservation budgets, token/latency usage tracking, safe-answer cache keyed by org/question/route/data-version, and no-provider-call guards. `npm test` 89/89; migrations, syntax and hygiene pass. Checkpoint `90fb767`.
+- T5 not started: inspect event/order/capture/invoice repositories and worker lifecycle, then implement rules, persistence, notifications and schedule in server files only.
 
 ## NEXT STEPS
-1. Finish T4 migration/syntax/hygiene and secret/frontend checks; commit if clean.
-2. T5 anomalies and notifications; T6 approval-only AI proposals; test/docs/checkpoint each.
+1. T5 implement rule-based anomalies, idempotent persistence, notifications and scheduled/on-demand runs; tests/docs/checkpoint.
+2. T6 create AI proposals only as pending Approvals; tests/docs/checkpoint.
 3. T7 add next migration `0005_ai.sql`, run migration parser/security checks, document exact SQL Editor steps and wait for user `applied` before live DB checks.
 4. T8 API/docs and `scripts/verify-phase4.js`; live checks only after migration is applied.
 5. Run Phase 4 gate; commit only with no FAIL; never push; ask before Phase 5.
@@ -46,6 +48,7 @@
 | T3 migrations/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; all migrations parsed; `find server scripts ... node --check`; `git diff --check`; no frontend paths changed; `.env` ignored |
 | T4 focused tests | PASS | 2026-10-24 | `node --test server/test/ai-control.test.js server/test/postgres-repos.test.js server/test/llm.test.js`; 18 passed |
 | T4 full test suite | PASS | 2026-10-24 | `npm test`; 89 passed, 0 failed |
+| T4 migrations/syntax/hygiene | PASS | 2026-10-24 | `npm run check:migrations`; `node --check` all JS; `git diff --check`; no frontend paths changed; `.env` ignored |
 | Phase 3 live gate | PASS with limitation | 2026-10-24 | Signed webhook/replay, capture/refund and reports passed; real invoice-paid linkage UNVERIFIED because sending is simulated |
 
 ## KNOWN ISSUES AND RISKS
