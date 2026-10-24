@@ -250,3 +250,10 @@
 - Choice: Build evidence on the server using only allow-listed read-only repository methods. Take `orgId` only from authenticated membership context; ignore legacy request `context`. Cap calls at three, reject repeats/unknown names, time out each call, and bound result rows/bytes. Exclude names, emails, and free-text invoice descriptions; use a per-org one-way customer reference only for grouping.
 - Reason: Free-tier inputs may be used by Google, and DB/user text is untrusted. Minimal curated evidence prevents raw client context, cross-tenant selection, and PII/injection text from reaching the provider.
 - Source: Phase 4 requirements and `server/src/ai/evidence.js` tests, 2026-10-24. Rejected alternative: accept model/request org IDs, send invoice/customer fields, or pass client-supplied context to the LLM.
+
+## Phase 4 Gemini model and bounded provider behavior — 2026-10-24
+
+- Question: Which free Gemini models should NovaPay use, and how should transient provider failures be bounded?
+- Choice: Keep `gemini-3.5-flash-lite` as primary and `gemini-3.1-flash-lite` as the free fallback for now; retry only throttling/network/timeout once with short bounded backoff, then try the fallback at most once. Enforce request timeout and strict output schema/grounding.
+- Reason: Current Google pricing lists both models as free of charge on the Free Tier; model docs list them as available. Google currently lists a May 7, 2027 shutdown for 3.1 Flash-Lite, so revisit the fallback before then. Free-tier prompts may be used to improve products; send minimized evidence only.
+- Source: Google [Gemini models](https://ai.google.dev/gemini-api/docs/models), [pricing](https://ai.google.dev/gemini-api/docs/pricing), [deprecations](https://ai.google.dev/gemini-api/docs/deprecations), checked 2026-10-24. Rejected alternative: use a paid model or retry indefinitely.
