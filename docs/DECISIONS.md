@@ -178,3 +178,24 @@
 - Choice: Accept a valid `id` or derive the ID from a self `href`; require HTTPS, the configured PayPal API origin, the exact `/v2/invoicing/invoices/{id}` path, and the documented `INV2-…` ID format. Log create-success, ID-extracted, send-called and failure-stage markers without invoice IDs or provider payloads.
 - Reason: Current PayPal quickstart says HTTP 201 returns an `href` containing the invoice ID, while the API reference/object also documents a top-level `id`. Handling both forms preserves compatibility and prevents arbitrary URLs from influencing outbound request paths.
 - Source: PayPal [Invoicing API quickstart](https://developer.paypal.com/api/invoicing), [Invoices v2 reference](https://developer.paypal.com/api/invoicing/v2/), and [Invoice object](https://developer.paypal.com/invoicing/object/), checked 2026-10-24. Rejected alternative: assume only `response.id` or trust any `href` host/path.
+
+## Invoice send simulated after single live response failure — 2026-10-24
+
+- Question: What should approval do after the one permitted live run created a draft but failed to extract its ID before calling `/send`?
+- Choice: Default `PAYPAL_INVOICE_SEND_MODE` to `simulated`; preserve RBAC/approval and local invoice tracking, return explicit `sendMode: SIMULATED`/`simulated: true`, and make no further PayPal create/send calls unless a later operator deliberately selects live mode.
+- Reason: Safe stage records prove create succeeded, ID extraction failed, and send was never called. The user's one-invoice ceiling prohibits another live retry; continuing must not imply delivery to a buyer. The API/docs must label simulated delivery.
+- Source: Single authorized live retry on 2026-10-24, user's explicit fallback instruction, and PayPal [Invoicing API quickstart](https://developer.paypal.com/api/invoicing), checked 2026-10-24. Rejected alternative: silently call the local state `sent` as a real PayPal send or create another Sandbox invoice.
+
+## Simulated invoice state response contract — 2026-10-24
+
+- Question: How should the UI distinguish an approved local invoice record from a real provider delivery?
+- Choice: Add `PAYPAL_INVOICE_SEND_MODE` (`simulated` by default; `live` only by explicit operator configuration). In simulated mode, keep the approval gate, record local tracking state, return `sendMode: "SIMULATED"` and `simulated: true`, and do not call PayPal.
+- Reason: The one allowed live attempt returned PayPal create HTTP 201, then safe server stage logs showed ID extraction failed before `/send`; no real delivery occurred. The UI must not mistake local status tracking for an email/payment request.
+- Source: User's fallback instruction and live stage markers, 2026-10-24. Rejected alternative: silently report provider delivery or keep retrying PayPal calls.
+
+## Observed invoice create href not extracted — 2026-10-24
+
+- Question: What did the one permitted live attempt prove about the current provider response handling?
+- Choice: Keep the local href parser broad but origin/path/ID validated, run only local realistic-response tests, and leave live-mode revalidation unverified while defaulting delivery to SIMULATED.
+- Reason: Server-side markers showed create success then extraction failure, before any send call. The actual response body was not retained; guessing at its link relation or ID shape and making another PayPal draft would violate the one-create limit.
+- Source: Live `api_activity` stage messages and PayPal current v2 quickstart/object docs, checked 2026-10-24. Rejected alternative: log the full provider response or make another external invoice.

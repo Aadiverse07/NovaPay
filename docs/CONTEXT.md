@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-24, Asia/Kolkata.
 - Branch: `backend`; last commit before checkpoint: `00fa9be WIP-BROKEN: Phase 3 live verification handoff`.
-- Phase/task: Phase 3 live verification, Task 5 — extract PayPal invoice IDs from the documented create response; one controlled live attempt is authorized.
+- Phase/task: Phase 3 live verification, Task 5 — simulated send fallback and remaining checks after the single live attempt.
 
 ## DONE
 - Phase 2 and Phase 3 implementation are committed through `e6e1953`; Phase 3 live verification remains incomplete.
@@ -15,7 +15,7 @@
 ## IN PROGRESS
 - User identified likely cause: v2 create returns an invoice link href, while code required response.id. Official docs checked 2026-10-24 confirm 201 href with invoice ID and also document an `id` field. Fix and focused tests are in progress.
 - `docs/TEST-REPORT.md` records latest live result. No browser payment, approval URL, signed paid webhook, or final Phase 3 gate pass exists.
-- Current WIP changes: `server/src/services/invoices.js`, `server/test/phase3-services.test.js`, plus continuity docs. The one-live-attempt ceiling is enforced.
+- Current WIP changes: response-link parser broadened, simulated mode in config/approval route/service, verifier expectations, tests, API contract and continuity docs. Final local gate passed; checkpoint pending.
 
 ## NEXT STEPS
 1. Do not create another live PayPal invoice until the create/persist/send boundary is diagnosed; inspect app/server safe errors and verify whether database RPC `set_invoice_paypal_draft` succeeded for the test run.
@@ -39,12 +39,12 @@
 |---|---|---|---|
 | Branch/worktree | PASS | 2026-10-24 | branch `backend`; local changes only in six backend/docs files |
 | Install | PASS | 2026-10-24 | `npm ci`; 89 packages, 0 vulnerabilities |
-| Unit suite | PASS | 2026-10-24 | `npm test`; 59 passed, 0 failed |
+| Unit suite | PASS | 2026-10-24 | final `npm test`; 60 passed, 0 failed |
 | Migration parser | PASS | 2026-10-24 | `npm run check:migrations`; 0001–0004 parse |
 | Live status/schema | PASS | 2026-10-24 | `/api/status` 200; nine Phase 3 objects HTTP 200 |
-| Live security/roles/routes/FX | PASS | 2026-10-24 | latest verifier: 8/8 JWT RPC denials, 11/11 service assertions, isolation, writes, roles, FX, reports |
-| Invoice send/paid webhook | UNVERIFIED pending single retry | 2026-10-24 | ID/href fix passes local tests; one live attempt not yet run |
-| Real report totals | UNVERIFIED | 2026-10-24 | live org inventory had zero completed capture/refund rows |
+| Live security/roles/routes/FX | PASS | 2026-10-24 | latest verifier: 8/8 JWT RPC denials, 11/11 service assertions, isolation, writes, roles, FX, reports; simulated invoice approval passed |
+| Invoice send/paid webhook | UNVERIFIED; simulated fallback | 2026-10-24 | live marker confirmed ID extraction failure; simulated live flow passed; real paid webhook unverified |
+| Real report totals | UNVERIFIED | 2026-10-24 | count-only live probe: captures, transactions, journal entries all 0 |
 | Cleanup | PASS, scoped | 2026-10-24 | run-created local invoices/events/FX removed; fixed fixtures and audit rows retained |
 | Frontend/secrets hygiene | PASS | 2026-10-24 | frontend diff empty; `.env` ignored/untracked; no secrets in changed files |
 
@@ -66,7 +66,7 @@
 - Never print `.env` values, complete provider responses, auth headers, or stack traces.
 
 ## DO NOT
-- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or create more than one Sandbox invoice in this retry.
+- Do not push, touch frontend files, use force, weaken tests, edit applied migrations, commit `.env`, or make any more PayPal invoice create/send calls in this phase.
 
 ## RESUME COMMANDS
 - `git status --short`

@@ -42,6 +42,7 @@ test('PayPal invoice create response extracts and validates the invoice id from 
   const id='INV2-W44B-KRGF-JM6R-26VU';
   const createResponse={links:[{href:`https://api-m.sandbox.paypal.com/v2/invoicing/invoices/${id}`,rel:'self',method:'GET'}]};
   assert.equal(extractPayPalInvoiceId(createResponse),id);
+  assert.equal(extractPayPalInvoiceId({links:[{href:`/v2/invoicing/invoices/INV2-ABCD-EFGH?fields=id`,rel:'create'}]}),'INV2-ABCD-EFGH');
   assert.equal(extractPayPalInvoiceId({id}),id);
   assert.equal(extractPayPalInvoiceId({links:[{href:`https://evil.example/v2/invoicing/invoices/${id}`,rel:'self'}]}),null);
   assert.equal(extractPayPalInvoiceId({links:[{href:`https://api-m.sandbox.paypal.com/v2/invoicing/invoices/not-an-invoice-id`,rel:'self'}]}),null);
@@ -78,6 +79,19 @@ test('invalid PayPal invoice create response keeps the client error structured',
   assert.deepEqual(result.body,{error:{code:'INVOICE_SEND_FAILED',message:'PayPal could not send the invoice. Check the Sandbox invoice before retrying.'}});
   assert.ok(logs.includes('invoice_send:invoice_id_extraction_failed'));
   assert.ok(logs.includes('invoice_send:failed_at_invoice_id_extract'));
+});
+
+test('simulated invoice send preserves approval and local tracking without calling PayPal',async()=>{
+  const logs=[],calls=[];
+  const approval={proposalType:'send-invoice',status:'pending',invoiceId:'invoice-row-1'};
+  const invoice={id:'invoice-row-1',state:'reviewed',paypalInvoiceId:null};
+  const repos={approvals:{async get(){return approval;},async decideInvoiceSend(){return{result:'decided',approval};}},invoices:{async get(){return invoice;},async completeSend(...args){calls.push(args);return{};}},events:{async addCall(call){logs.push(call.m);}}};
+  const result=await decideInvoiceSend({repos,paypal:{async pp(){throw new Error('PayPal must not be called in simulated mode');}},req:{orgId:'org-1',user:{id:'approver-1'},id:'request-1'},approvalId:'approval-1',decision:'approve',simulate:true});
+  await new Promise((resolve)=>setImmediate(resolve));
+  assert.equal(result.status,200);
+  assert.equal(result.body.sendMode,'SIMULATED');assert.equal(result.body.simulated,true);assert.equal(result.body.paypalInvoiceId,null);
+  assert.equal(calls.length,1);assert.equal(calls[0][2],null);assert.deepEqual(calls[0][3],{status:'SIMULATED',simulated:true});
+  assert.ok(logs.includes('invoice_send:simulated_send'));
 });
 
 test('report totals computed from ledger views balance and match the underlying ledger fixture',()=>{
