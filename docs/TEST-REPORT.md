@@ -601,3 +601,16 @@ Date: 2026-10-24
 - Runtime dependency audit: `npm audit --omit=dev` PASS, 0 vulnerabilities.
 - Hygiene: `git diff --check` PASS; `git diff --name-only -- preview.html dashboard.html src assets tailwind.novapay.preset.*` empty; `git check-ignore .env` returned `.env`. No frontend changes and `.env` is ignored.
 - Server restored after the HTTP budget proof: current `npm start` on port 3000 with explicit normal limits 5 user / 20 org; `curl .../` returned HTTP 200. Tunnel and port 34872 untouched. No PayPal endpoint was called during restart.
+# NovaPay Frontend Wiring — Task 1 Auth — 2026-10-25
+- Command: `node --check src/auth.js && node --check src/landing.js && node --check src/dashboard.js && git diff --check`
+- Result: PASS. All three browser JavaScript files parsed and the diff had no whitespace errors.
+- Scope note: This static check does not prove the Supabase CDN loads, real login/signup/reset works, `/api/onboarding` succeeds in the configured project, or dashboard gating works in a browser; those remain UNVERIFIED for task 7's real-login walkthrough.
+
+# NovaPay Frontend Wiring — Task 1 backend regression — 2026-10-25
+- Command: `npm test`
+- Result: PASS. PostgreSQL 17 parsed migrations 0001–0005; 104 tests passed, 0 failed.
+- Scope note: Existing backend unit/integration tests do not execute browser Auth wiring; real Supabase login and onboarding remain UNVERIFIED pending the task 7 browser walkthrough.
+
+# NovaPay Frontend Wiring — Task 1 scope hygiene — 2026-10-25
+- Command: branch/status check, protected-path `git diff --name-only`, and `git check-ignore -q .env`.
+- Result: PASS. Branch was `frontend-wiring`; 0 protected files changed; `.env` is ignored. Worktree contained only the listed task 1 HTML/JS and continuity-file changes.

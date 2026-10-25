@@ -355,3 +355,33 @@
 - Choice: Mark only fixture-dependent inspection UNVERIFIED; do not recreate users or orgs in safe mode.
 - Reason: Safe mode must stay read-only, and provisioning would alter live auth and tenant state.
 - Source: `node scripts/verify-phase2.js --safe` returned all 9 financial relations available but no named Phase 2 fixture orgs, 2026-10-25. Rejected alternative: silently onboard the missing organizations.
+
+## Session branch gate conflict — 2026-10-25
+- Question: Should implementation continue when the checked-out branch is `frontend-wiring` but the attached master role prompt requires `backend`?
+- Choice: Stop implementation and live/test work; record the conflict and request human resolution before resuming.
+- Reason: The master prompt explicitly says to stop when `git branch --show-current` is not `backend`; this session's initial instruction explicitly required `frontend-wiring`, and the check returned that branch.
+- Source: User's session instruction and attached `/Users/aditya/.codex/attachments/28efa723-d6f0-40c2-b4dd-9fa6bcf429b6/Pasted text.txt`, checked 2026-10-25. Rejected alternative: silently switching branches or continuing backend work on `frontend-wiring`.
+
+## Frontend wiring session scope — 2026-10-25
+- Question: Which branch and file scope apply to the requested frontend wiring work?
+- Choice: Follow the user's session override: work/commit locally on `frontend-wiring`; frontend edits are allowed for wiring tasks, while protected design files named by the wiring prompt remain off limits.
+- Reason: The user explicitly made this a session-only override to the master prompt.
+- Source: User message in this session, checked 2026-10-25. Rejected alternative: enforce the master prompt's `backend`-only and no-frontend-edits rules.
+
+## Frontend wiring task 1 prompt missing — 2026-10-25
+- Question: Should task 1 implementation be inferred when the task-specific prompt and protected design file list are not available?
+- Choice: Do not implement until the user provides the wiring prompt or task 1 text.
+- Reason: Acceptance criteria and protected files define the permitted change; guessing could alter the team's design or miss the requested integration.
+- Source: Repository search and available pasted-text attachments checked 2026-10-25; only the master role prompt was available. Rejected alternative: infer task 1 from existing UI or backend contracts.
+
+## Frontend Auth implementation scope and Supabase SDK — 2026-10-25
+- Question: How should task 1 be wired without touching protected design files or reworking the team's UI?
+- Choice: Keep the existing auth modal and CSS, connect its existing handlers via a small `src/auth.js` module, discover the public Supabase URL/anon key from `/api/public-config`, and pin the browser CDN to `@supabase/supabase-js@2.112.3`. Use Supabase Auth for real sessions; enable the existing labeled demo flow only when the API/config/SDK cannot be used. Call `/api/onboarding` with a bearer token after sign-up when a session is available; repeat onboarding after sign-in to recover the org ID for an existing owner account.
+- Reason: This keeps changes to existing handlers and wiring files, meets the task's security/session requirements, and supports Supabase projects that require email confirmation before creating a session.
+- Source: [Supabase JavaScript installation](https://supabase.com/docs/reference/javascript/installing), [Auth sign-up](https://supabase.com/docs/reference/javascript/auth-signup), [Auth sign-out](https://supabase.com/docs/reference/javascript/auth-signout), and `docs/FRONTEND-CONTRACT.md`, checked 2026-10-25; npm registry confirmed `@supabase/supabase-js@2.112.3`. Rejected alternative: unpinned `@2` CDN URL, embedding credentials, or relying on localStorage demo accounts when the backend is available.
+
+## Auth integration test boundary — 2026-10-25
+- Question: Should task 1 claim real Supabase login/onboarding verification without running the fixed named test account?
+- Choice: Mark browser login, signup, password reset, session guard, and live onboarding UNVERIFIED until task 7's real-login walkthrough; complete task 1's local code and backend regression checkpoint now.
+- Reason: The user assigns the real-login browser walkthrough to task 7; task 1 has no supplied test-account credentials, and real Auth must not be simulated as PASS.
+- Source: Frontend wiring prompt task 7 and task 1 checks run 2026-10-25. Rejected alternative: treat existing backend auth tests or static JavaScript parsing as proof of a real browser session.

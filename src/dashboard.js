@@ -1,19 +1,28 @@
 (function(){
   "use strict";
   var $=function(id){return document.getElementById(id);};
+  var auth=window.NovaPayAuth;
+  if(!auth){location.replace("preview.html#login");return;}
+  auth.ready.then(function(){return initialize(auth);}).catch(function(){location.replace("preview.html#login");});
+
+  async function initialize(auth){
   var toast=$("dashboard-toast"), toastTimer;
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},3000);}
-  function getUser(){
-    try{
-      var raw=localStorage.getItem("novapay-demo-user");
-      if(raw)return JSON.parse(raw);
-    }catch(e){}
-    return {name:"NovaPay User",email:"user@novapay.app"};
-  }
-  var user=getUser();
-  try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login");return;}}catch(e){location.replace("preview.html#login");return;}
+  var user;
+  if(auth.mode==="supabase"){
+    var session=await auth.currentSession();
+    if(!session){location.replace("preview.html#login");return;}
+    var metadata=session.user.user_metadata||{};
+    user={name:metadata.full_name||metadata.name||(session.user.email||"").split("@")[0]||"NovaPay User",email:session.user.email||""};
+    if(!auth.currentOrgId(session.user.id)){
+      try{await auth.ensureWorkspace(session,user.name);}catch(error){showToast(error.message||"Workspace setup needs attention.");}
+    }
+  }else if(auth.mode==="demo"&&auth.isAuthenticated()){
+    try{user=JSON.parse(localStorage.getItem("novapay-demo-user")||"{}");}catch(e){user={};}
+    user.name=user.name||"NovaPay Demo User";user.email=user.email||"";
+  }else{location.replace("preview.html#login");return;}
   $("user-name").textContent=user.name||"NovaPay User";
-  $("user-email").textContent=user.email||"user@novapay.app";
+  $("user-email").textContent=user.email||"Demo account";
   $("user-avatar").textContent=(user.name||"F").trim().charAt(0).toUpperCase();
 
   var THEME_KEY="novapay-theme", root=document.documentElement;
@@ -39,8 +48,8 @@
   window.addEventListener("hashchange",route); window.addEventListener("popstate",route); route();
 
   $("logout").addEventListener("click",function(){
-    try{localStorage.removeItem("novapay-demo-auth")}catch(e){}
-    window.location.href="preview.html#home";
+    $("logout").disabled=true;
+    auth.signOut().then(function(){window.location.href="preview.html#home";},function(error){$("logout").disabled=false;showToast(error.message||"Sign-out failed. Please try again.");});
   });
 
   document.querySelectorAll(".table-action,.report-card .table-action").forEach(function(b){
@@ -135,13 +144,14 @@
   }
 
   // Phase 5 — dashboard controls and dynamic illustrative cash-flow data.
-  var displayName=(user.name||"").trim();if(!displayName||/^novapay (demo )?user$/i.test(displayName))displayName="there";displayName=displayName.replace(/\s*\bdemo\b\s*/i," ").trim()||"there";
+  var displayName=(user.name||"").trim();if(!displayName||/^novapay (demo )?user$/i.test(displayName))displayName="there";if(auth.mode==="demo")displayName=displayName.replace(/\s*\bdemo\b\s*/i," ").trim()||"there";
   $("greeting-name").textContent=displayName.split(/\s+/)[0];
   var greetingHour=new Date().getHours(),greetingPrefix=greetingHour<12?"Good morning":greetingHour<18?"Good afternoon":"Good evening";
   var greeting=$("dashboard-subtitle");if(greeting&&greeting.firstChild)greeting.firstChild.textContent=greetingPrefix+", ";
   $("user-name").textContent=displayName;
-  $("user-email").textContent="Business Owner";
+  $("user-email").textContent=user.email||"Demo account";
   $("profile-name").textContent=displayName;
+  var profileEmail=$("profile-popover").querySelector(".profile-popover-head small");if(profileEmail)profileEmail.textContent=user.email||"Demo account";
   $("user-avatar").textContent=displayName.charAt(0).toUpperCase();
 
   var notifications=$("notifications"), notificationPopover=$("notification-popover"), profileButton=$("profile-button"), profilePopover=$("profile-popover");
@@ -414,4 +424,5 @@
   document.querySelectorAll(".report-card button").forEach(function(b){
     b.addEventListener("click",function(){activate("reports",true);showToast("Report opened with sample data.");});
   });
+  }
 })();
