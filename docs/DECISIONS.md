@@ -397,3 +397,10 @@
 - Choice: Render only returned transaction fields and label absent buyer/provider fields as unavailable; use the stable `sourceId`/capture/refund reference for the visible row ID. Use the server's `pendingCount` from the organization-scoped approvals response and refresh it with the queue.
 - Reason: This avoids presenting illustrative or inferred values as real financial data while keeping the badge tied to the selected organization's server state.
 - Source: `docs/FRONTEND-CONTRACT.md` transaction and approvals response examples, checked 2026-10-25. Rejected alternative: retain sample INR rows in an authenticated workspace, infer counterparties, or calculate the badge from a potentially stale local queue.
+
+## 2026-10-25 — Frontend wiring task 4
+- Question: How should existing dashboard widgets consume reports and FX without redesigning?
+- Choice: Preserve existing widget/chart rendering, fetch organization-scoped report and FX endpoints through the shared authenticated API client, and show unavailable states when report data is absent. The cash-flow visualization derives positive and negative movement series from signed report rows.
+- Reason: Matches the API contract while avoiding invented live values; the FX result displays server source, timestamp, and indicative label.
+- Source: `docs/FRONTEND-CONTRACT.md` (repository contract, checked 2026-10-25).
+- Rejected alternatives: Client-computed/sample financial figures in authenticated mode; changing protected styles or layout.

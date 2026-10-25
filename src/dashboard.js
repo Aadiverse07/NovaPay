@@ -226,8 +226,26 @@
   }
   var dateSelect=$("dashboard-date");
   if(dateSelect){var now=new Date(),yesterday=new Date(now);yesterday.setDate(now.getDate()-1);var week=new Date(now);week.setDate(now.getDate()-6);var dateFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short",year:"numeric"}),rangeFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short"});dateSelect.options[0].textContent=dateFormat.format(now);dateSelect.options[1].textContent=dateFormat.format(yesterday);dateSelect.options[2].textContent=rangeFormat.format(week)+" – "+dateFormat.format(now);}
-  if(dateSelect){dateSelect.addEventListener("change",function(){renderKpis(dateSelect.value, true);showToast("Dashboard date set to "+dateSelect.options[dateSelect.selectedIndex].text+". Sample data remains illustrative.");});}
+  if(dateSelect){dateSelect.addEventListener("change",function(){loadDashboardReports(dateSelect.value,true);});}
   renderKpis("today", false);
+  function isoDate(date){return date.toISOString().slice(0,10);}
+  function reportRange(key){var end=new Date(),start=new Date(end);if(key==="yesterday"){start.setDate(end.getDate()-1);end.setDate(end.getDate()-1)}else if(key==="week")start.setDate(end.getDate()-6);return{from:isoDate(start),to:isoDate(end)}}
+  function minorMoney(value){var n=Number(value);return Number.isFinite(n)?n/100:null}
+  async function loadDashboardReports(key,animate){
+    if(auth.mode!=="supabase"||!window.NovaPayApi)return;
+    var dates=reportRange(key),query="?from="+dates.from+"&to="+dates.to+"&currency=INR";
+    try{
+      var result=await window.NovaPayApi.request("/api/reports/profit-and-loss"+query);
+      var fees=await window.NovaPayApi.request("/api/reports/fees"+query);
+      var totals=result.totals||{},feeRows=Array.isArray(fees.rows)?fees.rows:[],feeMinor=feeRows.reduce(function(sum,row){return sum+Number(row.fee_minor||0)},0);
+      var values={revenue:minorMoney(totals.revenueMinor),fees:feeMinor/100,refunds:minorMoney(totals.refundsMinor),net:minorMoney(totals.netIncomeMinor)};
+      Object.keys(values).forEach(function(name){var value=values[name],el=$("kpi-"+name),trend=$("kpi-"+name+"-trend");if(value!==null){el.textContent=inr(value);trend.textContent="Reported · "+dates.from+" to "+dates.to}else{el.textContent="Unavailable";trend.textContent="Not returned by report"}});
+      $("kpi-disputes").textContent="Unavailable";$("kpi-disputes-trend").textContent="Not provided by reports API";
+      var status=$("dashboard-report-source");if(status)status.textContent="Source: organization reports · "+result.from+" to "+result.to;
+      if(animate)showToast("Dashboard updated from organization reports.");
+    }catch(error){["revenue","fees","refunds","disputes","net"].forEach(function(k){$("kpi-"+k).textContent="Unavailable";$("kpi-"+k+"-trend").textContent="Report unavailable"});}
+  }
+  if(auth.mode==="supabase")loadDashboardReports("today",false);
   applyChartTheme();
 
   /* Cash flow: deterministic demo series per range; totals always equal the sum of the plotted points */
@@ -249,9 +267,9 @@
   function xAt(i,n){return PAD+i*(W-PAD*2)/(n-1);}
   function pathFor(vals,max){return vals.map(function(v,i){return (i?"L":"M")+xAt(i,vals.length).toFixed(1)+" "+(PAD+(1-v/max)*(H-PAD*2)).toFixed(1);}).join(" ");}
   function areaFor(vals,max){return pathFor(vals,max)+" L"+xAt(vals.length-1,vals.length).toFixed(1)+" "+(H-PAD)+" L"+PAD+" "+(H-PAD)+" Z";}
-  function renderCashflow(range, animate){
+  function renderCashflow(range, animate, supplied){
     var cfg=ranges[range]||ranges["30D"];cfRange=range;
-    var mi=series(cfg,cfg.in,0),mo=series(cfg,cfg.out,5),net=mi.map(function(v,i){return v-mo[i];});
+    var mi=supplied&&supplied.mi||series(cfg,cfg.in,0),mo=supplied&&supplied.mo||series(cfg,cfg.out,5),net=mi.map(function(v,i){return v-mo[i];});
     var totIn=mi.reduce(function(a,b){return a+b;},0),totOut=mo.reduce(function(a,b){return a+b;},0);
     var peak=Math.max.apply(null,mi),stepV=Math.pow(10,Math.floor(Math.log10(peak))),max=Math.ceil(peak/stepV*1.1/(stepV>=1?1:1))*stepV;
     max=Math.ceil(peak*1.08/(stepV/2))*(stepV/2);
@@ -272,7 +290,20 @@
     $("cf-tip").hidden=true;$("cf-cursor").hidden=true;$("cf-crosshair-y").hidden=true;
     document.querySelectorAll("#cashflow-tabs button").forEach(function(b){var on=b.dataset.range===range;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.setAttribute("role","tab");});
   }
-  document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){renderCashflow(b.dataset.range,true);});});
+  async function loadCashflow(range,animate){
+    if(auth.mode!=="supabase"||!window.NovaPayApi){renderCashflow(range,animate);return}
+    var end=new Date(),start=new Date(end),days=range==="7D"?7:range==="30D"?30:range==="3M"?90:365;start.setDate(start.getDate()-days+1);
+    try{
+      var data=await window.NovaPayApi.request("/api/reports/cash-movement?from="+isoDate(start)+"&to="+isoDate(end)+"&currency=INR");
+      var rows=Array.isArray(data.rows)?data.rows:[],periods={},keys=[];
+      rows.forEach(function(row){var key=String(row.period||"");if(!key)return;if(!periods[key]){periods[key]=0;keys.push(key)}periods[key]+=Number(row.cash_movement_minor||0)});
+      keys.sort();var signed=keys.map(function(k){return periods[k]/100}),positive=signed.map(function(v){return Math.max(0,v)}),negative=signed.map(function(v){return Math.max(0,-v)});
+      if(!keys.length){$("cash-in").textContent="₹0";$("cash-out").textContent="₹0";$("cash-net").textContent="₹0";$("cf-sub").textContent="No posted cash movement for this period · INR";return}
+      var dynamic=Object.assign({},ranges[range]||ranges["30D"],{n:keys.length,labels:function(i){var d=new Date(keys[i]+"T00:00:00");return d.toLocaleDateString(undefined,{day:"numeric",month:"short"})},ticks:keys.length>5?[0,Math.floor((keys.length-1)/4),Math.floor((keys.length-1)/2),Math.floor(3*(keys.length-1)/4),keys.length-1]:keys.map(function(_,i){return i}),sub:(ranges[range]||ranges["30D"]).sub});
+      ranges[range]=dynamic;renderCashflow(range,animate,{mi:positive,mo:negative});$("cf-sub").textContent=dynamic.sub+" · organization cash-movement report · INR";
+    }catch(error){$("cf-sub").textContent="Cash movement report unavailable."}
+  }
+  document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){loadCashflow(b.dataset.range,true);});});
 
   var plot=$("cf-plot"),tip=$("cf-tip"),cursor=$("cf-cursor"),crosshairY=$("cf-crosshair-y");
   function hover(e){
@@ -287,8 +318,9 @@
   plot.addEventListener("mousemove",hover);plot.addEventListener("touchstart",function(e){hover(e.touches[0]);},{passive:true});plot.addEventListener("touchmove",function(e){hover(e.touches[0]);},{passive:true});
   plot.addEventListener("mouseleave",function(){tip.hidden=true;cursor.hidden=true;crosshairY.hidden=true;});
   renderCashflow("30D",false);
+  if(auth.mode==="supabase")loadCashflow("30D",false);
   applyChartTheme();
-  if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); renderKpis(dateSelect?dateSelect.value:"today",false); renderCashflow(cfRange,false); });
+  if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); renderKpis(dateSelect?dateSelect.value:"today",false); loadCashflow(cfRange,false); });
 
   function animateHealth(){
     var ring=document.querySelector(".health-ring"),seg=document.querySelector(".health-segment-main"),value=document.querySelector("[data-health-value]");
@@ -416,6 +448,13 @@
       else if(first && last && !e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
     }
   });
+  /* FX conversion is always supplied by the authenticated API in live mode. */
+  var fxTimer=null;
+  function fxTimestamp(value){var d=new Date(value);return Number.isNaN(d.getTime())?"Timestamp unavailable":d.toLocaleString()+" ("+d.toISOString()+")"}
+  async function convertFx(){var amount=$("fx-amount"),from=$("fx-from"),to=$("fx-to"),value=$("fx-result-value"),note=$("fx-rate-note"),meta=document.querySelector(".fx-result small");if(!amount||!from||!to)return;if(auth.mode!=="supabase"){if(meta)meta.textContent="Demo mode · illustrative rate · not a settlement quote";return}var n=Number(amount.value);if(!Number.isFinite(n)||n<=0||Math.round(n*100)!==n*100){value.textContent="Enter a positive amount";note.textContent="Up to two decimal places";if(meta)meta.textContent="";return}value.textContent="Converting…";try{var r=await window.NovaPayApi.request("/api/fx/convert?amount="+encodeURIComponent(n.toFixed(2))+"&base="+encodeURIComponent(from.value)+"&quote="+encodeURIComponent(to.value));value.textContent=r.quoteCurrency+" "+Number(r.convertedAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});note.textContent="1 "+r.baseCurrency+" = "+r.rate+" "+r.quoteCurrency+" · source: "+r.source;if(meta)meta.textContent="Indicative · "+r.label+" · "+fxTimestamp(r.timestamp)}catch(error){value.textContent="Conversion unavailable";note.textContent=error.message;if(meta)meta.textContent="No cached or provider rate was returned."}}
+  ["fx-amount","fx-from","fx-to"].forEach(function(id){var el=$(id);if(el)el.addEventListener(el.tagName==="INPUT"?"input":"change",function(){clearTimeout(fxTimer);fxTimer=setTimeout(convertFx,250)})});
+  if(auth.mode==="supabase")convertFx();
+
   /* Demo feedback for otherwise non-destructive controls. */
   document.addEventListener("click",function(e){
     var b=e.target.closest("button[data-demo-feedback]");

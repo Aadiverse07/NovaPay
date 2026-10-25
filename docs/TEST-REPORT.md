@@ -632,3 +632,9 @@ Date: 2026-10-24
 - Command: `npm test`
 - Result: PASS. Migrations 0001–0005 parsed; 104 tests passed, 0 failed.
 - Scope note: Browser rendering against a real tenant and real PayPal Sandbox state remains UNVERIFIED for task 7; no payment or live provider request was made for this checkpoint.
+
+## Frontend wiring task 4 — 2026-10-25
+- `find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check` — PASS; JavaScript syntax and whitespace checks clean.
+- `npm test` — PASS; migrations 0001–0005 parsed and 104 tests passed, 0 failed.
+- Authenticated dashboard/browser report and FX requests — UNVERIFIED; no real browser session exercised.
+- Protected-file diff — pending checkpoint scope check.
