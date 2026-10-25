@@ -86,8 +86,8 @@ export function createPostgresRepositories(database) {
     },
     async addFromWebhook(capture) {
       const providerCapture = { id: capture.id, gross: capture.value, fee: capture.fee, net: capture.net, currency: capture.currency, amount: { value: capture.value, currency_code: capture.currency } };
-      const result = await database.rpc('record_paypal_capture_event', { p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: journalLinesPayload(captureJournalLines(providerCapture)) });
-      return { orgId: result?.orgId, capture: mapCapture(result?.result?.capture) };
+      const result = await database.rpc('record_fund_paypal_capture_event', { p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: journalLinesPayload(captureJournalLines(providerCapture)) });
+      return { orgId: result?.orgId, mismatch: Boolean(result?.mismatch), capture: mapCapture(result?.result?.capture) };
     },
     async refund(approvalId, orgId) {
       const rows = await database.select('approvals', q({ select: 'result', org_id: `eq.${orgId}`, id: `eq.${approvalId}`, limit: '1' }));
@@ -285,8 +285,30 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const funds = {
+    async listCampaigns(orgId) {
+      return database.select('fund_campaigns', q({ select: 'id,org_id,title,purpose,target_minor,currency,deadline,organiser,status,created_at', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: '100' }));
+    },
+    async createCampaign({ orgId, actorId, title, purpose, targetMinor, deadline, organiser, status, requestId }) {
+      return database.rpc('create_fund_campaign', { p_org: orgId, p_actor: actorId, p_title: title, p_purpose: purpose, p_target_minor: targetMinor, p_deadline: deadline || null, p_organiser: organiser, p_status: status, p_request_id: requestId });
+    },
+    async createPledge({ orgId, actorId, campaignId, amountMinor, requestId }) {
+      return database.rpc('create_fund_pledge', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId, p_amount_minor: amountMinor, p_request_id: requestId });
+    },
+    async getContribution(orgId, contributionId) {
+      const rows = await database.select('fund_contributions', q({ select: '*', org_id: `eq.${orgId}`, id: `eq.${contributionId}`, limit: '1' }));
+      return rows?.[0] || null;
+    },
+    async linkContributionOrder({ orgId, actorId, contributionId, requestKey, orderId, approveUrl, requestId }) {
+      return database.rpc('link_fund_contribution_order', { p_org: orgId, p_actor: actorId, p_contribution_id: contributionId, p_request_key: requestKey, p_paypal_order_id: orderId, p_approve_url: approveUrl, p_request_id: requestId });
+    },
+    async campaignSummary(orgId, campaignId) {
+      return database.rpc('get_fund_campaign_summary', { p_org: orgId, p_campaign_id: campaignId });
+    },
+  };
+
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

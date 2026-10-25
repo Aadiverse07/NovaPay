@@ -34,9 +34,9 @@ export async function processPayPalEvent({ eventId, repos, paypal }) {
         providerPayload: { seller_receivable_breakdown: breakdown },
       });
       orgId = stored.orgId;
-      posted = Boolean(orgId);
+      posted = Boolean(orgId) && !stored.mismatch;
       const exchange = breakdown.exchange_rate;
-      if (exchange && repos.fxRates) {
+      if (posted && exchange && repos.fxRates) {
         const base=String(exchange.source_currency||'').toUpperCase(),quote=String(exchange.target_currency||'').toUpperCase(),rate=String(exchange.value||'');
         if(/^[A-Z]{3}$/.test(base)&&/^[A-Z]{3}$/.test(quote)&&base!==quote&&/^(?:0|[1-9]\d*)(?:\.\d{1,15})?$/.test(rate)) {
           await repos.fxRates.put({org_id:orgId,base_currency:base,quote_currency:quote,rate,fetched_at:new Date().toISOString(),source:'PayPal capture'}).catch(()=>{});

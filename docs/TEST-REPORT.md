@@ -701,3 +701,14 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ## Phase 6 T1 live migration verification — 2026-10-26
 - User confirmed migration 0006 was applied in Supabase. Starting read-only verification of schema visibility and ordinary-user JWT grants; result pending. No live writes planned.
 - Read-only live verification (fixed `novapay-phase3-owner-a` owner JWT, generated and consumed in memory; no response bodies/tokens printed): PASS. All 11 Phase 6 table reads returned HTTP 200; POST direct-write attempts to all 11 returned HTTP 403. No rows were created or changed.
+
+## Phase 6 T2 — 2026-10-26
+- Implementation test run has not started. Planned coverage: migration parser/RPC grants, pledged vs received, unverified event, five verified replays, mismatch flagging, campaign totals.
+- `npm test` — FAIL; PostgreSQL parser accepted 0001–0007; 106 passed, 3 failed. Two T2 capture tests exposed that the memory fixture had not attached the funds repo to CapturesRepo; the security test read migration 0006 only and therefore did not inspect new RPCs in 0007. Fixes in progress.
+- `node --test server/test/phase6-contributions.test.js server/test/phase6-migration.test.js` — FAIL; 3 passed, 2 failed. The standalone webhook integration fixture still leaves pledges unchanged, indicating capture processing error remains; RPC-grant static tests now pass. Inspect event state/error without dumping provider data, then fix before full rerun.
+- Targeted rerun `node --test server/test/phase6-contributions.test.js server/test/phase6-migration.test.js` — PASS; 5 passed, 0 failed after fixing async memory fixture lookup and loading 0007 for RPC checks.
+- `npm test` — PASS; migrations 0001–0007 parsed; 110 passed, 0 failed, 0 skipped.
+- `npm run check:migrations` — PASS; PostgreSQL 17 parser accepted migrations 0001–0007.
+- `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check` — PASS; all JavaScript files parse.
+- `git diff --check` — PASS; no whitespace errors. Frontend scope check (`git diff --name-only -- preview.html dashboard.html src assets`) — PASS; empty.
+- Correction: The preceding “implementation test run has not started” line is the pre-run snapshot. Subsequent T2 entries above record the completed failing and passing runs.

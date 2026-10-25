@@ -28,7 +28,29 @@ export class CapturesRepo {
   all(orgId) { return this.items.filter((capture) => capture.orgId === orgId); }
   get(id, orgId) { return this.items.find((capture) => capture.id === id && capture.orgId === orgId); }
   add(capture, orgId) { capture.orgId = orgId; if (!this.get(capture.id, orgId)) this.items.unshift(capture); return capture; }
-  addFromWebhook(capture) { const order = this.orders?.findByPayPalId(capture.orderId); if (!order) throw new Error('verified capture does not match a stored PayPal order'); return { orgId: order.orgId, capture: this.add(capture, order.orgId) }; }
+  async addFromWebhook(capture) {
+    const order = this.orders?.findByPayPalId(capture.orderId);
+    if (!order) throw new Error('verified capture does not match a stored PayPal order');
+    if (order.fundContributionId && this.funds) {
+      const contribution = await this.funds.getContribution(order.orgId, order.fundContributionId);
+      if (!contribution) throw new Error('verified capture contribution link is missing');
+      if (toMinor(capture.value) !== contribution.amountMinor || capture.currency !== 'USD') {
+        contribution.captureMismatch = true;
+        contribution.captureMismatchReason = 'Verified PayPal capture amount or currency does not match the pledge.';
+        return { orgId: order.orgId, mismatch: true };
+      }
+      const stored = this.add(capture, order.orgId);
+      if (capture.status === 'COMPLETED' && contribution.status === 'pledged') {
+        contribution.status = 'received';
+        contribution.paypalCaptureId = capture.id;
+        contribution.receivedAt = capture.occurredAt || new Date().toISOString();
+        contribution.captureMismatch = false;
+        contribution.receipt ||= { receiptNumber: `RCP-${contribution.id.replaceAll('-', '').slice(0,16).toUpperCase()}`, issuedAt: contribution.receivedAt };
+      }
+      return { orgId: order.orgId, capture: stored, mismatch: false };
+    }
+    return { orgId: order.orgId, capture: this.add(capture, order.orgId), mismatch: false };
+  }
   refund(approvalId, orgId) { return this.refunds.get(this.key(orgId, approvalId)); }
   saveRefund(approvalId, result, orgId) { this.refunds.set(this.key(orgId, approvalId), result); }
   isLocked(approvalId, orgId) { return this.locks.has(this.key(orgId, approvalId)); }
@@ -94,8 +116,43 @@ export function createRepositories() {
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
+  const campaignRows = new Map();
+  const contributionRows = new Map();
+  const funds = {
+    key(orgId, id) { return `${orgId}:${id}`; },
+    async listCampaigns(orgId) { return [...campaignRows.values()].filter((row) => row.orgId === orgId); },
+    async createCampaign(input) {
+      const row = { id: randomUUID(), org_id: input.orgId, orgId: input.orgId, title: input.title, purpose: input.purpose, target_minor: input.targetMinor, targetMinor: input.targetMinor, currency: 'USD', deadline: input.deadline || null, organiser: input.organiser, status: input.status, created_by: input.actorId };
+      campaignRows.set(this.key(input.orgId,row.id),row); return row;
+    },
+    async createPledge(input) {
+      const campaign = campaignRows.get(this.key(input.orgId,input.campaignId));
+      if (!campaign) throw Object.assign(new Error('campaign not found'),{statusCode:404});
+      if (campaign.status !== 'active') throw Object.assign(new Error('campaign is not accepting contributions'),{statusCode:409});
+      const row = { id: randomUUID(), org_id: input.orgId, orgId: input.orgId, campaign_id: input.campaignId, campaignId: input.campaignId, amount_minor: input.amountMinor, amountMinor: input.amountMinor, status: 'pledged', donor_ref: 'anonymous', donorRef: 'anonymous', created_by: input.actorId, createdBy: input.actorId, capture_mismatch: false, captureMismatch: false };
+      contributionRows.set(this.key(input.orgId,row.id),row); return row;
+    },
+    async getContribution(orgId,id) { return contributionRows.get(this.key(orgId,id)) || null; },
+    async linkContributionOrder(input) {
+      const contribution = await this.getContribution(input.orgId,input.contributionId);
+      const order = orders.byRequestKey(input.requestKey,input.orgId);
+      if (!contribution || !order || order.id !== input.orderId || toMinor(order.amount) !== contribution.amountMinor) throw new Error('PayPal order does not match contribution');
+      order.fundContributionId = contribution.id; order.approveUrl = input.approveUrl;
+      contribution.paypalOrderId = input.orderId;
+      return { contribution_id:contribution.id,paypal_order_id:input.orderId,approve_url:input.approveUrl };
+    },
+    async campaignSummary(orgId,id) {
+      const campaign=campaignRows.get(this.key(orgId,id));
+      if (!campaign) throw Object.assign(new Error('campaign not found'),{statusCode:404});
+      const contributions=[...contributionRows.values()].filter((row)=>row.orgId===orgId&&row.campaignId===id);
+      const pledgedMinor=contributions.filter((row)=>row.status==='pledged').reduce((sum,row)=>sum+row.amountMinor,0);
+      const receivedMinor=contributions.filter((row)=>row.status==='received').reduce((sum,row)=>sum+row.amountMinor,0);
+      return { campaign:{id:campaign.id,title:campaign.title,purpose:campaign.purpose,targetMinor:campaign.targetMinor,currency:'USD',deadline:campaign.deadline,organiser:campaign.organiser,status:campaign.status},pledgedMinor,receivedMinor,allocatedMinor:0,approvedExpensesMinor:0,actualSpendingMinor:0,remainingMinor:campaign.targetMinor-receivedMinor,asOf:new Date().toISOString(),legalCaution:'Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only.' };
+    },
+  };
+  captures.funds = funds;
   const notifications = new MemoryNotificationsRepo();
-  const repos = { orders, captures, approvals: new ApprovalsRepo(captures), events: new EventsRepo(), notifications };
+  const repos = { orders, captures, approvals: new ApprovalsRepo(captures), events: new EventsRepo(), notifications, funds };
   repos.anomalies = new MemoryAnomaliesRepo(notifications);
   repos.ai = {
     usage: new AIUsageRepo(),
