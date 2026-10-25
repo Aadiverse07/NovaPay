@@ -65,7 +65,7 @@
       throw unavailable;
     }
     var payload = null;
-    try { payload = await response.json(); } catch (_) {}
+    try { payload = response.ok && options.responseType === "text" ? await response.text() : await response.json(); } catch (_) {}
     if (!response.ok) {
       var error = apiError(response, payload);
       dispatchError(error);

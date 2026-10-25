@@ -404,3 +404,10 @@
 - Reason: Matches the API contract while avoiding invented live values; the FX result displays server source, timestamp, and indicative label.
 - Source: `docs/FRONTEND-CONTRACT.md` (repository contract, checked 2026-10-25).
 - Rejected alternatives: Client-computed/sample financial figures in authenticated mode; changing protected styles or layout.
+
+## 2026-10-25 — Frontend wiring task 5
+- Question: How to expose invoice and report endpoints through the existing views?
+- Choice: Populate the existing invoice table from `/api/invoices`, populate report totals/period bars from P&L and fees reports, and download server-generated P&L CSV through the authenticated client. Label invoice sending as SIMULATED.
+- Reason: Reuses existing components and contract-backed API data; invoice responses lack issue/due dates, so the UI reports those values as unavailable rather than fabricating them.
+- Source: `docs/FRONTEND-CONTRACT.md` (repository contract, checked 2026-10-25).
+- Rejected alternatives: Rendering the old illustrative invoice/report values for authenticated users; creating or sending a PayPal invoice from this view.
