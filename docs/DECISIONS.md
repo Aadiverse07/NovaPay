@@ -319,3 +319,9 @@
 - Choice: Make one tiny Gemini call with synthetic evidence first, then create exactly one $1 Sandbox order only for requested live evidence; retain the resulting capture and do not refund it. Do not call PayPal invoicing.
 - Reason: User explicitly authorized this bounded flow and specified the human approval gate; synthetic smoke avoids customer data.
 - Source: User instruction, 2026-10-25. Rejected alternative: repeat arbitrary live payments or use real customer evidence.
+
+## Phase 4 live Gemini smoke output handling — 2026-10-25
+- Question: How to handle a successful tiny Gemini transport response that did not match the minimal probe JSON shape?
+- Choice: Record provider connectivity and exact model/latency/token metadata as PASS, note the probe shape mismatch, suppress response contents, and rely on the production AI sanitizer/grounding path for the evidence-backed API check.
+- Reason: The smoke was an adapter connectivity probe, not an answer correctness proof; a malformed output must remain subject to sanitizer behavior and cannot be treated as a grounded answer.
+- Source: One bounded synthetic call through `server/src/services/llm.js`, HTTP 200, 2026-10-25. Rejected alternative: print the provider output or repeat provider calls until a preferred response appears.
