@@ -571,3 +571,4 @@ Date: 2026-10-24
 
 ## Phase 4 one-order runner first invocation — 2026-10-25
 - `node scripts/phase4-live-order.js` created exactly one $1 order and printed its approval URL. The non-TTY command had closed stdin; it exited with unsettled readline await before capture. No second order was issued. Rerunning with TTY uses the same deterministic request key and recovers the existing order.
+- Interactive retry recovered the same order token and is paused at buyer approval. Awaiting the user to approve; no capture/webhook verification yet.

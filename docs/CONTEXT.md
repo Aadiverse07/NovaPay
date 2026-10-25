@@ -25,7 +25,7 @@
 6. Run final gate, update docs, commit if no FAIL, report; never push; ask before Phase 5.
 
 ## USER ACTIONS PENDING
-- After new order is created, open the printed PayPal Sandbox approval URL, sign in with the US Personal buyer `sb-jzrsh53532685@personal.example.com`, pay with Visa, then reply `approved`. To verify remaining live Gemini/cache/injection checks later, the fixed Phase 3 test organization needs a completed capture with non-sensitive evidence; do not create one without an explicitly authorized Sandbox flow.
+- Open the current approval URL printed in this chat, sign in with US Personal Sandbox buyer `sb-jzrsh53532685@personal.example.com`, pay $1.00 with Visa, return and reply `approved`. Interactive verifier remains paused. To verify remaining live Gemini/cache/injection checks later, the fixed Phase 3 test organization needs a completed capture with non-sensitive evidence; do not create one without an explicitly authorized Sandbox flow.
 
 ## LIVE STATE
 - Migrations 0001–0005 reported applied by user; read-only probes confirmed 0005 tables and RPCs.
