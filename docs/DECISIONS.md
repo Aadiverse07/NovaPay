@@ -432,3 +432,11 @@
 - Reason: The configured environment contains Supabase keys but no test password. API reads verify real JWT and organization membership without resetting a password, sending email, consuming AI quota, or mutating financial/notification state.
 - Source: [Supabase Auth Admin generateLink](https://supabase.com/docs/reference/javascript/auth-admin-generatelink), [Supabase Auth verifyOtp](https://supabase.com/docs/reference/javascript/auth-verifyotp), checked 2026-10-25; repository `docs/FRONTEND-CONTRACT.md` checked 2026-10-25.
 - Rejected alternatives: Resetting the fixed user's password; printing or persisting tokens; claiming browser PASS without opening the UI.
+
+## 2026-10-25 — UI 404, AI badge, and sample-data presentation
+- Question: How to resolve favicon fallback and clarify route/data provenance without editing protected design files?
+- Choice: Add explicit PNG favicon links on both pages using the existing NovaPay mark; carry server `reason` into the AI route badge tooltip/accessible label; label demo sessions globally and replace non-API sample views with organization empty states.
+- Reason: Uses an existing logo, preserves existing styles, and avoids presenting illustrative figures as real organization activity.
+- Source: Repository `src/fonts.css`, `src/dashboard.js`, `src/novapay-live.js`, `dashboard.html`, `preview.html`, checked 2026-10-25.
+- Rejected alternatives: Editing protected fonts/tokens stylesheets; inventing a replacement font or favicon; leaving static community/ledger values visible in authenticated mode.
+- User action: Add `assets/fonts/Montserrat-Variable.woff2`; the file is absent and the protected stylesheet must remain unchanged.

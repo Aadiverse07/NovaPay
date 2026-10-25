@@ -3,66 +3,60 @@
 ## HEADER
 - Date/time: 2026-10-25 Asia/Kolkata.
 - Branch: `frontend-wiring` (verified; local commits only).
-- Last commit before task 7 documentation checkpoint: `ed36605` (task 6 wiring).
-- Current phase/task: Frontend wiring task 7; API verification complete. Browser-only walkthrough remains unverified.
+- Last commit before this UI-fix checkpoint: `e5938fe Frontend wiring: task 7 API verification`.
+- Current phase/task: Three frontend UI fixes complete; checkpoint commit pending.
 
 ## DONE
-- Tasks 1–6 frontend wiring completed and checkpointed locally: Auth; authenticated API client; Transactions/Approvals/Sandbox; reports/KPIs/cash flow/FX; Invoices/Reports/CSV; AI/notifications.
-- Task 7 used an admin-generated, one-time Supabase magic-link hash for fixed owner `novapay-phase3-owner-a@example.test`, verified it into a real user session, and retained token/org only in process memory.
-- Task 7 confirmed fixed owner membership in existing `NovaPay Phase 3 Verification A` and completed 8/8 authenticated read API checks plus 5/5 report/CSV checks (all HTTP 200). No user/org was created; no password reset/email sent; no AI, notification mutation, invoice action, or PayPal endpoint called.
-- Browser-only checklist and UNVERIFIED statuses are in `docs/TEST-REPORT.md`. Task 7 changed only `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, and `docs/DECISIONS.md` (plus those files updated during earlier tasks).
-- Frontend files changed across tasks 1–6: `preview.html`, `dashboard.html`, `src/auth.js`, `src/landing.js`, `src/api-client.js`, `src/dashboard.js`, `src/novapay-live.js`. Continuity docs updated throughout.
-- Task commits: 1 `a8a05b0`; 2 `cb11f22`; 3 `c1c95fe`; 4 `9a69ad9`; 5 `f8de915`; 6 task checkpoint `ed36605`.
+- Fixed favicon references in `dashboard.html` and `preview.html` using existing `assets/novapay-mark-clean.png`.
+- AI Assistant badge uses the backend `response.route` (code/sql/llm) and exposes response `reason` on hover and to assistive technology.
+- Demo dashboard shows persistent “Sample data · Demo workspace”. Authenticated organization mode shows API-backed loading/live data and empty states for sample-only ledger, documents, fundraising, maintenance, transparency, and financial health sections.
+- Real dashboard metrics and FX begin in loading state; no illustrative values flash while organization API data loads. Missing report data shows empty/unavailable states.
+- `src/fonts.css` and `src/tokens.css` are protected and unchanged. `assets/fonts/Montserrat-Variable.woff2` does not exist; only `assets/fonts/README.txt` is present. User needs to add the font asset.
+- Files changed in this task: `dashboard.html`, `preview.html`, `src/dashboard.js`, `src/novapay-live.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 
 ## IN PROGRESS
-- None. API verification is done; browser checks require a human with access to the test account's normal sign-in/recovery channel.
+- None. Source review and diff hygiene are complete. Browser verification was not run.
 
 ## NEXT STEPS
-1. Human: follow “Frontend wiring task 7 — browser-only manual walkthrough” in `docs/TEST-REPORT.md`.
-2. Update that report with observed browser results; do not mark any unrun check PASS.
+1. User adds `assets/fonts/Montserrat-Variable.woff2` to resolve the font 404; do not change `src/fonts.css` or `src/tokens.css`.
+2. Browser-check favicon loading, AI badge hover/reason, demo sample label, and live empty states if desired.
 
 ## USER ACTIONS PENDING
-- Browser walkthrough: sign into `http://localhost:3000/preview.html#login` as `novapay-phase3-owner-a@example.test` with its authorized password. If unavailable, use Forgot password only if its test inbox is accessible.
-- Open all 12 views; inspect DevTools Console and Network; check light/dark, reduced-motion, 390×844 mobile drawer, notifications and one AI chat. Exact steps are in `docs/TEST-REPORT.md`.
-- Do not share the password, recovery OTP/link, access token, or session data in chat.
+- Add the Montserrat variable font at `assets/fonts/Montserrat-Variable.woff2`. The repository currently lacks this file; no substitute was created.
 
 ## LIVE STATE
-- Migration status: 0001–0005 previously reported applied to the real Supabase project; task 7 did not run migrations. Authenticated read APIs for report, ledger, invoices, notifications, FX, transactions, and approvals returned HTTP 200.
-- Existing tunnel/webhook were previously reported configured and verified; task 7 did not send webhook or PayPal requests.
-- The earlier single $1 Sandbox capture remains; no payment/refund was called this session.
-- AI request was intentionally not called to avoid consuming fixed-user/org quota; notification actions were not mutated.
-- Last live checks: fixed-user Supabase login and membership PASS; authenticated reads 8/8 HTTP 200; remaining report/CSV reads 5/5 HTTP 200. Browser behavior UNVERIFIED.
-- Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
+- Supabase migrations 0001–0005 were previously reported applied. No migration/API/live run was performed for this UI patch.
+- Existing tunnel/webhook and single $1 PayPal Sandbox capture are prior verified state; no PayPal requests were made for this patch.
+- Last live API check from task 7: fixed user login/membership PASS; authenticated read APIs 8/8 HTTP 200; remaining report/CSV checks 5/5 HTTP 200.
+- Never print `.env` values. Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| Task 7 server preflight | PASS | 2026-10-25 | Existing port 3000 listener; `GET /api/status` HTTP 200 |
-| Fixed owner login/membership | PASS | 2026-10-25 | Admin `generate_link` + Auth verify; existing owner membership; token/org held in memory only |
-| Authenticated GET API set | PASS | 2026-10-25 | Transactions, approvals, pending count, ledger trial balance, invoices, P&L, FX, notifications: 8/8 HTTP 200 |
-| Additional reports and CSV | PASS | 2026-10-25 | Trial balance, fees, refunds, cash movement, P&L CSV: 5/5 HTTP 200; CSV content type `text/csv` |
-| Browser views, console/network, themes, motion, mobile drawer, notifications, AI chat | UNVERIFIED | 2026-10-25 | No browser UI session; exact manual steps in `docs/TEST-REPORT.md` |
-| Tasks 1–6 syntax/regression | PASS | 2026-10-25 | JS syntax + diff check PASS; `npm test`: 104 passed, 0 failed |
-| Protected-file diff / `.env` hygiene | PASS | 2026-10-25 | Protected path diff empty; `.env` ignored; no secret values printed |
+| UI source/diff whitespace | PASS | 2026-10-25 | `git diff --check` |
+| Montserrat WOFF2 repository presence | FAIL / user action pending | 2026-10-25 | `assets/fonts/Montserrat-Variable.woff2` absent; no protected stylesheet edit |
+| Favicon browser request | UNVERIFIED | 2026-10-25 | Both pages explicitly reference existing PNG; browser not opened |
+| AI route badge and reason tooltip | UNVERIFIED | 2026-10-25 | Source inspection only; browser hover not tested |
+| Demo label and authenticated empty/live states | UNVERIFIED | 2026-10-25 | Source inspection only; browser runtime not tested |
+| Automated/browser tests | UNVERIFIED | 2026-10-25 | Not run for this patch |
 
 ## KNOWN ISSUES AND RISKS
-- The fixed account has no password configured in environment; browser login needs its authorized password or access to its recovery inbox. Do not reset its password for this walkthrough.
-- Invoices and notifications had zero rows in the existing test organization; empty states are expected, but mutation/action UI behavior remains browser-unverified.
-- No AI chat API request was made in task 7. Browser AI chat must be limited to one test request to avoid unnecessary quota use.
-- Browser console/network, light/dark, reduced motion and mobile behavior remain UNVERIFIED.
+- Montserrat WOFF2 is missing, so requests from `src/fonts.css` can still 404 until the user adds the font.
+- Browser runtime behavior of the favicon, tooltip, and conditional data presentation remains unverified.
+- Organization ledger/documents/fundraising/maintenance/transparency views currently show explicit empty states because no live data client is wired for them.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; syntax/runtime errors roll everything back. Never edit an applied migration; add a numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary-user JWT denial.
+- Supabase SQL Editor is transactional; never edit an applied migration; add a new numbered file.
+- SECURITY DEFINER/posting RPCs must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary-user JWT denial.
 - PostgREST embeds need explicit foreign-key names when multiple relationships exist.
-- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup order: journal entries/lines, audit log, organizations, auth users; reuse fixed named fixtures and `scripts/cleanup-phase2-test-data.sql`.
-- PayPal sandbox buyer must be US Personal; seller USD only; use Visa; webhook ends `/api/webhook` and `PAYPAL_WEBHOOK_ID` must match.
+- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup order: journal entries/lines, audit log, organizations, auth users; reuse fixed fixtures and `scripts/cleanup-phase2-test-data.sql`.
+- PayPal sandbox buyer must be US Personal; seller USD; use Visa; webhook ends `/api/webhook` and `PAYPAL_WEBHOOK_ID` must match.
 - Raw request body is required for PayPal signature verification.
 - Never print `.env` values; use key names only.
 
 ## DO NOT
-- Do not push, edit protected design files/assets, use `--force`, run `npm audit fix --force`, weaken tests, edit applied migrations, commit `.env`, call PayPal Invoicing, or invent financial evidence.
-- Protected UI files: `tokens.css`, `base.css`, `fonts.css`, `tailwind.novapay.preset.*`, `theme.js`, `hero-*`, `fx-*`, `logo-intro`, `capabilities-zoom`, `cta-reveal`, `novapay-logo*`, and `assets/`.
+- Do not push, edit protected design files/assets, use `--force`, run `npm audit fix --force`, weaken tests, edit applied migrations, commit `.env`, or invent financial evidence.
+- Protected UI files: `tokens.css`, `base.css`, `fonts.css`, `tailwind.novapay.preset.*`, `theme.js`, `hero-*`, `fx-*`, `logo-intro`, `capabilities-zoom`, `cta-reveal`, `novapay-logo*`, `assets/`.
 - Never commit to `backend` or `main`; only use `frontend-wiring`.
 
 ## RESUME COMMANDS
