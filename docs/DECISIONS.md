@@ -411,3 +411,10 @@
 - Reason: Reuses existing components and contract-backed API data; invoice responses lack issue/due dates, so the UI reports those values as unavailable rather than fabricating them.
 - Source: `docs/FRONTEND-CONTRACT.md` (repository contract, checked 2026-10-25).
 - Rejected alternatives: Rendering the old illustrative invoice/report values for authenticated users; creating or sending a PayPal invoice from this view.
+
+## 2026-10-25 — Frontend wiring task 6
+- Question: What client data should reach the assistant, and how should its result and notifications appear?
+- Choice: Send only `{ message }` to `/api/ai/chat`; render the contract's `answer`, route badge (code/sql/llm), citations, usage, insufficient-evidence state and limit response. Keep local answer generation only in explicitly labeled demo mode. Load notifications from `/api/notifications` and expose read/dismiss actions.
+- Reason: Assistant evidence is resolved by the backend using verified organization context; notifications are tenant scoped and have supported read/dismiss endpoints.
+- Source: `docs/FRONTEND-CONTRACT.md` and `server/src/routes/ai.js`, `server/src/routes/notifications.js` (checked 2026-10-25).
+- Rejected alternatives: Sending browser-scraped transactions; using local fallback for authenticated sessions; displaying static notification examples as live notices.

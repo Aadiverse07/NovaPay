@@ -643,3 +643,9 @@ Date: 2026-10-24
 - `find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check` — PASS; JavaScript syntax and whitespace checks clean.
 - `npm test` — PASS; migrations 0001–0005 parsed and 104 tests passed, 0 failed.
 - Authenticated invoice/report browser rendering and CSV download — UNVERIFIED; no browser session run.
+
+## Frontend wiring task 6 — 2026-10-25
+- `find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check` — PASS; source syntax and whitespace checks clean (also rerun after the final demo-label adjustment).
+- `npm test` — PASS; migrations 0001–0005 parsed and 104 tests passed, 0 failed.
+- AI Assistant request/UI, notifications read/dismiss, and real-login/browser walkthrough — UNVERIFIED; no browser session run.
+- `git diff --stat origin/main -- <protected files>` — pending final scope verification.
