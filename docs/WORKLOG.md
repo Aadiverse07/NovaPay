@@ -1,8 +1,8 @@
 ## RESUME POINTER
 - Current task: Phase 6 T3; wait for user to apply migration 0009.
-- Last finished step: T3 full suite PASS 117/117 and standalone parser PASS 0001-0009; migration 0009 is ready.
+- Last finished step: T3 code/migration/tests passed `npm test` 117/117 and `npm run check:migrations` 0001-0009; checkpoint `6801806`.
 - Next step: user applies full `supabase/migrations/0009_maintenance_state_machine.sql` once in Supabase SQL Editor and replies “applied”.
-- Pending human action: apply only 0009 in the correct project; do not rerun 0001-0008.
+- Pending human action: apply only migration 0009 in the correct project; do not rerun 0001-0008.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -201,3 +201,12 @@
 - NEXT: log parser PASS and T3 implementation decisions, update exact pending 0009 apply gate, then checkpoint all T3 code/tests/docs locally.
 - 2026-10-26 — ABOUT TO: Append migration-check evidence/decision and refresh CONTEXT/WORKLOG to the 0009 apply gate; then commit. WHY: user must review a concrete tested migration before SQL Editor application.
 - 2026-10-26 — ABOUT TO: Confirm branch and staged-path scope, check whitespace/no `.env`, and checkpoint the passing T3 implementation/migration/tests and apply gate locally. WHY: user requires WIP commits every 2–3 steps; full regression and parser passed.
+- RESULT: PASS; T3 code/migration/test checkpoint committed as `6801806` on `phase6-backend`; no push; no `.env`; branch and whitespace check passed.
+- NEXT: verify CONTEXT's pending user action references only migration 0009 and the resume pointer names `6801806`; then present exact SQL Editor steps and wait for “applied”.
+- 2026-10-26 — ABOUT TO: Inspect current top-level handoff and USER ACTIONS PENDING section for any stale 0008/T2 apply instructions. WHY: do not ask the user to apply the wrong migration or act on stale context.
+- RESULT: FAIL; `docs/CONTEXT.md` has stale values from earlier string replacements: it lists 0009 as applied and 0008 as unapplied and points at an old checkpoint. The actual confirmed state is 0008 applied, 0009 pending. No live action taken.
+- NEXT: rewrite CONTEXT with accurate T2/T3 status and checkpoint `6801806`, then re-check it before requesting migration 0009 application.
+- 2026-10-26 — ABOUT TO: Rewrite `docs/CONTEXT.md` to remove stale migration/checkpoint claims while keeping all required continuity sections and lessons.
+- RESULT: PASS; CONTEXT rewritten to 77 lines with accurate migration state: 0001-0008 applied, 0009 pending; latest code checkpoint `6801806`; exact SQL Editor action listed. `git diff --check` passed.
+- NEXT: checkpoint context/worklog correction, then give exact SQL Editor steps and wait for “applied”.
+- 2026-10-26 — ABOUT TO: Check branch/status and commit corrected CONTEXT/WORKLOG locally before asking the user to apply 0009. WHY: the apply gate must be accurately documented and checkpointed.
