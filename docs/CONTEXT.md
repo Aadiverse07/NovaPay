@@ -22,14 +22,12 @@
 - Continuity files: `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`.
 
 ## NEXT STEPS
-1. Run `npm test`; log result, repair failures, and rerun if needed.
-2. Run `npm run check:migrations`; log exact parse result.
-3. If checks pass, checkpoint and give user exact Supabase SQL Editor steps for the complete 0008 file; wait for “applied”.
-4. After user confirms, verify reversal/repost lines, account 4100 balance, contribution summary/ledger reconciliation, then replay exact webhook x5 and check no duplicates.
-5. Once T2 passes, checkpoint and continue to T3.
+1. User applies `supabase/migrations/0008_fund_contribution_accounting.sql` once in Supabase SQL Editor and replies “applied”.
+2. Verify original capture entry is unchanged; reversal and repost entries are balanced; final net credits 4100; summary reconciles; replay exact webhook x5 creates no duplicates.
+3. Checkpoint T2, then continue to T3.
 
 ## USER ACTIONS PENDING
-- After local code/tests and migration parser pass, apply `supabase/migrations/0008_fund_contribution_accounting.sql` once in the Supabase SQL Editor. Do not edit or rerun migrations 0001-0007. Wait for “applied” before live verification.
+- After local code/tests and migration parser passed, apply the complete `supabase/migrations/0008_fund_contribution_accounting.sql` file once in the correct Supabase project: Dashboard > SQL Editor > New query > paste entire file > Run. Do not edit or rerun migrations 0001-0007. Reply “applied”; wait for that before live verification.
 
 ## LIVE STATE
 - Supabase migrations 0001-0007 applied per user confirmation; 0008 not applied.
@@ -47,7 +45,7 @@
 | T2 exact webhook replay x5 | PASS | 2026-10-26 | five HTTP 200; no duplicates |
 | T2 account classification | FAIL | 2026-10-26 | existing entry credits 4000, expected 4100; 0008 correction in progress |
 | T2 correction unit/integration/static tests | PASS | 2026-10-26 | `npm test`: 113/113; 0001-0008 parsed |
-| Migration check 0008 | UNVERIFIED | 2026-10-26 | standalone `npm run check:migrations` pending |
+| Migration check 0008 | PASS | 2026-10-26 | `npm run check:migrations`: PostgreSQL 17 parsed 0001-0008 |
 
 ## KNOWN ISSUES AND RISKS
 - Migration 0008 must insert two new entries per affected capture: an exact reversal and a corrected repost. It must not update/delete original journal entries or lines.
