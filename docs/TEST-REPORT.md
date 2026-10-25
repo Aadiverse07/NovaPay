@@ -747,3 +747,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `npm test` — FAIL (2026-10-26): migration parser accepted 0001-0008; 112 passed, 1 failed. `server/test/postgres-repos.test.js` generic capture/refund mock omits `database.select`, which the new fund-link detection uses. Fix the mock to return an unlinked order; rerun.
 - `npm test` — RERUN STARTED (2026-10-26): fixed the generic capture test mock to return a non-fund order. Awaiting complete result.
 - `npm test` — PASS (2026-10-26): 113 tests passed, 0 failed, 0 skipped; PostgreSQL 17 parser accepted migrations 0001-0008. Includes fund 4100 unit/repository tests and append-only reversal/repost migration assertions. The initial 112-pass/1-fail run remains recorded above.
+- `npm run check:migrations` — STARTED (2026-10-26): standalone required parser check for migrations 0001-0008; result pending.
+- `npm run check:migrations` — PASS (2026-10-26): PostgreSQL 17 parser accepted migrations 0001-0008, including `0008_fund_contribution_accounting.sql`.

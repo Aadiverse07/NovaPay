@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T2; run standalone migration check and present SQL Editor apply instructions.
-- Last finished step: fund-specific 4100 mapping, migration 0008 reversal/repost, and focused tests implemented; `npm test` PASS 113/113.
-- Next step: run `npm run check:migrations`, checkpoint, show exact SQL Editor steps, and wait for user “applied”.
-- Pending human action: apply only migration 0008 after standalone check passes.
+- Current task: Phase 6 T2; wait for user to apply migration 0008.
+- Last finished step: `npm test` PASS 113/113 and `npm run check:migrations` PASS for 0001-0008; checkpoint `b1de9b5` contains migration and code.
+- Next step: user applies full `supabase/migrations/0008_fund_contribution_accounting.sql` once in Supabase SQL Editor and replies “applied”.
+- Pending human action: apply 0008 in the correct Supabase project; do not rerun 0001-0007.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -111,3 +111,10 @@
 - NEXT: record the test result, update current context, and checkpoint code/migration/tests/docs before standalone `npm run check:migrations`.
 - 2026-10-26 — ABOUT TO: Append full-suite PASS, refresh CONTEXT/WORKLOG, verify no `.env`, and commit the implemented correction locally. WHY: test run passed and several implementation steps have accumulated; checkpoint before the requested standalone parser check.
 - 2026-10-26 — ABOUT TO: Confirm branch/status contains no `.env`, check whitespace, stage exact code/migration/tests/docs, and make local WIP checkpoint. WHY: checkpoint the 113/113 passing implementation before standalone migration validation; never push.
+- RESULT: PASS; code/migration/tests/checkpoint committed locally as `b1de9b5` on `phase6-backend`; no push, no `.env`, worktree clean at commit.
+- NEXT: run the required standalone `npm run check:migrations` and append its exact parser result.
+- 2026-10-26 — ABOUT TO: Run standalone migration parser for migrations 0001-0008. WHY: user explicitly requires this command before receiving SQL Editor apply steps.
+- RESULT: PASS; `npm run check:migrations` accepted migrations 0001-0008 with PostgreSQL 17 parser.
+- NEXT: record PASS, update pending user action to exact 0008 apply gate, checkpoint docs, and provide SQL Editor steps; wait for “applied”.
+- 2026-10-26 — ABOUT TO: Update TEST-REPORT and CONTEXT with standalone migration parser PASS and the exact apply gate, then commit locally. WHY: user must see a concrete, verified migration before applying it.
+- 2026-10-26 — ABOUT TO: Check `phase6-backend` and pending paths, run whitespace check, and checkpoint migration-check PASS/apply instructions locally. WHY: user-requested apply gate is ready and must be committed before requesting SQL Editor action.
