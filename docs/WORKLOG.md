@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: Phase 6 T2; reconcile verified PayPal capture event to contribution receipt and summary.
-- Last finished step: read-only re-check after user-reported tunnel fix/resend; 8 recent inbox events had no exact capture/order match; pledge remains unreceived. Checkpoint `8496882`.
+- Last finished step: read-only re-check after user-reported tunnel fix/resend; 8 recent inbox events had no exact capture/order match; pledge remains unreceived. Checkpoint `0a8cb3b`.
 - Next step: human checks PayPal Sandbox Event deliveries for the capture-completed event and confirms `/api/webhook` delivery; then resume inbox/receipt/summary reconciliation.
 - Pending human action: report provider delivery status (no secrets); if failed, repair tunnel forwarding and resend this existing event.
 
@@ -37,3 +37,6 @@
 - RESULT: PASS; RESUME POINTER now correctly identifies checkpoint `8496882`, absent exact event, unreceived pledge, and the human PayPal delivery-status action. The prior false PASS line is retained with an explicit correction per append-only policy.
 - NEXT: verify the corrected header and checkpoint locally; then stop pending provider delivery status.
 - 2026-10-26 — ABOUT TO: Check for `.env`, run documentation whitespace check, and commit the corrected pointer and truthful failure note locally. WHY: leave the journal self-consistent before stopping.
+- RESULT: PASS; corrected pointer/log checkpoint committed as `0a8cb3b` on `phase6-backend`; no push; `git diff --check` clean and worktree clean.
+- NEXT: update RESUME POINTER's checkpoint reference to `0a8cb3b` and commit the pointer-only change, then stop for the human delivery status.
+- 2026-10-26 — ABOUT TO: Set the pointer's checkpoint reference to `0a8cb3b` and commit the final pointer update. WHY: ensure the continuation block names the latest local commit.
