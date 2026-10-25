@@ -691,3 +691,9 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `npm run check:migrations` — PASS; migrations 0001–0005 parsed as valid PostgreSQL 17 SQL/PLpgSQL.
 - STEP 0 scope check: PASS; `git diff --name-only -- preview.html dashboard.html src assets` returned empty. No frontend paths changed.
 - `git diff --check` — PASS; STEP 0 documentation changes have no whitespace errors.
+
+## Phase 6 T1 — 2026-10-25
+- `npm test` — FAIL; migration 0006 parsed successfully; 105 passed, 1 failed. The new static schema test incorrectly required `org_id NOT NULL` on `fund_transparency_settings`, whose org_id is its non-null primary key. Test assertion corrected; rerun pending.
+- `npm test` rerun — PASS; migration parser accepted 0001–0006; 106 passed, 0 failed, 0 skipped.
+- `npm run check:migrations` — PASS; migrations 0001–0006 parse as PostgreSQL 17 SQL/PLpgSQL.
+- `git diff --check` — PASS; no whitespace errors. Frontend scope check (`git diff --name-only -- preview.html dashboard.html src assets`) — PASS; empty.
