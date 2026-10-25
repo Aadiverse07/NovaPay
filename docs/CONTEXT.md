@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
-- Last task checkpoint: `ae0ae4f WIP Phase 6 task 2: locate missing webhook`.
+- Last task checkpoint: `fe4c6c0 WIP Phase 6 task 2: prepare exact webhook resend`.
 - Current phase/task: Phase 6 Fund Transparency, T2 investigate capture-to-contribution transition failure.
 
 ## DONE
@@ -15,12 +15,12 @@
 
 ## IN PROGRESS
 - T2 task files/functions: `supabase/migrations/0007_fund_contributions.sql` (`create_fund_campaign`, `create_fund_pledge`, `link_fund_contribution_order`, `record_fund_paypal_capture_event`, `get_fund_campaign_summary`); `server/src/repos/postgres.js` fund repository and capture RPC; `server/src/repos/memory.js` campaign/pledge/receipt fixtures; `server/src/services/webhookProcessor.js` mismatch handling; `server/src/routes/funds.js` campaign/pledge/order APIs; `server/src/app.js` route/error wiring; `server/test/phase6-migration.test.js`; `server/test/phase6-contributions.test.js`; all three continuity docs.
-- Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. Exact provider resend is next, then verify receipt/ledger/summary and replay stored raw body x5.
+- Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. PayPal accepted exact-event resend, but that event ID is not in Supabase inbox. Existing verified/processed event is unrelated. Contribution remains pledged; one capture, no receipt, receivedMinor=0. Stop before any replay until exact event arrives.
 
 ## NEXT STEPS
-1. Resend the exact matching PayPal `PAYMENT.CAPTURE.COMPLETED` event.
-2. Verify signed event processing, contribution receipt, single capture and balanced ledger; replay the exact stored raw body five times and verify idempotency.
-3. Log/checkpoint T2; then begin T3 with a new migration number.
+1. Wait for the exact resent PayPal event ID to arrive in `paypal_events`; verify its capture/order IDs, signature and processing outcome.
+2. If delivered and verified, reconcile contribution, receipt, capture, balanced journal and summary; replay the exact stored body five times and verify idempotency.
+3. If it does not arrive, inspect configured tunnel/delivery in PayPal and ask user for the precise external repair; do not mark received. Then checkpoint T2 before T3.
 
 ## USER ACTIONS PENDING
 - None; user approved the $1 Sandbox purchase. If an external PayPal/UI step is still required, ask only after the approved capture attempt and include the precise error/result.
@@ -46,7 +46,7 @@
 | T2 buyer approval/webhook/capture/replay | UNVERIFIED | 2026-10-26 | PASS; current port 3000 reports PayPal configured/connected and webhook configured after restart |
 
 ## KNOWN ISSUES AND RISKS
-- The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. PayPal event list returned the exact matching capture event and webhook inspection confirmed the endpoint and subscription. Exact provider resend and receipt/ledger reconciliation remain pending; earlier generic processed-event match was unrelated.
+- The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. PayPal event list returned the exact matching capture event and webhook inspection confirmed the endpoint and subscription. PayPal accepted resend, but exact event ID has not arrived in Supabase inbox; existing processed event is unrelated. No receipt/ledger transition. Earlier generic processed-event match was unrelated.
 - T2 mismatch handling flags and leaves pledge unreceived; it does not post the mismatched capture to the ledger, consistent with existing capture RPC's expected-amount check. Investigate via safe operations before claiming receipt.
 - Target summary `remainingMinor` is target minus received, as specified by the test requirements; allocations and expense fields are separate.
 - PayPal Sandbox purchase requires a human approval at the buyer link. Do not buy until the Phase 6 gate; never use payout/invoicing without explicit requested gate.
