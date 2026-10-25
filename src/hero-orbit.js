@@ -65,7 +65,7 @@
       " A" + g.RX + " " + g.RY + " 0 1 1 " + (g.cx + g.RX) + " " + g.cy;
     var arrows = "";
     [0, 2.5, 5, 7.5].forEach(function (b, i) {
-      arrows += '<path d="M-14 -11 L15 0 L-14 11 L-7 0 Z" fill="' + (i % 2 ? "#7a3ff2" : "#2f66f5") + '"><animateMotion dur="10s" begin="-' + b +
+      arrows += '<path d="M-14 -11 L15 0 L-14 11 L-7 0 Z" fill="' + (i % 2 ? "#087f78" : "#155eef") + '"><animateMotion dur="10s" begin="-' + b +
         's" repeatCount="indefinite" rotate="auto" path="' + p + '"/></path>';
     });
     var e = function (rx, ry, extra) { return '<ellipse cx="' + g.cx + '" cy="' + g.cy + '" rx="' + rx + '" ry="' + ry + '" fill="none" ' + extra + "/>"; };
@@ -73,14 +73,14 @@
     ring.setAttribute("class", "np-ring"); ring.setAttribute("aria-hidden", "true");
     ring.setAttribute("width", g.W); ring.setAttribute("height", g.H); ring.setAttribute("viewBox", "0 0 " + g.W + " " + g.H);
     ring.innerHTML =
-      '<defs><linearGradient id="np-g" x1="0" x2="1"><stop offset="0" stop-color="#7a3ff2"/><stop offset=".5" stop-color="#2f66f5"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>' +
+      '<defs><linearGradient id="np-g" x1="0" x2="1"><stop offset="0" stop-color="#087f78"/><stop offset=".5" stop-color="#155eef"/><stop offset="1" stop-color="#22b8c7"/></linearGradient>' +
       '<filter id="np-bl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="10"/></filter></defs>' +
       '<g transform="rotate(' + deg + " " + g.cx + " " + g.cy + ')">' +
       e(g.RX, g.RY, 'stroke="url(#np-g)" stroke-width="22" opacity=".45" filter="url(#np-bl)"') +
       e(g.RX, g.RY, 'stroke="url(#np-g)" stroke-width="4"') +
       e(g.RX, g.RY, 'stroke="#fff" stroke-width="1.5" opacity=".8"') +
       e(g.RX * .97, g.RY * .96, 'class="np-dash" stroke="#fff" stroke-width="3"') +
-      e(g.RX * 1.04, g.RY * 1.05, 'class="np-dash np-dash2" stroke="#b7a6ff" stroke-width="2"') +
+      e(g.RX * 1.04, g.RY * 1.05, 'class="np-dash np-dash2" stroke="#79aaff" stroke-width="2"') +
       arrows + "</g>";
     stage.insertBefore(ring, stage.firstChild);
     ring.style.opacity = em;

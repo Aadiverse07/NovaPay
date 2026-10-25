@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light dark">
 <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("novapay-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
 <script>(function(){try{var d=document.documentElement;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("fx-pre");setTimeout(function(){if(!window.__fxStarted)d.classList.remove("fx-pre")},2500)}catch(e){}})();</script>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%232f66f5%27/%3E%3Cpath d=%27M16 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2z%27 fill=%27white%27/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23155eef%27/%3E%3Cpath d=%27M16 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2z%27 fill=%27white%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
@@ -23,10 +23,14 @@
 <link rel="stylesheet" href="src/hero-orbit.css">
 <link rel="stylesheet" href="src/auth-panel.css">
 <link rel="stylesheet" href="src/logo-intro.css">
-<link rel="stylesheet" href="src/capabilities-zoom.css">
+<link rel="stylesheet" href="src/capabilities-holo.css">
 <link rel="stylesheet" href="src/hero-glass.css">
 <link rel="stylesheet" href="src/feature-logos.css">
 <link rel="stylesheet" href="src/cta-reveal.css">
+<link rel="stylesheet" href="src/hero-globe.css">
+<link rel="stylesheet" href="src/click-spark.css">
+<link rel="stylesheet" href="src/specular-buttons.css">
+<link rel="stylesheet" href="src/payment-theme.css">
 <script src="src/novapay-logo.js"></script>
 </head>
 <body class="landing-body">
@@ -50,6 +54,11 @@
 </header>
 
 <main>
+  <div class="globe-bg" aria-hidden="true">
+    <video class="globe-video" autoplay muted loop playsinline preload="auto" poster="assets/novapay-globe-poster.jpg" tabindex="-1" disablepictureinpicture disableremoteplayback>
+      <source src="assets/novapay-globe.mp4" type="video/mp4">
+    </video>
+  </div>
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero-copy">
       <div class="eyebrow"><span><novapay-logo size="14" variant="mark"></novapay-logo></span> AI Bookkeeper for PayPal Merchants</div>
@@ -242,7 +251,7 @@
           <div class="input-box animation" style="--out:4;--in:21;margin-top:16px;height:auto">
             <button class="auth-btn" type="submit">Create Account</button>
           </div>
-          <button type="button" class="auth-google animation" id="google-demo-2" style="--out:5;--in:22"><span class="google-g">G</span> Continue with Google</button>
+          <button type="button" class="auth-google animation" id="google-demo-2" style="--out:4;--in:21"><span class="google-g">G</span> Continue with Google</button>
           <div class="regi-link animation" style="--out:6;--in:23">
             <p>Already have an account? <a href="#" class="SignInLink">Login</a></p>
           </div>
@@ -263,6 +272,7 @@
 <script src="src/landing.js"></script>
 <script src="src/hero-laptop.js"></script>
 <script src="src/hero-video.js"></script>
+<script src="src/hero-globe.js"></script>
 <script src="src/hero-orbit.js"></script>
 <script src="src/logo-intro.js"></script>
 <script src="src/fx-core.js"></script>
@@ -270,8 +280,10 @@
 <!-- Pointer-following tilt animation removed. -->
 <script src="src/fx-orb.js"></script>
 <script src="src/fx-aurora.js"></script>
-<script src="src/capabilities-zoom.js"></script>
+<script src="src/capabilities-holo.js"></script>
 <script src="src/cta-reveal.js"></script>
+<script src="src/click-spark.js"></script>
+<script src="src/specular-buttons.js"></script>
 <!-- Pointer reveal animation removed. -->
 </body>
 </html>

@@ -25,14 +25,15 @@
 
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
   var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents",fundraising:"Fundraising",maintenance:"Maintenance",transparency:"Transparency"};
-  function activate(view,writeHash){
+  function activate(view,writeHash,preserveScroll){
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
     title.textContent=titles[view];
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
-    window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+    if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
+  window.NovaPayActivateView=activate;
   function route(){activate(location.hash.slice(1)||"dashboard",false)}
   nav.forEach(function(a){a.addEventListener("click",function(){activate(a.dataset.view,true)})});
   window.addEventListener("hashchange",route); window.addEventListener("popstate",route); route();
@@ -257,22 +258,23 @@
     });
     $("cf-x").innerHTML=cfg.ticks.map(function(t){return "<span>"+cfg.labels(t)+"</span>";}).join("");
     $("cf-sub").textContent=cfg.sub+" · illustrative sample data · amounts in INR";
-    $("cf-tip").hidden=true;$("cf-cursor").hidden=true;
+    $("cf-tip").hidden=true;$("cf-cursor").hidden=true;$("cf-crosshair-y").hidden=true;
     document.querySelectorAll("#cashflow-tabs button").forEach(function(b){var on=b.dataset.range===range;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.setAttribute("role","tab");});
   }
   document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){renderCashflow(b.dataset.range,true);});});
 
-  var plot=$("cf-plot"),tip=$("cf-tip"),cursor=$("cf-cursor");
+  var plot=$("cf-plot"),tip=$("cf-tip"),cursor=$("cf-cursor"),crosshairY=$("cf-crosshair-y");
   function hover(e){
     if(!cf)return;var r=plot.getBoundingClientRect(),n=cf.cfg.n,fx=Math.min(Math.max((e.clientX-r.left)/r.width,0),1);
     var i=Math.round((fx*W-PAD)/((W-PAD*2)/(n-1)));i=Math.min(Math.max(i,0),n-1);
     var px=xAt(i,n)/W*r.width;
     cursor.style.left=px+"px";cursor.hidden=false;
+    crosshairY.style.top=Math.min(Math.max(e.clientY-r.top,0),205)+"px";crosshairY.hidden=false;
     tip.innerHTML="<b>"+cf.cfg.labels(i)+"</b><span class='t-in'>Money In <em>"+inr(cf.mi[i])+"</em></span><span class='t-out'>Money Out <em>"+inr(cf.mo[i])+"</em></span><span class='t-net'>Net <em>"+inr(cf.net[i])+"</em></span>";
     tip.hidden=false;var tw=tip.offsetWidth;tip.style.left=Math.min(Math.max(px-tw/2,0),r.width-tw)+"px";
   }
   plot.addEventListener("mousemove",hover);plot.addEventListener("touchstart",function(e){hover(e.touches[0]);},{passive:true});plot.addEventListener("touchmove",function(e){hover(e.touches[0]);},{passive:true});
-  plot.addEventListener("mouseleave",function(){tip.hidden=true;cursor.hidden=true;});
+  plot.addEventListener("mouseleave",function(){tip.hidden=true;cursor.hidden=true;crosshairY.hidden=true;});
   renderCashflow("30D",false);
   applyChartTheme();
   if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); renderKpis(dateSelect?dateSelect.value:"today",false); renderCashflow(cfRange,false); });

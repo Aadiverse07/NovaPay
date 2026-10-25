@@ -1,0 +1,33 @@
+.dashboard-nav a[data-view] {
+  --line-effect: 0;
+  position: relative;
+}
+
+.dashboard-nav a[data-view]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: calc(8px + var(--line-effect) * 34px);
+  height: 2px;
+  background: color-mix(in srgb, var(--info-text) calc(var(--line-effect) * 100%), var(--border));
+  opacity: calc(.45 + var(--line-effect) * .55);
+  transform: translateY(-50%);
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.dashboard-nav a[data-view] b {
+  color: color-mix(in srgb, var(--info-text) calc(var(--line-effect) * 72%), currentColor);
+  transform: translateX(calc(var(--line-effect) * 9px));
+  transition: color 100ms linear;
+}
+
+.dashboard-nav a[data-view] .nav-ai-logo {
+  transform: translateX(calc(var(--line-effect) * 4px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-nav a[data-view] b,
+  .dashboard-nav a[data-view] .nav-ai-logo { transition: none; transform: none; }
+}

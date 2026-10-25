@@ -71,9 +71,9 @@
 /* ---------- laptop ---------- */
 .hs-laptop{left:17.4em;top:1.8em;width:28em;height:25em}
 .hs-laptop .hs-face{transform:perspective(70em) rotateY(-13deg) rotateX(3deg) rotateZ(-2.5deg)}
-.hs-bezel{position:absolute;left:0;top:1.4em;width:26.4em;height:18.4em;border-radius:1.8em;
+.hs-bezel{position:absolute;left:0;top:0;width:26.4em;height:19em;border-radius:1.8em;
   background:var(--hs-bezel);border:1px solid var(--hs-glass-edge);box-shadow:var(--hs-shadow)}
-.hs-screen{position:absolute;left:3em;top:0;width:23.4em;height:18em;padding:1.3em 1.5em;border-radius:1.4em;
+.hs-screen{position:absolute;left:1em;top:1em;width:24.4em;height:17em;padding:1em 1.4em;border-radius:1em;
   background:var(--hs-panel);border:1px solid var(--hs-glass-edge);box-shadow:0 1.4em 2.6em -1em rgba(60,80,190,.32);
   overflow:hidden}
 .hs-screen::after{content:"";position:absolute;top:-30%;bottom:-30%;left:0;width:30%;
@@ -100,7 +100,7 @@
 .hs-row.is-out b{color:var(--hs-ink)}
 .hs-row.is-in b{color:var(--hs-green)}
 
-.hs-base{position:absolute;left:-1.4em;top:20.4em;width:29.4em;height:2.4em;border-radius:0 0 2.4em 2.4em / 0 0 1.4em 1.4em;
+.hs-base{position:absolute;left:-1.4em;top:19.6em;width:29.4em;height:2.4em;border-radius:0 0 2.4em 2.4em / 0 0 1.4em 1.4em;
   background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(205,218,255,.7));
   border:1px solid var(--hs-glass-edge);box-shadow:0 1.6em 2.6em -.8em rgba(60,80,190,.35);
   transform:perspective(40em) rotateX(48deg);transform-origin:top center}
@@ -203,3 +203,6 @@
 @media (max-width:520px){
   .dashboard-hero-art[data-integration-visual]{transform:none}
 }
+
+/* Remove the decorative orbit surrounding the dashboard hero laptop. */
+.dashboard-hero-art[data-integration-visual] .hs-orbit { display: none; }

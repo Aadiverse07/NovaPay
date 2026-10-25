@@ -1,0 +1,69 @@
+/* Transaction workspace glass surfaces, adapted from the Rishi branch. */
+#view-transactions > .dash-card {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--info-text) 18%, var(--border));
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--surface) 88%, var(--info-soft)),
+    color-mix(in srgb, var(--surface) 96%, transparent));
+  box-shadow: 0 20px 55px color-mix(in srgb, var(--info-text) 8%, transparent), var(--shadow-sm);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+#view-transactions > .dash-card::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, white 75%, var(--info-text)), transparent);
+  opacity: .7;
+}
+
+#view-transactions .table-scroll {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--info-text) 14%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent), 0 12px 30px rgba(26, 57, 119, .06);
+}
+
+#view-transactions .data-table { border-collapse: separate; border-spacing: 0; }
+
+#view-transactions .data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--surface) 76%, var(--info-soft));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+#view-transactions .data-table th {
+  border-bottom-color: color-mix(in srgb, var(--info-text) 19%, var(--border));
+  background: transparent;
+}
+
+#view-transactions .data-table td {
+  border-bottom-color: color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface) 42%, transparent);
+  transition: background .24s ease, box-shadow .24s ease;
+}
+
+#view-transactions .data-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--info-soft) 30%, transparent);
+}
+
+#view-transactions .data-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--info-soft) 76%, var(--surface));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 35%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--info-text) 16%, transparent);
+}
+
+#view-transactions .data-table tbody tr.transaction-row:hover td {
+  background: radial-gradient(260px circle at var(--tx-pointer-x, 50%) 50%, color-mix(in srgb, var(--info-soft) 95%, var(--surface)), color-mix(in srgb, var(--info-soft) 48%, var(--surface)) 82%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 42%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--info-text) 20%, transparent);
+}
