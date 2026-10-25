@@ -2,74 +2,77 @@
 
 ## HEADER
 - Date/time: 2026-10-25 Asia/Kolkata.
-- Branch: `backend`; last commit before this closeout: `756f9d8 WIP Phase 4 task 4: investigate budget result`.
-- Current phase/task: Phase 4 resumed live verification, task 6 final gate and closeout.
+- Branch: `frontend-wiring` (confirmed this session; user says this overrides the master prompt branch rule).
+- Last commit: `ff50093 Merge remote-tracking branch 'origin/main' into backend`.
+- Current phase/task: Frontend wiring, task 1 (Auth).
 
 ## DONE
 - Phase 3 completed; invoice sending remains SIMULATED.
-- Phase 4 T0–T7 completed in commits `e6cd524`, `574253a`, `f68996e`, `eef73a9`, `90fb767`, `b755e89`, `ba413c0`, `41eb9b7`, `317a580`.
-- T8 deterministic code/FX and SQL routes bypass LLM; `/api/ai/chat` now returns `answer`, `route`, `reason`, `citations`, `usage`, and `cached`. Files: `server/src/services/ai.js`, `server/src/app.js`, `server/src/routes/ai.js`.
-- Updated tests/docs: `server/test/{ai,llm,routes}.test.js`, `docs/FRONTEND-CONTRACT.md`, `docs/API.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`.
-- Added live verifier `scripts/verify-phase4.js`; fixed identities/orgs only, per-run cleanup only.
-- Expanded live AI assertions: real capture fee answer/citations/numeric checks and cache passed; hostile client context caused no approval or PayPal activity. Separate HTTP budget request passed with no provider call. Database-description injection and live model-generated proposal remain UNVERIFIED. The single verifier-owned AI usage row is deleted and exact remaining-row count verified zero.
+- Phase 4 T0–T8 implemented and previously verified; evidence is in `docs/TEST-REPORT.md` and `docs/DECISIONS.md`.
+- Re-read `dashboard.html`, `preview.html`, and all JavaScript files under `src/` at the start of this session, as requested.
+- Confirmed current branch is `frontend-wiring`.
 
 ## IN PROGRESS
-- Added GET-only `--safe` modes. Phase 2 safe mode: root and all 9 financial relations PASS; dedicated Phase 2 organizations absent, so org fixture inspection UNVERIFIED (mode does not provision). Phase 3 safe mode PASS: root, all 18 financial/FX/invoice/report relations and fixed org A USD balance. No PayPal calls, auth writes, invoices, orders, cleanup, or `/api/status` calls.
+- Task: Task 1 Auth checkpoint is implemented and locally verified; ready for local WIP commit. Browser Auth verification is deferred to task 7.
+- Edited files: `preview.html`, `dashboard.html`, `src/landing.js`, `src/dashboard.js`, new `src/auth.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`. Existing modal markup/styles and protected design files were preserved.
+- Supabase Auth is loaded from pinned CDN `@supabase/supabase-js@2.112.3`; frontend fetches only public config, signs in/up/resets through Supabase, calls onboarding with the access token, guards the dashboard, shows profile name/email, and signs out locally. Existing dashboard date labels already use real dates from `new Date()`.
+- Remaining: verify no protected files changed and `.env` is not staged; commit locally on `frontend-wiring`. Real browser login/onboarding remains UNVERIFIED until task 7.
 
 ## NEXT STEPS
-1. Run final test, migration, JS syntax, diff, audit and frontend-hygiene checks.
-2. Update docs with actual outputs and commit locally if no FAIL; report and ask before Phase 5.
+1. Confirm task 1 diff contains only the edited files listed above, no protected design files, and no `.env`.
+2. Commit task 1 locally on `frontend-wiring` using a WIP task checkpoint message; never push or commit to `backend`/`main`.
+3. Stop at the task 1 checkpoint. Continue with task 2 when instructed; task 7 still needs a real login with the fixed named test user.
 
 ## USER ACTIONS PENDING
-- None. Buyer approval/capture are complete; do not make another PayPal call or refund.
+- Task 7 needs a real browser login using the fixed named test user; make that account available in the test browser/session when task 7 begins. Do not send its password or tokens in chat or commit them.
 
 ## LIVE STATE
-- Migrations 0001–0005 reported applied by user; read-only probes confirmed 0005 tables and RPCs.
+- Supabase migrations 0001–0005 were reported applied; read-only probes confirmed 0005 tables/RPCs.
+- Tunnel/webhook were previously configured and verified; webhook URL ended `/api/webhook`, matching webhook ID was set.
+- One $1 PayPal Sandbox order was approved/captured; webhook verified/processed; one transaction/journal entry retained ($1 gross/$0.40 fee/$0.60 net). Do not make another PayPal call or refund.
+- Phase 4 live grounded AI answer/cache and HTTP budget block were verified. Database-description injection and model-generated proposal remain UNVERIFIED. Phase 2 safe mode lacked named org fixtures; Phase 3 safe mode passed.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
-- NovaPay on port 3000 was restarted to load current code; latest run used process-only `AI_DAILY_USER_LIMIT=1` for the blocked-request check. Tunnel and unrelated port 34872 untouched.
-- Public preflight was HTTP 200 authenticated; webhook registration matched `/api/webhook` and expected subscriptions. One synthetic Gemini call: HTTP 200, model `gemini-3.5-flash-lite`, 2138 ms, 59 input/39 output tokens; tiny probe JSON shape was invalid (body suppressed). One $1 order approved/captured; signed webhook verified/processed; exactly one capture transaction and journal entry ($1 gross/$0.40 fee/$0.60 net). Capture retained; no refund. Tunnel hostname `cheaper-approximate-advances-keyboard.trycloudflare.com`; unrelated port 34872 untouched. Invoice sending remains SIMULATED.
-- Port 3000 now runs current checked-in code as PID 71634 with process limits 5 user / 20 org; static root returned HTTP 200. No PayPal call was made during this restart.
+- Invoice sending remains SIMULATED. No live check was run this session.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| `npm ci` | PASS | 2026-10-24 | 89 packages; npm audit at install 0 vulnerabilities |
-| `npm test` | PASS | 2026-10-25 | 104 passed, 0 failed |
-| `npm run check:migrations` | PASS | 2026-10-25 | 0001–0005 parsed by PostgreSQL 17 parser |
-| JS syntax + diff | PASS | 2026-10-25 | `find server scripts -name '*.js' ... node --check`; `git diff --check` |
-| `npm audit --omit=dev` | PASS | 2026-10-25 | 0 runtime vulnerabilities |
-| Phase 4 live verifier | PASS / UNVERIFIED | 2026-10-25 | Capture, grounded fee response/cache, hostile client context, budget block, RLS/RPC and FX checks passed; database description and live proposal remain UNVERIFIED |
-| Final gate rerun | PASS | 2026-10-24 | `npm test` 104/104; migration check 0001–0005; JS syntax and diff check |
-| Earlier Phase 2/3 safe subset attempt | UNVERIFIED | 2026-10-24 | At that point no safe mode existed; superseded by the 2026-10-25 runs below |
-| Frontend diff | PASS | 2026-10-24 | `git diff --name-only -- preview.html dashboard.html src assets tailwind.novapay.preset.*` empty |
-| `.env` hygiene | PASS | 2026-10-24 | ignored by Git; no `.env` in status/staged list |
-| Phase 2 safe subset | UNVERIFIED | 2026-10-25 | `node scripts/verify-phase2.js --safe`: root and 9 tables PASS; fixed Phase 2 orgs absent; no mutations |
-| Phase 3 safe subset | PASS | 2026-10-25 | `node scripts/verify-phase3.js --safe`: root, 18 relations, fixed orgs; A USD balanced=true; no mutations |
+| Unit suite | PASS | 2026-10-25 | `npm test`: 104 passed, 0 failed (last recorded run) |
+| Migration parser | PASS | 2026-10-25 | `npm run check:migrations`: 0001–0005 accepted by PostgreSQL 17 parser |
+| JS syntax and diff | PASS | 2026-10-25 | `find server scripts -name '*.js' -print0 \| xargs -0 -n1 node --check`; `git diff --check` |
+| Runtime dependency audit | PASS | 2026-10-25 | `npm audit --omit=dev`: 0 vulnerabilities |
+| Phase 4 live verifier | PASS / UNVERIFIED | 2026-10-25 | Grounded answer/cache, hostile client context, budget block and RLS/RPC/FX passed; database description and live proposal unverified |
+| Phase 2 safe subset | UNVERIFIED | 2026-10-25 | `node scripts/verify-phase2.js --safe`: root and 9 relations pass; named org fixtures absent |
+| Phase 3 safe subset | PASS | 2026-10-25 | `node scripts/verify-phase3.js --safe`: root, 18 relations, fixed org A USD balance passed |
+| Auth JavaScript syntax/diff | PASS | 2026-10-25 | `node --check src/auth.js && node --check src/landing.js && node --check src/dashboard.js && git diff --check` |
+| Backend regression suite | PASS | 2026-10-25 | `npm test`: migrations 0001–0005 parsed; 104 passed, 0 failed |
+| Task 1 scope hygiene | PASS | 2026-10-25 | Branch `frontend-wiring`; protected worktree diff empty; `.env` ignored |
+| Supabase browser login/signup/reset/onboarding | UNVERIFIED | 2026-10-25 | Deferred to frontend wiring task 7; no real test user login was performed |
 
 ## KNOWN ISSUES AND RISKS
-- Phase 2 read-only safe check could not inspect org-specific data because its named fixture orgs are absent; all nine tables are available. No fixture was created.
-- Live DB-description prompt injection is UNVERIFIED because `transactions` has no description field; client-supplied hostile context was ignored. Live model-generated pending proposal is UNVERIFIED. Unit tests cover sanitization and pending-only proposal mechanics.
-- Gemini synthetic smoke returned HTTP 200 but did not match the tiny probe JSON shape; response was suppressed. Production grounded fee answer and cache were verified separately.
-- Gemini free quotas can vary; minimized evidence only. Duplicate-payer and payout anomaly cases remain fixture-limited by available schema data.
+- Real Supabase sign-up onboarding requires a returned session; if email confirmation is enabled, onboarding occurs after confirmation and sign-in.
+- Phase 2 safe inspection cannot validate org-specific data because its named fixtures are absent; no fixture was created.
+- Live database-description injection is unverified because transactions have no description field; live model-generated pending proposal is unverified.
+- Gemini synthetic smoke returned HTTP 200 but did not match the tiny probe JSON shape; output was suppressed. Production grounded fee answer/cache were separately verified.
+- Duplicate-payer and payout anomaly cases remain fixture-limited by available schema data.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor is transactional; never edit an applied migration; add a new numbered file.
 - SECURITY DEFINER/posting RPCs must revoke public/anon/authenticated execute, grant only service_role (or enforce membership), and be tested with ordinary JWTs.
 - PostgREST embeds need explicit FK names when multiple relationships exist.
-- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup financial test data in dependency order; reuse fixed identities/orgs.
-- PayPal sandbox buyer must be US Personal, seller USD, Visa; webhook ID must match; signature verification needs raw bytes.
+- `audit_log` is insert-only and ON DELETE RESTRICT; delete journal entries (lines with them) before audit rows, orgs and auth users. Reuse fixed test identities/orgs.
+- PayPal Sandbox buyer must be US Personal, seller USD, Visa; webhook ID must match; signature verification needs raw bytes.
 - PayPal invoice number max is 25 chars; use `DUE_ON_RECEIPT`; compare FX timestamps as instants; invoice sending stays SIMULATED.
 - Check port 3000 process freshness after source edits; leave unrelated tunnel/processes untouched.
 - Never print `.env` values, provider bodies, Authorization headers, stack traces, or sensitive evidence.
 
 ## DO NOT
-- Do not push, touch frontend files, use `--force`, weaken tests, edit applied migrations, commit `.env`, call PayPal Invoicing, or invent financial evidence.
+- Do not push, edit protected design files, use `--force`, weaken tests, edit applied migrations, commit `.env`, call PayPal Invoicing, or invent financial evidence.
+- Do not commit or push to `backend` or `main`; work and commit locally only on `frontend-wiring`.
 
 ## RESUME COMMANDS
 - `git status --short`
+- `git branch --show-current`
 - `npm test`
 - `npm run check:migrations`
 - `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`
-- `npm audit --omit=dev`
-- `node scripts/verify-phase2.js --safe`
-- `node scripts/verify-phase3.js --safe`
