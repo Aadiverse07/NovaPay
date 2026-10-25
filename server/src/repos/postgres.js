@@ -1,4 +1,4 @@
-import { captureJournalLines, refundJournalLines } from '../services/ledger.js';
+import { captureJournalLines, fundContributionJournalLines, refundJournalLines } from '../services/ledger.js';
 
 const q = (values) => new URLSearchParams(values).toString();
 const journalLinesPayload = (lines) => lines.map((line) => ({ account_code: line.accountCode, debit_minor: line.debitMinor, credit_minor: line.creditMinor, currency: line.currency }));
@@ -17,7 +17,7 @@ export function moneyToMinor(value) {
 export const minorToMoney = (minor) => (Number(minor) / 100).toFixed(2);
 
 function mapOrder(row) {
-  return row && ({ id: row.paypal_order_id, dbId: row.id, orgId: row.org_id, requestKey: row.request_key, amount: minorToMoney(row.amount_minor), currency: row.currency, status: row.status, state: row.state, approveUrl: row.approve_url, capture: row.capture_response || null });
+  return row && ({ id: row.paypal_order_id, dbId: row.id, orgId: row.org_id, requestKey: row.request_key, fundContributionId: row.fund_contribution_id || null, amount: minorToMoney(row.amount_minor), currency: row.currency, status: row.status, state: row.state, approveUrl: row.approve_url, capture: row.capture_response || null });
 }
 
 function mapCapture(row) {
@@ -42,6 +42,14 @@ function mapInvoice(row, lines = []) {
 }
 
 export function createPostgresRepositories(database) {
+  async function captureLinesForOrder(providerCapture, orderId, orgId = null) {
+    const filters = { select: 'fund_contribution_id', paypal_order_id: `eq.${orderId}`, limit: '1' };
+    if (orgId) filters.org_id = `eq.${orgId}`;
+    const rows = await database.select('paypal_orders', q(filters));
+    const buildLines = rows?.[0]?.fund_contribution_id ? fundContributionJournalLines : captureJournalLines;
+    return journalLinesPayload(buildLines(providerCapture));
+  }
+
   const orders = {
     async get(id, orgId) {
       const rows = await database.select('paypal_orders', q({ select: '*', org_id: `eq.${orgId}`, paypal_order_id: `eq.${id}`, limit: '1' }));
@@ -81,12 +89,14 @@ export function createPostgresRepositories(database) {
     },
     async add(capture, orgId) {
       const providerCapture = { id: capture.id, gross: capture.value, fee: capture.fee, net: capture.net, currency: capture.currency, amount: { value: capture.value, currency_code: capture.currency } };
-      const result = await database.rpc('record_paypal_capture', { p_org: orgId, p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: journalLinesPayload(captureJournalLines(providerCapture)) });
+      const lines = await captureLinesForOrder(providerCapture, capture.orderId, orgId);
+      const result = await database.rpc('record_paypal_capture', { p_org: orgId, p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: lines });
       return mapCapture(result?.capture);
     },
     async addFromWebhook(capture) {
       const providerCapture = { id: capture.id, gross: capture.value, fee: capture.fee, net: capture.net, currency: capture.currency, amount: { value: capture.value, currency_code: capture.currency } };
-      const result = await database.rpc('record_fund_paypal_capture_event', { p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: journalLinesPayload(captureJournalLines(providerCapture)) });
+      const lines = await captureLinesForOrder(providerCapture, capture.orderId);
+      const result = await database.rpc('record_fund_paypal_capture_event', { p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: lines });
       return { orgId: result?.orgId, mismatch: Boolean(result?.mismatch), capture: mapCapture(result?.result?.capture) };
     },
     async refund(approvalId, orgId) {

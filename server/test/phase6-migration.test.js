@@ -6,6 +6,8 @@ const migrationUrl = new URL('../../supabase/migrations/0006_fund_transparency.s
 const sql = await readFile(migrationUrl, 'utf8');
 const contributionMigrationUrl = new URL('../../supabase/migrations/0007_fund_contributions.sql', import.meta.url);
 const contributionSql = await readFile(contributionMigrationUrl, 'utf8');
+const accountingMigrationUrl = new URL('../../supabase/migrations/0008_fund_contribution_accounting.sql', import.meta.url);
+const accountingSql = await readFile(accountingMigrationUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -43,4 +45,14 @@ test('Phase 6 SECURITY DEFINER RPCs are executable only by service_role', () => 
     assert.match(contributionSql,new RegExp(`grant execute on function public\\.${name}\\([^;]+ to service_role;`,'i'),`${name} must grant service_role execution`);
   }
   assert.doesNotMatch(contributionSql,/grant execute on function public\.[^(]+\([^;]+ to (?:public|anon|authenticated)/i);
+});
+
+test('fund account correction uses append-only reversal and repost entries', () => {
+  assert.match(accountingSql, /fund_reclassification_reversal/i);
+  assert.match(accountingSql, /fund_reclassification_repost/i);
+  assert.match(accountingSql, /a\.code='4000'\s+then v_donations_account_id/i);
+  assert.match(accountingSql, /where org_id=v_fund\.org_id and code='4100'/i);
+  assert.match(accountingSql, /not exists\s*\([\s\S]*?fund_reclassification_reversal/i);
+  assert.match(accountingSql, /on conflict\(org_id,source_type,source_id\) do nothing/ig);
+  assert.doesNotMatch(accountingSql, /\b(?:update|delete)\s+(?:from\s+)?public\.journal_(?:entries|lines)\b/i);
 });

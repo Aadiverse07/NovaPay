@@ -46,6 +46,32 @@ test('capture reads disambiguate the order foreign key in PostgREST embeds', asy
   }
 });
 
+test('fund-linked synchronous and webhook captures send Donations account lines', async () => {
+  const calls = [];
+  const database = {
+    async select(table, query) {
+      calls.push({ kind: 'select', table, query });
+      return table === 'paypal_orders' ? [{ id: 'db-order', org_id: 'org-a', paypal_order_id: 'ORDER-FUND', fund_contribution_id: 'contribution-1' }] : [];
+    },
+    async rpc(name, args) {
+      calls.push({ kind: 'rpc', name, args });
+      return name === 'record_paypal_capture'
+        ? { capture: { paypal_capture_id: 'CAP-FUND', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', org_id: 'org-a' } }
+        : { orgId: 'org-a', result: { capture: { paypal_capture_id: 'CAP-FUND', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', org_id: 'org-a' } } };
+    },
+  };
+  const repos = createPostgresRepositories(database);
+  const capture = { id: 'CAP-FUND', orderId: 'ORDER-FUND', value: '10.00', fee: '0.59', net: '9.41', currency: 'USD', status: 'COMPLETED' };
+  await repos.captures.add(capture, 'org-a');
+  await repos.captures.addFromWebhook(capture);
+  const postings = calls.filter((call) => call.kind === 'rpc');
+  assert.deepEqual(postings.map((call) => call.name), ['record_paypal_capture', 'record_fund_paypal_capture_event']);
+  for (const { args } of postings) {
+    assert.equal(args.p_lines.find((line) => line.account_code === '4100')?.credit_minor, 1000);
+    assert.equal(args.p_lines.some((line) => line.account_code === '4000'), false);
+  }
+});
+
 test('approval repository exposes its public approvalId field for persistence checks', async () => {
   const database = {
     async select(table) { return table === 'approvals' ? [{ id:'APR-RESTORED', org_id:'org-a', proposal_type:'refund', capture_id:'CAP-1', amount_minor:100, currency:'USD', status:'pending' }] : []; },
@@ -69,7 +95,10 @@ test('AI proposal persistence uses the scoped pending-approval RPC with minor-un
 
 test('capture and refund persistence send the pure ledger mapping into atomic database RPCs', async () => {
   const calls = [];
-  const database = { async rpc(name, args) { calls.push({ name, args }); return { capture: { paypal_capture_id: 'CAP-1', amount_minor: 1000, currency: 'USD', status: 'COMPLETED' }, approval: { id: 'APR-1', amount_minor: 1000, currency: 'USD', status: 'completed' } }; } };
+  const database = {
+    async select() { return [{ fund_contribution_id: null }]; },
+    async rpc(name, args) { calls.push({ name, args }); return { capture: { paypal_capture_id: 'CAP-1', amount_minor: 1000, currency: 'USD', status: 'COMPLETED' }, approval: { id: 'APR-1', amount_minor: 1000, currency: 'USD', status: 'completed' } }; },
+  };
   const repos = createPostgresRepositories(database);
   await repos.captures.add({ id: 'CAP-1', orderId: 'ORDER-1', value: '10.00', fee: '0.50', net: '9.50', currency: 'USD', status: 'COMPLETED' }, 'org-a');
   assert.equal(calls[0].name, 'record_paypal_capture');
