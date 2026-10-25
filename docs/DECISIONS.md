@@ -496,3 +496,10 @@
 - Reason: Do not change server/tunnel routing based on an absent response key. The configured server is now running on port 3000.
 - Source: `server/src/routes/status.js` and `GET /api/status`, checked 2026-10-26.
 - Rejected alternatives: Infer PayPal is disabled from an undefined response field; restart further processes without evidence.
+
+## 2026-10-26 — Retrieve missing signed PayPal event
+- Question: How to deliver the completed capture's original signed webhook when no matching event is in the local inbox?
+- Choice: Use PayPal's official event-list API filtered by the capture transaction ID; inspect the configured webhook URL/subscriptions without printing secrets; if the exact event exists, request PayPal's event resend and wait for the signed delivery to the existing listener.
+- Reason: Resending the original event preserves PayPal's signed event body and avoids fabricating a webhook or manually marking a contribution received.
+- Source: [PayPal Webhooks Events List API](https://developer.paypal.com/api/webhooks/v1/webhooks-events-list), checked 2026-10-26; API supports `transaction_id` filtering and event resend.
+- Rejected alternatives: Reconstruct a webhook body and claim it was PayPal-signed; manually update received status; create another payment.
