@@ -9,6 +9,7 @@
 <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("novapay-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
 <script src="src/auth.js"></script>
+<script src="src/api-client.js"></script>
 <script>window.NovaPayAuth.ready.then(function(){if(!window.NovaPayAuth.isAuthenticated())location.replace("preview.html#login")});</script>
 <script>try{if(sessionStorage.getItem("novapay-hero-enter")==="1"){sessionStorage.removeItem("novapay-hero-enter");document.documentElement.classList.add("fx-enter");setTimeout(function(){document.documentElement.classList.remove("fx-enter")},1100)}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -8,6 +8,7 @@
   async function initialize(auth){
   var toast=$("dashboard-toast"), toastTimer;
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},3000);}
+  document.addEventListener("novapay:api-error",function(event){var detail=event.detail||{};if(detail.status===403)showToast(detail.message||"You do not have permission to do that.");else if(detail.status===401)showToast(detail.message||"Your session expired. Please sign in again.");});
   var user;
   if(auth.mode==="supabase"){
     var session=await auth.currentSession();

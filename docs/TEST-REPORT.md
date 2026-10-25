@@ -614,3 +614,12 @@ Date: 2026-10-24
 # NovaPay Frontend Wiring — Task 1 scope hygiene — 2026-10-25
 - Command: branch/status check, protected-path `git diff --name-only`, and `git check-ignore -q .env`.
 - Result: PASS. Branch was `frontend-wiring`; 0 protected files changed; `.env` is ignored. Worktree contained only the listed task 1 HTML/JS and continuity-file changes.
+
+# NovaPay Frontend Wiring — Task 2 API client syntax — 2026-10-25
+- Command: `find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check`
+- Result: PASS. All JavaScript files under `src/` parsed; no whitespace errors.
+
+# NovaPay Frontend Wiring — Task 2 regression — 2026-10-25
+- Command: `npm test`
+- Result: PASS. Migrations 0001–0005 parsed; 104 tests passed, 0 failed.
+- Scope note: The suite covers the backend's token/membership and error contracts; it does not exercise browser header construction or real sessions. Those remain UNVERIFIED for task 7.

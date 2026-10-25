@@ -385,3 +385,9 @@
 - Choice: Mark browser login, signup, password reset, session guard, and live onboarding UNVERIFIED until task 7's real-login walkthrough; complete task 1's local code and backend regression checkpoint now.
 - Reason: The user assigns the real-login browser walkthrough to task 7; task 1 has no supplied test-account credentials, and real Auth must not be simulated as PASS.
 - Source: Frontend wiring prompt task 7 and task 1 checks run 2026-10-25. Rejected alternative: treat existing backend auth tests or static JavaScript parsing as proof of a real browser session.
+
+## Shared frontend API client — 2026-10-25
+- Question: How should browser API calls consistently carry tenant credentials and normalize API errors?
+- Choice: Add a small shared same-origin client that reads the current access token and locally selected organization ID from `NovaPayAuth`, sends `Authorization: Bearer` and `X-Org-Id` on protected calls, and converts both structured and legacy error bodies into errors with `status` and `code`. Keep the contract's `POST /api/onboarding` exception bearer-authenticated without an org header and keep `GET /api/public-config` public.
+- Reason: This centralizes tenant headers and error handling without putting secrets in the browser or changing the backend contract.
+- Source: `docs/FRONTEND-CONTRACT.md` Authentication and organization selection, checked 2026-10-25. Rejected alternative: duplicate token/header/error logic in each view or force an org header on onboarding/public config.
