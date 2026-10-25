@@ -26,11 +26,12 @@ const fixtureEmails = { A:'novapay-phase2-a@example.test', B:'novapay-phase2-b@e
 const fixtureOrgNames = { A:'NovaPay Phase 2 Verification A', B:'NovaPay Phase 2 Verification B' };
 const artifacts = { orgs: [], webhookEvents: [], extraEvent: `phase2-security-${runId}`, captureId: null, orderId: null, refundCompleted: false };
 const results = [];
+const safeMode = process.argv.includes('--safe');
 let serverProcess;
 let helperProcess;
 let outcome = 'FAIL';
 
-if (!config.hasSupabase || !config.hasPayPal || !config.PAYPAL_WEBHOOK_ID) {
+if (!config.hasSupabase || (!safeMode && (!config.hasPayPal || !config.PAYPAL_WEBHOOK_ID))) {
   console.error('UNVERIFIED: Supabase, PayPal Sandbox, and webhook configuration are required.');
   process.exit(2);
 }
@@ -212,6 +213,39 @@ async function checkPhase2Objects() {
     if (result.status !== 200) present = false;
   }
   record('Phase 2 financial tables available in live REST schema', present);
+}
+
+async function runSafe() {
+  // This mode deliberately uses only GET requests: no PayPal, auth provisioning,
+  // API status route, reconciliation writes, or test-data cleanup.
+  const rootResponse = await request(apiBase + '/');
+  record('NovaPay static root reachable (no PayPal status call)', rootResponse.status === 200, `HTTP ${rootResponse.status}`);
+  const tables = ['accounts','journal_entries','journal_lines','transactions','paypal_orders','paypal_captures','paypal_events','approvals','reconciliation_runs'];
+  let schemaOk = true;
+  for (const table of tables) schemaOk &&= (await serviceRequest(`/rest/v1/${table}?select=id&limit=0`)).status === 200;
+  record('Phase 2 financial tables available', schemaOk, `${tables.length} GET-only schema probes`);
+  let orgsOk = true;
+  let orgsPresent = true;
+  const summaries = [];
+  for (const label of ['A','B']) {
+    const found = await serviceRequest(`/rest/v1/organizations?${new URLSearchParams({select:'id,name',name:`eq.${fixtureOrgNames[label]}`,limit:'2'})}`);
+    if (found.status !== 200 || found.body?.length !== 1) { orgsOk = false; orgsPresent = false; continue; }
+    const orgId = found.body[0].id;
+    for (const table of tables) {
+      const rows = await serviceRequest(`/rest/v1/${table}?${new URLSearchParams({select:'id',org_id:`eq.${orgId}`,limit:'0'})}`, {headers:{Prefer:'count=exact'}});
+      if (rows.status !== 200) orgsOk = false;
+    }
+    const lines = await serviceRequest(`/rest/v1/journal_lines?${new URLSearchParams({select:'debit_minor,credit_minor,currency,org_id',org_id:`eq.${orgId}`,limit:'1000'})}`);
+    if (lines.status !== 200 || !Array.isArray(lines.body)) { orgsOk = false; continue; }
+    const totals = new Map();
+    for (const line of lines.body) {
+      const total = totals.get(line.currency) || {debit:0n,credit:0n};
+      total.debit += BigInt(line.debit_minor || 0); total.credit += BigInt(line.credit_minor || 0); totals.set(line.currency,total);
+    }
+    summaries.push([...totals].map(([currency,total])=>`${label}:${currency} balanced=${total.debit===total.credit}`).join(',') || `${label}: no journal lines`);
+  }
+  record('Fixed Phase 2 organizations inspected read-only', orgsPresent ? (orgsOk ? 'PASS' : 'FAIL') : 'UNVERIFIED', summaries.join('; ') || 'fixed Phase 2 organizations were not present; safe mode does not create them');
+  outcome = results.some((item) => item.status === 'FAIL') ? 'FAIL' : results.some((item) => item.status === 'UNVERIFIED') ? 'UNVERIFIED' : 'PASS';
 }
 
 async function checkRpcPermissions(userId, userToken, orgId) {
@@ -475,13 +509,14 @@ async function cleanup() {
 
 let orgA;
 try {
-  await run();
+  if (safeMode) await runSafe(); else await run();
 } catch (error) {
   console.error(`Verification stopped at ${String(error?.message || 'unknown-error').replace(/^check-failed:/,'')}. No credentials or provider response bodies are printed.`);
 } finally {
-  await cleanup();
+  if (!safeMode) await cleanup();
 }
 
 console.log(`Phase 2 live verification result: ${outcome}`);
 for (const item of results) console.log(`${item.status} ${item.name}`);
-if (outcome !== 'PASS') process.exitCode = 1;
+if (outcome === 'FAIL') process.exitCode = 1;
+else if (outcome === 'UNVERIFIED') process.exitCode = 2;

@@ -30,6 +30,7 @@ const results = [];
 let failed = false;
 let paused = false;
 const runStartedAt = new Date().toISOString();
+const safeMode = process.argv.includes('--safe');
 
 function record(name, status, detail = '') {
   results.push({ name, status });
@@ -307,6 +308,40 @@ async function checkReportsAndPhase2Safe() {
   record('Live report totals equal this run ledger totals',parity?'PASS':'FAIL',parity?'capture and refund ledger lines match all five report totals':'one or more report totals differ from ledger-derived totals');
 }
 
+async function runSafe() {
+  // Read-only prior-phase regression: do not call /api/status (which can fetch
+  // a PayPal token), provision identities, request FX, or invoke cleanup.
+  if (!config.hasSupabase) throw new Error('supabase-configuration-missing');
+  const rootResponse = await req(apiBase + '/');
+  record('NovaPay static root reachable (no PayPal status call)', rootResponse.status === 200 ? 'PASS' : 'FAIL', 'HTTP ' + rootResponse.status);
+  const tables = ['accounts','journal_entries','journal_lines','transactions','paypal_orders','paypal_captures','paypal_events','approvals','reconciliation_runs','fx_rates','invoices','invoice_lines','invoice_events'];
+  const views = ['report_profit_and_loss','report_trial_balance','report_fee_summary','report_refunds_summary','report_cash_movement'];
+  const available = [];
+  for (const name of [...tables,...views]) available.push((await service('/rest/v1/'+name+'?select=org_id&limit=0')).status === 200);
+  record('Phase 2/3 financial, FX, invoice, and report relations available', available.every(Boolean) ? 'PASS' : 'FAIL', `${available.filter(Boolean).length}/${available.length} GET-only probes`);
+  let tenantRead = true;
+  const balanceNotes = [];
+  for (const label of ['A','B']) {
+    const f = fixtures[label];
+    const found = await service('/rest/v1/organizations?'+q({select:'id,name',name:'eq.'+f.org,limit:'2'}));
+    if (found.status !== 200 || found.body?.length !== 1) { tenantRead = false; continue; }
+    const orgId = found.body[0].id;
+    for (const table of tables) {
+      const rows = await service('/rest/v1/'+table+'?'+q({select:'org_id',org_id:'eq.'+orgId,limit:'0'}));
+      if (rows.status !== 200) tenantRead = false;
+    }
+    const lines = await service('/rest/v1/journal_lines?'+q({select:'debit_minor,credit_minor,currency',org_id:'eq.'+orgId,limit:'1000'}));
+    if (lines.status !== 200 || !Array.isArray(lines.body)) { tenantRead = false; continue; }
+    const totals = new Map();
+    for (const line of lines.body) {
+      const value = totals.get(line.currency) || {debit:0n,credit:0n};
+      value.debit += BigInt(line.debit_minor || 0); value.credit += BigInt(line.credit_minor || 0); totals.set(line.currency,value);
+    }
+    balanceNotes.push([...totals].map(([currency,value])=>`${label}:${currency} balanced=${value.debit===value.credit}`).join(',') || `${label}: no journal lines`);
+  }
+  record('Fixed Phase 3 organizations inspected read-only', tenantRead ? 'PASS' : 'FAIL', balanceNotes.join('; ') || 'fixed test organizations unavailable');
+}
+
 function amount(value){try{return BigInt(String(value||0));}catch{return 0n;}}
 function sum(rows,fn){return rows.reduce((n,row)=>n+fn(row),0n);}
 async function checkRealReportParity(start,end){
@@ -466,13 +501,13 @@ async function run() {
 }
 
 try {
-  await run();
+  if (safeMode) await runSafe(); else await run();
 } catch(error) {
   const safe=String(error?.message||'verification-error').replace(/https?:\/\/\S+/g,'[URL]').replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,'[email]');
   console.error('Verifier stopped: '+safe+'; secrets and provider bodies suppressed.');
   record('Verifier ended without an unexpected error','FAIL','see redacted stop reason');
 } finally {
-  if(!paused&&Object.keys(orgs).length)await cleanup();
+  if(!safeMode&&!paused&&Object.keys(orgs).length)await cleanup();
 }
 console.log('\nPhase 3 live verification results');
 for(const r of results)console.log(r.status+' '+r.name);

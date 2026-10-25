@@ -2,8 +2,8 @@
 
 ## HEADER
 - Date/time: 2026-10-25 Asia/Kolkata.
-- Branch: `backend`; Phase 4 delivery commit: `cc018ed Phase 4: AI assistant and orchestration (live verified)`.
-- Current phase/task: Phase 4 resumed live verification, task 3 AI assertions.
+- Branch: `backend`; last commit before this closeout: `756f9d8 WIP Phase 4 task 4: investigate budget result`.
+- Current phase/task: Phase 4 resumed live verification, task 6 final gate and closeout.
 
 ## DONE
 - Phase 3 completed; invoice sending remains SIMULATED.
@@ -11,45 +11,45 @@
 - T8 deterministic code/FX and SQL routes bypass LLM; `/api/ai/chat` now returns `answer`, `route`, `reason`, `citations`, `usage`, and `cached`. Files: `server/src/services/ai.js`, `server/src/app.js`, `server/src/routes/ai.js`.
 - Updated tests/docs: `server/test/{ai,llm,routes}.test.js`, `docs/FRONTEND-CONTRACT.md`, `docs/API.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`.
 - Added live verifier `scripts/verify-phase4.js`; fixed identities/orgs only, per-run cleanup only.
-- Live verifier latest: 12 PASS / 0 FAIL / 3 UNVERIFIED. Service RPC grants/RLS, tenant isolation, direct-write denial, deterministic SQL, FX, anomaly idempotency and run-owned cleanup passed. No Gemini call: fixed org has no completed capture evidence.
+- Expanded live AI assertions: real capture fee answer/citations/numeric checks and cache passed; hostile client context caused no approval or PayPal activity. Separate HTTP budget request passed with no provider call. Database-description injection and live model-generated proposal remain UNVERIFIED. The single verifier-owned AI usage row is deleted and exact remaining-row count verified zero.
 
 ## IN PROGRESS
-- Capture is retained and webhook/ledger PASS. Phase 4 live verifier: 15 PASS / 1 FAIL / 3 UNVERIFIED with process limit 2. Real fee answer/citations/numbers and cache passed; hostile client context caused no approval/PayPal action. Live proposal did not appear; HTTP budget assertion failed without detailed shape. Inspect residual viewer usage safely, add redacted diagnostics, then verify blocked path without additional provider calls. NovaPay server currently runs on port 3000 with process-only AI limit 2. `.env` unchanged. One viewer Gemini usage row from this run remains (`created_at` 08:14Z); baseline was zero. Retain it only to force the HTTP budget block under process limit 1, then delete that exact run-owned row. `transactions` schema lacks a description column, so database-description injection will remain UNVERIFIED; client-context injection can be tested live. Current port 3000 process identified as NovaPay `node server/index.js` PID 66956. Next: restart it, check public `/api/status` and registered webhook, then one synthetic Gemini call; afterward create one Sandbox order and wait for buyer approval. Keep the successful capture; no refund.
+- Added GET-only `--safe` modes. Phase 2 safe mode: root and all 9 financial relations PASS; dedicated Phase 2 organizations absent, so org fixture inspection UNVERIFIED (mode does not provision). Phase 3 safe mode PASS: root, all 18 financial/FX/invoice/report relations and fixed org A USD balance. No PayPal calls, auth writes, invoices, orders, cleanup, or `/api/status` calls.
 
 ## NEXT STEPS
-1. PASS: restarted NovaPay on port 3000; public status and PayPal registration/event subscriptions verified.
-2. Run one direct synthetic Gemini call via `services/llm.js`; record model/latency/tokens or exact safe provider error.
-3. Resume the existing single $1 order in fixed Phase 4 org using deterministic request key; print approval URL and wait for user approval. Keep its capture; remove only this run's other rows.
-4. Run evidence-grounded chat, repeat cache, ignored hostile context, AI proposal pending, tiny HTTP budget. Transaction description field is absent; mark that live subcheck UNVERIFIED.
-5. Add `--safe` modes to Phase 2/3 verifiers and run non-payment/non-invoice subsets.
-6. Run final gate, update docs, commit if no FAIL, report; never push; ask before Phase 5.
+1. Run final test, migration, JS syntax, diff, audit and frontend-hygiene checks.
+2. Update docs with actual outputs and commit locally if no FAIL; report and ask before Phase 5.
 
 ## USER ACTIONS PENDING
-- None currently. To verify remaining live Gemini/cache/injection checks later, the fixed Phase 3 test organization needs a completed capture with non-sensitive evidence; do not create one without an explicitly authorized Sandbox flow.
+- None. Buyer approval/capture are complete; do not make another PayPal call or refund.
 
 ## LIVE STATE
 - Migrations 0001–0005 reported applied by user; read-only probes confirmed 0005 tables and RPCs.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
-- NovaPay on port 3000 was restarted to load current T8 code; `/api/status` HTTP 200 authenticated. Tunnel and unrelated port 34872 untouched.
-- Previous Phase 4 verifier made no Gemini/PayPal calls. Server restarted; PID 67892 listens on 3000. Public `/api/status` returned HTTP 200 authenticated; PayPal registration preflight matched the provided tunnel host, `/api/webhook`, and capture/refund-completed subscriptions. One synthetic Gemini call completed through `services/llm.js`: HTTP 200, model `gemini-3.5-flash-lite`, 2138 ms, 59 input/39 output tokens. Probe JSON-shape check failed; response suppressed. One synthetic Gemini call completed. The single $1 order has been approved/captured; signed webhook verified/processed; 1 capture transaction and 1 journal entry ($1.00 gross, $0.40 fee, $0.60 net). Capture retained; no refund. Interactive runner finished PASS. Tunnel hostname from user: `cheaper-approximate-advances-keyboard.trycloudflare.com`; webhook path `/api/webhook`. Invoice sending remains SIMULATED.
+- NovaPay on port 3000 was restarted to load current code; latest run used process-only `AI_DAILY_USER_LIMIT=1` for the blocked-request check. Tunnel and unrelated port 34872 untouched.
+- Public preflight was HTTP 200 authenticated; webhook registration matched `/api/webhook` and expected subscriptions. One synthetic Gemini call: HTTP 200, model `gemini-3.5-flash-lite`, 2138 ms, 59 input/39 output tokens; tiny probe JSON shape was invalid (body suppressed). One $1 order approved/captured; signed webhook verified/processed; exactly one capture transaction and journal entry ($1 gross/$0.40 fee/$0.60 net). Capture retained; no refund. Tunnel hostname `cheaper-approximate-advances-keyboard.trycloudflare.com`; unrelated port 34872 untouched. Invoice sending remains SIMULATED.
+- Port 3000 now runs current checked-in code as PID 71634 with process limits 5 user / 20 org; static root returned HTTP 200. No PayPal call was made during this restart.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
 | `npm ci` | PASS | 2026-10-24 | 89 packages; npm audit at install 0 vulnerabilities |
-| `npm test` | PASS | 2026-10-24 | 104 passed, 0 failed |
-| `npm run check:migrations` | PASS | 2026-10-24 | 0001–0005 parsed by PostgreSQL 17 parser |
-| JS syntax + diff | PASS | 2026-10-24 | `find server scripts -name '*.js' ... node --check`; `git diff --check` |
-| `npm audit --omit=dev` | PASS | 2026-10-24 | 0 runtime vulnerabilities |
-| Phase 4 live verifier | PASS / UNVERIFIED | 2026-10-24 | 12 PASS, 0 FAIL, 3 UNVERIFIED; see `docs/TEST-REPORT.md` |
+| `npm test` | PASS | 2026-10-25 | 104 passed, 0 failed |
+| `npm run check:migrations` | PASS | 2026-10-25 | 0001–0005 parsed by PostgreSQL 17 parser |
+| JS syntax + diff | PASS | 2026-10-25 | `find server scripts -name '*.js' ... node --check`; `git diff --check` |
+| `npm audit --omit=dev` | PASS | 2026-10-25 | 0 runtime vulnerabilities |
+| Phase 4 live verifier | PASS / UNVERIFIED | 2026-10-25 | Capture, grounded fee response/cache, hostile client context, budget block, RLS/RPC and FX checks passed; database description and live proposal remain UNVERIFIED |
 | Final gate rerun | PASS | 2026-10-24 | `npm test` 104/104; migration check 0001–0005; JS syntax and diff check |
-| Phase 2/3 safe live subset | UNVERIFIED | 2026-10-24 | No safe mode; scripts create PayPal Sandbox side effects, not run |
+| Earlier Phase 2/3 safe subset attempt | UNVERIFIED | 2026-10-24 | At that point no safe mode existed; superseded by the 2026-10-25 runs below |
 | Frontend diff | PASS | 2026-10-24 | `git diff --name-only -- preview.html dashboard.html src assets tailwind.novapay.preset.*` empty |
 | `.env` hygiene | PASS | 2026-10-24 | ignored by Git; no `.env` in status/staged list |
+| Phase 2 safe subset | UNVERIFIED | 2026-10-25 | `node scripts/verify-phase2.js --safe`: root and 9 tables PASS; fixed Phase 2 orgs absent; no mutations |
+| Phase 3 safe subset | PASS | 2026-10-25 | `node scripts/verify-phase3.js --safe`: root, 18 relations, fixed orgs; A USD balanced=true; no mutations |
 
 ## KNOWN ISSUES AND RISKS
-- Evidence-backed live Gemini checks are in progress now that one real capture exists. Gemini smoke adapter returned HTTP 200 but its tiny probe did not match the minimal JSON shape. Unit tests cover budget no-call, cache, and injection behavior.
-- Phase 2/3 live verifier safe subset remains UNVERIFIED because those scripts have no read-only mode and trigger PayPal Sandbox operations.
+- Phase 2 read-only safe check could not inspect org-specific data because its named fixture orgs are absent; all nine tables are available. No fixture was created.
+- Live DB-description prompt injection is UNVERIFIED because `transactions` has no description field; client-supplied hostile context was ignored. Live model-generated pending proposal is UNVERIFIED. Unit tests cover sanitization and pending-only proposal mechanics.
+- Gemini synthetic smoke returned HTTP 200 but did not match the tiny probe JSON shape; response was suppressed. Production grounded fee answer and cache were verified separately.
 - Gemini free quotas can vary; minimized evidence only. Duplicate-payer and payout anomaly cases remain fixture-limited by available schema data.
 
 ## LESSONS LEARNED
@@ -70,3 +70,6 @@
 - `npm test`
 - `npm run check:migrations`
 - `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check`
+- `npm audit --omit=dev`
+- `node scripts/verify-phase2.js --safe`
+- `node scripts/verify-phase3.js --safe`
