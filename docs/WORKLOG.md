@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T3; inspect the exact Phase 6 user prompt and continue its next numbered task.
-- Last finished step: migration 0008 applied; original/reversal/repost entries balanced; summary reconciles; exact webhook replay x5 created no duplicates.
-- Next step: read the attached Phase 6 prompt and identify T3 requirements; inspect repo instructions and current files before edits.
-- Pending human action: none for T2; wait only if a T3 external approval gate is explicitly required by the prompt.
+- Current task: Phase 6 T3; wait for user to apply migration 0009.
+- Last finished step: T3 full suite PASS 117/117 and standalone parser PASS 0001-0009; migration 0009 is ready.
+- Next step: user applies full `supabase/migrations/0009_maintenance_state_machine.sql` once in Supabase SQL Editor and replies “applied”.
+- Pending human action: apply only 0009 in the correct project; do not rerun 0001-0008.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -143,3 +143,61 @@
 - RESULT: DISCOVERY COMPLETE; `maintenance_requests` currently permits legacy states `proposed/quoting/approved/in_progress/completed/cancelled`; no maintenance actions exist in `fundRoutes`/repositories. Schema has quotation/approval/evidence/payment tables and threshold settings. T3 needs additive state constraint/data migration plus server-only RPCs and routes.
 - NEXT: checkpoint discovery journal, then define the minimal T3 API/RPC surface and tests against the existing structures.
 - 2026-10-26 — ABOUT TO: Check branch/status and checkpoint T2 completion/T3 discovery in WORKLOG before starting T3 implementation. WHY: maintain the requested 2–3 step local WIP cadence.
+- RESULT: PASS; T3 discovery checkpoint committed as `0046caa` on `phase6-backend`; no push.
+- NEXT: inspect complete fund route and memory repository surfaces, then add the minimum maintenance request/quote/approval/verification workflow.
+- 2026-10-26 — ABOUT TO: Read fund route and memory repo method boundaries plus auth/error conventions before designing T3 handlers. WHY: implement API behavior consistently with current role/error patterns.
+- RESULT: DISCOVERY PASS; no maintenance route or repo method exists. Existing RLS-protected tables already contain required quotation, approval, contractor verification and threshold fields, but maintenance request status check is legacy. T3 will add migration 0009 and server APIs backed by service-only RPCs; no frontend edits.
+- NEXT: inspect test app/auth setup and Postgres error mapping, then implement T3 route/repo/migration/tests.
+- 2026-10-26 — ABOUT TO: Read existing route test harness, error mapping and Postgres RPC error shape to ensure T3 tests exercise role/state failures consistently.
+- RESULT: PASS; `/api/funds` errors are structured; existing HTTP test harness can use memory repositories and stub identity roles. No maintenance RPC/API exists. App globally authenticates org membership before fund routes.
+- NEXT: inspect createApp/memory repo structure and route tests, then implement migration 0009 RPCs and handlers.
+- 2026-10-26 — ABOUT TO: Read exact `createApp` identity injection and memory repository return structure to place T3 maintenance fixtures safely.
+- RESULT: PASS; test harness identifies users/roles through the `identity.membership` stub; DB errors use structured fund-route responses. Existing maintenance `status` constraint allows only legacy values; 0009 must add the T3 graph while preserving legacy rows/states until they can be migrated safely.
+- NEXT: add migration 0009 with requester metadata, state constraint, and service-only RPCs for request/contractor/quotation/scope/verification/payment approval; then add repository/routes/tests.
+- 2026-10-26 — ABOUT TO: Create additive migration 0009 for T3. WHY: enforce legal transitions and approval rules in PostgreSQL, where client writes are already blocked; preserve legacy statuses and all applied migrations.
+- RESULT: PASS; additive migration 0009 now adds requester identity, T3 status values (retaining legacy states), and six SECURITY DEFINER/service_role-only RPCs for request creation, contractors, quotations, scope approval, contractor verification, and threshold-aware payment approvals. State changes emit audit_log rows. No tests run yet.
+- NEXT: add Postgres/memory fund repository methods and HTTP handlers for the six RPC workflows, then add transition/approval tests.
+- 2026-10-26 — ABOUT TO: Implement T3 fund repository adapters, memory behavior and routes using zod and role guards. WHY: expose the server-enforced state machine over authenticated org-scoped API calls.
+- RESULT: PASS; Postgres adapters now call six T3 RPCs; memory repository models request→quoting→scope_approved→contractor_verified→payment_approved, requester self-approval rejection, duplicate approver rejection, and threshold count. No tests run yet.
+- NEXT: add zod-validated org-authenticated T3 routes with role guards and structured domain errors, then add focused tests.
+- 2026-10-26 — ABOUT TO: Extend `server/src/routes/funds.js` with request, contractor, quotation, scope approval, verification, and payment approval endpoints. WHY: expose only the authorized operations and let RPCs enforce the same rules server-side.
+- RESULT: PASS; six authenticated fund maintenance routes added with strict Zod schemas and per-action role guards. Memory domain errors return stable structured codes. No tests run yet.
+- NEXT: add end-to-end repository state-machine tests for legal/illegal transitions, chosen quote ownership, requester self-approval, distinct payment approvers, and threshold boundary; add migration privilege/state assertions.
+- 2026-10-26 — ABOUT TO: Create focused T3 tests and extend migration tests for all 0009 RPC execution grants and guarded state/approval rules. WHY: prove each legal transition path and reject skips/self-approval/repeated approvers before applying migration.
+- RESULT: PASS; T3 memory state tests and migration RPC/grant assertions added. These cover legal workflow progression, invalid skips, non-owned quote, requester self-approval, duplicate approver, contractor actor/time, and threshold at/just below 10000. No tests run yet.
+- NEXT: inspect route-test setup, correct any weak assertions, and add HTTP coverage for role/route wiring; then run focused T3 tests.
+- 2026-10-26 — ABOUT TO: Read existing authenticated route test setup and validate new test assertion quality before adding HTTP route coverage.
+- RESULT: REVIEW; maintenance route harness supports an in-memory flow, and the new tests cover the T3 state path. Found one tautological state assertion (`assert.equal(status, condition ? status : status)`) in the new test; replace with a direct expectation.
+- NEXT: fix the tautological assertion, then run focused T3 tests and migration parser.
+- 2026-10-26 — ABOUT TO: Replace the weak assertion with `request.status === 'quoting'` in the workflow test. WHY: ensure the test fails if quote creation does not advance requested→quoting.
+- RESULT: PASS; state assertion now directly requires `quoting` after first quotation.
+- NEXT: run focused maintenance state and migration authorization tests; log exact counts.
+- 2026-10-26 — ABOUT TO: Execute `node --test server/test/phase6-maintenance.test.js server/test/phase6-migration.test.js`. WHY: validate T3 legal/illegal workflow rules and privileged migration grants before the full suite.
+- RESULT: FAIL; focused T3 run: 5 passed, 3 failed. Failures are fixture/regex expectations: prepared fixture already transitions to quoting, self-approval message capitalization, and whitespace-sensitive SQL source assertion. No live calls or DB changes.
+- NEXT: correct these three assertions and rerun focused tests.
+- 2026-10-26 — ABOUT TO: Fix the test expectations only, preserving implementation and migration behavior. WHY: align tests with the actual state reached by fixture and tolerate harmless SQL whitespace/capitalization.
+- RESULT: PASS; fixed only the three test expectations. No production code or SQL changed.
+- NEXT: rerun the focused T3 unit/migration tests and append exact result.
+- 2026-10-26 — ABOUT TO: Rerun `node --test server/test/phase6-maintenance.test.js server/test/phase6-migration.test.js`. WHY: verify the T3 expectations now match implemented transitions and migration text.
+- RESULT: FAIL; focused rerun 7 passed, 1 failed due to one remaining case-sensitive regex (`Requester` capitalization) in the contractor verification self-approval assertion. No live calls or DB changes.
+- NEXT: make that regex case-insensitive and rerun focused tests.
+- 2026-10-26 — ABOUT TO: Fix the final case-sensitive assertion in `phase6-maintenance.test.js`. WHY: test intent is correct; capitalization should not make this domain assertion brittle.
+- RESULT: PASS; the final assertion now ignores message capitalization; production files and migration unchanged.
+- NEXT: rerun focused T3 tests, then perform a full suite run after they pass.
+- 2026-10-26 — ABOUT TO: Rerun focused T3 test files after the assertion-only fix. WHY: verify the maintenance state-machine and migration checks are green before broader regression.
+- RESULT: FAIL; focused third run 7 passed, 1 failed because the payment self-approval expectation also needs case-insensitive matching. No live calls or DB changes.
+- NEXT: correct the remaining requester regex and run the focused suite again.
+- 2026-10-26 — ABOUT TO: Make all requester self-approval test regexes case-insensitive in the T3 test file. WHY: keep assertions aligned with the stable semantic message regardless of capitalization.
+- RESULT: PASS; all requester self-approval expectations now use case-insensitive matching.
+- NEXT: rerun the focused T3 test files.
+- 2026-10-26 — ABOUT TO: Execute the focused T3 unit/migration tests again. WHY: validate workflow state progression and SQL RPC privileges after all test expectation fixes.
+- RESULT: PASS; focused T3 run passed 8/8 tests, 0 failed, covering state progression, invalid skips, quotation ownership, self-approval, contractor actor/time, distinct approvers and threshold boundary.
+- NEXT: record focused PASS, update current T3 handoff, then run full `npm test`.
+- 2026-10-26 — ABOUT TO: Update TEST-REPORT/CONTEXT with focused T3 result and exact pending files, then start full regression with migration 0009.
+- RESULT: PASS; full `npm test` parsed migrations 0001-0009 and passed 117/117 tests, 0 failed/skipped. Includes T3 state and service-role RPC assertions.
+- NEXT: append full-suite PASS and run the required standalone `npm run check:migrations` for migration 0009.
+- 2026-10-26 — ABOUT TO: Record full-suite PASS in TEST-REPORT/CONTEXT, then start standalone migration parser command.
+- RESULT: PASS; standalone `npm run check:migrations` parsed all migrations 0001-0009 with PostgreSQL 17.
+- NEXT: log parser PASS and T3 implementation decisions, update exact pending 0009 apply gate, then checkpoint all T3 code/tests/docs locally.
+- 2026-10-26 — ABOUT TO: Append migration-check evidence/decision and refresh CONTEXT/WORKLOG to the 0009 apply gate; then commit. WHY: user must review a concrete tested migration before SQL Editor application.
+- 2026-10-26 — ABOUT TO: Confirm branch and staged-path scope, check whitespace/no `.env`, and checkpoint the passing T3 implementation/migration/tests and apply gate locally. WHY: user requires WIP commits every 2–3 steps; full regression and parser passed.

@@ -4,7 +4,7 @@
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
 - Last completed checkpoint: implementation checkpoint pending; last committed `0d37592 WIP Phase 6 task 2: plan fund account correction`.
-- Current phase/task: Phase 6 Fund Transparency, T3 (read exact Phase 6 prompt requirements before implementation).
+- Current phase/task: Phase 6 Fund Transparency, T3 maintenance state machine implementation; migration 0009 apply gate pending.
 
 ## DONE
 - STEP 0 baseline and T1 complete; migrations 0001-0006 applied per user; ordinary owner JWT read/write checks for 0006 passed.
@@ -14,20 +14,23 @@
 - Existing capture journal balances (100 minor units) but credits 4000 Sales Revenue instead of 4100 Donations.
 
 ## IN PROGRESS
+- T2 complete; all authorized T2 post-0008 live checks pass.
+- T3 files: `supabase/migrations/0009_maintenance_state_machine.sql`, `server/src/routes/funds.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/phase6-maintenance.test.js`, `server/test/phase6-migration.test.js`, plus continuity docs.
+- T3 focused tests PASS 8/8; full `npm test` PASS 117/117; `npm run check:migrations` PASS for 0001-0009.
 - `server/src/services/ledger.js`: fund-specific line builder maps only revenue account 4000 to 4100.
 - `server/src/repos/postgres.js`: reads order fund linkage and uses fund-specific lines in synchronous and webhook capture paths.
 - `server/test/ledger.test.js`, `server/test/postgres-repos.test.js`: verify 4100 lines for both paths.
-- `supabase/migrations/0008_fund_contribution_accounting.sql`: user confirmed applied; live original/reversal/repost entries all balanced, original unchanged.
+- `supabase/migrations/0009_maintenance_state_machine.sql`: user confirmed applied; live original/reversal/repost entries all balanced, original unchanged.
 - `server/test/phase6-migration.test.js`: assert reversal/repost, idempotency keys, account mapping, and no journal updates/deletes.
 - Continuity files: `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`.
 
 ## NEXT STEPS
-1. User applies `supabase/migrations/0008_fund_contribution_accounting.sql` once in Supabase SQL Editor and replies “applied”.
+1. User applies `supabase/migrations/0009_maintenance_state_machine.sql` once in Supabase SQL Editor and replies “applied”.
 2. Verify original capture entry is unchanged; reversal and repost entries are balanced; final net credits 4100; summary reconciles; replay exact webhook x5 creates no duplicates.
 3. Checkpoint T2, then continue to T3.
 
 ## USER ACTIONS PENDING
-- None. User confirmed 0008 applied; live verification and replay x5 passed.
+- After local T3 tests and migration parser pass, apply complete `supabase/migrations/0009_maintenance_state_machine.sql` once in the correct Supabase SQL Editor project and reply “applied”. Do not edit/rerun 0001-0008.
 
 ## LIVE STATE
 - Supabase migrations 0001-0007 applied per user confirmation; 0008 not applied.

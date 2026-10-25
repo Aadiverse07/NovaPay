@@ -15,6 +15,16 @@ const campaignBody = z.object({
   status: z.enum(['draft','active']).default('active'),
 }).strict();
 const pledgeBody = z.object({ amountMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER) }).strict();
+const maintenanceBody = z.object({ campaignId: uuid.nullable().optional(), title: z.string().trim().min(1).max(160), scope: z.string().trim().min(1).max(4000), estimateMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).nullable().optional() }).strict();
+const contractorBody = z.object({ name: z.string().trim().min(1).max(160), paymentDestinationRef: z.string().trim().max(200).nullable().optional() }).strict();
+const quotationBody = z.object({ contractorId: uuid, amountMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER), documentRef: z.string().trim().max(500).nullable().optional() }).strict();
+const scopeApprovalBody = z.object({ quotationId: uuid, note: z.string().trim().max(500).nullable().optional() }).strict();
+const approvalBody = z.object({ note: z.string().trim().max(500).nullable().optional() }).strict();
+
+function sendFundError(error, res, next) {
+  if (error?.statusCode && error?.code) return res.status(error.statusCode).json(structuredErrorBody(error.code,error.message));
+  return next(error);
+}
 
 function mapCampaign(row) {
   return { id: row.id, title: row.title, purpose: row.purpose, targetMinor: Number(row.target_minor ?? row.targetMinor), currency: row.currency || 'USD', deadline: row.deadline || null, organiser: row.organiser, status: row.status, createdAt: row.created_at || null };
@@ -78,6 +88,45 @@ export function fundRoutes({ config, paypal, repos }) {
       }
       return res.status(201).json({ orderId:order.id,status:order.status,approveUrl:order.approveUrl,amount:order.amount,currency:'USD',contributionId:contribution.id });
     } catch (error) { return next(error); }
+  });
+
+  router.post('/funds/maintenance', rbac(['owner','admin','accountant','approver','resident']), async (req,res,next)=>{
+    const parsed=maintenanceBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request fields are invalid.'));
+    try{const request=await repos.funds.createMaintenanceRequest({orgId:req.orgId,actorId:req.user.id,...parsed.data,requestId:req.id});return res.status(201).json({request});}
+    catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/contractors', rbac(['owner','admin','accountant']), async(req,res,next)=>{
+    const parsed=contractorBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Contractor fields are invalid.'));
+    try{const contractor=await repos.funds.createContractor({orgId:req.orgId,actorId:req.user.id,...parsed.data,requestId:req.id});return res.status(201).json({contractor});}
+    catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/quotations', rbac(['owner','admin','accountant']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    const parsed=quotationBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Quotation fields are invalid.'));
+    try{const quotation=await repos.funds.addQuotation({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,...parsed.data,requestKey:req.id});return res.status(201).json({quotation,status:'quoting'});}
+    catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/scope-approval', rbac(['owner','admin','approver']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    const parsed=scopeApprovalBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Scope approval fields are invalid.'));
+    try{const result=await repos.funds.approveMaintenanceScope({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,...parsed.data,requestKey:req.id});return res.json(result);}
+    catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/contractor-verification', rbac(['owner','admin','approver']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    try{const result=await repos.funds.verifyMaintenanceContractor({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,requestKey:req.id});return res.json(result);}
+    catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/payment-approval', rbac(['owner','admin','approver']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    const parsed=approvalBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Payment approval fields are invalid.'));
+    try{const result=await repos.funds.approveMaintenancePayment({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,...parsed.data,requestKey:req.id});return res.json(result);}
+    catch(error){return sendFundError(error,res,next)}
   });
   return router;
 }

@@ -8,6 +8,8 @@ const contributionMigrationUrl = new URL('../../supabase/migrations/0007_fund_co
 const contributionSql = await readFile(contributionMigrationUrl, 'utf8');
 const accountingMigrationUrl = new URL('../../supabase/migrations/0008_fund_contribution_accounting.sql', import.meta.url);
 const accountingSql = await readFile(accountingMigrationUrl, 'utf8');
+const maintenanceMigrationUrl = new URL('../../supabase/migrations/0009_maintenance_state_machine.sql', import.meta.url);
+const maintenanceSql = await readFile(maintenanceMigrationUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -55,4 +57,18 @@ test('fund account correction uses append-only reversal and repost entries', () 
   assert.match(accountingSql, /not exists\s*\([\s\S]*?fund_reclassification_reversal/i);
   assert.match(accountingSql, /on conflict\(org_id,source_type,source_id\) do nothing/ig);
   assert.doesNotMatch(accountingSql, /\b(?:update|delete)\s+(?:from\s+)?public\.journal_(?:entries|lines)\b/i);
+});
+
+test('T3 maintenance RPCs enforce the state graph and are service_role-only', () => {
+  const names=['create_fund_maintenance_request','create_fund_contractor','add_fund_quotation','approve_fund_maintenance_scope','verify_fund_maintenance_contractor','approve_fund_maintenance_payment'];
+  for(const name of names){
+    assert.match(maintenanceSql,new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?security definer`,'i'),`${name} must be SECURITY DEFINER`);
+    assert.match(maintenanceSql,new RegExp(`revoke all on function public\\.${name}\\([^;]+ from public,anon,authenticated;`,'i'),`${name} must revoke client execution`);
+    assert.match(maintenanceSql,new RegExp(`grant execute on function public\\.${name}\\([^;]+ to service_role;`,'i'),`${name} must grant service_role only`);
+  }
+  assert.match(maintenanceSql,/requested','quoting','scope_approved','contractor_verified','payment_approved','paid','evidence_submitted','reviewed','closed/i);
+  assert.match(maintenanceSql,/requested_by=p_actor/);
+  assert.match(maintenanceSql,/count\(distinct approver_id\)/i);
+  assert.match(maintenanceSql,/v_quote\.amount_minor>=v_threshold/);
+  assert.match(maintenanceSql,/maintenance_request_id\s*=\s*p_request/i);
 });

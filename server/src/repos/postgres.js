@@ -315,6 +315,24 @@ export function createPostgresRepositories(database) {
     async campaignSummary(orgId, campaignId) {
       return database.rpc('get_fund_campaign_summary', { p_org: orgId, p_campaign_id: campaignId });
     },
+    async createMaintenanceRequest({ orgId, actorId, campaignId, title, scope, estimateMinor, requestId }) {
+      return database.rpc('create_fund_maintenance_request', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId || null, p_title: title, p_scope: scope, p_estimate_minor: estimateMinor ?? null, p_request_id: requestId });
+    },
+    async createContractor({ orgId, actorId, name, paymentDestinationRef, requestId }) {
+      return database.rpc('create_fund_contractor', { p_org: orgId, p_actor: actorId, p_name: name, p_payment_destination_ref: paymentDestinationRef || null, p_request_id: requestId });
+    },
+    async addQuotation({ orgId, actorId, requestId, contractorId, amountMinor, documentRef, requestKey }) {
+      return database.rpc('add_fund_quotation', { p_org: orgId, p_actor: actorId, p_request: requestId, p_contractor: contractorId, p_amount_minor: amountMinor, p_document_ref: documentRef || null, p_request_id: requestKey });
+    },
+    async approveMaintenanceScope({ orgId, actorId, requestId, quotationId, note, requestKey }) {
+      return database.rpc('approve_fund_maintenance_scope', { p_org: orgId, p_actor: actorId, p_request: requestId, p_quotation: quotationId, p_note: note || null, p_request_id: requestKey });
+    },
+    async verifyMaintenanceContractor({ orgId, actorId, requestId, requestKey }) {
+      return database.rpc('verify_fund_maintenance_contractor', { p_org: orgId, p_actor: actorId, p_request: requestId, p_request_id: requestKey });
+    },
+    async approveMaintenancePayment({ orgId, actorId, requestId, note, requestKey }) {
+      return database.rpc('approve_fund_maintenance_payment', { p_org: orgId, p_actor: actorId, p_request: requestId, p_note: note || null, p_request_id: requestKey });
+    },
   };
 
   return {
