@@ -454,3 +454,10 @@
 - Reason: Matches the requested thin slice and existing RLS/composite-FK conventions; default rows exist for current and future organizations. No external facts used.
 - Source: User-provided Phase 6 prompt; `supabase/migrations/0001_foundation.sql`, `0002_financial_core.sql`, and `0005_ai.sql`, checked 2026-10-25.
 - Rejected alternatives: Editing an applied migration; granting authenticated writes; storing donor PII; using a global unscoped settings row.
+
+## 2026-10-26 — Phase 6 T1 live RLS verification
+- Question: How to prove migration 0006 is applied and client writes are denied without changing fixture data?
+- Choice: Reuse the fixed Phase 3 owner fixture, mint/verify a one-time magic-link token in memory, issue authenticated GETs and constraint-safe incomplete POST attempts against all 11 Phase 6 tables, and print only status codes.
+- Reason: Confirms actual PostgREST permissions with an ordinary user JWT; failed incomplete writes cannot create rows. No tokens, bodies, or key values were printed.
+- Source: User-confirmed SQL Editor application and live Supabase checks run 2026-10-26; repository fixture documented in `docs/CONTEXT.md`.
+- Rejected alternatives: Relying on static SQL checks alone; using the service-role JWT as the client proof; inserting test data during the permissions check.

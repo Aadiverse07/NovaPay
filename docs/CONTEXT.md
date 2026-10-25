@@ -1,10 +1,10 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-10-25 22:49 IST.
+- Date/time: 2026-10-26 (Asia/Kolkata).
 - Branch: `phase6-backend` (verified; local-only work).
 - Last task checkpoint: `92525db WIP Phase 6 task 1: fund transparency schema`.
-- Current phase/task: Phase 6 Fund Transparency, T1 complete; waiting for user to apply migration 0006.
+- Current phase/task: Phase 6 Fund Transparency, T1 applied and live-verified; T2 contributions implementation is next.
 
 ## DONE
 - STEP 0 complete and locally checkpointed as `7ac6c65`: dependency install, baseline tests and migration parse passed.
@@ -13,20 +13,20 @@
 - Added static migration checks in `server/test/phase6-migration.test.js`.
 
 ## IN PROGRESS
-- T1 schema and security shape implemented; static tests pass. Migration 0006 has not been applied to Supabase.
+- T1 migration 0006 applied and verified live: fixed owner JWT read all 11 new tables (200); direct POST write attempts denied on all 11 (403). No fixture data changed.
 - Edited files: `supabase/migrations/0006_fund_transparency.sql`, `server/test/phase6-migration.test.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
-- Remaining: wait for human application and confirmation before T2. Working tree was clean at T1 checkpoint.
+- T1 live check complete. Next inspect webhook/PayPal posting repositories, then implement T2 verified-capture contribution receipt persistence, campaign summary, unit/integration tests, and continuity updates. Never edit migration 0006.
 
 ## NEXT STEPS
-1. Complete T1 test and diff checks; update all continuity files; commit `WIP Phase 6 task 1: fund transparency schema` locally.
-2. User applies migration 0006 via Supabase SQL Editor using the exact file; verify success and ask user to reply “applied”.
-3. Do not begin T2 until the user confirms migration application; then resume Phase 6 in prompt order.
+1. Inspect existing PayPal webhook processor, capture posting path, and repository/test fixtures.
+2. Implement T2: pledge and contribution reference linkage; verified posted captures only; idempotent receipt; amount mismatch flagged; SQL-computed campaign summary.
+3. Add tests, run/checkpoint T2, then move to T3 in prompt order.
 
 ## USER ACTIONS PENDING
-- Apply `supabase/migrations/0006_fund_transparency.sql`: Supabase Dashboard → SQL Editor → New query → paste the complete file contents → Run once. Confirm with “applied”. Do this only after T1 is checkpointed. SQL Editor runs each script in a transaction; on any error, report the error and do not retry edited SQL against a partially applied migration.
+- None; user confirmed migration 0006 is applied.
 
 ## LIVE STATE
-- Real Supabase: user-reported migrations 0001 and 0002 applied; migrations 0003–0005 previously reported applied in project context; migration 0006 is not applied (pending user action).
+- Real Supabase: user-reported migrations 0001 and 0002 applied; migrations 0003–0005 previously reported applied in project context; migration 0006 applied (user confirmed 2026-10-26); direct verification pending.
 - Tunnel/webhook: previously user-reported configured; no new live verification in Phase 6.
 - Last live tests: prior session reported fixed-user auth and read APIs; no Phase 6 live API checks run.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
@@ -40,7 +40,7 @@
 | T1 `npm test` | PASS | 2026-10-25 | Migration 0001–0006 parsed; 106 passed, 0 failed, 0 skipped |
 | T1 `npm run check:migrations` | PASS | 2026-10-25 | Migrations 0001–0006 parse as PostgreSQL 17 SQL/PLpgSQL |
 | T1 `git diff --check` | PASS | 2026-10-25 | No whitespace errors |
-| T1 live Supabase/RLS ordinary-user JWT | UNVERIFIED | 2026-10-25 | 0006 not applied |
+| T1 live Supabase/RLS ordinary-user JWT | PASS | 2026-10-26 | 11/11 reads 200; 11/11 writes denied 403 |
 | Frontend scope | PASS | 2026-10-25 | No changed paths under `preview.html`, `dashboard.html`, `src/`, or `assets/` |
 
 ## KNOWN ISSUES AND RISKS

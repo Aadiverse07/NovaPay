@@ -697,3 +697,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `npm test` rerun — PASS; migration parser accepted 0001–0006; 106 passed, 0 failed, 0 skipped.
 - `npm run check:migrations` — PASS; migrations 0001–0006 parse as PostgreSQL 17 SQL/PLpgSQL.
 - `git diff --check` — PASS; no whitespace errors. Frontend scope check (`git diff --name-only -- preview.html dashboard.html src assets`) — PASS; empty.
+
+## Phase 6 T1 live migration verification — 2026-10-26
+- User confirmed migration 0006 was applied in Supabase. Starting read-only verification of schema visibility and ordinary-user JWT grants; result pending. No live writes planned.
+- Read-only live verification (fixed `novapay-phase3-owner-a` owner JWT, generated and consumed in memory; no response bodies/tokens printed): PASS. All 11 Phase 6 table reads returned HTTP 200; POST direct-write attempts to all 11 returned HTTP 403. No rows were created or changed.
