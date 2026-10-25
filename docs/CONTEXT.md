@@ -3,8 +3,8 @@
 ## HEADER
 - Date/time: 2026-10-25 Asia/Kolkata.
 - Branch: `frontend-wiring` (confirmed this session; user says this overrides the master prompt branch rule).
-- Last commit: `c1c95fe WIP Frontend wiring task 3: API data`.
-- Current phase/task: Frontend wiring, task 4 complete; proceed to task 5 (Invoices and Reports views).
+- Last commit: `9a69ad9 WIP Frontend wiring task 4: reports and FX`.
+- Current phase/task: Frontend wiring, task 5 complete; proceed to task 6 (AI Assistant and notifications).
 
 ## DONE
 - Phase 3 completed; invoice sending remains SIMULATED.
@@ -14,15 +14,17 @@
 
 ## IN PROGRESS
 - Task: Task 5 — wire invoice and report views to API, add CSV download, keep invoice sending explicitly SIMULATED.
+- Files being edited: `src/dashboard.js`, `src/api-client.js`, `dashboard.html`, and continuity files.
+- Task 4 checkpoint committed as `9a69ad9`; task 5 checks/commit remain pending.
 - Checkpoint commits: task 1 `a8a05b0`; task 2 `cb11f22`; task 3 `c1c95fe`; task 4 checkpoint is being finalized.
 - Files for task 4: `src/dashboard.js`; continuity files. Existing chart structures retained.
-- Task 4 done: KPI values use `/api/reports/profit-and-loss` and `/api/reports/fees`; cash flow uses `/api/reports/cash-movement`; FX uses `/api/fx/convert`, showing source, timestamp, and indicative label.
-- Task 4 test evidence: JS syntax + diff check PASS; `npm test` PASS (104/104); browser/live UI UNVERIFIED.
+- Task 4 done: KPI values use `/api/reports/profit-and-loss` and `/api/reports/fees`; cash flow uses `/api/reports/cash-movement`; FX uses `/api/fx/convert`, showing source, timestamp, and indicative label. Task 4 commit `9a69ad9`.
+- Task 5 done: invoices load from `/api/invoices`; reports use P&L and fee endpoints; CSV export requests server `format=csv`; invoice sending is labelled SIMULATED. Files: `src/dashboard.js`, `src/api-client.js`, `dashboard.html`, continuity files.
+- Task 5 tests: JS syntax + diff check PASS; `npm test` PASS (104/104); browser/API session UNVERIFIED. Checkpoint pending.
 
 ## NEXT STEPS
-1. Complete task 5 (Invoices/Reports API data and CSV export), update docs, and commit locally.
-2. Complete task 6 (AI Assistant and notifications API), update docs, and commit locally.
-3. Stop after task 6; task 7 will need a real login using the fixed named test user.
+1. Complete task 6 (AI Assistant and notifications API), update docs, and commit locally.
+2. Stop after task 6; task 7 will need a real login using the fixed named test user.
 
 ## USER ACTIONS PENDING
 - Task 7 needs a real browser login using the fixed named test user; make that account available in the test browser/session when task 7 begins. Do not send its password or tokens in chat or commit them.
@@ -56,6 +58,9 @@
 | Task 4 JavaScript syntax/diff | PASS | 2026-10-25 | `find src -type f -name '*.js' -print0 \| xargs -0 -n1 node --check && git diff --check` |
 | Task 4 regression suite | PASS | 2026-10-25 | `npm test`: 104 passed, 0 failed; migrations 0001–0005 parsed |
 | Task 4 authenticated browser report/FX requests | UNVERIFIED | 2026-10-25 | No browser session run |
+| Task 5 JavaScript syntax/diff | PASS | 2026-10-25 | `find src -type f -name '*.js' -print0 \| xargs -0 -n1 node --check && git diff --check` |
+| Task 5 regression suite | PASS | 2026-10-25 | `npm test`: 104 passed, 0 failed; migrations 0001–0005 parsed |
+| Task 5 authenticated invoice/report/CSV browser behavior | UNVERIFIED | 2026-10-25 | No browser session run |
 
 ## KNOWN ISSUES AND RISKS
 - Real Supabase sign-up onboarding requires a returned session; if email confirmation is enabled, onboarding occurs after confirmation and sign-in.
@@ -75,6 +80,7 @@
 - Never print `.env` values, provider bodies, Authorization headers, stack traces, or sensitive evidence.
 
 - Task 4 changed files: `src/dashboard.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
+- Task 5 changed files: `src/dashboard.js`, `src/api-client.js`, `dashboard.html`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 
 ## DO NOT
 - Do not push, edit protected design files, use `--force`, weaken tests, edit applied migrations, commit `.env`, call PayPal Invoicing, or invent financial evidence.
