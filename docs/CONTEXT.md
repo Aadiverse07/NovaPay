@@ -2,77 +2,73 @@
 
 ## HEADER
 - Date/time: 2026-10-26, Asia/Kolkata.
-- Branch: `phase6-backend`; local-only, verified.
-- Last task checkpoint: `2d8a1f6 WIP Phase 6: update resume pointer after reconciliation`.
-- Current phase/task: Phase 6 Fund Transparency, T2 fund-specific 4100 posting correction; next T3 after user applies migration 0008 and live verification passes.
+- Branch: `phase6-backend`; local-only.
+- Last completed checkpoint: implementation checkpoint pending; last committed `0d37592 WIP Phase 6 task 2: plan fund account correction`.
+- Current phase/task: Phase 6 Fund Transparency, T2 account correction; T3 begins after 0008 is applied and live checks pass.
 
 ## DONE
-- STEP 0 complete: `npm ci`, `npm test` (104 passed), and migration parser for 0001–0005; checkpoint `7ac6c65`.
-- T1 migration `supabase/migrations/0006_fund_transparency.sql` and static checks committed as `92525db`.
-- User confirmed 0006 applied. Fixed ordinary owner JWT live check: all 11 Phase 6 table reads returned 200; all 11 direct-write attempts returned 403; no rows changed. Docs checkpoint `0a0ab25`.
-- T2 implemented locally: 0007 donation/order/capture RPCs; campaign/pledge/order/summary endpoints; webhook verified capture update, mismatch flag, receipt; memory fixtures and tests.
-- T2 `npm test`: PASS, 110/110. Explicit migration parse 0001–0007 PASS. JS syntax and `git diff --check` PASS. Frontend diff empty. User applied 0007; five RPCs denied ordinary JWT (403); campaign/pledge/summary API passed; linked $1 Sandbox order created; user approved checkout; capture/webhook/replay verification in progress.
+- STEP 0 baseline and T1 complete; migrations 0001-0006 applied per user; ordinary owner JWT read/write checks for 0006 passed.
+- T2 0007 implemented/applied; API checks and ordinary-user RPC denials passed.
+- Fixed $1 Sandbox contribution was approved and captured once. Exact event `0U573441YN817132C` was verified/processed; contribution received; one receipt; summary pledged=0, received=100, remaining=900 minor units.
+- Five exact stored-body webhook replays returned HTTP 200 and created no duplicates.
+- Existing capture journal balances (100 minor units) but credits 4000 Sales Revenue instead of 4100 Donations.
 
 ## IN PROGRESS
-- T2 correction in progress: `server/src/services/ledger.js`, `server/src/repos/postgres.js`, targeted ledger/repo/migration tests, and new `supabase/migrations/0008_fund_contribution_accounting.sql`. Migration must append reversal and repost entries only; never update/delete journal rows. Run `npm test` and `npm run check:migrations`; present exact SQL Editor steps and wait for user “applied”.
-- Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. Exact event resource `0U573441YN817132C` is signature verified/processed; contribution received; one receipt; summary pledged=0, received=100, remaining=900. Five exact raw-body replay requests all returned 200 and created no duplicates. Journal is balanced at 100 minor units but credits 4000 Sales Revenue instead of 4100 Donations. No posted data changed; correction requires new migration/fund-specific posting logic.
+- `server/src/services/ledger.js`: fund-specific line builder maps only revenue account 4000 to 4100.
+- `server/src/repos/postgres.js`: reads order fund linkage and uses fund-specific lines in synchronous and webhook capture paths.
+- `server/test/ledger.test.js`, `server/test/postgres-repos.test.js`: verify 4100 lines for both paths.
+- `supabase/migrations/0008_fund_contribution_accounting.sql`: append reversal of each affected original capture entry and repost with 4000 mapped to 4100; originals remain untouched.
+- `server/test/phase6-migration.test.js`: assert reversal/repost, idempotency keys, account mapping, and no journal updates/deletes.
+- Continuity files: `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`.
 
 ## NEXT STEPS
-1. Human confirms PayPal Sandbox delivery status for the exact capture-completed event after the latest resend; app inbox still shows no match.
-2. Once the event appears in `paypal_events`, verify signature and capture/order references; reconcile contribution, receipt, capture, balanced journal and summary; replay exact stored raw body five times and verify idempotency.
-3. If delivery remains absent, inspect PayPal delivery status/tunnel routing and repair or resend the existing event; never mark received manually. Finish T2 reconciliation before T3.
+1. Run `npm test`; log result, repair failures, and rerun if needed.
+2. Run `npm run check:migrations`; log exact parse result.
+3. If checks pass, checkpoint and give user exact Supabase SQL Editor steps for the complete 0008 file; wait for “applied”.
+4. After user confirms, verify reversal/repost lines, account 4100 balance, contribution summary/ledger reconciliation, then replay exact webhook x5 and check no duplicates.
+5. Once T2 passes, checkpoint and continue to T3.
 
 ## USER ACTIONS PENDING
-- Inspect PayPal Developer Dashboard > Apps & Credentials > Sandbox > Webhooks > configured webhook > Event deliveries for the exact capture-completed event. The user reports the server/tunnel was fixed and the event resent; this latest read still shows no exact matching event, receipt, or received summary balance. Check PayPal Sandbox Event deliveries for the captured transaction and confirm delivery to `/api/webhook`. If failed, inspect forwarding/delivery status and resend the existing event. Do not create another order or manually mark received. Share status only; no secrets.
+- After local code/tests and migration parser pass, apply `supabase/migrations/0008_fund_contribution_accounting.sql` once in the Supabase SQL Editor. Do not edit or rerun migrations 0001-0007. Wait for “applied” before live verification.
 
 ## LIVE STATE
-- Supabase migrations 0001–0007 applied (user reported/confirmed); migration 0008 not applied. 0006 ordinary-user read/write checks PASS; 0007 RPC-denial and live API checks PASS.
-- Tunnel/webhook: previously user-reported configured; no new Phase 6 verification.
-- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once. Exact resent event verifies/processes successfully; contribution received; one receipt; summary receivedMinor=100, remainingMinor=900. Five exact-body replays passed idempotency. Ledger balances but uses 4000 Sales Revenue instead of 4100 Donations; no correction applied.
+- Supabase migrations 0001-0007 applied per user confirmation; 0008 not applied.
+- Tunnel/webhook server reported fixed by user.
+- Exact capture event verified/processed; one contribution, one capture, one receipt; summary receivedMinor=100, remainingMinor=900.
+- Existing ledger capture entry has equal 100-minor debits/credits but uses account 4000 Sales Revenue; correcting reversal/repost pending 0008.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
 |---|---|---|---|
-| STEP 0 baseline | PASS | 2026-10-25 | `npm ci`; `npm test` 104/104; migrations 0001–0005 parse |
-| T1 static | PASS | 2026-10-25 | `npm test` 106/106; migration parse; diff check |
-| T1 live ordinary-user RLS | PASS | 2026-10-26 | 11 table GETs HTTP 200; 11 direct POSTs HTTP 403 |
-| T2 full regression | PASS | 2026-10-26 | `npm test`: 110/110, migrations 0001–0007 parsed |
-| T2 explicit migration check | PASS | 2026-10-26 | `npm run check:migrations`: 0001–0007 parse |
-| T2 JavaScript syntax | PASS | 2026-10-26 | `find server scripts -name '*.js' -print0 \| xargs -0 -n1 node --check` |
-| T2 diff/frontend scope | PASS | 2026-10-26 | `git diff --check`; frontend changed-path list empty |
-| T2 live RPC/API | PASS | 2026-10-26 | 5 RPCs 403; campaigns/summary 200; pledge=100, received=0, remaining=1000 minor units
-| T2 Sandbox order creation | PASS | 2026-10-26 | 1.00 USD order linked; HTTP 201; no purchase/capture
-| T2 buyer-approved capture | PASS | 2026-10-26 | Authenticated capture completed existing $1 Sandbox order once |
-| T2 exact PayPal event lookup/webhook subscription | PASS | 2026-10-26 | One exact matching provider event; webhook path/subscription confirmed |
-| T2 exact-event resend request | PASS | 2026-10-26 | PayPal accepted resend request |
-| T2 event/receipt/summary | PASS | 2026-10-26 | exact capture verified/processed; one receipt; receivedMinor=100, remainingMinor=900
-| T2 exact raw-body replay x5 | PASS | 2026-10-26 | Five 200 responses; no duplicate capture/receipt/journal
-| T2 donation account classification | FAIL | 2026-10-26 | Existing balanced journal credits 4000 Sales Revenue instead of 4100 Donations; migration 0008/tests in progress |
+| Baseline/T1/T2 existing suite | PASS | 2026-10-26 | `npm test`: 110/110; migrations 0001-0007 parsed |
+| T2 live auth/API | PASS | 2026-10-26 | 5 RPCs 403; campaign/pledge/summary passed |
+| T2 capture receipt | PASS | 2026-10-26 | exact event verified/processed; one receipt; summary received=100 |
+| T2 exact webhook replay x5 | PASS | 2026-10-26 | five HTTP 200; no duplicates |
+| T2 account classification | FAIL | 2026-10-26 | existing entry credits 4000, expected 4100; 0008 correction in progress |
+| T2 correction unit/integration/static tests | PASS | 2026-10-26 | `npm test`: 113/113; 0001-0008 parsed |
+| Migration check 0008 | UNVERIFIED | 2026-10-26 | standalone `npm run check:migrations` pending |
 
 ## KNOWN ISSUES AND RISKS
-- The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. PayPal event list returned the exact matching capture event and webhook inspection confirmed the endpoint and subscription. User reported tunnel/webhook fix and resend, but exact event still absent across the 8 most recent global inbox rows. Contribution is still pledged and no receipt/ledger transition occurred. Earlier generic processed-event match was unrelated.
-- T2 mismatch handling flags and leaves pledge unreceived; it does not post the mismatched capture to the ledger, consistent with existing capture RPC's expected-amount check. Investigate via safe operations before claiming receipt.
-- Target summary `remainingMinor` is target minus received, as specified by the test requirements; allocations and expense fields are separate.
-- PayPal Sandbox purchase requires a human approval at the buyer link. Do not buy until the Phase 6 gate; never use payout/invoicing without explicit requested gate.
-- Receipts/evidence do not imply donor identity or prove completion quality.
+- Migration 0008 must insert two new entries per affected capture: an exact reversal and a corrected repost. It must not update/delete original journal entries or lines.
+- A migration failure in Supabase SQL Editor rolls back the transaction. Do not edit applied migrations; use a new numbered migration.
+- No live correction occurs until the user applies 0008.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; syntax/runtime error rolls all changes back. Never edit an applied migration; add a numbered file.
-- Every SECURITY DEFINER/posting RPC must revoke execute from public, anon, authenticated, grant only to service_role, and be tested with ordinary-user JWT (expect 403).
-- PostgREST embeds need explicit FK names when multiple relationships exist.
-- `audit_log` is insert-only and ON DELETE RESTRICT; cleanup deletes journal_entries first (lines cascade), then audit_log, organizations, auth.users with `scripts/cleanup-phase2-test-data.sql`. Reuse fixed fixtures.
-- PayPal Sandbox buyer must be US Personal; seller USD; use Visa. Webhook URL ends `/api/webhook`; `PAYPAL_WEBHOOK_ID` must match.
-- Raw body is needed for PayPal signature verification. Never print `.env` values; key names only.
-- Pledges are intent; only verified, posted captures are received. Simulated payments do not enter real ledger.
+- Supabase SQL Editor runs inside one transaction; a syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only service_role; prove ordinary user JWT gets 403.
+- PostgREST embeds need explicit foreign-key names when two relationships exist.
+- audit_log is insert-only and ON DELETE RESTRICT; cleanup journal_entries first (lines cascade), then audit_log, organizations, auth.users, using `scripts/cleanup-phase2-test-data.sql`. Reuse fixed named fixtures.
+- PayPal Sandbox buyer must be US Personal; seller USD only; use Visa. Webhook URL ends `/api/webhook`; `PAYPAL_WEBHOOK_ID` must match. Raw body is required for signature verification.
+- Never print `.env` values; use key names only.
+- Pledges are intent; only verified, posted captures are received. Simulated payments do not enter the ledger.
 - Every expense needs a visible path to approval, quotation/invoice, payment, ledger entry, completion evidence; report every gap.
 
 ## DO NOT
 - Never push, use `--force`, weaken tests, edit applied migrations, commit `.env`, or print secrets.
-- Stay on the currently instructed branch; never push or commit to `backend` or `main`.
+- Stay on `phase6-backend`; never commit/push to `backend` or `main`.
 - Do not edit `preview.html`, `dashboard.html`, `src/`, `assets/`.
-- Do not create/buy a PayPal donation until the explicit human gate; no PayPal Payouts/Invoicing unless explicitly reached and approved.
-- Reuse fixed test users/orgs; clean only rows created by this run.
+- Do not create another PayPal payment or manually edit the posted journal; migration 0008 will make the auditable correction.
 
 ## RESUME COMMANDS
 - `git branch --show-current`

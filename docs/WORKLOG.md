@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T2; correct fund donation revenue classification without rewriting applied migrations.
-- Last finished step: exact capture event verified; receipt/summary pass; five exact raw-body replays idempotent. Journal balances but credits 4000 Sales Revenue instead of 4100 Donations. Checkpoint `7ec3cea`.
-- Next step: prepare focused fund-specific posting change and auditable reclassification in a new migration; test before requesting the user to apply it.
-- Pending human action: after a concrete migration is prepared, user must review/apply it; no live ledger correction has been made.
+- Current task: Phase 6 T2; run standalone migration check and present SQL Editor apply instructions.
+- Last finished step: fund-specific 4100 mapping, migration 0008 reversal/repost, and focused tests implemented; `npm test` PASS 113/113.
+- Next step: run `npm run check:migrations`, checkpoint, show exact SQL Editor steps, and wait for user “applied”.
+- Pending human action: apply only migration 0008 after standalone check passes.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -92,3 +92,22 @@
 - NEXT: checkpoint refreshed handoff for implementation scope, then add fund-specific journal lines/repository routing, migration 0008 reversal/repost, and focused tests.
 - 2026-10-26 — ABOUT TO: Refresh CONTEXT/TEST-REPORT/DECISIONS to identify the user-authorized correction implementation and exact files before coding. WHY: ensure the current task/files and apply gate are explicit in repo memory.
 - 2026-10-26 — ABOUT TO: Check phase6-backend status for `.env`, whitespace, and checkpoint the refreshed implementation handoff locally. WHY: three discovery/documentation steps completed; user requires WIP commits every 2–3 steps.
+- RESULT: PASS; fund-specific line helper and repository order detection were edited in `server/src/services/ledger.js`, `server/src/repos/postgres.js`, `server/test/ledger.test.js`, and `server/test/postgres-repos.test.js`. This code edit was not preceded by its own journal intent line; recording that protocol lapse now. No tests run yet.
+- NEXT: add migration 0008 with append-only reversing/reposting entries and migration assertions, then review the complete diff.
+- 2026-10-26 — ABOUT TO: Add `0008_fund_contribution_accounting.sql` and tests that prove it only INSERTs reversal/repost lines, preserves originals, and is idempotent by source keys. WHY: repair the existing posted account classification without modifying/deleting prior journal entries, and cover the migration invariants.
+- RESULT: PASS; implementation and migration 0008 plus static/unit coverage added. Files: `ledger.js`, `postgres.js`, `ledger.test.js`, `postgres-repos.test.js`, `phase6-migration.test.js`, `0008_fund_contribution_accounting.sql`. No tests run yet.
+- NEXT: inspect focused diffs for migration safety and test correctness, then run `npm test` and append exact result.
+- 2026-10-26 — ABOUT TO: Review the new migration and code/test diff for unintentional original-journal updates/deletes, fund-only account mapping, and transaction idempotency. WHY: catch SQL/test issues before executing the full test suite.
+- RESULT: REVIEW PASS; diff confirms fund lines remap only 4000 to 4100 for linked fund orders, while migration inserts separate reversal/repost journal entries and never updates/deletes original journal rows. Existing regression checks will now validate implementation and SQL parse.
+- NEXT: refresh handoff with exact pending files/apply gate and record `npm test` start, then run the suite.
+- 2026-10-26 — ABOUT TO: Rewrite CONTEXT.md for the current T2 correction state and append a pre-run test entry. WHY: current handoff contains stale webhook-pending claims; update it before the requested test run.
+- RESULT: FAIL; `npm test` migration parser accepted 0001-0008; 112 passed, 1 failed. The existing generic capture/refund persistence test failed because its database mock has no `select` implementation. No code behavior in a live DB was exercised.
+- NEXT: inspect and repair the failing generic test mock to return an unlinked order, then rerun `npm test`.
+- 2026-10-26 — ABOUT TO: Read the failing test fixture and modify only its mock so ordinary captures remain on Sales Revenue. WHY: maintain coverage of generic posting while accommodating order-link detection.
+- RESULT: PASS; generic capture/refund test mock now returns an order with `fund_contribution_id=null`; test file only changed for the fix.
+- NEXT: append the rerun start status and execute full `npm test`.
+- 2026-10-26 — ABOUT TO: Rerun `npm test` after fixing the missing generic order mock. WHY: verify both 4100 fund posting and unchanged 4000 generic capture behavior across the full suite.
+- RESULT: PASS; `npm test` rerun parsed migrations 0001-0008 and passed 113/113 tests, 0 failed. Fund line builder and both repository paths passed; append-only migration assertions passed.
+- NEXT: record the test result, update current context, and checkpoint code/migration/tests/docs before standalone `npm run check:migrations`.
+- 2026-10-26 — ABOUT TO: Append full-suite PASS, refresh CONTEXT/WORKLOG, verify no `.env`, and commit the implemented correction locally. WHY: test run passed and several implementation steps have accumulated; checkpoint before the requested standalone parser check.
+- 2026-10-26 — ABOUT TO: Confirm branch/status contains no `.env`, check whitespace, stage exact code/migration/tests/docs, and make local WIP checkpoint. WHY: checkpoint the 113/113 passing implementation before standalone migration validation; never push.

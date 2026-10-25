@@ -41,6 +41,12 @@ export function captureJournalLines(capture) {
   return assertBalanced([line('1010', gross, 0, currency), line('4000', 0, gross, currency)]);
 }
 
+export function fundContributionJournalLines(capture) {
+  return captureJournalLines(capture).map((entry) => entry.accountCode === '4000'
+    ? { ...entry, accountCode: '4100' }
+    : entry);
+}
+
 export function refundJournalLines(refund) {
   const currency = validCurrency(refund.currency || refund.amount?.currency_code);
   const grossText = refund.gross ?? refund.seller_payable_breakdown?.gross_amount?.value ?? refund.amount?.value;
