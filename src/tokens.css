@@ -8,42 +8,42 @@
 
   /* Brand. The gradient used for FILLS is constant in both themes so white
      label text keeps >= 4.5:1 contrast. Gradient TEXT is theme-aware. */
-  --brand-blue: #2f66f5;
-  --brand-violet: #7a3ff2;
-  --brand-gradient: linear-gradient(135deg, #2f66f5 0%, #7a3ff2 100%);
-  --brand-gradient-text: linear-gradient(135deg, #2f66f5 0%, #7a3ff2 100%);
+  --brand-blue: #155eef;
+  --brand-violet: #087f78;
+  --brand-gradient: linear-gradient(135deg, #1769e0 0%, #087f78 100%);
+  --brand-gradient-text: linear-gradient(135deg, #155eef 0%, #087f78 100%);
   --on-brand: #ffffff;
 
   /* Semantic. *-soft = chip/tint background, *-text = AA-safe text on it,
      base color (--ok etc.) = fills, icons, chart strokes only. */
-  --ok: #16a34a;     --ok-soft: #e7f8ee;     --ok-text: #0f7a37;
-  --danger: #ef4444; --danger-soft: #fdecec; --danger-text: #c42b2b;
-  --warn: #f59e0b;   --warn-soft: #fff4dd;   --warn-text: #8a5300;
-  --info: #2f66f5;   --info-soft: #e8efff;   --info-text: #1d4fd8;
-  --health-teal: #168f7a; --health-indigo: #5a68c8; --health-slate: #8a96ad; --health-amber: #c58b2c;
+  --ok: #13804a;     --ok-soft: #e7f6ed;     --ok-text: #11643c;
+  --danger: #d84343; --danger-soft: #fff0ef; --danger-text: #b72f32;
+  --warn: #bd710d;   --warn-soft: #fff4df;   --warn-text: #8a5207;
+  --info: #2563eb;   --info-soft: #eaf1ff;   --info-text: #1d4ed8;
+  --health-teal: #138c78; --health-indigo: #4276cf; --health-slate: #78899d; --health-amber: #c18420;
 
   /* Surfaces & text — light */
-  --bg: #f6f8ff;
+  --bg: #f3f7fc;
   --surface: #ffffff;
-  --surface-glass: rgba(255, 255, 255, 0.72);
-  --surface-sunken: #eef2ff;
-  --border: #e3e8f6;
-  --text: #0b1b4b;
-  --text-muted: #5b6785;
-  --text-subtle: #66718f;
-  --focus-ring: #2f66f5;
+  --surface-glass: rgba(255, 255, 255, 0.88);
+  --surface-sunken: #eaf1f8;
+  --border: #d8e2ee;
+  --text: #14263d;
+  --text-muted: #52667d;
+  --text-subtle: #6b7d91;
+  --focus-ring: #2871e8;
 
   /* Dark data panel (cash-flow card stays dark in both themes) */
-  --panel-dark: #0b2447;
-  --panel-dark-text: #e8eeff;
+  --panel-dark: #10243a;
+  --panel-dark-text: #edf5ff;
 
   /* Shape */
   --radius-sm: 12px; --radius-md: 16px; --radius-lg: 20px; --radius-pill: 999px;
 
   /* Depth */
-  --shadow-sm: 0 2px 8px rgba(47, 102, 245, 0.06);
-  --shadow-md: 0 8px 30px rgba(47, 102, 245, 0.08);
-  --shadow-lg: 0 20px 60px rgba(47, 102, 245, 0.14);
+  --shadow-sm: 0 2px 8px rgba(21, 57, 99, 0.06);
+  --shadow-md: 0 9px 28px rgba(21, 57, 99, 0.09);
+  --shadow-lg: 0 20px 52px rgba(21, 57, 99, 0.14);
   --glass-blur: blur(14px);
 
   /* Spacing (4px base) */
@@ -64,51 +64,51 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #0a1224;
-  --surface: #101b33;
-  --surface-glass: rgba(16, 27, 51, 0.72);
-  --surface-sunken: #0d1630;
-  --border: #243457;
-  --text: #f1f5ff;
-  --text-muted: #9aa7c7;
-  --text-subtle: #8d9bc0;
-  --brand-blue: #4c7dff;
-  --brand-violet: #9a6bff;
-  --brand-gradient-text: linear-gradient(135deg, #6f97ff 0%, #b18cff 100%);
-  --focus-ring: #8fb0ff;
-  --ok-soft: rgba(22, 163, 74, 0.16);     --ok-text: #4ade80;
-  --danger-soft: rgba(239, 68, 68, 0.16); --danger-text: #f87171;
-  --warn-soft: rgba(245, 158, 11, 0.16);  --warn-text: #fbbf24;
-  --info-soft: rgba(76, 125, 255, 0.18);  --info-text: #8fb0ff;
-  --health-teal: #45c6ad; --health-indigo: #91a0ff; --health-slate: #586783; --health-amber: #e6b85b;
+  --bg: #081523;
+  --surface: #102238;
+  --surface-glass: rgba(16, 34, 56, 0.86);
+  --surface-sunken: #0b1a2b;
+  --border: #263d55;
+  --text: #eef5fc;
+  --text-muted: #b1c2d4;
+  --text-subtle: #91a6bb;
+  --brand-blue: #69a3ff;
+  --brand-violet: #34c5b3;
+  --brand-gradient-text: linear-gradient(135deg, #7fb2ff 0%, #55d1c2 100%);
+  --focus-ring: #77aaff;
+  --ok-soft: rgba(50, 201, 130, 0.14);     --ok-text: #65dda2;
+  --danger-soft: rgba(240, 100, 100, 0.14); --danger-text: #ff9290;
+  --warn-soft: rgba(231, 166, 63, 0.15);  --warn-text: #f2c16e;
+  --info-soft: rgba(83, 142, 240, 0.15);  --info-text: #8db9ff;
+  --health-teal: #43d1b2; --health-indigo: #76a6f4; --health-slate: #71869d; --health-amber: #e7b35c;
   --shadow-sm: 0 0 0 1px var(--border);
-  --shadow-md: 0 0 0 1px var(--border), 0 10px 40px rgba(76, 125, 255, 0.10);
-  --shadow-lg: 0 0 0 1px var(--border), 0 24px 70px rgba(76, 125, 255, 0.18);
+  --shadow-md: 0 0 0 1px rgba(105, 163, 255, .14), 0 12px 36px rgba(0, 0, 0, .24);
+  --shadow-lg: 0 0 0 1px rgba(105, 163, 255, .2), 0 24px 64px rgba(0, 0, 0, .34);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a1224;
-    --surface: #101b33;
-    --surface-glass: rgba(16, 27, 51, 0.72);
-    --surface-sunken: #0d1630;
-    --border: #243457;
-    --text: #f1f5ff;
-    --text-muted: #9aa7c7;
-    --text-subtle: #8d9bc0;
-    --brand-blue: #4c7dff;
-    --brand-violet: #9a6bff;
-    --brand-gradient-text: linear-gradient(135deg, #6f97ff 0%, #b18cff 100%);
-    --focus-ring: #8fb0ff;
-    --ok-soft: rgba(22, 163, 74, 0.16);     --ok-text: #4ade80;
-    --danger-soft: rgba(239, 68, 68, 0.16); --danger-text: #f87171;
-    --warn-soft: rgba(245, 158, 11, 0.16);  --warn-text: #fbbf24;
-    --info-soft: rgba(76, 125, 255, 0.18);  --info-text: #8fb0ff;
+    --bg: #081523;
+    --surface: #102238;
+    --surface-glass: rgba(16, 34, 56, 0.86);
+    --surface-sunken: #0b1a2b;
+    --border: #263d55;
+    --text: #eef5fc;
+    --text-muted: #b1c2d4;
+    --text-subtle: #91a6bb;
+    --brand-blue: #69a3ff;
+    --brand-violet: #34c5b3;
+    --brand-gradient-text: linear-gradient(135deg, #7fb2ff 0%, #55d1c2 100%);
+    --focus-ring: #77aaff;
+    --ok-soft: rgba(50, 201, 130, 0.14);     --ok-text: #65dda2;
+    --danger-soft: rgba(240, 100, 100, 0.14); --danger-text: #ff9290;
+    --warn-soft: rgba(231, 166, 63, 0.15);  --warn-text: #f2c16e;
+    --info-soft: rgba(83, 142, 240, 0.15);  --info-text: #8db9ff;
   --health-teal: #45c6ad; --health-indigo: #91a0ff; --health-slate: #586783; --health-amber: #e6b85b;
     --shadow-sm: 0 0 0 1px var(--border);
-    --shadow-md: 0 0 0 1px var(--border), 0 10px 40px rgba(76, 125, 255, 0.10);
-    --shadow-lg: 0 0 0 1px var(--border), 0 24px 70px rgba(76, 125, 255, 0.18);
+    --shadow-md: 0 0 0 1px rgba(105, 163, 255, .14), 0 12px 36px rgba(0, 0, 0, .24);
+    --shadow-lg: 0 0 0 1px rgba(105, 163, 255, .2), 0 24px 64px rgba(0, 0, 0, .34);
     color-scheme: dark;
   }
 }

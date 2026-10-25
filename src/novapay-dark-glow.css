@@ -41,7 +41,7 @@
   --grain-opacity: .06;
 
   --mesh:
-    radial-gradient(52vmax 44vmax at 6% 4%,   rgba(var(--glow-pink), .24), transparent 62%),
+    radial-gradient(52vmax 44vmax at 6% 4%,   rgba(45, 105, 220, .24), transparent 62%),
     radial-gradient(48vmax 42vmax at 96% 8%,  rgba(var(--glow-sky), .22),  transparent 60%),
     radial-gradient(56vmax 50vmax at 88% 96%, rgba(var(--glow-lav), .26),  transparent 62%),
     radial-gradient(48vmax 44vmax at 4% 94%,  rgba(var(--glow-mint), .17), transparent 60%),
@@ -198,7 +198,7 @@
 :root[data-theme="dark"] .ai-bubble:not(.ai-bubble--assistant) { box-shadow: 0 0 26px rgba(var(--glow-pink), .28); }
 
 /* ---------- Ambient scene: brighter neon orbs ---------- */
-:root[data-theme="dark"] .ambient--one { background: rgb(var(--glow-pink)); opacity: .20; }
+:root[data-theme="dark"] .ambient--one { background: rgb(45, 105, 220); opacity: .20; }
 :root[data-theme="dark"] .ambient--two { background: rgb(var(--glow-sky));  opacity: .18; }
 :root[data-theme="dark"] .scene-orb { opacity: .42; filter: blur(64px); }
 :root[data-theme="dark"] .scene-orb--c { opacity: .34; }

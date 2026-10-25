@@ -1,4 +1,53 @@
-/* Plays only when the dashboard is opened from the landing-page laptop transition. */
-html.fx-enter body { animation: fx-dash-in 520ms cubic-bezier(.22, 1, .36, 1) both; }
-@keyframes fx-dash-in { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { html.fx-enter body { animation: none; } }
+/* Editorial split-panel reveal for the home → dashboard navigation. */
+html.fx-enter body {
+  animation: fx-dashboard-resolve 820ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+html.fx-enter::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  transform-origin: center top;
+  background: linear-gradient(180deg, #f8faff 0 55%, #0b1228 55% 100%);
+  animation: fx-panel-lift 900ms cubic-bezier(.76, 0, .24, 1) both;
+}
+
+html.fx-enter::after {
+  content: "NOVA PAY";
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  color: #fff;
+  font: 800 clamp(3rem, 15vw, 12rem)/.9 "Montserrat", "Segoe UI", sans-serif;
+  letter-spacing: .12em;
+  white-space: nowrap;
+  mix-blend-mode: difference;
+  animation: fx-title-sweep 820ms cubic-bezier(.65, 0, .35, 1) both;
+}
+
+@keyframes fx-dashboard-resolve {
+  from { opacity: .2; filter: blur(8px); transform: scale(1.025); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+@keyframes fx-panel-lift {
+  0%, 48% { opacity: 1; transform: perspective(1400px) rotateX(0) translateY(0) scale(1); }
+  100% { opacity: 0; transform: perspective(1400px) rotateX(-12deg) translateY(-105vh) scale(.94); }
+}
+
+@keyframes fx-title-sweep {
+  0%, 24% { opacity: 0; transform: translateY(8vh) scale(.82); letter-spacing: .28em; }
+  48% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: .12em; }
+  100% { opacity: 0; transform: translateY(-18vh) scale(1.12); letter-spacing: .24em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.fx-enter body { animation: none; }
+  html.fx-enter::before,
+  html.fx-enter::after { display: none; animation: none; }
+}

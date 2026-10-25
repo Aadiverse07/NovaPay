@@ -1,0 +1,6 @@
+.click-spark-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+}

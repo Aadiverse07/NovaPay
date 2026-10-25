@@ -1,0 +1,128 @@
+/* Pointer-following holographic tilt, scoped to the NovaPay capabilities cards. */
+#features .feature-grid .feature-card,
+#feature-summary {
+  --holo-rx: 0deg;
+  --holo-ry: 0deg;
+  --holo-x: 50%;
+  --holo-y: 50%;
+  --holo-strength: 0;
+  transform: perspective(1100px) rotateX(var(--holo-rx)) rotateY(var(--holo-ry)) translateY(var(--holo-lift, 0px));
+  transform-style: preserve-3d;
+  background-image:
+    radial-gradient(ellipse at var(--holo-x) var(--holo-y), rgba(255,255,255,calc(var(--holo-strength) * .7)), transparent 42%),
+    conic-gradient(from var(--holo-angle, 0deg) at var(--holo-x) var(--holo-y), rgba(245,92,183,calc(var(--holo-strength) * .22)), rgba(78,205,255,calc(var(--holo-strength) * .22)), rgba(255,222,130,calc(var(--holo-strength) * .2)), rgba(151,116,255,calc(var(--holo-strength) * .24)), rgba(245,92,183,calc(var(--holo-strength) * .22))),
+    repeating-linear-gradient(116deg, rgba(255,255,255,calc(var(--holo-strength) * .1)) 0 1px, transparent 1px 4px);
+  background-blend-mode: soft-light, soft-light, soft-light;
+  will-change: transform;
+}
+
+#feature-summary {
+  transform: perspective(1100px) rotateX(var(--holo-rx)) rotateY(var(--holo-ry)) translateY(var(--holo-lift, 0px));
+  background-image: none;
+}
+
+#feature-summary::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--holo-strength);
+  background:
+    radial-gradient(ellipse at var(--holo-x) var(--holo-y), rgba(255,255,255,.9), transparent 42%),
+    conic-gradient(from var(--holo-angle, 0deg) at var(--holo-x) var(--holo-y), rgba(255,55,170,.48), rgba(35,190,255,.46), rgba(255,205,55,.42), rgba(145,90,255,.48), rgba(255,55,170,.48)),
+    repeating-linear-gradient(116deg, rgba(255,255,255,.2) 0 1px, transparent 1px 4px);
+  mix-blend-mode: overlay;
+  transition: opacity 180ms ease;
+}
+
+#features .feature-grid .feature-card:hover,
+#feature-summary:hover { --holo-lift: -9px; --holo-strength: .9; }
+
+#features .feature-grid .feature-card.holo-active,
+#feature-summary.holo-active { --holo-strength: 1; }
+
+/* Keep pointer tilt on its own transform component so hero parallax/orbit positioning stays intact. */
+#hero-stage :is(.float-card, .lpui-card, .lpui-kpi) {
+  --holo-rotation: var(--r, 0deg);
+  rotate: var(--holo-rotation);
+  transform-style: preserve-3d;
+  transition: rotate 140ms ease-out, transform .6s var(--fx-ease), box-shadow .25s var(--fx-ease), border-color .25s var(--fx-ease);
+}
+
+#hero-stage :is(.float-card, .lpui-card, .lpui-kpi)::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--holo-strength, 0);
+  background:
+    radial-gradient(ellipse at var(--holo-x, 50%) var(--holo-y, 50%), rgba(255,255,255,.86), transparent 42%),
+    conic-gradient(from var(--holo-angle, 0deg) at var(--holo-x, 50%) var(--holo-y, 50%), rgba(255,55,170,.42), rgba(35,190,255,.4), rgba(255,205,55,.38), rgba(145,90,255,.44), rgba(255,55,170,.42)),
+    repeating-linear-gradient(116deg, rgba(255,255,255,.16) 0 1px, transparent 1px 4px);
+  mix-blend-mode: overlay;
+  transition: opacity 180ms ease;
+}
+
+#hero-stage :is(.float-card, .lpui-card, .lpui-kpi):hover { --holo-strength: .9; }
+#hero-stage :is(.float-card, .lpui-card, .lpui-kpi).holo-active { --holo-strength: 1; }
+
+/* Dashboard cards use the independent rotate property so existing hover lifts stay intact. */
+.dashboard-main .holo-target {
+  position: relative;
+  --holo-strength: 0;
+  rotate: var(--holo-rotation, 0deg);
+  transform-style: preserve-3d;
+  transition: rotate 140ms ease-out, transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease), border-color .2s var(--motion-ease);
+}
+
+.action-modal .holo-target {
+  position: relative;
+  --holo-strength: 0;
+  rotate: var(--holo-rotation, 0deg);
+  transform-style: preserve-3d;
+  transition: rotate 140ms ease-out, transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease), border-color .2s var(--motion-ease);
+}
+
+#view-approvals .approval-card.holo-target { rotate: var(--holo-rotation, 0deg); }
+
+.dashboard-main .holo-target:hover,
+.action-modal .holo-target:hover { --holo-strength: .9; }
+.dashboard-main .holo-target.holo-active,
+.action-modal .holo-target.holo-active { --holo-strength: 1; }
+
+.dashboard-main .holo-target:not(.dashboard-hero-card):not(.agent-card)::after,
+.dashboard-main .holo-target:is(.dashboard-hero-card, .agent-card)::before,
+.action-modal .holo-target::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--holo-strength);
+  background:
+    radial-gradient(ellipse at var(--holo-x, 50%) var(--holo-y, 50%), rgba(255,255,255,.86), transparent 42%),
+    conic-gradient(from var(--holo-angle, 0deg) at var(--holo-x, 50%) var(--holo-y, 50%), rgba(255,55,170,.42), rgba(35,190,255,.4), rgba(255,205,55,.38), rgba(145,90,255,.44), rgba(255,55,170,.42)),
+    repeating-linear-gradient(116deg, rgba(255,255,255,.16) 0 1px, transparent 1px 4px);
+  mix-blend-mode: overlay;
+  transition: opacity 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #hero-stage :is(.float-card, .lpui-card, .lpui-kpi) { rotate: var(--r, 0deg); transition: none; }
+  #hero-stage :is(.float-card, .lpui-card, .lpui-kpi)::after { display: none; }
+  .dashboard-main .holo-target { rotate: none; transition: none; }
+  .dashboard-main .holo-target::before,
+  .dashboard-main .holo-target::after,
+  .action-modal .holo-target::after { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #features .feature-grid .feature-card,
+  #feature-summary { transform: none; transition: none; will-change: auto; background-image: none; }
+  #feature-summary::before { display: none; }
+}
