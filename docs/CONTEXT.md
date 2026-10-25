@@ -4,7 +4,7 @@
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
 - Last task checkpoint: `ead92ad WIP Phase 6 task 2: await webhook delivery`.
-- Current phase/task: Phase 6 Fund Transparency, T2 live capture-event delivery remains unresolved.
+- Current phase/task: Phase 6 Fund Transparency, T2 ledger balance and webhook replay-idempotency verification.
 
 ## DONE
 - STEP 0 complete: `npm ci`, `npm test` (104 passed), and migration parser for 0001–0005; checkpoint `7ac6c65`.
@@ -15,7 +15,7 @@
 
 ## IN PROGRESS
 - T2 task files/functions: `supabase/migrations/0007_fund_contributions.sql` (`create_fund_campaign`, `create_fund_pledge`, `link_fund_contribution_order`, `record_fund_paypal_capture_event`, `get_fund_campaign_summary`); `server/src/repos/postgres.js` fund repository and capture RPC; `server/src/repos/memory.js` campaign/pledge/receipt fixtures; `server/src/services/webhookProcessor.js` mismatch handling; `server/src/routes/funds.js` campaign/pledge/order APIs; `server/src/app.js` route/error wiring; `server/test/phase6-migration.test.js`; `server/test/phase6-contributions.test.js`; all three continuity docs.
-- Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. After the latest user report of server/tunnel repair and resend, read-only reconciliation again found no exact capture/order event in the recent inbox. Contribution remains pledged, one completed $1 capture row exists, capture link absent, no receipt, and receivedMinor=0. No manual write or replay.
+- Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. Exact event resource `0U573441YN817132C` is now present in `paypal_events`, signature verified and processed with no error; payload order matches. Contribution is received with matching capture link; mismatch=false; one completed 100-minor-unit capture and one receipt. Summary: pledged=0, received=100, remaining=900 minor units. Ledger balance and five exact raw-body replay checks remain.
 
 ## NEXT STEPS
 1. Human confirms PayPal Sandbox delivery status for the exact capture-completed event after the latest resend; app inbox still shows no match.
@@ -28,7 +28,7 @@
 ## LIVE STATE
 - Supabase migrations 0001–0006 applied (user reported); 0006 ordinary-user read/write checks PASS. 0007 applied (user confirmed 2026-10-26); live verification pending.
 - Tunnel/webhook: previously user-reported configured; no new Phase 6 verification.
-- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once. After user-reported server/tunnel fix and resend, exact event still absent from recent inbox query. Contribution remains pledged; one capture row; no receipt; receivedMinor=0. Raw-body replay not run.
+- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once. Exact resent event now verifies/processes successfully, contribution is received, one receipt exists, and summary reports receivedMinor=100, remainingMinor=900. Raw-body replay and ledger-balance checks still pending.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE

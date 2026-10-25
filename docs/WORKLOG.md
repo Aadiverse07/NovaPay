@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T2; reconcile PayPal capture event to contribution receipt and summary.
-- Last finished step: latest read-only re-check found no matching event, no receipt, receivedMinor=0; pledge remains unreceived. Checkpoint `ff20e37`.
-- Next step: inspect PayPal Sandbox Event deliveries for this exact capture transaction and verify delivery to `/api/webhook`; then repeat inbox/receipt/summary reconciliation.
-- Pending human action: report provider delivery status without secrets; if failed, repair forwarding and resend this existing event.
+- Current task: Phase 6 T2; verify balanced donation ledger posting and webhook replay idempotency.
+- Last finished step: exact resent capture resource `0U573441YN817132C` verified/processed; contribution received, one receipt; summary received=100, remaining=900 minor units.
+- Next step: inspect journal/account lines, then replay the exact stored raw webhook body five times and confirm no duplicate financial rows.
+- Pending human action: none; user reported server/tunnel repair and resent the event.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -50,3 +50,10 @@
 - RESULT: PASS; checkpoint `ff20e37` created locally on `phase6-backend`; files committed: CONTEXT.md, TEST-REPORT.md, WORKLOG.md; `git diff --check` clean; no push.
 - NEXT: refresh the RESUME POINTER to checkpoint `ff20e37`, then stop pending PayPal delivery confirmation.
 - 2026-10-26 — ABOUT TO: Update the top RESUME POINTER with the latest result and checkpoint. WHY: make the handoff immediately actionable from the first lines of the journal.
+- RESULT: PASS; pointer refresh committed locally as `f70ea97` on `phase6-backend`; no push. File touched: `docs/WORKLOG.md`.
+- NEXT: wait for PayPal Sandbox delivery status; once the exact event is delivered, verify receipt and summary again.
+- 2026-10-26 — ABOUT TO: Search recent PayPal event inbox rows for resource `0U573441YN817132C`; read the fixed campaign contribution, receipt and SQL summary. WHY: user reports a fresh resend at 11:07 p.m.; verify this exact capture reached and posted through the signed webhook path.
+- RESULT: PASS; exact resource `0U573441YN817132C` found in `paypal_events` as verified/processed with no processing error and matching order reference; contribution status=received with capture link, mismatch=false, received_at set; one COMPLETED 100-minor-unit capture; one receipt; summary pledged=0, received=100, remaining=900 minor units. Files queried read-only; no records changed.
+- NEXT: update CONTEXT.md and append this live PASS to TEST-REPORT.md; keep ledger-balance and exact raw-body replay checks as remaining T2 validation.
+- 2026-10-26 — ABOUT TO: Record successful exact-event, receipt, and summary reconciliation in continuity docs and point the journal to remaining ledger/idempotency verification. WHY: preserve evidence while the earlier T2 objective remains in progress.
+- 2026-10-26 — ABOUT TO: Verify branch, inspect pending paths for `.env`, check whitespace, and locally checkpoint the successful event/receipt/summary result. WHY: continuity docs were updated after the live check and require a local WIP checkpoint.
