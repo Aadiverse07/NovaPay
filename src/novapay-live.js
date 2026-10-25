@@ -4,7 +4,8 @@
   var live={paypal:false,ai:false,backend:false}, nextId=1, audit=[];
   var toast=function(m){var t=$("dashboard-toast");if(t){t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2600);}};
   function api(path,body){
-    return fetch(path,body?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}:undefined).then(function(r){return r.json().then(function(d){if(!r.ok){var e=new Error(d.error||r.status);e.retryBlocked=!!d.retryBlocked;throw e}return d})});
+    if(!window.NovaPayApi||!window.NovaPayApi.request)return Promise.reject(new Error("NovaPay API client is unavailable."));
+    return window.NovaPayApi.request(path,{method:body?"POST":"GET",body:body});
   }
   var queue=[
     {type:"refund",txId:"PAY-28491",display:"INR 2,000.00",currency:"INR",title:"Review possible duplicate payment",reason:"The illustrative transaction is flagged as a possible duplicate. Compare the original PayPal records before deciding; this proposal is simulated only.",source:"NovaPay AI",simulatedOnly:true,evidence:"Transaction PAY-28491 is labeled Possible duplicate in illustrative sample data."},
