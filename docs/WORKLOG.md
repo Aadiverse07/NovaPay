@@ -210,3 +210,6 @@
 - RESULT: PASS; CONTEXT rewritten to 77 lines with accurate migration state: 0001-0008 applied, 0009 pending; latest code checkpoint `6801806`; exact SQL Editor action listed. `git diff --check` passed.
 - NEXT: checkpoint context/worklog correction, then give exact SQL Editor steps and wait for “applied”.
 - 2026-10-26 — ABOUT TO: Check branch/status and commit corrected CONTEXT/WORKLOG locally before asking the user to apply 0009. WHY: the apply gate must be accurately documented and checkpointed.
+- RESULT: PASS; corrected apply-gate documentation committed locally as `3600c15` on `phase6-backend`; no push, branch verified.
+- NEXT: checkpoint this journal result; ask user to apply only 0009 using the exact steps below and wait for “applied”.
+- 2026-10-26 — ABOUT TO: Commit the post-commit journal result as a local WIP checkpoint before presenting SQL Editor steps. WHY: keep the log durable through the human apply gate.
