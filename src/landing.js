@@ -12,7 +12,7 @@
     b.setAttribute("aria-label", d ? "Switch to light theme" : "Switch to dark theme");
     var m = document.querySelector('meta[name="theme-color"]');
     if (!m) { m = document.createElement("meta"); m.name = "theme-color"; document.head.appendChild(m); }
-    m.content = d ? "#0b0818" : "#f6f8ff";
+    m.content = d ? "#081523" : "#f3f7fc";
   }
   $("theme").addEventListener("click", function () {
     var t = cur() === "dark" ? "light" : "dark";

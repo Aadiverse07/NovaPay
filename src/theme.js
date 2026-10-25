@@ -19,7 +19,7 @@ function apply(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   let m = document.querySelector('meta[name="theme-color"]');
   if (!m) { m = document.createElement("meta"); m.name = "theme-color"; document.head.appendChild(m); }
-  m.content = theme === "dark" ? "#0b0818" : "#f6f8ff";
+  m.content = theme === "dark" ? "#081523" : "#f3f7fc";
   document.dispatchEvent(new CustomEvent("novapay:theme", { detail: theme }));
 }
 
