@@ -391,3 +391,9 @@
 - Choice: Add a small shared same-origin client that reads the current access token and locally selected organization ID from `NovaPayAuth`, sends `Authorization: Bearer` and `X-Org-Id` on protected calls, and converts both structured and legacy error bodies into errors with `status` and `code`. Keep the contract's `POST /api/onboarding` exception bearer-authenticated without an org header and keep `GET /api/public-config` public.
 - Reason: This centralizes tenant headers and error handling without putting secrets in the browser or changing the backend contract.
 - Source: `docs/FRONTEND-CONTRACT.md` Authentication and organization selection, checked 2026-10-25. Rejected alternative: duplicate token/header/error logic in each view or force an org header on onboarding/public config.
+
+## Task 3 tenant data mapping — 2026-10-25
+- Question: How should the UI render fields the tenant APIs do not return, and how should the approvals badge stay current?
+- Choice: Render only returned transaction fields and label absent buyer/provider fields as unavailable; use the stable `sourceId`/capture/refund reference for the visible row ID. Use the server's `pendingCount` from the organization-scoped approvals response and refresh it with the queue.
+- Reason: This avoids presenting illustrative or inferred values as real financial data while keeping the badge tied to the selected organization's server state.
+- Source: `docs/FRONTEND-CONTRACT.md` transaction and approvals response examples, checked 2026-10-25. Rejected alternative: retain sample INR rows in an authenticated workspace, infer counterparties, or calculate the badge from a potentially stale local queue.

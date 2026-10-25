@@ -3,8 +3,8 @@
 ## HEADER
 - Date/time: 2026-10-25 Asia/Kolkata.
 - Branch: `frontend-wiring` (confirmed this session; user says this overrides the master prompt branch rule).
-- Last commit: `a8a05b0 WIP Frontend wiring task 1: auth`.
-- Current phase/task: Frontend wiring, task 2 (API client).
+- Last commit: `cb11f22 WIP Frontend wiring task 2: API client`.
+- Current phase/task: Frontend wiring, task 3 (Transactions, Approvals, PayPal Sandbox views).
 
 ## DONE
 - Phase 3 completed; invoice sending remains SIMULATED.
@@ -13,15 +13,15 @@
 - Confirmed current branch is `frontend-wiring`.
 
 ## IN PROGRESS
-- Task: Task 2 API client is implemented and locally verified; ready for checkpoint commit.
-- Task 1 commit: `a8a05b0`. Task 2 adds shared token/org headers and normalized error handling; current API calls in `src/novapay-live.js` now use the shared client. Public config and onboarding retain their documented auth exceptions.
-- Edited files across tasks 1–2: `preview.html`, `dashboard.html`, `src/auth.js`, new `src/api-client.js`, `src/landing.js`, `src/dashboard.js`, `src/novapay-live.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
-- Remaining: verify no protected files changed and `.env` remains ignored; commit task 2 locally. Browser request-header and real-session behavior remain UNVERIFIED until task 7.
+- Task: Task 3 Transactions/Approvals/PayPal Sandbox is implemented and locally verified; ready for checkpoint commit.
+- Checkpoint commits: task 1 `a8a05b0`; task 2 `cb11f22`.
+- Task 3 edits: `src/novapay-live.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`. Existing view components and styles were retained. Transactions/recent activity, approvals, pending badge, status/events and PayPal create/capture now use API-backed data; persisted approval decisions use the server decision route.
+- Remaining: verify protected-file scope and `.env` hygiene, commit task 3 locally, then proceed to task 4.
 
 ## NEXT STEPS
-1. Complete task 2 API client and commit its checkpoint locally on `frontend-wiring`.
-2. Continue with tasks 3, 4, 5, and 6 in order, with a docs update and local checkpoint commit after each.
-3. Stop after task 6; tasks 2–6 have been authorized without intermediate pauses. Task 7 will need a real login using the fixed named test user.
+1. Complete task 3 with API-backed Transactions, Approvals and PayPal Sandbox data and commit locally.
+2. Continue tasks 4, 5, and 6 in order, updating docs and committing locally after each.
+3. Stop after task 6; task 7 will need a real login using the fixed named test user.
 
 ## USER ACTIONS PENDING
 - Task 7 needs a real browser login using the fixed named test user; make that account available in the test browser/session when task 7 begins. Do not send its password or tokens in chat or commit them.
@@ -50,6 +50,8 @@
 | Supabase browser login/signup/reset/onboarding | UNVERIFIED | 2026-10-25 | Deferred to frontend wiring task 7; no real test user login was performed |
 | Task 2 API client syntax | PASS | 2026-10-25 | `find src -type f -name '*.js' -print0 \| xargs -0 -n1 node --check && git diff --check` |
 | Task 2 regression suite | PASS | 2026-10-25 | `npm test`: 104 passed, 0 failed; migrations 0001–0005 parsed |
+| Task 3 JavaScript syntax/diff | PASS | 2026-10-25 | `find src -type f -name '*.js' -print0 \| xargs -0 -n1 node --check && git diff --check` |
+| Task 3 regression suite | PASS | 2026-10-25 | `npm test`: 104 passed, 0 failed; migrations 0001–0005 parsed |
 
 ## KNOWN ISSUES AND RISKS
 - Real Supabase sign-up onboarding requires a returned session; if email confirmation is enabled, onboarding occurs after confirmation and sign-in.
