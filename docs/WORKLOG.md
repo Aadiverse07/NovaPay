@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: Phase 6 T2; correct fund donation revenue classification without rewriting applied migrations.
-- Last finished step: exact capture event verified; receipt/summary pass; five exact raw-body replays idempotent. Journal balances but credits 4000 Sales Revenue instead of 4100 Donations.
+- Last finished step: exact capture event verified; receipt/summary pass; five exact raw-body replays idempotent. Journal balances but credits 4000 Sales Revenue instead of 4100 Donations. Checkpoint `7ec3cea`.
 - Next step: prepare focused fund-specific posting change and auditable reclassification in a new migration; test before requesting the user to apply it.
 - Pending human action: after a concrete migration is prepared, user must review/apply it; no live ledger correction has been made.
 
@@ -79,3 +79,6 @@
 - NEXT: update continuity docs with replay PASS and unresolved fund revenue classification FAIL, then checkpoint locally. Do not mutate/reclassify the posted journal as part of this read-only verification.
 - 2026-10-26 — ABOUT TO: Append replay and ledger-classification findings to TEST-REPORT/DECISIONS, refresh CONTEXT and WORKLOG pointer, and commit locally. WHY: preserve the completed idempotency evidence while flagging the financial classification defect accurately.
 - 2026-10-26 — ABOUT TO: Check branch/status for `.env`, verify whitespace, and checkpoint the reconciliation, replay, and account-classification findings in continuity docs. WHY: preserve the fully verified delivery state and explicit accounting defect before ending this check.
+- RESULT: PASS; findings committed locally as `7ec3cea` on `phase6-backend`; no push, branch confirmed, `git diff --check` clean. Four docs updated: CONTEXT, DECISIONS, TEST-REPORT, WORKLOG.
+- NEXT: update the RESUME POINTER to checkpoint `7ec3cea`; then stop after reporting delivery PASS, replay PASS, and account-classification FAIL.
+- 2026-10-26 — ABOUT TO: Refresh the top RESUME POINTER with checkpoint `7ec3cea` and the precise next Phase 6 action. WHY: make the journal resume-ready after this verification turn.
