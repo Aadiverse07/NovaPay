@@ -461,3 +461,10 @@
 - Reason: Confirms actual PostgREST permissions with an ordinary user JWT; failed incomplete writes cannot create rows. No tokens, bodies, or key values were printed.
 - Source: User-confirmed SQL Editor application and live Supabase checks run 2026-10-26; repository fixture documented in `docs/CONTEXT.md`.
 - Rejected alternatives: Relying on static SQL checks alone; using the service-role JWT as the client proof; inserting test data during the permissions check.
+
+## 2026-10-26 — T2 donation capture integration
+- Question: How to distinguish a pledge from received funds and preserve idempotence across verified webhook replay?
+- Choice: Link each PayPal order to one organization-scoped contribution; use a new service-role-only SECURITY DEFINER RPC that delegates normal capture posting to the established ledger RPC and, in the same transaction, marks only matching verified completed captures received and inserts one receipt. Record amount/currency mismatches on the pledge without marking it received.
+- Reason: Keeps the existing signed webhook and ledger path authoritative and makes contribution/receipt updates atomic with capture processing. No third-party facts used.
+- Source: Phase 6 T2 requirements and existing `record_paypal_capture_event` implementation in `supabase/migrations/0002_financial_core.sql`, checked 2026-10-26.
+- Rejected alternatives: Count pledges as funds; mark received from browser/API request; create receipts before verified completed capture; reimplement ordinary capture ledger posting.

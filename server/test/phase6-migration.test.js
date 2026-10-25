@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 
 const migrationUrl = new URL('../../supabase/migrations/0006_fund_transparency.sql', import.meta.url);
 const sql = await readFile(migrationUrl, 'utf8');
+const contributionMigrationUrl = new URL('../../supabase/migrations/0007_fund_contributions.sql', import.meta.url);
+const contributionSql = await readFile(contributionMigrationUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -31,4 +33,14 @@ test('Fund schema encodes contribution receipts, quotation selection, approvals,
   assert.match(sql, /minimum_quotation_count integer not null default 1/i);
   assert.match(sql, /organizations_seed_fund_transparency_settings/i);
   assert.match(sql, /from public,anon,authenticated,service_role/i);
+});
+
+test('Phase 6 SECURITY DEFINER RPCs are executable only by service_role', () => {
+  const names = ['create_fund_campaign','create_fund_pledge','link_fund_contribution_order','record_fund_paypal_capture_event','get_fund_campaign_summary'];
+  for (const name of names) {
+    assert.match(contributionSql,new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?security definer`,'i'),`${name} must be SECURITY DEFINER`);
+    assert.match(contributionSql,new RegExp(`revoke all on function public\\.${name}\\([^;]+ from public,anon,authenticated;`,'i'),`${name} must revoke client execution`);
+    assert.match(contributionSql,new RegExp(`grant execute on function public\\.${name}\\([^;]+ to service_role;`,'i'),`${name} must grant service_role execution`);
+  }
+  assert.doesNotMatch(contributionSql,/grant execute on function public\.[^(]+\([^;]+ to (?:public|anon|authenticated)/i);
 });
