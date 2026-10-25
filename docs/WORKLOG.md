@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T2; reconcile verified PayPal capture event to contribution receipt and summary.
-- Last finished step: read-only re-check after user-reported tunnel fix/resend; 8 recent inbox events had no exact capture/order match; pledge remains unreceived. Checkpoint `0a8cb3b`.
-- Next step: human checks PayPal Sandbox Event deliveries for the capture-completed event and confirms `/api/webhook` delivery; then resume inbox/receipt/summary reconciliation.
-- Pending human action: report provider delivery status (no secrets); if failed, repair tunnel forwarding and resend this existing event.
+- Current task: Phase 6 T2; reconcile PayPal capture event to contribution receipt and summary.
+- Last finished step: latest read-only re-check after user-reported server/tunnel fix/resend found no matching event, no receipt, and receivedMinor=0; pledge remains unreceived.
+- Next step: inspect PayPal Sandbox Event deliveries for this exact capture transaction and verify delivery to `/api/webhook`; then repeat inbox/receipt/summary reconciliation.
+- Pending human action: report provider delivery status without secrets; if failed, repair forwarding and resend this existing event.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -40,3 +40,10 @@
 - RESULT: PASS; corrected pointer/log checkpoint committed as `0a8cb3b` on `phase6-backend`; no push; `git diff --check` clean and worktree clean.
 - NEXT: update RESUME POINTER's checkpoint reference to `0a8cb3b` and commit the pointer-only change, then stop for the human delivery status.
 - 2026-10-26 — ABOUT TO: Set the pointer's checkpoint reference to `0a8cb3b` and commit the final pointer update. WHY: ensure the continuation block names the latest local commit.
+- RESULT: PASS; pointer update committed locally as `32aa4a3` on `phase6-backend`; no push. This journal entry records the outcome of the commit and leaves the exact pending action below.
+- NEXT: stop and await the user's PayPal Sandbox delivery status; when resuming, first check branch/status, then query the exact capture event, receipt, and summary again.
+- 2026-10-26 — ABOUT TO: Re-check fixed campaign's Supabase webhook inbox, contribution, receipt, capture and SQL summary after user reports server/tunnel fixed and capture event resent. WHY: verify whether signed provider delivery now converted the pledge into a receipt-backed contribution.
+- RESULT: UNVERIFIED; fixed pledge remains `pledged`, capture link absent, mismatch=false; one COMPLETED capture row for 100 minor units; zero matching inbox events, zero receipts; campaign summary pledged=100, received=0, remaining=1000 minor units. No records changed.
+- NEXT: update CONTEXT.md and append the live result to TEST-REPORT.md, then checkpoint the journal and handoff on phase6-backend.
+- 2026-10-26 — ABOUT TO: Update continuity handoff and test report with the repeated post-resend live result, including exact statuses and counts. WHY: ensure the next session can distinguish this latest read from previous tunnel/resend checks.
+- 2026-10-26 — ABOUT TO: Confirm branch and pending paths, check whitespace and absence of `.env`, and make a local checkpoint of the latest verification result. WHY: preserve the current handoff after the repeated live check; never push.
