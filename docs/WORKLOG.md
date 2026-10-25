@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T2; wait for user to apply migration 0008.
-- Last finished step: `npm test` PASS 113/113 and `npm run check:migrations` PASS for 0001-0008; checkpoint `b1de9b5` contains migration and code.
-- Next step: user applies full `supabase/migrations/0008_fund_contribution_accounting.sql` once in Supabase SQL Editor and replies “applied”.
-- Pending human action: apply 0008 in the correct Supabase project; do not rerun 0001-0007.
+- Current task: Phase 6 T3; inspect the exact Phase 6 user prompt and continue its next numbered task.
+- Last finished step: migration 0008 applied; original/reversal/repost entries balanced; summary reconciles; exact webhook replay x5 created no duplicates.
+- Next step: read the attached Phase 6 prompt and identify T3 requirements; inspect repo instructions and current files before edits.
+- Pending human action: none for T2; wait only if a T3 external approval gate is explicitly required by the prompt.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -118,3 +118,16 @@
 - NEXT: record PASS, update pending user action to exact 0008 apply gate, checkpoint docs, and provide SQL Editor steps; wait for “applied”.
 - 2026-10-26 — ABOUT TO: Update TEST-REPORT and CONTEXT with standalone migration parser PASS and the exact apply gate, then commit locally. WHY: user must see a concrete, verified migration before applying it.
 - 2026-10-26 — ABOUT TO: Check `phase6-backend` and pending paths, run whitespace check, and checkpoint migration-check PASS/apply instructions locally. WHY: user-requested apply gate is ready and must be committed before requesting SQL Editor action.
+- RESULT: PASS; apply-gate docs committed locally as `befa065` on `phase6-backend`; no push; branch verified and whitespace clean. Docs updated: CONTEXT, TEST-REPORT, WORKLOG.
+- NEXT: user applies the full 0008 migration in Supabase SQL Editor and replies “applied”; then run the authorized live journal/summary/replay checks and continue to T3.
+- 2026-10-26 — ABOUT TO: Verify branch/worktree and read-only query the target contribution, original/reversal/repost journal entries and lines, account codes, receipt, and campaign summary after user confirmed migration 0008 applied. WHY: prove the auditable correction committed while the original entry stayed unchanged before replay testing.
+- RESULT: PASS; migration effect verified read-only. Original capture entry remains unchanged (1000 Dr 60, 5000 Dr 40, 4000 Cr 100); separate reversal exactly reverses it; separate repost debits 1000=60 and 5000=40, credits Donations 4100=100. Each of 3 entries balances at 100 minor units. Contribution received; one capture; one receipt; summary received=100, remaining=900. No rows changed by verification.
+- NEXT: replay exact stored verified event bytes/signature headers five times, then verify no duplicate event/capture/receipt/journal source and summary remains stable.
+- 2026-10-26 — ABOUT TO: POST the exact stored event `WH-8SW03507R3565953L-50560916DS109670B` to local `/api/webhook` five times, then read counts/summary again. WHY: user requires post-migration replay x5 idempotency verification.
+- RESULT: FAIL; replay diagnostic script had malformed JavaScript string quotes in capture/receipt field lists and failed at parse time. No HTTP requests were sent and no data changed.
+- NEXT: correct the select strings and rerun the exact five-body replay plus post-check.
+- 2026-10-26 — ABOUT TO: Append the syntax-failure record to TEST-REPORT and execute the corrected replay script with the same stored event body/signature headers.
+- RESULT: PASS; post-0008 exact raw-body replay x5 returned `[200,200,200,200,200]`; contribution remains received with matching capture; one capture, one receipt, and exactly one each of original/reversal/repost journal entries; event verified/processed; summary pledged=0, received=100, remaining=900. No duplicate rows.
+- NEXT: record T2 migration/live/replay PASS, checkpoint continuity docs, then inspect the Phase 6 prompt for T3 requirements and start that numbered task.
+- 2026-10-26 — ABOUT TO: Update CONTEXT/TEST-REPORT with migration 0008 user-applied status, reversal/repost evidence, and replay result; advance resume pointer to T3. WHY: T2 gates are now verified, and user asked to continue to T3.
+- 2026-10-26 — ABOUT TO: Verify branch/status and whitespace, then locally checkpoint T2 completion docs before beginning T3 discovery. WHY: T2 now passes migration, reconciliation, and replay gates; user requires WIP commits on the active branch.

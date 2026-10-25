@@ -4,7 +4,7 @@
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
 - Last completed checkpoint: implementation checkpoint pending; last committed `0d37592 WIP Phase 6 task 2: plan fund account correction`.
-- Current phase/task: Phase 6 Fund Transparency, T2 account correction; T3 begins after 0008 is applied and live checks pass.
+- Current phase/task: Phase 6 Fund Transparency, T3 (read exact Phase 6 prompt requirements before implementation).
 
 ## DONE
 - STEP 0 baseline and T1 complete; migrations 0001-0006 applied per user; ordinary owner JWT read/write checks for 0006 passed.
@@ -17,7 +17,7 @@
 - `server/src/services/ledger.js`: fund-specific line builder maps only revenue account 4000 to 4100.
 - `server/src/repos/postgres.js`: reads order fund linkage and uses fund-specific lines in synchronous and webhook capture paths.
 - `server/test/ledger.test.js`, `server/test/postgres-repos.test.js`: verify 4100 lines for both paths.
-- `supabase/migrations/0008_fund_contribution_accounting.sql`: append reversal of each affected original capture entry and repost with 4000 mapped to 4100; originals remain untouched.
+- `supabase/migrations/0008_fund_contribution_accounting.sql`: user confirmed applied; live original/reversal/repost entries all balanced, original unchanged.
 - `server/test/phase6-migration.test.js`: assert reversal/repost, idempotency keys, account mapping, and no journal updates/deletes.
 - Continuity files: `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`.
 
@@ -27,13 +27,13 @@
 3. Checkpoint T2, then continue to T3.
 
 ## USER ACTIONS PENDING
-- After local code/tests and migration parser passed, apply the complete `supabase/migrations/0008_fund_contribution_accounting.sql` file once in the correct Supabase project: Dashboard > SQL Editor > New query > paste entire file > Run. Do not edit or rerun migrations 0001-0007. Reply “applied”; wait for that before live verification.
+- None. User confirmed 0008 applied; live verification and replay x5 passed.
 
 ## LIVE STATE
 - Supabase migrations 0001-0007 applied per user confirmation; 0008 not applied.
 - Tunnel/webhook server reported fixed by user.
 - Exact capture event verified/processed; one contribution, one capture, one receipt; summary receivedMinor=100, remainingMinor=900.
-- Existing ledger capture entry has equal 100-minor debits/credits but uses account 4000 Sales Revenue; correcting reversal/repost pending 0008.
+- Original ledger capture remains unchanged; new reversal and repost entries correct the net revenue credit to Donations account 4100.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
@@ -43,12 +43,13 @@
 | T2 live auth/API | PASS | 2026-10-26 | 5 RPCs 403; campaign/pledge/summary passed |
 | T2 capture receipt | PASS | 2026-10-26 | exact event verified/processed; one receipt; summary received=100 |
 | T2 exact webhook replay x5 | PASS | 2026-10-26 | five HTTP 200; no duplicates |
-| T2 account classification | FAIL | 2026-10-26 | existing entry credits 4000, expected 4100; 0008 correction in progress |
-| T2 correction unit/integration/static tests | PASS | 2026-10-26 | `npm test`: 113/113; 0001-0008 parsed |
+| T2 account classification | PASS | 2026-10-26 | 0008 applied; original preserved; balanced reversal/repost puts net credit in 4100 |
+| T2 correction unit/integration/static tests | PASS | 2026-10-26 | `npm test`: 113/113; migrations 0001-0008 parsed |
 | Migration check 0008 | PASS | 2026-10-26 | `npm run check:migrations`: PostgreSQL 17 parsed 0001-0008 |
+| T2 post-0008 live reconciliation/replay | PASS | 2026-10-26 | original/reversal/repost balanced; summary reconciles; exact replay x5 yielded no duplicates |
 
 ## KNOWN ISSUES AND RISKS
-- Migration 0008 must insert two new entries per affected capture: an exact reversal and a corrected repost. It must not update/delete original journal entries or lines.
+- T2 migration 0008 inserted reversal/repost entries and was live-verified. Continue preserving original journal entries and lines.
 - A migration failure in Supabase SQL Editor rolls back the transaction. Do not edit applied migrations; use a new numbered migration.
 - No live correction occurs until the user applies 0008.
 
