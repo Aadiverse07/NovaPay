@@ -468,3 +468,17 @@
 - Reason: Keeps the existing signed webhook and ledger path authoritative and makes contribution/receipt updates atomic with capture processing. No third-party facts used.
 - Source: Phase 6 T2 requirements and existing `record_paypal_capture_event` implementation in `supabase/migrations/0002_financial_core.sql`, checked 2026-10-26.
 - Rejected alternatives: Count pledges as funds; mark received from browser/API request; create receipts before verified completed capture; reimplement ordinary capture ledger posting.
+
+## 2026-10-26 — Safe live T2 contribution fixture
+- Question: How to exercise the live campaign/pledge summary without initiating a real donation?
+- Choice: Use the fixed owner and a stable campaign title, reuse an existing matching pledge if present, and create at most one $1 pledged-only record; do not create a PayPal order or capture.
+- Reason: Verifies API-to-SQL summary and pledge semantics without moving money or creating repeat fixtures. No external facts used.
+- Source: Phase 6 live test instructions and user confirmation that migration 0007 was applied, checked 2026-10-26.
+- Rejected alternatives: Repeatedly creating new orgs/users/campaigns; treating a pledge as received; initiating buyer checkout during safe API verification.
+
+## 2026-10-26 — Phase 6 live donation human gate
+- Question: How to verify the live $1 donation flow without executing a purchase as the agent?
+- Choice: Create only the PayPal Sandbox order linked to the fixed campaign pledge, return its approval URL to the user, then stop for their explicit “approved” response before capture/webhook verification.
+- Reason: This is the specified Phase 6 live test gate; the human controls the US Personal buyer checkout and Visa step. No third-party purchase is completed by the agent.
+- Source: User-provided Phase 6 live test instructions, checked 2026-10-26.
+- Rejected alternatives: Capturing without buyer approval; initiating a different amount; creating repeated orders for the same fixed contribution.

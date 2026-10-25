@@ -712,3 +712,11 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `find server scripts -name '*.js' -print0 | xargs -0 -n1 node --check` — PASS; all JavaScript files parse.
 - `git diff --check` — PASS; no whitespace errors. Frontend scope check (`git diff --name-only -- preview.html dashboard.html src assets`) — PASS; empty.
 - Correction: The preceding “implementation test run has not started” line is the pre-run snapshot. Subsequent T2 entries above record the completed failing and passing runs.
+
+## Phase 6 T2 live verification — 2026-10-26
+- User confirmed migration 0007 applied. Starting live ordinary-JWT RPC-denial checks and safe local-API campaign/pledge/summary checks. Reuse fixed owner and fixed campaign/pledge fixtures; do not invoke PayPal. Results pending.
+- T2 live ordinary-user RPC test — PASS; all five migration 0007 RPCs returned HTTP 403 with fixed owner's JWT.
+- T2 live local API — PASS; GET campaigns HTTP 200, created/reused fixed campaign and pledged-only $1 contribution, GET SQL-backed summary HTTP 200 with pledgedMinor=100, receivedMinor=0, remainingMinor=1000. No PayPal endpoint called.
+- Phase 6 live donation gate — preparing the single $1 PayPal Sandbox order linked to the fixed pledge. No buyer approval/capture has occurred; stop at approval URL.
+- T2 live campaign/pledge/summary results — PASS; fixed campaign `Phase 6 T2 Live Verification`; one $1.00 USD pledge; summary `pledgedMinor=100`, `receivedMinor=0`, `remainingMinor=1000`.
+- T2 PayPal Sandbox order — PASS; HTTP 201; order linked to fixed contribution, USD 1.00. No purchase/capture yet. Approval URL returned in the conversation; waiting for human buyer approval.
