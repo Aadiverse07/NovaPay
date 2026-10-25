@@ -447,3 +447,10 @@
 - Reason: The user explicitly confirmed `phase6-backend` was created from main and asked to resume Phase 6 STEP 0; this supersedes the previous frontend session's branch/scope for the new task.
 - Source: User-provided Phase 6 prompt and resume instruction, 2026-10-25.
 - Rejected alternatives: Continue on `frontend-wiring`, change branches during work, or edit frontend/assets.
+
+## 2026-10-25 — Phase 6 T1 schema shape
+- Question: How should Fund Transparency data and workflow thresholds be represented without allowing direct client writes?
+- Choice: Add migration 0006 with organization-scoped tables and composite tenant foreign keys, authenticated member SELECT only, service-role writes, donor/resident membership roles, and seeded per-organization defaults (minimum one quotation; second approver threshold 10,000 minor USD units).
+- Reason: Matches the requested thin slice and existing RLS/composite-FK conventions; default rows exist for current and future organizations. No external facts used.
+- Source: User-provided Phase 6 prompt; `supabase/migrations/0001_foundation.sql`, `0002_financial_core.sql`, and `0005_ai.sql`, checked 2026-10-25.
+- Rejected alternatives: Editing an applied migration; granting authenticated writes; storing donor PII; using a global unscoped settings row.
