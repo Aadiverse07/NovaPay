@@ -337,3 +337,21 @@
 - Choice: Retain the order, capture, verified event, transaction, and journal entry in the dedicated verifier organization; do not refund or clean financial rows.
 - Reason: The capture is the requested real evidence for Phase 4 fees/AI testing, and the user explicitly requested retention.
 - Source: `scripts/phase4-live-order.js` live output: signed event verified and processed, one transaction/journal entry, 100 gross/40 fee/60 net USD minor units, 2026-10-25. Rejected alternative: refund or delete capture/ledger data.
+
+## Phase 4 live per-user budget test boundary — 2026-10-25
+- Question: How to prove the API limit without risking another provider request when the active server limit is uncertain?
+- Choice: Use the one already-recorded verifier Gemini usage row as the baseline, restart NovaPay with a process-only limit of one, issue one distinct authenticated chat, assert the limit answer/zero tokens/unchanged usage and Gemini activity, then delete only that known verifier row.
+- Reason: The request is guaranteed to hit the cap before provider invocation; no `.env` value is changed and no new provider quota is consumed.
+- Source: Live HTTP API check returned 200, limit answer true, zero tokens, usage unchanged at 1, Gemini activity unchanged at 2, 2026-10-25. Rejected alternative: issue another provider request to discover the limit behavior.
+
+## Phase 4 prior-phase regression mode — 2026-10-25
+- Question: How to run Phase 2/3 live regression without creating more PayPal or invoice side effects?
+- Choice: Add explicit `--safe` modes that only issue GET requests to Supabase and the app's static root. They skip `/api/status` because that route may fetch a PayPal token, and skip user provisioning, FX fetches, payments, invoice actions, reconciliation writes, and cleanup.
+- Reason: The Phase 4 closeout requires safe subsets while the user authorized one retained Sandbox capture and prohibited further unnecessary provider actions.
+- Source: Phase 4 user request and verifier control-flow inspection, 2026-10-25. Rejected alternative: run the full Phase 2/3 scripts or use endpoints with hidden provider/write side effects.
+
+## Phase 4 missing Phase 2 safe fixtures — 2026-10-25
+- Question: What to do when read-only Phase 2 verification cannot find its dedicated named organizations?
+- Choice: Mark only fixture-dependent inspection UNVERIFIED; do not recreate users or orgs in safe mode.
+- Reason: Safe mode must stay read-only, and provisioning would alter live auth and tenant state.
+- Source: `node scripts/verify-phase2.js --safe` returned all 9 financial relations available but no named Phase 2 fixture orgs, 2026-10-25. Rejected alternative: silently onboard the missing organizations.

@@ -191,7 +191,6 @@ async function schemaAndRls() {
   const userLimitSecond = await rpc('reserve_ai_usage', { p_org: orgs.owner, p_user: userId, p_route: 'llm', p_model: 'probe', p_input_tokens: 1, p_user_limit: oneMoreLimit, p_org_limit: 10000 });
   if (userLimitSecond.status !== 200 || userLimitSecond.body?.allowed !== false || userLimitSecond.body?.reason !== 'user_limit') throw new Error('tiny-budget-did-not-block');
   record('Live tiny budget blocks the next provider reservation', 'PASS', `limit=${oneMoreLimit}; next reservation denied before provider call`);
-  record('Live chat endpoint budget block with zero provider calls', 'UNVERIFIED', 'server is running with its configured daily limits; lowering them would require a separate test server/config and evidence-backed retrieval data; unit test covers zero provider calls');
 }
 
 async function apiChecks() {
