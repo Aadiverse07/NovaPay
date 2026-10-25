@@ -564,3 +564,7 @@ Date: 2026-10-24
 ## Phase 4 resumed Gemini synthetic smoke — 2026-10-25
 - Command: one inline `createLLMAdapter({config}).generate()` call through `server/src/services/llm.js`, 64-token max, synthetic `SYNTH-001` USD fee data only.
 - Result: PASS for provider connectivity; HTTP 200, `gemini-3.5-flash-lite`, 2,138 ms, 59 input tokens, 39 output tokens, exactly one provider event. The output did not match the tiny probe's JSON shape (`jsonShapeValid=false`); response text was intentionally not printed. Full service sanitizer remains covered by `npm test`; real API chat will be tested with sandbox evidence after capture.
+
+## Phase 4 single-order flow implementation — pre-run — 2026-10-25
+- Added `scripts/phase4-live-order.js` with a deterministic per-org request key, fixed existing owner/org, no user/org creation, and recovery of the same order on rerun. The script pauses after printing the payer URL and retains the order/capture/webhook/transaction/journal. It never refunds and does not delete financial data.
+- `node --check scripts/phase4-live-order.js` and `git diff --check` are pending; no Sandbox order has been created by this script yet.
