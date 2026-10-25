@@ -489,3 +489,10 @@
 - Reason: The order was created through current config but the old listener may not verify incoming PayPal signatures; using the configured port keeps the registered webhook route aligned with the local tunnel. No new purchase is created.
 - Source: Live `GET /api/status` on port 3000 and server process inspection, 2026-10-26; `server/index.js` starts the webhook worker.
 - Rejected alternatives: Capture while the callback receiver is stale; create another order; manually mark contribution received without a signed webhook.
+
+## 2026-10-26 — Status field correction
+- Question: Did the stale server report PayPal configuration missing?
+- Choice: Treat the earlier preflight as a field-name mistake; the status response uses `paypal`, not `paypalConfigured`. After restarting the server, the correct fields reported PayPal configured, connected, and webhook configured.
+- Reason: Do not change server/tunnel routing based on an absent response key. The configured server is now running on port 3000.
+- Source: `server/src/routes/status.js` and `GET /api/status`, checked 2026-10-26.
+- Rejected alternatives: Infer PayPal is disabled from an undefined response field; restart further processes without evidence.
