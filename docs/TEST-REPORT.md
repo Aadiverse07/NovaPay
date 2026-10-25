@@ -623,3 +623,12 @@ Date: 2026-10-24
 - Command: `npm test`
 - Result: PASS. Migrations 0001–0005 parsed; 104 tests passed, 0 failed.
 - Scope note: The suite covers the backend's token/membership and error contracts; it does not exercise browser header construction or real sessions. Those remain UNVERIFIED for task 7.
+
+# NovaPay Frontend Wiring — Task 3 syntax — 2026-10-25
+- Command: `find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check && git diff --check`
+- Result: PASS. All JavaScript files under `src/` parsed; no whitespace errors.
+
+# NovaPay Frontend Wiring — Task 3 regression — 2026-10-25
+- Command: `npm test`
+- Result: PASS. Migrations 0001–0005 parsed; 104 tests passed, 0 failed.
+- Scope note: Browser rendering against a real tenant and real PayPal Sandbox state remains UNVERIFIED for task 7; no payment or live provider request was made for this checkpoint.
