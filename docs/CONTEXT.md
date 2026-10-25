@@ -1,9 +1,9 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-10-24 Asia/Kolkata.
+- Date/time: 2026-10-25 Asia/Kolkata.
 - Branch: `backend`; Phase 4 delivery commit: `cc018ed Phase 4: AI assistant and orchestration (live verified)`.
-- Current phase/task: Phase 4 complete; awaiting user direction before Phase 5.
+- Current phase/task: Phase 4 resumed live verification, step 0 preflight.
 
 ## DONE
 - Phase 3 completed; invoice sending remains SIMULATED.
@@ -14,20 +14,24 @@
 - Live verifier latest: 12 PASS / 0 FAIL / 3 UNVERIFIED. Service RPC grants/RLS, tenant isolation, direct-write denial, deterministic SQL, FX, anomaly idempotency and run-owned cleanup passed. No Gemini call: fixed org has no completed capture evidence.
 
 ## IN PROGRESS
-- None. Phase 4 delivery committed locally as `cc018ed`; no push.
+- User requested completion of remaining Phase 4 live checks. Current port 3000 process identified as NovaPay `node server/index.js` PID 66956. Next: restart it, check public `/api/status` and registered webhook, then one synthetic Gemini call; afterward create one Sandbox order and wait for buyer approval. Keep the successful capture; no refund.
 
 ## NEXT STEPS
-1. Finish final `npm test`, `npm run check:migrations`, JS syntax, diff/hygiene checks.
-2. Phase 4 report delivered; wait for explicit approval before Phase 5. Never push.
+1. PASS: restarted NovaPay on port 3000; public status and PayPal registration/event subscriptions verified.
+2. Run one direct synthetic Gemini call via `services/llm.js`; record model/latency/tokens or exact safe provider error.
+3. Create one $1 order in fixed Phase 4 org, print approval URL and wait for user approval. Keep its capture; remove only this run's other rows.
+4. Run evidence-grounded chat, repeat cache, injection, tiny budget, proposal-pending checks.
+5. Add `--safe` modes to Phase 2/3 verifiers and run non-payment/non-invoice subsets.
+6. Run final gate, update docs, commit if no FAIL, report; never push; ask before Phase 5.
 
 ## USER ACTIONS PENDING
-- None to finish this phase. To verify remaining live Gemini/cache/injection checks later, the fixed Phase 3 test organization needs a completed capture with non-sensitive evidence; do not create one without an explicitly authorized Sandbox flow.
+- After new order is created, open the printed PayPal Sandbox approval URL, sign in with the US Personal buyer `sb-jzrsh53532685@personal.example.com`, pay with Visa, then reply `approved`. To verify remaining live Gemini/cache/injection checks later, the fixed Phase 3 test organization needs a completed capture with non-sensitive evidence; do not create one without an explicitly authorized Sandbox flow.
 
 ## LIVE STATE
 - Migrations 0001–0005 reported applied by user; read-only probes confirmed 0005 tables and RPCs.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 - NovaPay on port 3000 was restarted to load current T8 code; `/api/status` HTTP 200 authenticated. Tunnel and unrelated port 34872 untouched.
-- No Gemini API request made in final verifier; no PayPal request made. Invoice sending remains SIMULATED.
+- Previous Phase 4 verifier made no Gemini/PayPal calls. Server restarted; PID 67892 listens on 3000. Public `/api/status` returned HTTP 200 authenticated; PayPal registration preflight matched the provided tunnel host, `/api/webhook`, and capture/refund-completed subscriptions. Synthetic Gemini smoke is next. Tunnel hostname from user: `cheaper-approximate-advances-keyboard.trycloudflare.com`; webhook path `/api/webhook`. Invoice sending remains SIMULATED.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
@@ -44,7 +48,7 @@
 | `.env` hygiene | PASS | 2026-10-24 | ignored by Git; no `.env` in status/staged list |
 
 ## KNOWN ISSUES AND RISKS
-- Live Gemini smoke, grounded fee answer/cache replay, database-text injection, and API-level tiny-budget denial remain UNVERIFIED because the fixed test org has no completed capture evidence. Unit tests cover budget no-call, cache, and injection behavior.
+- Live Gemini/evidence checks remain UNVERIFIED until resumed pass. The dedicated Phase 4 org previously lacked a capture; this pass is authorized to retain one new capture. Unit tests cover budget no-call, cache, and injection behavior.
 - Phase 2/3 live verifier safe subset remains UNVERIFIED because those scripts have no read-only mode and trigger PayPal Sandbox operations.
 - Gemini free quotas can vary; minimized evidence only. Duplicate-payer and payout anomaly cases remain fixture-limited by available schema data.
 

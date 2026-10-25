@@ -551,3 +551,9 @@ Date: 2026-10-24
 - Commit: `cc018ed Phase 4: AI assistant and orchestration (live verified)` on `backend`.
 - `git status --short`: clean immediately after commit; `.env` ignored and not staged; staged frontend-path diff was empty.
 - Phase closes with 0 FAIL and 3 UNVERIFIED live checks as detailed above.
+
+## Phase 4 resumed live verification preflight — 2026-10-25
+- Branch/status/log checked: `backend`, clean at start; latest commit `213bf87 WIP Phase 4 task 8: continuity closeout`.
+- User requests a fresh Phase 4 pass with one synthetic Gemini smoke, then a single $1 Sandbox order requiring buyer approval; no refund. Restart, external status, webhook preflight, verifier plan in progress. No live provider/payment call yet.
+- Restarted NovaPay with `npm start`; current listener PID 67892 on port 3000. Public `curl -sS -o /tmp/... -w 'HTTP %{http_code}' https://cheaper-approximate-advances-keyboard.trycloudflare.com/api/status`: PASS, HTTP 200, mode authenticated, webhook configured.
+- Read-only PayPal registration preflight through configured webhook ID: PASS; HTTPS host is the provided trycloudflare hostname, path `/api/webhook`, subscriptions include `CHECKOUT.PAYMENT-RESOURCE.PAYMENT-COMPLETED`, `PAYMENT.CAPTURE.COMPLETED`, and `PAYMENT.REFUND.COMPLETED` (plus invoice-paid). No credentials/provider body printed.
