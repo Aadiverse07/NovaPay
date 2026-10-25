@@ -87,9 +87,8 @@
         <button class="btn btn--ghost logout-btn" id="logout">Log Out</button>
       </div>
       <div class="popover notification-popover" id="notification-popover" hidden>
-        <div class="popover-title"><b>Notifications</b><span class="status info">2 new</span></div>
-        <button type="button" class="notification-item" data-notification-view="approvals"><span class="notif-icon warn">✓</span><span><b>Proposals ready for review</b><small>Open Approvals to review suggested actions.</small></span></button>
-        <button type="button" class="notification-item" data-notification-view="ai-assistant"><span class="notif-icon info"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="16" height="16" style="width:16px;height:16px;display:block;object-fit:contain"></span><span><b>NovaPay AI insight ready</b><small>Open AI Assistant for a summary.</small></span></button>
+        <div class="popover-title"><b>Notifications</b><span class="status info" id="notification-count">Loading…</span></div>
+        <div id="notification-list" role="list" aria-live="polite"><p class="notification-item">Notifications load from your organization.</p></div>
       </div>
       <div class="popover profile-popover" id="profile-popover" hidden>
         <div class="profile-popover-head"><span class="avatar">S</span><span><b id="profile-name">Shikhar</b><small>Business Owner</small></span></div>
