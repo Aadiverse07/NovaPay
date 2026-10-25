@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: Phase 6 T2; reconcile PayPal capture event to contribution receipt and summary.
-- Last finished step: latest read-only re-check after user-reported server/tunnel fix/resend found no matching event, no receipt, and receivedMinor=0; pledge remains unreceived.
+- Last finished step: latest read-only re-check found no matching event, no receipt, receivedMinor=0; pledge remains unreceived. Checkpoint `ff20e37`.
 - Next step: inspect PayPal Sandbox Event deliveries for this exact capture transaction and verify delivery to `/api/webhook`; then repeat inbox/receipt/summary reconciliation.
 - Pending human action: report provider delivery status without secrets; if failed, repair forwarding and resend this existing event.
 
@@ -47,3 +47,6 @@
 - NEXT: update CONTEXT.md and append the live result to TEST-REPORT.md, then checkpoint the journal and handoff on phase6-backend.
 - 2026-10-26 — ABOUT TO: Update continuity handoff and test report with the repeated post-resend live result, including exact statuses and counts. WHY: ensure the next session can distinguish this latest read from previous tunnel/resend checks.
 - 2026-10-26 — ABOUT TO: Confirm branch and pending paths, check whitespace and absence of `.env`, and make a local checkpoint of the latest verification result. WHY: preserve the current handoff after the repeated live check; never push.
+- RESULT: PASS; checkpoint `ff20e37` created locally on `phase6-backend`; files committed: CONTEXT.md, TEST-REPORT.md, WORKLOG.md; `git diff --check` clean; no push.
+- NEXT: refresh the RESUME POINTER to checkpoint `ff20e37`, then stop pending PayPal delivery confirmation.
+- 2026-10-26 — ABOUT TO: Update the top RESUME POINTER with the latest result and checkpoint. WHY: make the handoff immediately actionable from the first lines of the journal.
