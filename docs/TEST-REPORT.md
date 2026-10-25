@@ -572,3 +572,12 @@ Date: 2026-10-24
 ## Phase 4 one-order runner first invocation — 2026-10-25
 - `node scripts/phase4-live-order.js` created exactly one $1 order and printed its approval URL. The non-TTY command had closed stdin; it exited with unsettled readline await before capture. No second order was issued. Rerunning with TTY uses the same deterministic request key and recovers the existing order.
 - Interactive retry recovered the same order token and is paused at buyer approval. Awaiting the user to approve; no capture/webhook verification yet.
+
+## Phase 4 retained Sandbox capture — 2026-10-25
+- Command: interactive `node scripts/phase4-live-order.js`; order used the deterministic fixed-org request key. Buyer approved in browser; script then captured and waited for the webhook.
+- Result: PASS. PayPal webhook verification=`verified`, processing=`processed`; exactly one transaction and one capture journal entry. Gross 100 minor units USD, PayPal fee 40, net 60. Capture/order/event/ledger were retained. No refund attempted. The one Sandbox order was created by the first non-TTY run and safely recovered by the interactive retry.
+
+## Phase 4 AI live assertions — pre-run — 2026-10-25
+- Fixed verifier organization now contains one completed capture (transaction ID, source ID and amount/fee/net queried read-only; no secret values). Plan: run grounded fee answer once with hostile legacy client context, verify every numeric claim against that transaction, replay same question for cache hit, request a pending-only AI refund proposal, then confirm a third viewer request is HTTP-budget-blocked with no new provider usage. Runtime per-user limit will be set to 2 for this restarted server process only; no `.env` edits.
+- Known boundary: `transactions` has no persisted `description` column; live database-description injection cannot be represented in the current schema. Verify ignored client-context injection live and retain unit coverage for description sanitization; mark database-description-specific live check UNVERIFIED.
+- AI-live verifier extension checks dynamic capture numeric grounding, real transaction citations, exactly one provider usage reservation, one cache-hit row with no second provider reservation, no new pending approval or PayPal activity from hostile client context, a pending-only AI refund proposal, and a subsequent HTTP daily-budget block with no new usage. `node --check scripts/verify-phase4.js && npm test`: PASS, 104/104.
