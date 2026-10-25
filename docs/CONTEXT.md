@@ -15,7 +15,7 @@
 
 ## IN PROGRESS
 - T2 task files/functions: `supabase/migrations/0007_fund_contributions.sql` (`create_fund_campaign`, `create_fund_pledge`, `link_fund_contribution_order`, `record_fund_paypal_capture_event`, `get_fund_campaign_summary`); `server/src/repos/postgres.js` fund repository and capture RPC; `server/src/repos/memory.js` campaign/pledge/receipt fixtures; `server/src/services/webhookProcessor.js` mismatch handling; `server/src/routes/funds.js` campaign/pledge/order APIs; `server/src/app.js` route/error wiring; `server/test/phase6-migration.test.js`; `server/test/phase6-contributions.test.js`; all three continuity docs.
-- Port 3000 runs this repo’s stale `node server/index.js` (19h uptime), reporting PayPal unconfigured while current config successfully created the approved order. Restart it from current checkout/config before capture so a configured tunnel can reach the current webhook handler. Then capture once and inspect webhook, receipt, summary; replay raw body x5.
+- Port 3000 listener was restarted from current checkout/config. Initial status parser mistakenly checked nonexistent `paypalConfigured`; actual `/api/status` keys report Supabase=true, PayPal configured=true, connected=true, webhookConfigured=true. Proceed to capture the already-approved order once; verify webhook, receipt, summary; replay raw body x5.
 
 ## NEXT STEPS
 1. Restart the local port 3000 server with current config and confirm `/api/status` reports PayPal configured.
@@ -43,10 +43,10 @@
 | T2 diff/frontend scope | PASS | 2026-10-26 | `git diff --check`; frontend changed-path list empty |
 | T2 live RPC/API | PASS | 2026-10-26 | 5 RPCs 403; campaigns/summary 200; pledge=100, received=0, remaining=1000 minor units
 | T2 Sandbox order creation | PASS | 2026-10-26 | 1.00 USD order linked; HTTP 201; no purchase/capture
-| T2 buyer approval/webhook/capture/replay | UNVERIFIED | 2026-10-26 | Approved; stale port 3000 server reports PayPal off; restart before capture |
+| T2 buyer approval/webhook/capture/replay | UNVERIFIED | 2026-10-26 | PASS; current port 3000 reports PayPal configured/connected and webhook configured after restart |
 
 ## KNOWN ISSUES AND RISKS
-- A 19-hour-old server on port 3000 reported PayPal unconfigured; restart it with current `.env` process config before capture to ensure webhook receiver compatibility. The remote webhook/tunnel destination has not been probed yet.
+- The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. The external webhook delivery is still pending capture.
 - T2 mismatch handling flags and leaves pledge unreceived; it does not post the mismatched capture to the ledger, consistent with existing capture RPC's expected-amount check. Investigate via safe operations before claiming receipt.
 - Target summary `remainingMinor` is target minus received, as specified by the test requirements; allocations and expense fields are separate.
 - PayPal Sandbox purchase requires a human approval at the buyer link. Do not buy until the Phase 6 gate; never use payout/invoicing without explicit requested gate.
