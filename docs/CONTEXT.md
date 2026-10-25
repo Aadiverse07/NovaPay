@@ -4,7 +4,7 @@
 - Date/time: 2026-10-25 Asia/Kolkata.
 - Branch: `frontend-wiring` (verified; local commits only).
 - Last commit before this UI-fix checkpoint: `e5938fe Frontend wiring: task 7 API verification`.
-- Current phase/task: Three frontend UI fixes complete; checkpoint commit pending.
+- Current phase/task: Three frontend UI fixes complete; local checkpoint `443d9b9` (`Fix frontend UI data states and badges`).
 
 ## DONE
 - Fixed favicon references in `dashboard.html` and `preview.html` using existing `assets/novapay-mark-clean.png`.
@@ -15,7 +15,7 @@
 - Files changed in this task: `dashboard.html`, `preview.html`, `src/dashboard.js`, `src/novapay-live.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 
 ## IN PROGRESS
-- None. Source review and diff hygiene are complete. Browser verification was not run.
+- None. Source review and diff hygiene are complete. Browser verification was not run. Task checkpoint `443d9b9` is committed; working tree was clean before this handoff-note update.
 
 ## NEXT STEPS
 1. User adds `assets/fonts/Montserrat-Variable.woff2` to resolve the font 404; do not change `src/fonts.css` or `src/tokens.css`.
