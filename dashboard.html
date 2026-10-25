@@ -18,10 +18,15 @@
 <link rel="stylesheet" href="src/base.css">
 <link rel="stylesheet" href="src/dashboard.css">
 <link rel="stylesheet" href="src/novapay-live.css">
+<link rel="stylesheet" href="src/click-spark.css">
+<link rel="stylesheet" href="src/specular-buttons.css">
+<link rel="stylesheet" href="src/line-sidebar.css">
 <link rel="stylesheet" href="src/novapay-pastel.css">
 <link rel="stylesheet" href="src/novapay-dark-glow.css">
+<link rel="stylesheet" href="src/transaction-motion.css">
 <link rel="stylesheet" href="src/approvals-polish.css">
 <link rel="stylesheet" href="src/modules.css">
+<link rel="stylesheet" href="src/capabilities-holo.css">
 <link rel="stylesheet" href="src/hero-scene.css">
 <link rel="stylesheet" href="src/nav-colorful.css">
 <script src="src/novapay-logo.js"></script>
@@ -149,7 +154,7 @@
             <div class="card-heading cashflow-heading"><div><h3 class="heading-with-icon"><span class="section-icon-tile"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14"/><path d="M14.5 4.5L18 8l-3.5 3.5"/><path d="M20 16H6"/><path d="M9.5 12.5L6 16l3.5 3.5"/><circle class="f" cx="12" cy="12" r="1.6"/></svg></span>Cash Flow Overview</h3><p id="cf-sub">Illustrative sample data · amounts in INR</p></div><div class="cashflow-legend"><span class="legend-in">● Money In</span><span class="legend-out">● Money Out</span><span class="legend-net">● Net</span></div></div>
             <div class="range-tabs" id="cashflow-tabs" role="tablist" aria-label="Cash flow period"><button type="button" data-range="7D">7D</button><button type="button" class="active" data-range="30D">30D</button><button type="button" data-range="3M">3M</button><button type="button" data-range="1Y">1Y</button></div>
             <div class="cashflow-summary"><div><span>Money In</span><strong id="cash-in">₹1,45,000</strong></div><div><span>Money Out</span><strong id="cash-out">₹36,000</strong></div><div><span>Net</span><strong id="cash-net">₹1,09,000</strong></div></div>
-            <div class="cashflow-chart" id="cashflow-chart"><div class="cf-y" id="cf-y" aria-hidden="true"></div><div class="cf-plot" id="cf-plot" role="img" aria-label="Illustrative cash flow chart showing Money In, Money Out and Net"><svg id="cf-svg" viewBox="0 0 900 260" preserveAspectRatio="none"><defs><linearGradient id="inFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#18b68a" stop-opacity=".30"/><stop offset="100%" stop-color="#18b68a" stop-opacity="0"/></linearGradient><linearGradient id="netFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4e76e9" stop-opacity=".30"/><stop offset="100%" stop-color="#4e76e9" stop-opacity="0"/></linearGradient></defs><g class="chart-grid" id="cf-grid"></g><path id="cash-in-area" class="cash-area in-area"></path><path id="cash-net-area" class="cash-area net-area"></path><path id="cash-in-line" class="cash-line in-line"></path><path id="cash-out-line" class="cash-line out-line"></path><path id="cash-net-line" class="cash-line net-line"></path></svg><div class="cf-cursor" id="cf-cursor" hidden></div><div class="cf-tip" id="cf-tip" hidden></div><div class="chart-labels" id="cf-x"></div></div></div>
+            <div class="cashflow-chart" id="cashflow-chart"><div class="cf-y" id="cf-y" aria-hidden="true"></div><div class="cf-plot" id="cf-plot" role="img" aria-label="Illustrative cash flow chart showing Money In, Money Out and Net"><svg id="cf-svg" viewBox="0 0 900 260" preserveAspectRatio="none"><defs><linearGradient id="inFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#18b68a" stop-opacity=".30"/><stop offset="100%" stop-color="#18b68a" stop-opacity="0"/></linearGradient><linearGradient id="netFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4e76e9" stop-opacity=".30"/><stop offset="100%" stop-color="#4e76e9" stop-opacity="0"/></linearGradient></defs><g class="chart-grid" id="cf-grid"></g><path id="cash-in-area" class="cash-area in-area"></path><path id="cash-net-area" class="cash-area net-area"></path><path id="cash-in-line" class="cash-line in-line"></path><path id="cash-out-line" class="cash-line out-line"></path><path id="cash-net-line" class="cash-line net-line"></path></svg><div class="cf-cursor" id="cf-cursor" hidden></div><div class="cf-crosshair-y" id="cf-crosshair-y" hidden></div><div class="cf-tip" id="cf-tip" hidden></div><div class="chart-labels" id="cf-x"></div></div></div>
           </article>
           <article class="dash-card financial-health-card"><div class="card-heading"><h3 class="heading-with-icon"><span class="section-icon-tile health"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 20.5s-8-4.6-8-10.7A4.6 4.6 0 0112 7a4.6 4.6 0 018 2.8c0 6.1-8 10.7-8 10.7z"/><path d="M6.5 12.5h3l1.5-3 2.2 6 1.5-3h2.8"/></svg></span>Financial Health</h3><span>→</span></div><div class="health-ring" aria-label="Financial Health 82 percent healthy"><svg class="health-donut" viewBox="0 0 120 120" aria-hidden="true"><circle class="health-track" cx="60" cy="60" r="48"></circle><circle class="health-segment health-segment-main" cx="60" cy="60" r="48" pathLength="100"></circle></svg><strong data-health-value>82%</strong><small>Healthy<br><b>↑ 6%</b></small></div><ul class="check-list"><li class="ok">Transaction activity available</li><li class="ok">Sandbox actions require review</li><li class="warn"><a href="#approvals">Open Approvals <span aria-hidden="true">→</span></a></li><li class="ok">Sample values clearly labeled</li></ul><div class="health-callout"><span class="callout-icon"><svg class="section-icon np-sec-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16v4M17 18h4"/></svg></span> Illustrative sample assessment<small>Based only on example dashboard values</small></div></article>
         </div>
@@ -312,5 +317,9 @@
 <script src="src/dashboard.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
+<script src="src/capabilities-holo.js"></script>
+<script src="src/click-spark.js"></script>
+<script src="src/specular-buttons.js"></script>
+<script src="src/line-sidebar.js"></script>
 </body>
 </html>

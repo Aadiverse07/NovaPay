@@ -5,11 +5,12 @@
 
 /* ---- cards: positioned by JS along a slanted ring (direct children only) ---- */
 .hero .hero-stage.np-orbit > .float-card {
+  --holo-rotation: none;
   left: 0 !important; top: 0 !important; right: auto !important; bottom: auto !important;
-  animation: none !important; rotate: none !important; scale: none !important; translate: none !important;
+  animation: none !important; rotate: var(--holo-rotation, none) !important; scale: none !important; translate: none !important;
   transform: var(--np-t, translate3d(0,0,0)) !important;
   transform-origin: 50% 50%;
-  transition: box-shadow .25s var(--fx-ease, ease), border-color .25s var(--fx-ease, ease) !important;
+  transition: rotate 140ms ease-out, box-shadow .25s var(--fx-ease, ease), border-color .25s var(--fx-ease, ease) !important;
   will-change: transform, opacity;
   cursor: pointer;
 }
