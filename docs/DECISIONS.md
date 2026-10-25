@@ -331,3 +331,9 @@
 - Choice: Use a SHA-256-derived stable request key scoped to the existing dedicated verifier organization; retries resolve the same order through the idempotent create-order API. Retain the completed capture and its verified webhook/ledger rows permanently; no refund or financial cleanup.
 - Reason: The user authorized exactly one Sandbox order and explicitly requested capture retention.
 - Source: Phase 4 resumed verification instruction and `scripts/phase4-live-order.js`, 2026-10-25. Rejected alternative: random request keys on rerun or cleanup of the capture/ledger.
+
+## Phase 4 approved capture retention — 2026-10-25
+- Question: What should happen to the one live Sandbox capture after webhook/ledger verification?
+- Choice: Retain the order, capture, verified event, transaction, and journal entry in the dedicated verifier organization; do not refund or clean financial rows.
+- Reason: The capture is the requested real evidence for Phase 4 fees/AI testing, and the user explicitly requested retention.
+- Source: `scripts/phase4-live-order.js` live output: signed event verified and processed, one transaction/journal entry, 100 gross/40 fee/60 net USD minor units, 2026-10-25. Rejected alternative: refund or delete capture/ledger data.
