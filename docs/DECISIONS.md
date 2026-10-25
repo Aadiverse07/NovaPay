@@ -313,3 +313,9 @@
 - Choice: Do not run them; mark their live safe-subset checks UNVERIFIED and rely on the complete unit regression for payment-independent coverage.
 - Reason: Inspection shows Phase 2 unconditionally creates a Sandbox PayPal order and pauses for buyer approval; Phase 3 invokes invoice/payment flow. Running them would create provider-side effects outside Phase 4 scope.
 - Source: `scripts/verify-phase2.js` and `scripts/verify-phase3.js` control flow inspection, 2026-10-24. Rejected alternative: trigger an additional payment/invoice flow solely for regression.
+
+## Phase 4 resumed live verification scope — 2026-10-25
+- Question: How to complete remaining live checks while avoiding unnecessary Sandbox activity?
+- Choice: Make one tiny Gemini call with synthetic evidence first, then create exactly one $1 Sandbox order only for requested live evidence; retain the resulting capture and do not refund it. Do not call PayPal invoicing.
+- Reason: User explicitly authorized this bounded flow and specified the human approval gate; synthetic smoke avoids customer data.
+- Source: User instruction, 2026-10-25. Rejected alternative: repeat arbitrary live payments or use real customer evidence.
