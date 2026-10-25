@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T2; verify balanced donation ledger posting and webhook replay idempotency.
-- Last finished step: exact resent capture resource `0U573441YN817132C` verified/processed; contribution received, one receipt; summary received=100, remaining=900 minor units.
-- Next step: inspect journal/account lines, then replay the exact stored raw webhook body five times and confirm no duplicate financial rows.
-- Pending human action: none; user reported server/tunnel repair and resent the event.
+- Current task: Phase 6 T2; correct fund donation revenue classification without rewriting applied migrations.
+- Last finished step: exact capture event verified; receipt/summary pass; five exact raw-body replays idempotent. Journal balances but credits 4000 Sales Revenue instead of 4100 Donations.
+- Next step: prepare focused fund-specific posting change and auditable reclassification in a new migration; test before requesting the user to apply it.
+- Pending human action: after a concrete migration is prepared, user must review/apply it; no live ledger correction has been made.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -57,3 +57,25 @@
 - NEXT: update CONTEXT.md and append this live PASS to TEST-REPORT.md; keep ledger-balance and exact raw-body replay checks as remaining T2 validation.
 - 2026-10-26 — ABOUT TO: Record successful exact-event, receipt, and summary reconciliation in continuity docs and point the journal to remaining ledger/idempotency verification. WHY: preserve evidence while the earlier T2 objective remains in progress.
 - 2026-10-26 — ABOUT TO: Verify branch, inspect pending paths for `.env`, check whitespace, and locally checkpoint the successful event/receipt/summary result. WHY: continuity docs were updated after the live check and require a local WIP checkpoint.
+- RESULT: PASS; `004b5d3` committed the updated context/test report/work journal on `phase6-backend`; no push.
+- NEXT: read the capture journal entry/lines and inspect stored raw-body/header availability, without printing payload or signatures.
+- 2026-10-26 — ABOUT TO: Query service-role ledger/account rows and exact event storage metadata for capture `0U573441YN817132C`; also inspect the local webhook route's expected raw request handling. WHY: confirm balanced posting and prepare an exact-byte replay without reconstructing the signed body.
+- RESULT: FAIL/UNVERIFIED; exact event is verified/processed and exact raw body is stored (1614 bytes, signature headers present), but `journal_entries` query by `source_id=paypal_captures.id` returned zero rows and therefore no balanced lines could be confirmed. No values/payload/signatures printed; no writes performed.
+- NEXT: inspect the capture-posting RPC's source_id semantics and read all capture entries for the fixed org to locate the posted entry before attempting replay.
+- 2026-10-26 — ABOUT TO: Inspect migration posting implementation and query capture journal entries for this fixed org using metadata only. WHY: determine whether the initial query used an incorrect source key or whether a completed capture lacks the expected ledger posting.
+- RESULT: CLARIFIED; no missing posting indicated. `journal_entries.source_id` is the provider capture ID, not `paypal_captures.id`; org scan found a capture entry whose source ID and description match the target capture. Initial zero-entry lookup was a query-key mistake. No records changed.
+- NEXT: query the exact capture journal lines/account codes and determine safe raw-body decoding metadata; then replay the exact event five times only if signature headers/body are intact.
+- 2026-10-26 — ABOUT TO: Read the journal entry keyed by provider capture ID and inspect stored raw-body format/header names without printing body or header values. WHY: prove debits equal credits and prepare exact-byte webhook replay.
+- RESULT: PASS for arithmetic; exact capture journal has 3 lines, debit=100 and credit=100 minor units, account codes 1000/5000/4000. Stored event is verified/processed with 1614-byte raw body and all 5 signature headers. The revenue line appears to use Sales Revenue (4000), while Donations is 4100; verifying fund-specific posting intent before marking ledger validation complete.
+- NEXT: inspect the ledger helper and contribution posting path to confirm whether donations should credit account 4100; do not replay until this discrepancy is understood.
+- 2026-10-26 — ABOUT TO: Read local ledger helper and fund capture routing code to determine the intended revenue account for fund contributions. WHY: a balanced entry may still classify donation revenue incorrectly; avoid certifying the wrong ledger posting.
+- RESULT: FAIL for fund-account classification; posting is mathematically balanced (debit=credit=100 minor units), but the fund capture path passes generic `captureJournalLines`, whose revenue line is account 4000 (`Sales Revenue`); account 4100 is `Donations`. The exact capture currently credits 4000, not 4100. Exact raw body and required signature headers are stored. No files changed by inspection; no writes performed.
+- NEXT: record the live account classification issue and inspect webhook receive deduplication before deciding whether to run the already-planned five exact-body replays.
+- 2026-10-26 — ABOUT TO: Read `receive_paypal_event` conflict behavior and relevant fund-capture tests to confirm duplicate delivery cannot create duplicate ledger entries. WHY: only replay if database event dedupe is idempotent; do not risk duplicate accounting.
+- RESULT: PASS; `receive_paypal_event` conflicts on `(provider,event_id)` and updates only `event_id`; `claim_paypal_event` only returns queued/retry/stale-processing rows, so the already-processed event cannot be reprocessed. Existing tests cover one receipt for a verified capture but no account-4100 assertion. No writes performed by inspection.
+- NEXT: POST the exact stored raw body and signature headers for the verified resource to local `/api/webhook` five times; then re-read event/contribution/capture/receipt/journal counts to verify idempotency.
+- 2026-10-26 — ABOUT TO: Retrieve stored body/headers in memory, assert the payload identifies the exact event and capture, POST unchanged bytes five times to the local webhook route, then read-only verify counts. WHY: complete the already-planned duplicate-delivery test without generating a payment or fabricating signature data.
+- RESULT: PASS for idempotency; five exact-byte replay requests returned HTTP 200. Event remained verified/processed; contribution stayed received and capture link matched; capture count=1, receipt count=1, capture journal entry count=1. Earlier live check: debit=credit=100 minor units but credited account is 4000 Sales Revenue rather than 4100 Donations.
+- NEXT: update continuity docs with replay PASS and unresolved fund revenue classification FAIL, then checkpoint locally. Do not mutate/reclassify the posted journal as part of this read-only verification.
+- 2026-10-26 — ABOUT TO: Append replay and ledger-classification findings to TEST-REPORT/DECISIONS, refresh CONTEXT and WORKLOG pointer, and commit locally. WHY: preserve the completed idempotency evidence while flagging the financial classification defect accurately.
+- 2026-10-26 — ABOUT TO: Check branch/status for `.env`, verify whitespace, and checkpoint the reconciliation, replay, and account-classification findings in continuity docs. WHY: preserve the fully verified delivery state and explicit accounting defect before ending this check.
