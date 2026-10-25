@@ -418,3 +418,17 @@
 - Reason: Assistant evidence is resolved by the backend using verified organization context; notifications are tenant scoped and have supported read/dismiss endpoints.
 - Source: `docs/FRONTEND-CONTRACT.md` and `server/src/routes/ai.js`, `server/src/routes/notifications.js` (checked 2026-10-25).
 - Rejected alternatives: Sending browser-scraped transactions; using local fallback for authenticated sessions; displaying static notification examples as live notices.
+
+## 2026-10-25 — Frontend wiring task 7 API login method
+- Question: How to authenticate the existing fixed owner for API verification when no test password is configured?
+- Choice: Use Supabase Admin `generateLink` for a one-time magic-link hash, verify it to a user session in memory, and query existing fixture membership; do not reset the fixture password or send email.
+- Reason: This proves real Supabase user JWT authorization without password mutation or exposing credentials. Admin-generated links are intended for custom email providers and are not themselves email sends.
+- Source: [Supabase JavaScript Auth Admin generateLink](https://supabase.com/docs/reference/javascript/auth-admin-generatelink), [Supabase JavaScript Auth verifyOtp](https://supabase.com/docs/reference/javascript/auth-verifyotp), checked 2026-10-25.
+- Rejected alternatives: Resetting the fixed user's password to an ephemeral random value; printing or persisting an access token; running a test that sends email, consumes AI quota, mutates notifications, or invokes PayPal.
+
+## 2026-10-25 — Task 7 scope and manual verification boundary
+- Question: Which task 7 checks can run safely without a browser credential/password, and what should stay manual?
+- Choice: Reuse the already-running local server and existing fixed owner fixture; use a one-time admin-generated login link in memory for authenticated read APIs. Leave browser rendering, console/network, theme/motion, mobile drawer, notifications UI, and AI chat UNVERIFIED with exact manual steps.
+- Reason: The configured environment contains Supabase keys but no test password. API reads verify real JWT and organization membership without resetting a password, sending email, consuming AI quota, or mutating financial/notification state.
+- Source: [Supabase Auth Admin generateLink](https://supabase.com/docs/reference/javascript/auth-admin-generatelink), [Supabase Auth verifyOtp](https://supabase.com/docs/reference/javascript/auth-verifyotp), checked 2026-10-25; repository `docs/FRONTEND-CONTRACT.md` checked 2026-10-25.
+- Rejected alternatives: Resetting the fixed user's password; printing or persisting tokens; claiming browser PASS without opening the UI.

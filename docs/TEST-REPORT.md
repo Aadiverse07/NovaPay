@@ -649,3 +649,30 @@ Date: 2026-10-24
 - `npm test` — PASS; migrations 0001–0005 parsed and 104 tests passed, 0 failed.
 - AI Assistant request/UI, notifications read/dismiss, and real-login/browser walkthrough — UNVERIFIED; no browser session run.
 - `git diff --stat origin/main -- <protected files>` — pending final scope verification.
+
+## Frontend wiring task 7 — 2026-10-25
+- Existing local server preflight: PASS. Port 3000 listener present; `GET /api/status` returned HTTP 200.
+- Fixed-user Supabase admin link generation: HTTP 200, but login attempt was UNVERIFIED because the initial safe script expected a different generated-token response field and exited before verification; no credentials, tokens, or response bodies were printed. Inspect only response field names before retrying.
+- Safe Supabase magic-link field inspection: PASS. Admin endpoint returned HTTP 200; expected `hashed_token` is a top-level field (field names only were logged). No generated token or account details were printed.
+
+## Frontend wiring task 7 — authenticated API checks — 2026-10-25
+- Server: PASS. Reused the existing local listener on port 3000; `GET /api/status` returned HTTP 200.
+- Login: PASS. Used Supabase Admin `generate_link` for existing fixed owner `novapay-phase3-owner-a@example.test`, verified its one-time magic-link hash through Auth, and received a real user access token in memory. No email was sent, no password was reset, and no token/response body/organization ID was printed.
+- Membership: PASS. Existing owner membership in `NovaPay Phase 3 Verification A` verified through service role; membership identity/org values remained in memory.
+- Authenticated GET APIs: PASS, 8/8 HTTP 200. Transactions 1 row; approvals 0; pending count returned; trial balance 9 accounts; invoices 0; P&L 2 rows; FX conversion returned source and timestamp; notifications 0.
+- Remaining authenticated report reads: PASS, 5/5 HTTP 200. Trial balance 3 rows, fees 1, refunds 0, cash movement 1; P&L CSV returned `text/csv`.
+- API scope: Read-only. No AI chat request (avoids consuming user/org AI quota), notification mutation, invoice action, or PayPal call was made.
+- Supabase magic-link discovery: first attempt UNVERIFIED because the script assumed a nested token field; a second field-name-only probe confirmed the hash is top-level, and the corrected login/API pass above succeeded. No sensitive response fields were logged.
+
+## Frontend wiring task 7 — browser-only manual walkthrough — UNVERIFIED — 2026-10-25
+A real Supabase API session was verified, but no browser UI was driven. Manual steps:
+1. Ensure `npm start` is running in this repository (port 3000 was already serving `/api/status` HTTP 200 during this task). Open `http://localhost:3000/preview.html#login`.
+2. Sign in as `novapay-phase3-owner-a@example.test` using the fixed test account's authorized password. If unavailable, use the page's Forgot password flow only if the test inbox is accessible; do not paste passwords, OTPs, or tokens into chat.
+3. Confirm redirect to `dashboard.html`, profile identity, and dashboard view. Open each navigation view: Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox, Ledger, Invoices, Reports, Documents, Fundraising, Maintenance, Transparency. Confirm each view renders without redirect/blank panel.
+4. Open DevTools Console and Network (Fetch/XHR), clear both, revisit the views, and confirm no uncaught console errors or unexpected failed requests. Expected empty organization lists are valid; investigate any 401/403 or API error.
+5. Toggle light and dark themes; reload and confirm the selected theme persists. Emulate `prefers-reduced-motion: reduce` in DevTools Rendering and confirm transitions/animations respect it.
+6. Set viewport to 390×844. Open the mobile navigation drawer, close it with backdrop and Escape, then select a view and confirm the drawer closes and focus remains usable.
+7. Open Notifications; confirm organization notifications or the empty state. If an unread item exists, mark it read and verify the count/state updates; dismiss a read item and verify it disappears.
+8. Open AI Assistant and ask once: “Summarize recent transactions for this organization.” Confirm the route badge, citation chips or explicit insufficient-evidence message, and any usage-limit response. In Network, verify the POST body contains only `{ "message": "..." }`; confirm no browser transaction context is sent and no local fallback is shown in the authenticated session.
+- Result: UNVERIFIED for all browser UI, console/network, theme/reduced-motion, mobile drawer, notification interaction, and AI chat checks because no browser session was available in this run.
+- Task 7 documentation/scope hygiene: PASS. `git diff --check` clean; branch `frontend-wiring`; `git diff --stat origin/main -- <protected paths>` returned empty; `git check-ignore .env` returned `.env`.
