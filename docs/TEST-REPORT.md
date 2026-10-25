@@ -676,3 +676,11 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 8. Open AI Assistant and ask once: “Summarize recent transactions for this organization.” Confirm the route badge, citation chips or explicit insufficient-evidence message, and any usage-limit response. In Network, verify the POST body contains only `{ "message": "..." }`; confirm no browser transaction context is sent and no local fallback is shown in the authenticated session.
 - Result: UNVERIFIED for all browser UI, console/network, theme/reduced-motion, mobile drawer, notification interaction, and AI chat checks because no browser session was available in this run.
 - Task 7 documentation/scope hygiene: PASS. `git diff --check` clean; branch `frontend-wiring`; `git diff --stat origin/main -- <protected paths>` returned empty; `git check-ignore .env` returned `.env`.
+
+## UI fixes — 2026-10-25
+- Repository asset inspection: PASS. `src/fonts.css` references `../assets/fonts/Montserrat-Variable.woff2`; `assets/fonts/` contains only `README.txt`, so the WOFF2 file is absent. `src/fonts.css` and `src/tokens.css` were not modified. Browser font 404 remains pending the user adding the file.
+- Favicon source inspection: PASS. Both `dashboard.html` and `preview.html` now declare `assets/novapay-mark-clean.png` as the favicon. Browser network verification remains UNVERIFIED.
+- AI badge source inspection: PASS. Client carries `response.reason`; badge uses the route and exposes the reason through `title` and `aria-label`. Browser hover/keyboard verification remains UNVERIFIED.
+- Demo/live state source inspection: PASS. Demo sessions get a persistent “Sample data · Demo workspace” indicator; authenticated sessions get API-backed loading/data states and empty states for views without organization data. Browser verification remains UNVERIFIED.
+- `git diff --check` — PASS; no whitespace errors.
+- JavaScript/browser runtime tests — UNVERIFIED; not run for this UI-only patch. No test suite was added or run.
