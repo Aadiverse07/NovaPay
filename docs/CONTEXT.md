@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
-- Last task checkpoint: `f1beaab WIP Phase 6 task 2: record pending webhook delivery`.
+- Last task checkpoint: `ead92ad WIP Phase 6 task 2: await webhook delivery`.
 - Current phase/task: Phase 6 Fund Transparency, T2 investigate capture-to-contribution transition failure.
 
 ## DONE
@@ -18,9 +18,9 @@
 - Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. PayPal accepted exact-event resend, but that event ID is not in Supabase inbox. Existing verified/processed event is unrelated. Contribution remains pledged; one capture, no receipt, receivedMinor=0. Stop before any replay until exact event arrives.
 
 ## NEXT STEPS
-1. Wait for the exact resent PayPal event ID to arrive in `paypal_events`; verify its capture/order IDs, signature and processing outcome.
-2. If delivered and verified, reconcile contribution, receipt, capture, balanced journal and summary; replay the exact stored body five times and verify idempotency.
-3. If it does not arrive, inspect configured tunnel/delivery in PayPal and ask user for the precise external repair; do not mark received. Then checkpoint T2 before T3.
+1. User checks the PayPal Sandbox webhook delivery log and tunnel forwarding per USER ACTIONS PENDING.
+2. If exact event delivery succeeds, verify its capture/order IDs and signature, then reconcile contribution, receipt, capture, balanced journal and summary; replay its stored raw body five times and verify idempotency.
+3. If delivery fails, repair tunnel/webhook delivery and resend that existing provider event; never mark received manually. Then checkpoint T2 before T3.
 
 ## USER ACTIONS PENDING
 - Inspect PayPal Developer Dashboard > Apps & Credentials > Sandbox > Webhooks > configured webhook > Event deliveries for the exact capture-completed event. The event-list API accepted a resend, but the exact event ID did not arrive in Supabase after 25 seconds. Check latest delivery status and that the tunnel URL is online and forwards to this repo server at `/api/webhook`; if failed, restore the tunnel then use PayPal “Resend” for this existing event. Do not create another order or manually mark received. Reply with delivery status only; do not paste secrets.
@@ -28,7 +28,7 @@
 ## LIVE STATE
 - Supabase migrations 0001–0006 applied (user reported); 0006 ordinary-user read/write checks PASS. 0007 applied (user confirmed 2026-10-26); live verification pending.
 - Tunnel/webhook: previously user-reported configured; no new Phase 6 verification.
-- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once; signed webhook processed. Reconciliation and five stored-body replays pending.
+- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once. PayPal accepted a resend for the exact matching event, but its event ID is absent from the app inbox after 25 seconds; the existing processed event is unrelated. Contribution remains pledged, no receipt, receivedMinor=0. Reconciliation and raw-body replay not run.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
@@ -43,7 +43,10 @@
 | T2 diff/frontend scope | PASS | 2026-10-26 | `git diff --check`; frontend changed-path list empty |
 | T2 live RPC/API | PASS | 2026-10-26 | 5 RPCs 403; campaigns/summary 200; pledge=100, received=0, remaining=1000 minor units
 | T2 Sandbox order creation | PASS | 2026-10-26 | 1.00 USD order linked; HTTP 201; no purchase/capture
-| T2 buyer approval/webhook/capture/replay | UNVERIFIED | 2026-10-26 | PASS; current port 3000 reports PayPal configured/connected and webhook configured after restart |
+| T2 buyer-approved capture | PASS | 2026-10-26 | Authenticated capture completed existing $1 Sandbox order once |
+| T2 exact PayPal event lookup/webhook subscription | PASS | 2026-10-26 | One exact matching provider event; webhook path/subscription confirmed |
+| T2 exact-event resend request | PASS | 2026-10-26 | PayPal accepted resend request |
+| T2 matching signed delivery, receipt, ledger, replay | UNVERIFIED | 2026-10-26 | Exact event absent from Supabase inbox after 25 seconds; pledge still pledged; 0 receipts |
 
 ## KNOWN ISSUES AND RISKS
 - The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. PayPal event list returned the exact matching capture event and webhook inspection confirmed the endpoint and subscription. PayPal accepted resend, but exact event ID has not arrived in Supabase inbox; existing processed event is unrelated. No receipt/ledger transition. Earlier generic processed-event match was unrelated.
@@ -64,7 +67,7 @@
 
 ## DO NOT
 - Never push, use `--force`, weaken tests, edit applied migrations, commit `.env`, or print secrets.
-- Stay on `phase6-backend`; never commit/push to `backend` or `main`.
+- Stay on the currently instructed branch; never push or commit to `backend` or `main`.
 - Do not edit `preview.html`, `dashboard.html`, `src/`, `assets/`.
 - Do not create/buy a PayPal donation until the explicit human gate; no PayPal Payouts/Invoicing unless explicitly reached and approved.
 - Reuse fixed test users/orgs; clean only rows created by this run.
