@@ -510,3 +510,10 @@
 - Reason: Signature-verified delivery is required before recording donations; the exact event remained absent after a 25-second bounded poll.
 - Source: PayPal Sandbox event-list/resend result and Supabase inbox read, checked 2026-10-26.
 - Rejected alternatives: Treat the unrelated processed event as a match; create another order; manually mark received; fabricate or replay a payload.
+
+## 2026-10-26 — Preserve posted entry while reporting donation account misclassification
+- Question: Should the live Sandbox donation's balanced but misclassified journal entry be edited during a read-only verification request?
+- Choice: Leave the posted journal untouched; report that the credit is account 4000 (`Sales Revenue`) instead of 4100 (`Donations`). Any correction must use a new numbered migration with an auditable reclassification and fund-specific posting logic.
+- Reason: Journal history must remain auditable; user requested reconciliation checks, not a live financial correction. Migration 0007 is already applied and must not be edited.
+- Source: Live journal line/account read and `supabase/migrations/0002_financial_core.sql` account definitions; checked 2026-10-26.
+- Rejected alternatives: Directly update/delete posted journal lines; edit applied migration 0007; treat balanced totals as proof of correct fund accounting.
