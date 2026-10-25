@@ -557,3 +557,10 @@ Date: 2026-10-24
 - User requests a fresh Phase 4 pass with one synthetic Gemini smoke, then a single $1 Sandbox order requiring buyer approval; no refund. Restart, external status, webhook preflight, verifier plan in progress. No live provider/payment call yet.
 - Restarted NovaPay with `npm start`; current listener PID 67892 on port 3000. Public `curl -sS -o /tmp/... -w 'HTTP %{http_code}' https://cheaper-approximate-advances-keyboard.trycloudflare.com/api/status`: PASS, HTTP 200, mode authenticated, webhook configured.
 - Read-only PayPal registration preflight through configured webhook ID: PASS; HTTPS host is the provided trycloudflare hostname, path `/api/webhook`, subscriptions include `CHECKOUT.PAYMENT-RESOURCE.PAYMENT-COMPLETED`, `PAYMENT.CAPTURE.COMPLETED`, and `PAYMENT.REFUND.COMPLETED` (plus invoice-paid). No credentials/provider body printed.
+
+## Phase 4 Gemini synthetic smoke — pre-run note — 2026-10-25
+- About to make one bounded `createLLMAdapter({config}).generate()` call through `server/src/services/llm.js` using only a synthetic record and a tiny prompt. Output will include safe model/latency/token metadata only; provider response body and credentials are suppressed. No database or PayPal action.
+
+## Phase 4 resumed Gemini synthetic smoke — 2026-10-25
+- Command: one inline `createLLMAdapter({config}).generate()` call through `server/src/services/llm.js`, 64-token max, synthetic `SYNTH-001` USD fee data only.
+- Result: PASS for provider connectivity; HTTP 200, `gemini-3.5-flash-lite`, 2,138 ms, 59 input tokens, 39 output tokens, exactly one provider event. The output did not match the tiny probe's JSON shape (`jsonShapeValid=false`); response text was intentionally not printed. Full service sanitizer remains covered by `npm test`; real API chat will be tested with sandbox evidence after capture.
