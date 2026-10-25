@@ -16,3 +16,13 @@
 - RESULT: FAIL; `git commit` could not create `.git/index.lock` (Operation not permitted) under current sandbox; no commit created. `docs/WORKLOG.md` remains untracked and contains no secrets.
 - NEXT: retry the same local-only commit with the required elevated permission; after success, begin the read-only reconciliation query.
 - 2026-10-26 — ABOUT TO: Retry local commit of `docs/WORKLOG.md` outside the workspace write sandbox. WHY: checkpointing the requested continuity journal requires writing Git metadata after the first attempt was denied.
+- RESULT: PASS; local journal backfill commit `670b369` created on `phase6-backend`; no push. Files committed: `docs/WORKLOG.md`.
+- NEXT: perform a read-only Supabase reconciliation for the fixed campaign’s capture event, receipt, and campaign summary.
+- 2026-10-26 — ABOUT TO: Query fixed campaign, pledge, PayPal order/capture, recent matching webhook events, receipts, and SQL campaign summary via service-role reads; print only IDs/status/counts/minor-unit totals. WHY: user reports tunnel/webhook repaired and exact event resent; verify whether it is now received and posted.
+- RESULT: UNVERIFIED; fixed campaign still shows contribution `pledged`, capture linked false at contribution row, one COMPLETED capture ($1.00), zero matching events in the campaign org, zero receipts, summary pledged=100/received=0/remaining=1000 minor units. No records changed.
+- NEXT: scan recent PayPal events across orgs for the exact capture ID/order ID, since an unassociated event may not yet carry org_id.
+- 2026-10-26 — ABOUT TO: Read only the recent PayPal capture event inbox across all orgs and compare event resource IDs in memory to the known capture/order. WHY: determine whether resent event arrived but was not associated with the fixed organization.
+- RESULT: UNVERIFIED; global inbox scan found 8 recent `PAYMENT.CAPTURE.COMPLETED` events and 0 exact matches for the fixed capture/order. The exact resent event has not arrived in this Supabase project. No records changed.
+- NEXT: update CONTEXT.md and TEST-REPORT.md with this exact live result, then checkpoint all continuity files locally.
+- 2026-10-26 — ABOUT TO: Update the handoff and append-only test report with the post-resend reconciliation and global inbox scan. WHY: preserve current live state and prevent a future agent from treating unrelated events as this capture.
+- 2026-10-26 — ABOUT TO: Check branch/status for `.env`, verify documentation whitespace, and locally checkpoint the live result in all three continuity files. WHY: checkpoint after two live verification steps; user requires local WIP commits and no pushes.
