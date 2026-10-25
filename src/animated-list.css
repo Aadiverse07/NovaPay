@@ -1,0 +1,68 @@
+/* AnimatedList behaviour (React Bits) ported to plain CSS for the Transactions table.
+   Purely additive: gliding selection indicator + spring pop-in. Uses site theme tokens,
+   so it follows the existing light/dark toggle automatically. */
+#view-transactions .table-scroll { --al-ring: var(--info-text, #3b6bff); }
+
+#view-transactions .al-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 12px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--al-ring) 19%, transparent),
+    color-mix(in srgb, var(--al-ring) 10%, transparent));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--al-ring) 16%, transparent);
+  will-change: transform, width, height, opacity;
+  transition: opacity .18s ease;
+}
+#view-transactions .al-indicator.is-on { opacity: 1; }
+
+/* Keep the row's focus outline from doubling up with the indicator. */
+#view-transactions .al-active .data-table tbody tr.transaction-row:focus-visible td { outline-color: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  #view-transactions .al-indicator { transition: none; }
+}
+
+/* Hover zoom without clipping: each cell zooms around its own centre, so nothing can grow past the
+   table frame (cells have 9px side padding; a 1.1 zoom needs < 8px even for the widest cell).
+   Uses the standalone `scale` property so it composes with the existing row-entrance animations.
+   The older position-dependent tilt on the row itself is switched off. */
+#view-transactions .data-table tbody tr.transaction-row {
+  transform: none;
+  transition: none;
+  filter: none;
+}
+#view-transactions .data-table tbody tr.transaction-row > td {
+  scale: 1;
+  transform-origin: center center;
+  transition: scale .12s ease-out, background 0s, box-shadow 0s;
+}
+#view-transactions .data-table tbody tr.transaction-row:hover > td,
+#view-transactions .data-table tbody tr.transaction-row:focus-visible > td {
+  scale: 1.1;
+  position: relative;
+  z-index: 1;
+  transition: scale .2s cubic-bezier(.2,.8,.3,1), background 0s, box-shadow 0s;
+}
+/* The single glass highlight is the row background while hovered: drop the per-cell tint, borders
+   and inner shadows, which overlapped when cells zoomed and showed up as lines across the row. */
+#view-transactions .data-table tbody tr.transaction-row:hover > td,
+#view-transactions .data-table tbody tr.transaction-row:focus-visible > td {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom-color: transparent !important;
+}
+/* Neighbouring rows' bottom borders would also cut across the highlight. */
+#view-transactions .data-table tbody tr.transaction-row:has(+ tr.transaction-row:hover) > td,
+#view-transactions .data-table tbody tr.transaction-row:has(+ tr.transaction-row:focus-visible) > td {
+  border-bottom-color: transparent !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-transactions .data-table tbody tr.transaction-row > td { transition: none; }
+}

@@ -1,0 +1,160 @@
+/* Transaction workspace: directional entrance, glass ledger rows, and tactile feedback. */
+#view-transactions .page-intro,
+#view-transactions > .dash-card,
+#view-transactions .tx-source-note,
+#view-transactions .tx-filters,
+#view-transactions .tx-result-count,
+#view-transactions .table-scroll {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+#view-transactions.tx-enter .page-intro {
+  animation: tx-arrive-top .62s cubic-bezier(.2,.8,.2,1) both;
+}
+#view-transactions.tx-enter > .dash-card {
+  animation: tx-arrive-bottom .72s .08s cubic-bezier(.2,.8,.2,1) both;
+}
+#view-transactions.tx-enter .tx-source-note {
+  animation: tx-arrive-right .58s .17s cubic-bezier(.2,.8,.2,1) both;
+}
+#view-transactions.tx-enter .tx-filters {
+  animation: tx-arrive-left .62s .22s cubic-bezier(.2,.8,.2,1) both;
+}
+#view-transactions.tx-enter .tx-result-count {
+  animation: tx-arrive-left .5s .28s cubic-bezier(.2,.8,.2,1) both;
+}
+#view-transactions.tx-enter .table-scroll {
+  animation: tx-arrive-bottom .62s .31s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes tx-arrive-left {
+  from { opacity: 0; transform: translate3d(-34px, 0, 0) scale(.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes tx-arrive-right {
+  from { opacity: 0; transform: translate3d(34px, 0, 0) scale(.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes tx-arrive-top {
+  from { opacity: 0; transform: translate3d(0, -24px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes tx-arrive-bottom {
+  from { opacity: 0; transform: translate3d(0, 30px, 0) scale(.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* Frosted ledger surface with restrained color refraction by transaction type. */
+#view-transactions > .dash-card {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--info-text) 18%, var(--border));
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--surface) 88%, var(--info-soft)),
+    color-mix(in srgb, var(--surface) 96%, transparent));
+  box-shadow: 0 20px 55px color-mix(in srgb, var(--info-text) 8%, transparent), var(--shadow-sm);
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+}
+#view-transactions > .dash-card::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, white 75%, var(--info-text)), transparent);
+  opacity: .7;
+}
+#view-transactions .table-scroll {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--info-text) 14%, var(--border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 48%, transparent), 0 12px 30px rgba(26, 57, 119, .06);
+}
+#view-transactions .data-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+#view-transactions .data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: color-mix(in srgb, var(--surface) 76%, var(--info-soft));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+#view-transactions .data-table th {
+  border-bottom-color: color-mix(in srgb, var(--info-text) 19%, var(--border));
+  background: transparent;
+}
+#view-transactions .data-table td {
+  border-bottom-color: color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface) 42%, transparent);
+  transition: background .24s ease, box-shadow .24s ease;
+}
+#view-transactions .data-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--info-soft) 30%, transparent);
+}
+#view-transactions .data-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--info-soft) 76%, var(--surface));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 35%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--info-text) 16%, transparent);
+}
+#view-transactions .data-table tbody tr:focus-visible td {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+#view-transactions .transaction-row {
+  position: relative;
+  z-index: 0;
+  transform: perspective(850px) rotateX(var(--tx-tilt-x, 0deg)) rotateY(var(--tx-tilt-y, 0deg)) scale(var(--tx-row-depth, 1));
+  transform-origin: center center;
+  transition: transform .2s cubic-bezier(.2,.75,.25,1), filter .24s ease;
+}
+#view-transactions .transaction-row:hover { z-index: 1; filter: saturate(1.1) brightness(1.015); }
+#view-transactions .data-table tbody tr.transaction-row:hover td {
+  background: radial-gradient(260px circle at var(--tx-pointer-x, 50%) 50%, color-mix(in srgb, var(--info-soft) 95%, var(--surface)), color-mix(in srgb, var(--info-soft) 48%, var(--surface)) 82%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 42%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--info-text) 20%, transparent);
+}
+#view-transactions .transaction-row.tx-row-enter td { animation: tx-row-reveal .5s cubic-bezier(.2,.8,.2,1) both; }
+#view-transactions .transaction-row.tx-row-enter:nth-child(odd) td { animation-name: tx-row-from-left; }
+#view-transactions .transaction-row.tx-row-enter:nth-child(even) td { animation-name: tx-row-from-right; }
+#view-transactions .transaction-row.tx-row-enter:nth-child(2) td { animation-delay: 35ms; }
+#view-transactions .transaction-row.tx-row-enter:nth-child(3) td { animation-delay: 70ms; }
+#view-transactions .transaction-row.tx-row-enter:nth-child(4) td { animation-delay: 105ms; }
+#view-transactions .transaction-row.tx-row-enter:nth-child(5) td { animation-delay: 140ms; }
+@keyframes tx-row-reveal { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tx-row-from-left { from { opacity: 0; transform: translate3d(-22px, 5px, -12px) rotateY(3deg) scale(.985); filter: blur(4px); } to { opacity: 1; transform: translate3d(0, 0, 0) rotateY(0) scale(1); filter: blur(0); } }
+@keyframes tx-row-from-right { from { opacity: 0; transform: translate3d(22px, 5px, -12px) rotateY(-3deg) scale(.985); filter: blur(4px); } to { opacity: 1; transform: translate3d(0, 0, 0) rotateY(0) scale(1); filter: blur(0); } }
+
+#transaction-modal:not([hidden]) .transaction-modal-backdrop { animation: tx-backdrop-in .24s ease both; }
+#transaction-modal:not([hidden]) .transaction-dialog { animation: tx-detail-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#transaction-modal:not([hidden]) .transaction-detail-grid > div { animation: tx-field-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#transaction-modal:not([hidden]) .transaction-detail-grid > div:nth-child(2n) { animation-delay: 45ms; }
+#transaction-modal:not([hidden]) .transaction-detail-grid > div:nth-child(3n) { animation-delay: 90ms; }
+@keyframes tx-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tx-detail-in { from { opacity: 0; transform: translateY(22px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes tx-field-in { from { opacity: 0; transform: translateY(10px) scale(.97); filter: blur(3px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #view-transactions .page-intro,
+  #view-transactions > .dash-card,
+  #view-transactions .tx-source-note,
+  #view-transactions .tx-filters,
+  #view-transactions .tx-result-count,
+  #view-transactions .table-scroll { opacity: 1; transform: none; will-change: auto; }
+  #view-transactions.tx-enter .page-intro,
+  #view-transactions.tx-enter > .dash-card,
+  #view-transactions.tx-enter .tx-source-note,
+  #view-transactions.tx-enter .tx-filters,
+  #view-transactions.tx-enter .tx-result-count,
+  #view-transactions.tx-enter .table-scroll,
+  #view-transactions .transaction-row.tx-row-enter td,
+  #transaction-modal:not([hidden]) .transaction-modal-backdrop,
+  #transaction-modal:not([hidden]) .transaction-dialog,
+  #transaction-modal:not([hidden]) .transaction-detail-grid > div { animation: none; }
+}
