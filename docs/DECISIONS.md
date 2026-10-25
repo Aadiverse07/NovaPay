@@ -440,3 +440,10 @@
 - Source: Repository `src/fonts.css`, `src/dashboard.js`, `src/novapay-live.js`, `dashboard.html`, `preview.html`, checked 2026-10-25.
 - Rejected alternatives: Editing protected fonts/tokens stylesheets; inventing a replacement font or favicon; leaving static community/ledger values visible in authenticated mode.
 - User action: Add `assets/fonts/Montserrat-Variable.woff2`; the file is absent and the protected stylesheet must remain unchanged.
+
+## 2026-10-25 — Phase 6 branch and scope
+- Question: Which branch and scope govern the Fund Transparency work?
+- Choice: Work locally only on `phase6-backend`, backend-only, and leave the committed font fix untouched.
+- Reason: The user explicitly confirmed `phase6-backend` was created from main and asked to resume Phase 6 STEP 0; this supersedes the previous frontend session's branch/scope for the new task.
+- Source: User-provided Phase 6 prompt and resume instruction, 2026-10-25.
+- Rejected alternatives: Continue on `frontend-wiring`, change branches during work, or edit frontend/assets.

@@ -684,3 +684,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Demo/live state source inspection: PASS. Demo sessions get a persistent “Sample data · Demo workspace” indicator; authenticated sessions get API-backed loading/data states and empty states for views without organization data. Browser verification remains UNVERIFIED.
 - `git diff --check` — PASS; no whitespace errors.
 - JavaScript/browser runtime tests — UNVERIFIED; not run for this UI-only patch. No test suite was added or run.
+
+## Phase 6 STEP 0 — 2026-10-25
+- `npm ci` — PASS; installed 89 packages, audited 90, 0 vulnerabilities. npm reported an unapproved postinstall script warning for `@launchql/protobufjs`; no approval changes were made.
+- `npm test` — PASS; migration parser accepted 0001–0005; 104 tests passed, 0 failed, 0 skipped.
+- `npm run check:migrations` — PASS; migrations 0001–0005 parsed as valid PostgreSQL 17 SQL/PLpgSQL.
+- STEP 0 scope check: PASS; `git diff --name-only -- preview.html dashboard.html src assets` returned empty. No frontend paths changed.
+- `git diff --check` — PASS; STEP 0 documentation changes have no whitespace errors.
