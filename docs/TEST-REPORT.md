@@ -720,3 +720,8 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Phase 6 live donation gate — preparing the single $1 PayPal Sandbox order linked to the fixed pledge. No buyer approval/capture has occurred; stop at approval URL.
 - T2 live campaign/pledge/summary results — PASS; fixed campaign `Phase 6 T2 Live Verification`; one $1.00 USD pledge; summary `pledgedMinor=100`, `receivedMinor=0`, `remainingMinor=1000`.
 - T2 PayPal Sandbox order — PASS; HTTP 201; order linked to fixed contribution, USD 1.00. No purchase/capture yet. Approval URL returned in the conversation; waiting for human buyer approval.
+
+## Phase 6 T2 approved Sandbox capture/webhook verification — 2026-10-26
+- User replied “approved” for the single fixed $1.00 linked Sandbox order. Starting authenticated order/capture and signed webhook verification. First inspect stored order and event state; no additional order will be created.
+- Post-approval server preflight: `GET http://127.0.0.1:3000/api/status` — HTTP 200, authenticated mode and Supabase configured; that existing listener reports PayPal not configured. A fresh in-process API server successfully created the linked Sandbox order using current configuration. Webhook callback routing must be checked before claiming capture/webhook PASS.
+- Callback preflight: port 3000 is served by this repo's existing `node server/index.js` (uptime ~19h) and reported PayPal unconfigured, despite the current process configuration supporting the order. Before capture, restart the local listener with current config so the configured webhook tunnel can reach the T2 handler. No financial data changed by the status probes.

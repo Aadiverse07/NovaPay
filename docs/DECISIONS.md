@@ -482,3 +482,10 @@
 - Reason: This is the specified Phase 6 live test gate; the human controls the US Personal buyer checkout and Visa step. No third-party purchase is completed by the agent.
 - Source: User-provided Phase 6 live test instructions, checked 2026-10-26.
 - Rejected alternatives: Capturing without buyer approval; initiating a different amount; creating repeated orders for the same fixed contribution.
+
+## 2026-10-26 — Restart stale local webhook receiver before capture
+- Question: How to ensure the approved live capture reaches the current webhook processor after the existing listener reported PayPal unconfigured?
+- Choice: Restart the repository's stale `node server/index.js` on port 3000 using current repository/environment configuration, confirm status reports PayPal configured, then capture the already-approved order once.
+- Reason: The order was created through current config but the old listener may not verify incoming PayPal signatures; using the configured port keeps the registered webhook route aligned with the local tunnel. No new purchase is created.
+- Source: Live `GET /api/status` on port 3000 and server process inspection, 2026-10-26; `server/index.js` starts the webhook worker.
+- Rejected alternatives: Capture while the callback receiver is stale; create another order; manually mark contribution received without a signed webhook.
