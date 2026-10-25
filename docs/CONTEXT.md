@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
-- Last task checkpoint: `0a0ab25 WIP Phase 6 task 1: verify live RLS`.
+- Last task checkpoint: `40ceb86 WIP Phase 6 task 2: verified fund contributions`.
 - Current phase/task: Phase 6 Fund Transparency, T2 implementation complete; awaiting migration 0007 application.
 
 ## DONE
