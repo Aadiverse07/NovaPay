@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
-- Last task checkpoint: `fe4c6c0 WIP Phase 6 task 2: prepare exact webhook resend`.
+- Last task checkpoint: `f1beaab WIP Phase 6 task 2: record pending webhook delivery`.
 - Current phase/task: Phase 6 Fund Transparency, T2 investigate capture-to-contribution transition failure.
 
 ## DONE
@@ -23,7 +23,7 @@
 3. If it does not arrive, inspect configured tunnel/delivery in PayPal and ask user for the precise external repair; do not mark received. Then checkpoint T2 before T3.
 
 ## USER ACTIONS PENDING
-- None; user approved the $1 Sandbox purchase. If an external PayPal/UI step is still required, ask only after the approved capture attempt and include the precise error/result.
+- Inspect PayPal Developer Dashboard > Apps & Credentials > Sandbox > Webhooks > configured webhook > Event deliveries for the exact capture-completed event. The event-list API accepted a resend, but the exact event ID did not arrive in Supabase after 25 seconds. Check latest delivery status and that the tunnel URL is online and forwards to this repo server at `/api/webhook`; if failed, restore the tunnel then use PayPal “Resend” for this existing event. Do not create another order or manually mark received. Reply with delivery status only; do not paste secrets.
 
 ## LIVE STATE
 - Supabase migrations 0001–0006 applied (user reported); 0006 ordinary-user read/write checks PASS. 0007 applied (user confirmed 2026-10-26); live verification pending.

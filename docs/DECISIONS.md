@@ -503,3 +503,10 @@
 - Reason: Resending the original event preserves PayPal's signed event body and avoids fabricating a webhook or manually marking a contribution received.
 - Source: [PayPal Webhooks Events List API](https://developer.paypal.com/api/webhooks/v1/webhooks-events-list), checked 2026-10-26; API supports `transaction_id` filtering and event resend.
 - Rejected alternatives: Reconstruct a webhook body and claim it was PayPal-signed; manually update received status; create another payment.
+
+## 2026-10-26 — Pause after provider resend did not reach inbox
+- Question: What to do after PayPal accepts an exact-event resend but the event does not reach the application inbox?
+- Choice: Stop live T2 reconciliation and ask the user to inspect PayPal delivery status and tunnel forwarding; do not retry endlessly, replay a different event, or write contribution state manually.
+- Reason: Signature-verified delivery is required before recording donations; the exact event remained absent after a 25-second bounded poll.
+- Source: PayPal Sandbox event-list/resend result and Supabase inbox read, checked 2026-10-26.
+- Rejected alternatives: Treat the unrelated processed event as a match; create another order; manually mark received; fabricate or replay a payload.
