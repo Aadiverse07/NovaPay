@@ -325,3 +325,9 @@
 - Choice: Record provider connectivity and exact model/latency/token metadata as PASS, note the probe shape mismatch, suppress response contents, and rely on the production AI sanitizer/grounding path for the evidence-backed API check.
 - Reason: The smoke was an adapter connectivity probe, not an answer correctness proof; a malformed output must remain subject to sanitizer behavior and cannot be treated as a grounded answer.
 - Source: One bounded synthetic call through `server/src/services/llm.js`, HTTP 200, 2026-10-25. Rejected alternative: print the provider output or repeat provider calls until a preferred response appears.
+
+## Phase 4 one-order retry and retention — 2026-10-25
+- Question: How should the single authorized live order avoid duplicate creation after interruption?
+- Choice: Use a SHA-256-derived stable request key scoped to the existing dedicated verifier organization; retries resolve the same order through the idempotent create-order API. Retain the completed capture and its verified webhook/ledger rows permanently; no refund or financial cleanup.
+- Reason: The user authorized exactly one Sandbox order and explicitly requested capture retention.
+- Source: Phase 4 resumed verification instruction and `scripts/phase4-live-order.js`, 2026-10-25. Rejected alternative: random request keys on rerun or cleanup of the capture/ledger.
