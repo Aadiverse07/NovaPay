@@ -568,3 +568,6 @@ Date: 2026-10-24
 ## Phase 4 single-order flow implementation — pre-run — 2026-10-25
 - Added `scripts/phase4-live-order.js` with a deterministic per-org request key, fixed existing owner/org, no user/org creation, and recovery of the same order on rerun. The script pauses after printing the payer URL and retains the order/capture/webhook/transaction/journal. It never refunds and does not delete financial data.
 - `node --check scripts/phase4-live-order.js` and `git diff --check` are pending; no Sandbox order has been created by this script yet.
+
+## Phase 4 one-order runner first invocation — 2026-10-25
+- `node scripts/phase4-live-order.js` created exactly one $1 order and printed its approval URL. The non-TTY command had closed stdin; it exited with unsettled readline await before capture. No second order was issued. Rerunning with TTY uses the same deterministic request key and recovers the existing order.
