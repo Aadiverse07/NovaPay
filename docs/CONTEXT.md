@@ -3,8 +3,8 @@
 ## HEADER
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
-- Last task checkpoint: `ead92ad WIP Phase 6 task 2: await webhook delivery`.
-- Current phase/task: Phase 6 Fund Transparency, T2 resolve incorrect revenue account used for received fund contributions.
+- Last task checkpoint: `2d8a1f6 WIP Phase 6: update resume pointer after reconciliation`.
+- Current phase/task: Phase 6 Fund Transparency, T2 fund-specific 4100 posting correction; next T3 after user applies migration 0008 and live verification passes.
 
 ## DONE
 - STEP 0 complete: `npm ci`, `npm test` (104 passed), and migration parser for 0001–0005; checkpoint `7ac6c65`.
@@ -14,7 +14,7 @@
 - T2 `npm test`: PASS, 110/110. Explicit migration parse 0001–0007 PASS. JS syntax and `git diff --check` PASS. Frontend diff empty. User applied 0007; five RPCs denied ordinary JWT (403); campaign/pledge/summary API passed; linked $1 Sandbox order created; user approved checkout; capture/webhook/replay verification in progress.
 
 ## IN PROGRESS
-- T2 task files/functions: `supabase/migrations/0007_fund_contributions.sql` (`create_fund_campaign`, `create_fund_pledge`, `link_fund_contribution_order`, `record_fund_paypal_capture_event`, `get_fund_campaign_summary`); `server/src/repos/postgres.js` fund repository and capture RPC; `server/src/repos/memory.js` campaign/pledge/receipt fixtures; `server/src/services/webhookProcessor.js` mismatch handling; `server/src/routes/funds.js` campaign/pledge/order APIs; `server/src/app.js` route/error wiring; `server/test/phase6-migration.test.js`; `server/test/phase6-contributions.test.js`; all three continuity docs.
+- T2 correction in progress: `server/src/services/ledger.js`, `server/src/repos/postgres.js`, targeted ledger/repo/migration tests, and new `supabase/migrations/0008_fund_contribution_accounting.sql`. Migration must append reversal and repost entries only; never update/delete journal rows. Run `npm test` and `npm run check:migrations`; present exact SQL Editor steps and wait for user “applied”.
 - Port 3000 listener is running current checkout/config. Approved order capture is complete once. PayPal event list found exactly one matching capture event; webhook endpoint and capture-event subscription are correct. Exact event resource `0U573441YN817132C` is signature verified/processed; contribution received; one receipt; summary pledged=0, received=100, remaining=900. Five exact raw-body replay requests all returned 200 and created no duplicates. Journal is balanced at 100 minor units but credits 4000 Sales Revenue instead of 4100 Donations. No posted data changed; correction requires new migration/fund-specific posting logic.
 
 ## NEXT STEPS
@@ -26,7 +26,7 @@
 - Inspect PayPal Developer Dashboard > Apps & Credentials > Sandbox > Webhooks > configured webhook > Event deliveries for the exact capture-completed event. The user reports the server/tunnel was fixed and the event resent; this latest read still shows no exact matching event, receipt, or received summary balance. Check PayPal Sandbox Event deliveries for the captured transaction and confirm delivery to `/api/webhook`. If failed, inspect forwarding/delivery status and resend the existing event. Do not create another order or manually mark received. Share status only; no secrets.
 
 ## LIVE STATE
-- Supabase migrations 0001–0006 applied (user reported); 0006 ordinary-user read/write checks PASS. 0007 applied (user confirmed 2026-10-26); live verification pending.
+- Supabase migrations 0001–0007 applied (user reported/confirmed); migration 0008 not applied. 0006 ordinary-user read/write checks PASS; 0007 RPC-denial and live API checks PASS.
 - Tunnel/webhook: previously user-reported configured; no new Phase 6 verification.
 - Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once. Exact resent event verifies/processes successfully; contribution received; one receipt; summary receivedMinor=100, remainingMinor=900. Five exact-body replays passed idempotency. Ledger balances but uses 4000 Sales Revenue instead of 4100 Donations; no correction applied.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
@@ -46,7 +46,9 @@
 | T2 buyer-approved capture | PASS | 2026-10-26 | Authenticated capture completed existing $1 Sandbox order once |
 | T2 exact PayPal event lookup/webhook subscription | PASS | 2026-10-26 | One exact matching provider event; webhook path/subscription confirmed |
 | T2 exact-event resend request | PASS | 2026-10-26 | PayPal accepted resend request |
-| T2 matching signed delivery, receipt, ledger, replay | UNVERIFIED | 2026-10-26 | Exact event absent from Supabase inbox after 25 seconds; pledge still pledged; 0 receipts |
+| T2 event/receipt/summary | PASS | 2026-10-26 | exact capture verified/processed; one receipt; receivedMinor=100, remainingMinor=900
+| T2 exact raw-body replay x5 | PASS | 2026-10-26 | Five 200 responses; no duplicate capture/receipt/journal
+| T2 donation account classification | FAIL | 2026-10-26 | Existing balanced journal credits 4000 Sales Revenue instead of 4100 Donations; migration 0008/tests in progress |
 
 ## KNOWN ISSUES AND RISKS
 - The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. PayPal event list returned the exact matching capture event and webhook inspection confirmed the endpoint and subscription. User reported tunnel/webhook fix and resend, but exact event still absent across the 8 most recent global inbox rows. Contribution is still pledged and no receipt/ledger transition occurred. Earlier generic processed-event match was unrelated.

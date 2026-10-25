@@ -517,3 +517,10 @@
 - Reason: Journal history must remain auditable; user requested reconciliation checks, not a live financial correction. Migration 0007 is already applied and must not be edited.
 - Source: Live journal line/account read and `supabase/migrations/0002_financial_core.sql` account definitions; checked 2026-10-26.
 - Rejected alternatives: Directly update/delete posted journal lines; edit applied migration 0007; treat balanced totals as proof of correct fund accounting.
+
+## 2026-10-26 — Route fund contribution captures to Donations account
+- Question: How to distinguish fund contribution capture posting from ordinary PayPal sales captures?
+- Choice: Detect the linked `fund_contribution_id` on the PayPal order in the repository, use fund-specific journal lines that credit 4100, and add migration 0008 that reverses and reposts already misclassified fund capture entries without editing/deleting them.
+- Reason: Preserve generic Sales Revenue postings while ensuring donations use the seeded Donations account and existing journal history stays auditable.
+- Source: Live ledger reconciliation and account definitions in `supabase/migrations/0002_financial_core.sql`, checked 2026-10-26; user instruction in this conversation.
+- Rejected alternatives: Change all PayPal capture revenue to Donations; update/delete applied journal entries; edit applied migrations 0002/0007.
