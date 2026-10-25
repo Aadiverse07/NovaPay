@@ -4,7 +4,7 @@
 - Date/time: 2026-10-26, Asia/Kolkata.
 - Branch: `phase6-backend`; local-only, verified.
 - Last task checkpoint: `40ceb86 WIP Phase 6 task 2: verified fund contributions`.
-- Current phase/task: Phase 6 Fund Transparency, T2 approved Sandbox capture/webhook verification.
+- Current phase/task: Phase 6 Fund Transparency, T2 investigate capture-to-contribution transition failure.
 
 ## DONE
 - STEP 0 complete: `npm ci`, `npm test` (104 passed), and migration parser for 0001–0005; checkpoint `7ac6c65`.
@@ -28,7 +28,7 @@
 ## LIVE STATE
 - Supabase migrations 0001–0006 applied (user reported); 0006 ordinary-user read/write checks PASS. 0007 applied (user confirmed 2026-10-26); live verification pending.
 - Tunnel/webhook: previously user-reported configured; no new Phase 6 verification.
-- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture pending restart of stale local server (port 3000) to current config; webhook verification follows.
+- Last live Phase 6 runs: 0006 table reads/writes PASS; 0007 five RPCs denied HTTP 403; local API fixed campaign/$1 pledge/SQL summary PASS; PayPal Sandbox order HTTP 201 linked to pledge. User approved checkout; capture completed exactly once; signed webhook processed. Reconciliation and five stored-body replays pending.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
@@ -46,7 +46,7 @@
 | T2 buyer approval/webhook/capture/replay | UNVERIFIED | 2026-10-26 | PASS; current port 3000 reports PayPal configured/connected and webhook configured after restart |
 
 ## KNOWN ISSUES AND RISKS
-- The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. The external webhook delivery is still pending capture.
+- The initial port-3000 status script checked the wrong field; corrected status check confirmed PayPal configured/connected and webhook configured. The external webhook delivery for this order has not been located. Official PayPal event list/resend lookup pending; earlier generic processed-event match was unrelated/insufficient.
 - T2 mismatch handling flags and leaves pledge unreceived; it does not post the mismatched capture to the ledger, consistent with existing capture RPC's expected-amount check. Investigate via safe operations before claiming receipt.
 - Target summary `remainingMinor` is target minus received, as specified by the test requirements; allocations and expense fields are separate.
 - PayPal Sandbox purchase requires a human approval at the buyer link. Do not buy until the Phase 6 gate; never use payout/invoicing without explicit requested gate.
