@@ -97,8 +97,9 @@
 .cf-plot .cash-line{vector-effect:non-scaling-stroke;stroke-width:2.6}
 .cf-plot .chart-labels{color:#9fb0dc;margin-top:6px}
 .cf-cursor{position:absolute;top:0;height:205px;width:0;border-left:1px dashed rgba(200,215,255,.55);pointer-events:none}
+.cf-crosshair-y{position:absolute;left:0;width:100%;height:0;border-top:1px dashed rgba(200,215,255,.55);pointer-events:none}
 .cf-tip{position:absolute;top:6px;z-index:5;display:grid;gap:3px;min-width:150px;padding:9px 11px;border-radius:10px;background:rgba(7,13,32,.94);border:1px solid rgba(140,165,255,.3);color:#fff;font-size:11px;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.cf-tip[hidden],.cf-cursor[hidden]{display:none}
+.cf-tip[hidden],.cf-cursor[hidden],.cf-crosshair-y[hidden]{display:none}
 .cf-tip span{display:flex;justify-content:space-between;gap:14px}.cf-tip em{font-style:normal;font-weight:700}
 .t-in{color:#34d3a4}.t-out{color:#ff6b86}.t-net{color:#9db4ff}
 .health-ring{font-size:0}
@@ -294,6 +295,7 @@ body.modal-open{overflow:hidden}
 .cashflow-legend .legend-net,.cf-plot .net-line,.t-net { color: var(--chart-series-net); stroke: var(--chart-series-net); }
 .cashflow-card .chart-grid line { stroke: var(--chart-grid); }
 .cf-cursor { border-left-color: var(--chart-series-net); opacity: .65; }
+.cf-crosshair-y { border-top-color: var(--chart-series-net); opacity: .65; }
 .cf-tip { background: var(--chart-tip-bg); border-color: var(--chart-tip-border); color: var(--chart-tip-text); box-shadow: 0 10px 30px var(--chart-tip-shadow); }
 .spark-line { stroke: currentColor; }
 .spark-area { fill: currentColor; }
