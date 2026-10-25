@@ -19,7 +19,7 @@
 ## NEXT STEPS
 1. PASS: restarted NovaPay on port 3000; public status and PayPal registration/event subscriptions verified.
 2. Run one direct synthetic Gemini call via `services/llm.js`; record model/latency/tokens or exact safe provider error.
-3. Create/resume exactly one $1 order in fixed Phase 4 org using deterministic request key; print approval URL and wait for user approval. Keep its capture; remove only this run's other rows.
+3. Resume the existing single $1 order in fixed Phase 4 org using deterministic request key; print approval URL and wait for user approval. Keep its capture; remove only this run's other rows.
 4. Run evidence-grounded chat, repeat cache, injection, tiny budget, proposal-pending checks.
 5. Add `--safe` modes to Phase 2/3 verifiers and run non-payment/non-invoice subsets.
 6. Run final gate, update docs, commit if no FAIL, report; never push; ask before Phase 5.
@@ -31,7 +31,7 @@
 - Migrations 0001–0005 reported applied by user; read-only probes confirmed 0005 tables and RPCs.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 - NovaPay on port 3000 was restarted to load current T8 code; `/api/status` HTTP 200 authenticated. Tunnel and unrelated port 34872 untouched.
-- Previous Phase 4 verifier made no Gemini/PayPal calls. Server restarted; PID 67892 listens on 3000. Public `/api/status` returned HTTP 200 authenticated; PayPal registration preflight matched the provided tunnel host, `/api/webhook`, and capture/refund-completed subscriptions. One synthetic Gemini call completed through `services/llm.js`: HTTP 200, model `gemini-3.5-flash-lite`, 2138 ms, 59 input/39 output tokens. Probe JSON-shape check failed; response suppressed. Next: one-order runner `scripts/phase4-live-order.js` is written; syntax check and tests are pending before first execution. It resumes the deterministic request key and retains the capture. Tunnel hostname from user: `cheaper-approximate-advances-keyboard.trycloudflare.com`; webhook path `/api/webhook`. Invoice sending remains SIMULATED.
+- Previous Phase 4 verifier made no Gemini/PayPal calls. Server restarted; PID 67892 listens on 3000. Public `/api/status` returned HTTP 200 authenticated; PayPal registration preflight matched the provided tunnel host, `/api/webhook`, and capture/refund-completed subscriptions. One synthetic Gemini call completed through `services/llm.js`: HTTP 200, model `gemini-3.5-flash-lite`, 2138 ms, 59 input/39 output tokens. Probe JSON-shape check failed; response suppressed. Next: one-order runner `scripts/phase4-live-order.js` is written; syntax and 104 tests passed. First invocation created one order but non-TTY stdin closed at approval prompt; it exited before capture. Same deterministic key will recover it in interactive run; no duplicate order. Tunnel hostname from user: `cheaper-approximate-advances-keyboard.trycloudflare.com`; webhook path `/api/webhook`. Invoice sending remains SIMULATED.
 
 ## TEST STATE
 | Check | Result | Date | Command/evidence |
