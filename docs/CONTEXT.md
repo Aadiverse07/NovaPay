@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-25 22:49 IST.
 - Branch: `phase6-backend` (verified; local-only work).
-- Last commit: `7ac6c65 WIP Phase 6 task 0: baseline`.
+- Last task checkpoint: `92525db WIP Phase 6 task 1: fund transparency schema`.
 - Current phase/task: Phase 6 Fund Transparency, T1 complete; waiting for user to apply migration 0006.
 
 ## DONE
@@ -15,7 +15,7 @@
 ## IN PROGRESS
 - T1 schema and security shape implemented; static tests pass. Migration 0006 has not been applied to Supabase.
 - Edited files: `supabase/migrations/0006_fund_transparency.sql`, `server/test/phase6-migration.test.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
-- Remaining: create local T1 checkpoint commit, refresh this header to the new commit hash, then wait for human application and confirmation.
+- Remaining: wait for human application and confirmation before T2. Working tree was clean at T1 checkpoint.
 
 ## NEXT STEPS
 1. Complete T1 test and diff checks; update all continuity files; commit `WIP Phase 6 task 1: fund transparency schema` locally.
