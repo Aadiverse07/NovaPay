@@ -524,3 +524,10 @@
 - Reason: Preserve generic Sales Revenue postings while ensuring donations use the seeded Donations account and existing journal history stays auditable.
 - Source: Live ledger reconciliation and account definitions in `supabase/migrations/0002_financial_core.sql`, checked 2026-10-26; user instruction in this conversation.
 - Rejected alternatives: Change all PayPal capture revenue to Donations; update/delete applied journal entries; edit applied migrations 0002/0007.
+
+## 2026-10-26 — Introduce maintenance state machine additively
+- Question: How should migration 0009 handle the legacy maintenance status values already accepted by migration 0006?
+- Choice: Add T3 workflow states and use `requested` for new requests while retaining legacy values in the check constraint for existing rows. All new state-changing operations go through SECURITY DEFINER RPCs with service_role-only execution.
+- Reason: Avoid silently rewriting any existing maintenance records while enforcing the new transitions for the new API path.
+- Source: User-provided Phase 6 T3 state-machine requirements and existing `0006_fund_transparency.sql`, checked 2026-10-26.
+- Rejected alternatives: Edit applied migration 0006; bulk-map legacy operational states without audit evidence; permit client table writes.

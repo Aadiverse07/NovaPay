@@ -118,6 +118,11 @@ export function createRepositories() {
   captures.orders = orders;
   const campaignRows = new Map();
   const contributionRows = new Map();
+  const maintenanceRows = new Map();
+  const contractorRows = new Map();
+  const quotationRows = new Map();
+  const maintenanceApprovalRows = new Map();
+  const maintenanceError = (code, statusCode, message) => Object.assign(new Error(message), { code, statusCode });
   const funds = {
     key(orgId, id) { return `${orgId}:${id}`; },
     async listCampaigns(orgId) { return [...campaignRows.values()].filter((row) => row.orgId === orgId); },
@@ -148,6 +153,53 @@ export function createRepositories() {
       const pledgedMinor=contributions.filter((row)=>row.status==='pledged').reduce((sum,row)=>sum+row.amountMinor,0);
       const receivedMinor=contributions.filter((row)=>row.status==='received').reduce((sum,row)=>sum+row.amountMinor,0);
       return { campaign:{id:campaign.id,title:campaign.title,purpose:campaign.purpose,targetMinor:campaign.targetMinor,currency:'USD',deadline:campaign.deadline,organiser:campaign.organiser,status:campaign.status},pledgedMinor,receivedMinor,allocatedMinor:0,approvedExpensesMinor:0,actualSpendingMinor:0,remainingMinor:campaign.targetMinor-receivedMinor,asOf:new Date().toISOString(),legalCaution:'Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only.' };
+    },
+    async createMaintenanceRequest(input) {
+      if (input.campaignId && !campaignRows.has(this.key(input.orgId,input.campaignId))) throw maintenanceError('CAMPAIGN_NOT_FOUND',404,'Campaign was not found.');
+      const row={id:randomUUID(),org_id:input.orgId,campaign_id:input.campaignId||null,title:input.title,scope:input.scope,status:'requested',estimate_minor:input.estimateMinor||null,requested_by:input.actorId,created_at:new Date().toISOString()};
+      maintenanceRows.set(this.key(input.orgId,row.id),row);return row;
+    },
+    async createContractor(input) {
+      const row={id:randomUUID(),org_id:input.orgId,name:input.name,verification_status:'unverified',verified_by:null,verified_at:null,payment_destination_ref:input.paymentDestinationRef||null};
+      contractorRows.set(this.key(input.orgId,row.id),row);return row;
+    },
+    async addQuotation(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));const contractor=contractorRows.get(this.key(input.orgId,input.contractorId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(!contractor)throw maintenanceError('CONTRACTOR_NOT_FOUND',404,'Contractor was not found.');
+      if(!['requested','quoting'].includes(request.status))throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'A quotation can only be added while requested or quoting.');
+      const row={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,contractor_id:contractor.id,amount_minor:input.amountMinor,currency:'USD',document_ref:input.documentRef||null};
+      quotationRows.set(this.key(input.orgId,row.id),row);if(request.status==='requested')request.status='quoting';return row;
+    },
+    async approveMaintenanceScope(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));const quote=quotationRows.get(this.key(input.orgId,input.quotationId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status!=='quoting')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Scope approval requires quoting state.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot approve own request.');
+      if(!quote||quote.maintenance_request_id!==request.id)throw maintenanceError('QUOTATION_NOT_FOR_REQUEST',409,'Chosen quotation must belong to this request.');
+      const approval={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,step:'scope',approver_id:input.actorId,decision:'approved',note:input.note||null};
+      maintenanceApprovalRows.set(this.key(input.orgId,approval.id),approval);request.chosen_quotation_id=quote.id;request.contractor_id=quote.contractor_id;request.status='scope_approved';return {request,approval};
+    },
+    async verifyMaintenanceContractor(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status!=='scope_approved')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Contractor verification requires scope_approved state.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot verify own request.');
+      const contractor=contractorRows.get(this.key(input.orgId,request.contractor_id));
+      if(!contractor)throw maintenanceError('CONTRACTOR_NOT_FOUND',404,'Chosen contractor was not found.');
+      contractor.verification_status='verified';contractor.verified_by=input.actorId;contractor.verified_at=new Date().toISOString();request.status='contractor_verified';return {request,contractor};
+    },
+    async approveMaintenancePayment(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status!=='contractor_verified')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Payment approval requires contractor_verified state.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot approve own request.');
+      const quote=quotationRows.get(this.key(input.orgId,request.chosen_quotation_id));if(!quote)throw maintenanceError('QUOTATION_NOT_FOUND',404,'Chosen quotation was not found.');
+      const approvals=[...maintenanceApprovalRows.values()].filter(a=>a.org_id===input.orgId&&a.maintenance_request_id===request.id&&a.step==='payment'&&a.decision==='approved');
+      if(approvals.some(a=>a.approver_id===input.actorId))throw maintenanceError('DUPLICATE_APPROVER',409,'This approver already approved the payment.');
+      const approval={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,step:'payment',approver_id:input.actorId,decision:'approved',note:input.note||null};maintenanceApprovalRows.set(this.key(input.orgId,approval.id),approval);
+      const required=quote.amount_minor>=10000?2:1;const count=approvals.length+1;if(count>=required)request.status='payment_approved';
+      return {status:request.status,approvals:count,required,approval};
     },
   };
   captures.funds = funds;
