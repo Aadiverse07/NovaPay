@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: finish T6 repair/live verification, then continue Phase 6 T7.
-- Last finished step: 0013 resolved 42725; live RPC now reports 42703 for absent approval-chain `created_at`; migration 0014 added; local full suite 129/129 PASS.
+- Last finished step: 0013 resolved 42725; migration 0014 fixes approval ordering; checkpoint `f5c8236`; full suite 129/129 PASS.
 - Next step: user applies `supabase/migrations/0014_fix_transparency_approval_order.sql` and says `applied`.
 - Pending human action: apply only migration 0014; do not reload schema cache.
 
@@ -1148,3 +1148,5 @@ RESULT — 2026-10-26 15:19:57 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - 2026-10-26 15:45 Asia/Kolkata — ABOUT TO: Update handoff and append-only reports for the post-0013 live finding (`42703 a.created_at`), new migration 0014, and current local tests; then checkpoint. WHY: keep repo state resumable and ask the user to apply only the next numbered migration.
 - RESULT: PASS; full suite 129/129 passed; embedded parser accepted 0001–0014. CONTEXT now names the 42703 failure, accurate applied/pending migrations, exact files, and current tests. NEXT: verify diff/branch/ignored `.env`, then commit 0014 and handoff locally.
 - 2026-10-26 15:46 Asia/Kolkata — ABOUT TO: Validate current T6 diff, branch and `.env` staging state and checkpoint migration 0014 with its test/docs. WHY: tests pass, and the user must apply only this additive migration before the next live run.
+- RESULT: PASS; checkpoint `f5c8236` committed locally on `phase6-backend`; worktree clean and no push. NEXT: user applies only migration 0014 and says `applied`; then rerun the live verifier without manual schema reload.
+- 2026-10-26 15:47 Asia/Kolkata — ABOUT TO: Refresh the top handoff pointers to `f5c8236` and commit the final 0014 apply gate. WHY: make the continuation pointer match the latest code checkpoint before requesting the user's migration run.

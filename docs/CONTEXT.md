@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 15:45 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last commit: T6 repair checkpoint pending; migrations 0013/0014 local, tests 129/129 pass.
+- Last commit: `f5c8236 WIP Phase 6 task 6: fix transparency approval ordering`; migration 0014 and docs/tests checkpointed locally.
 - Phase/task: Phase 6 Fund Transparency, T6 transparency/export; T1–T5 complete.
 
 ## DONE
