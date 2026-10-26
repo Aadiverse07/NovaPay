@@ -1068,3 +1068,4 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-26 — `npm test`: PASS; 131 passed, 0 failed (captured final summary).
 - 2026-10-26 — `npm run check:migrations`: PASS; PostgreSQL syntax accepted for migrations 0001–0014 (14 files).
 - 2026-10-26 — Fundraising and Maintenance browser/API interaction checks: UNVERIFIED; no view-specific browser session/API flow run yet; final T2/T4 steps pending.
+- 2026-10-26 — T1 Fundraising/Maintenance/Transparency runtime: UNVERIFIED; no API/browser view checks completed at the T1 checkpoint; T2/T4 pending.
