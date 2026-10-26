@@ -1039,3 +1039,12 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node --test server/test/phase6-migration.test.js` — PASS; 9 passed, 0 failed; includes T6 0013 repair ACL/allowlist assertion.
 - `npm run check:migrations` — PASS; PostgreSQL 17 parser accepted 0001–0013.
 - `npm test` — PASS; 128 passed, 0 failed; embedded PostgreSQL 17 migration parser accepted migrations 0001–0013.
+- User confirmation (2026-10-26): migration `0013_fix_transparency_campaign_json.sql` reported applied — awaiting live T6 verifier; schema cache not manually refreshed.
+- `node --test server/test/phase6-migration.test.js && npm run check:migrations` — FAIL; 9 passed, 1 failed. New 0014 test's negative regex matched the explanatory comment `not created_at`; SQL assertion needs to target `order by a.created_at`. Because of `&&`, migration parser did not run.
+- `node --test server/test/phase6-migration.test.js` — PASS; 10 passed, 0 failed after narrowing the 0014 negative assertion.
+- `npm run check:migrations` — PASS; PostgreSQL 17 parser accepted migrations 0001–0014.
+- `node scripts/verify-phase6-transparency-live.js` after user applied 0013 — FAIL/UNVERIFIED; migration 0013 resolved the prior 42725 error, but a valid-member RPC now returns HTTP 400 / SQLSTATE 42703 `column a.created_at does not exist`. No fund data mutation; existing fixture users/memberships reused; no schema reload.
+- `node --test server/test/phase6-migration.test.js && npm run check:migrations` — FAIL on first attempt; 9 passed, 1 failed because the negative regex matched the explanatory comment, so migration parser did not run.
+- `node --test server/test/phase6-migration.test.js` — PASS; 10 passed, 0 failed after narrowing the regex to the invalid SQL order reference.
+- `npm run check:migrations` — PASS; PostgreSQL 17 parser accepted migrations 0001–0014.
+- `npm test` — PASS; 129 passed, 0 failed; embedded migration parser accepted 0001–0014.
