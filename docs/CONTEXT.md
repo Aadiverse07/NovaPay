@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 15:09 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last commit: pending local T6 repair checkpoint; migration 0013 code/tests validate, full suite 128/128.
+- Last commit: `1423eb7 WIP Phase 6 task 6: fix transparency campaign JSON`; migration 0013 code/tests checkpointed locally.
 - Phase/task: Phase 6 Fund Transparency, T6 transparency/export; T1–T5 complete.
 
 ## DONE
