@@ -1,7 +1,7 @@
 ## RESUME POINTER
-- Current task: T4 final validation, documentation checkpoint and local final commit.
-- Last finished step: T1/T2/T3 complete. README Phase 6 section appended; scope review and `git diff --check` passed; commit checkpoint is next.
-- Next step: commit README/T3 docs locally, run T4 tests/migration check/node syntax/protected diff, then final docs and required commit message.
+- Current task: T4 JS syntax, whitespace, protected-file and final commit checks.
+- Last finished step: final `npm test` PASS 131/131; final `npm run check:migrations` PASS 14/14.
+- Next step: run `node --check src/fund-views.js`, `git diff --check`, and protected-file `git diff --stat main`; then update docs and create final local commit.
 - Pending human action: browser checks at finish; no PayPal order.
 
 ## Backfill
@@ -1837,3 +1837,10 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 - RESULT: PASS; appended the Phase 6 section at README end; no existing UI section changed; only env key names included. NEXT: inspect README diff for append-only scope and key-name safety, then proceed to T4 checks.
 - 2026-10-26 — ABOUT TO: Mark T3 README complete, record its append-only/scope review, update CONTEXT/DECISIONS/WORKLOG pointer, and commit a local checkpoint. WHY: save the requested real/simulated/run/demo documentation before T4 validation.
 - RESULT: PASS; T3 content and review recorded; CONTEXT/RESUME POINTER identify T4. NEXT: stage README and continuity docs, whitespace-check, and commit locally on fund-wiring.
+- RESULT: PASS; README checkpoint exit 0. NEXT: run requested final T4 validation in separately logged actions.
+- 2026-10-26 — ABOUT TO: Run `npm test` and capture its final test summary. WHY: execute the required T4 full suite after all T1–T3 changes.
+- RESULT: PASS; final npm test completed successfully; inspect captured summary above for exact count. NEXT: append the exact count to TEST-REPORT and run npm run check:migrations.
+- 2026-10-26 — ABOUT TO: Run `npm run check:migrations` and capture all migration parser results. WHY: satisfy T4 migration validation independently from the test suite.
+- RESULT: PASS; migration checker completed; 14 migrations reported PostgreSQL syntax OK. NEXT: append the result and run node --check on the changed JS.
+- 2026-10-26 — ABOUT TO: Checkpoint the two passing T4 validation runs and update the resume pointer before syntax/protected-file checks. WHY: preserve the exact 131/131 and 14-migration results after two steps.
+- RESULT: PASS; final test/migration results reflected in CONTEXT/TEST-REPORT; NEXT: check branch/worktree for .env paths, stage docs, and create T4 checkpoint.

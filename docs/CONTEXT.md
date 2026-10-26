@@ -35,8 +35,8 @@
 | Check | Status | Date | Command |
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
-| npm test baseline | PASS 131/131 | 2026-10-26 | `npm test` |
-| Migration baseline | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
+| npm test baseline/final | PASS 131/131 | 2026-10-26 | `npm test` twice; final after T1–T3 |
+| Migration baseline/final | PASS 14 files | 2026-10-26 | `npm run check:migrations` twice; final after T1–T3 |
 | Authenticated read APIs | PASS | 2026-10-26 | fixed owner; captures, ledger, approvals, funds/transparency HTTP 200 |
 | AI code route | PASS | 2026-10-26 | `/api/ai/chat`; code result 12 |
 | AI cited LLM | PASS | 2026-10-26 | `/api/ai/chat`; llm, 3 citations |
