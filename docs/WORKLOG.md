@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T3 live maintenance workflow verification; user confirmed migration 0009 applied.
-- Last finished step: T3 SQLSTATE response fix, focused route test 1/1, full `npm test` 118/118; local checkpoint `1ab3091`.
-- Next step: run authenticated resumable T3 lifecycle checks in existing Phase 3 Verification A using fixed owner, approver, and accountant fixtures.
-- Pending human action: none for T3 migration; do not provision new users or organizations.
+- Current task: Phase 6 T3 live maintenance verification; migration 0009 applied.
+- Last finished step: live verifier safely stopped after magic-link generation due to helper return unwrapping; no login/API call or DB write.
+- Next step: syntax-check fixed result handling, checkpoint the fix and docs, then rerun with deterministic fixtures.
+- Pending human action: none.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -473,3 +473,13 @@ ABOUT TO — 2026-10-26 Asia/Kolkata: Improve the live verifier's step records t
 RESULT — PASS: verifier now journals each API HTTP result/error code and refuses to use a deterministic request owned by the wrong fixed actor or amount. NEXT: run the verifier only if syntax exit was zero.
 ABOUT TO — 2026-10-26 Asia/Kolkata: Record verifier syntax PASS and the fixed-fixture/no-new-org decision; refresh CONTEXT/TEST-REPORT, verify branch/no `.env`/whitespace, then locally checkpoint the verifier before its live run. Reason: the verifier is resumable and every live mutation must be preceded by a committed handoff.
 RESULT — PASS: T3 verifier syntax and fixture strategy documented; branch and whitespace checks clean; no .env path in status. Files touched: scripts/verify-phase6-maintenance-live.js, docs/CONTEXT.md, docs/TEST-REPORT.md, docs/DECISIONS.md, docs/WORKLOG.md. NEXT: create local WIP checkpoint, then run the authenticated live T3 verifier.
+RESULT — PASS: verifier checkpoint 51f97b4 committed locally on phase6-backend; no push. NEXT: refresh resume pointer with this hash and run the verifier against the configured Supabase project.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Run `node scripts/verify-phase6-maintenance-live.js` against the configured live Supabase project and a fresh ephemeral local API instance. Reason: verify T3 transition/edge behavior and two distinct approvals at the exact tenant threshold after user applied migration 0009.
+ABOUT TO — 2026-10-26 14:08:52 Asia/Kolkata: Generate one-time test link for fixed owner fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 14:08:53 Asia/Kolkata: PASS: Generate one-time test link for fixed owner fixture; completed. NEXT: continue the T3 verifier.
+RESULT — FAIL: live verifier exited 1; its exact last step is recorded in WORKLOG.md. NEXT: inspect the failure, reuse deterministic rows, then resume safely.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Correct verifier result unwrapping after the first safe live attempt stopped immediately after one-time link generation. Reason: the journal helper must unwrap explicit `{value, detail}` wrappers but return ordinary HTTP response objects unchanged.
+RESULT — FAIL (safe stop): verifier failed reading `status` from an undefined helper return after the owner magic-link generation step. No login token was obtained, no API workflow endpoint was called, and no database rows were created. The one-time link was generated but not emailed. Files touched: docs/WORKLOG.md and TEST-REPORT.md (failure recorded). NEXT: fix result unwrapping, syntax-check, checkpoint, then rerun.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Patch `step()` to preserve raw HTTP response results while still unwrapping explicit journal wrappers; refresh CONTEXT and test log to show the safe failure and resume point.
+RESULT — PASS: helper corrected; syntax exit 0. NEXT: commit this safe fix before rerunning live verification.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Verify branch/whitespace/no `.env` and locally checkpoint the verifier helper fix plus failure/resume documentation. Reason: preserve the recovery point before retrying live auth.
