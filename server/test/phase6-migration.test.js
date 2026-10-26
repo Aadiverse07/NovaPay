@@ -14,6 +14,8 @@ const paymentMigrationUrl = new URL('../../supabase/migrations/0010_simulated_ma
 const paymentSql = await readFile(paymentMigrationUrl, 'utf8');
 const evidenceMigrationUrl = new URL('../../supabase/migrations/0011_completion_evidence_review.sql', import.meta.url);
 const evidenceSql = await readFile(evidenceMigrationUrl, 'utf8');
+const transparencyMigrationUrl = new URL('../../supabase/migrations/0012_fund_transparency_read_export.sql', import.meta.url);
+const transparencySql = await readFile(transparencyMigrationUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -113,4 +115,19 @@ test('T5 completion evidence RPCs are service_role-only and require reviewed acc
   assert.match(evidenceSql,/fund\.maintenance\.reviewed/);
   assert.match(evidenceSql,/fund\.maintenance\.closed/);
   assert.doesNotMatch(evidenceSql,/insert into public\.(?:storage\.|files)/i);
+});
+
+test('T6 transparency and audit export RPCs are service_role-only and enforce tenant/role boundaries', () => {
+  for(const name of ['get_fund_transparency','get_fund_audit_export']){
+    assert.match(transparencySql,new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?security definer`,'i'),`${name} must be SECURITY DEFINER`);
+    assert.match(transparencySql,new RegExp(`revoke all on function public\\.${name}\\([^;]+ from public,anon,authenticated;`,'i'),`${name} must revoke client execution`);
+    assert.match(transparencySql,new RegExp(`grant execute on function public\\.${name}\\([^;]+ to service_role;`,'i'),`${name} must grant service_role only`);
+  }
+  assert.match(transparencySql,/memberships where org_id=p_org and user_id=p_actor/i);
+  assert.match(transparencySql,/role in \('owner','admin'\)/i);
+  assert.match(transparencySql,/no completion evidence/);
+  assert.match(transparencySql,/simulated, no ledger entry/);
+  assert.match(transparencySql,/namesShown',false/i);
+  assert.match(transparencySql,/revoke select on public\.fund_campaigns[\s\S]*?from authenticated/i);
+  assert.doesNotMatch(transparencySql,/a\.metadata/);
 });

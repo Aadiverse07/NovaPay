@@ -248,4 +248,23 @@ Allowed roles: `owner`, `admin`, `approver`. Requester and evidence submitter ca
 
 Allowed roles: `owner`, `admin`, `approver`; requester cannot close their own request. No body. Requires `reviewed` status and at least one accepted evidence item. Success: `{ "request": { "id": "<uuid>", "status": "closed" }, "closed": true }`; repeated close is idempotent. Premature close is 409 `FUND_STATE_CONFLICT`; self-close is 403 `FUND_FORBIDDEN`.
 
-These actions use service-role-only RPCs and audit log records. Authenticated clients can read evidence only through member-scoped RLS and cannot directly insert/update/delete evidence rows.
+These actions use service-role-only RPCs and audit log records. Authenticated clients cannot query Phase 6 fund tables directly; use the scoped API/RPC endpoints for reads.
+
+
+## Phase 6 transparency and export (T6)
+
+### `GET /api/funds/transparency`
+
+Available to any authenticated member role, including donors and residents. Requires `X-Org-Id`; optional `campaignId=<uuid>` filters the selected org's campaign. The response includes safe campaign totals, contribution amounts/statuses with `donorRefHash` (SHA-256 scoped by org), and linked expense rows. Names, raw donor refs, contractor names, evidence descriptions/file paths, and reviewer/submitter IDs are omitted. `namesShown` is always `false`; include the returned `legalCaution` in the transparency view.
+
+Example expense row:
+
+```json
+{"requestId":"<uuid>","campaignId":"<uuid>","title":"Roof repair expense","status":"closed","amountMinor":9999,"currency":"USD","approvals":[{"id":"<uuid>","step":"payment","decision":"approved"}],"paymentApproval":{"id":"APR-FUND-PAY-...","status":"completed"},"quotation":{"id":"<uuid>","amountMinor":9999,"currency":"USD"},"invoice":null,"payment":{"id":"<uuid>","mode":"SIMULATED","status":"paid","amountMinor":9999},"paymentReference":null,"ledgerEntryId":null,"completionEvidence":[{"id":"<uuid>","kind":"inspection","reviewStatus":"accepted"}],"gaps":[{"gap":"no payment reference"},{"gap":"simulated, no ledger entry"}]}
+```
+
+Render every `gaps` item, including `{ "gap": "no quotation or invoice" }`, `{ "gap": "no payment approval" }`, `{ "gap": "no payment reference" }`, `{ "gap": "simulated, no ledger entry" }`, `{ "gap": "no ledger entry" }`, and `{ "gap": "no completion evidence" }`. Do not imply a SIMULATED row moved money or posted to the ledger. The endpoint has no write method. Direct Phase 6 fund table reads are revoked for authenticated clients; cross-org `X-Org-Id` returns 403.
+
+### `GET /api/funds/transparency/audit.csv`
+
+Allowed roles: `owner`, `admin`; optional inclusive UTC date filters `from=YYYY-MM-DD` and `to=YYYY-MM-DD`. Response is `text/csv`, attachment `fund-audit.csv`, headers `id,createdAt,action,entity,entityId,actorRef,requestId`. `actorRef` is pseudonymous; metadata and raw actor IDs are omitted. CSV quoting and formula prefixes are neutralized. Other roles receive 403; invalid/reversed dates receive 400 `VALIDATION_ERROR`.

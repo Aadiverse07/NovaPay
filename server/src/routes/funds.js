@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { rbac } from '../middleware/auth.js';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
 import { approveUrl, paypalRequestId } from '../services/paypal.js';
+import { reportCsvCell } from './reports.js';
 
 const uuid = z.string().uuid();
 const campaignBody = z.object({
@@ -24,6 +25,8 @@ const paymentRequestBody = z.object({}).strict();
 const evidenceBody = z.object({ kind: z.enum(['photo','invoice','inspection','other']), description: z.string().trim().min(1).max(2000), fileRef: z.string().trim().max(500).nullable().optional() }).strict();
 const evidenceReviewBody = z.object({ decision: z.enum(['accept','reject']), note: z.string().trim().max(500).nullable().optional() }).strict();
 const closeBody = z.object({}).strict();
+const transparencyQuery = z.object({ campaignId: uuid.optional() }).strict();
+const auditExportQuery = z.object({ from: z.string().date().optional(), to: z.string().date().optional() }).strict();
 
 function sendFundError(error, res, next) {
   const databaseErrors = {
@@ -46,6 +49,34 @@ function mapCampaign(row) {
 
 export function fundRoutes({ config, paypal, repos }) {
   const router = Router();
+  router.get('/funds/transparency/audit.csv', rbac(['owner','admin']), async(req,res,next)=>{
+    const parsed=auditExportQuery.safeParse(req.query);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Audit export filters are invalid.'));
+    const {from,to}=parsed.data;if(from&&to&&from>to)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','The from date must not be after the to date.'));
+    try{
+      const rows=await repos.funds.auditExport({orgId:req.orgId,actorId:req.user.id,from:from||null,to:to||null});
+      const fields=['id','createdAt','action','entity','entityId','actorRef','requestId'];
+      const lines=[fields.map(reportCsvCell).join(',')];
+      for(const row of rows||[]){
+        const actorRef=row.actorId?createHash('sha256').update(`${req.orgId}:${row.actorId}`).digest('hex'):'';
+        const values={...row,actorRef};delete values.actorId;delete values.metadata;
+        lines.push(fields.map((field)=>reportCsvCell(values[field])).join(','));
+      }
+      return res.type('text/csv').attachment('fund-audit.csv').send(lines.join('\r\n'));
+    }catch(error){return next(error)}
+  });
+
+  router.get('/funds/transparency', async(req,res,next)=>{
+    const parsed=transparencyQuery.safeParse(req.query);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Transparency filters are invalid.'));
+    try{
+      const data=await repos.funds.transparency({orgId:req.orgId,actorId:req.user.id,campaignId:parsed.data.campaignId||null});
+      const contributions=(data.contributions||[]).map((row)=>{
+        const {donorRef,...safe}=row;
+        return {...safe,donorRefHash:createHash('sha256').update(`${req.orgId}:${donorRef||'anonymous'}`).digest('hex')};
+      });
+      return res.json({...data,contributions,namesShown:false});
+    }catch(error){return sendFundError(error,res,next)}
+  });
+
   router.get('/funds/campaigns', async (req, res, next) => {
     try {
       const rows = await repos.funds.listCampaigns(req.orgId);
