@@ -26,17 +26,16 @@
 4. Record outcomes and continue to T7 only after T6 passes.
 
 ## USER ACTIONS PENDING
-- Run these read-only checks in the same Supabase SQL Editor and report the results. Do not run `NOTIFY pgrst, 'reload schema'` yet:
+- Run the routine-only read-only query below in the same Supabase SQL Editor and report its rows. The privilege check already returned false. Do not run `NOTIFY pgrst, 'reload schema'` yet:
   ```sql
   select routine_name from information_schema.routines
   where specific_schema='public'
     and routine_name in ('get_fund_transparency','get_fund_audit_export');
-  select has_table_privilege('authenticated','public.fund_contributions','SELECT') as authenticated_can_select;
   ```
 
 ## LIVE STATE
 - Applied and live verified: migrations 0001–0011.
-- Migration 0012: user confirmed applied; read-only catalog/grant verification pending. Earlier checks found 0 routine rows and authenticated SELECT true. Do not reload schema yet.
+- Migration 0012: user confirmed applied; screenshot confirms authenticated SELECT false. Routine rows still need confirmation; do not reload schema yet.
 - Tunnel/webhook fixed; T2 capture and five exact replays passed. Fixed T3/T4/T5 data remain in test organization; reuse only.
 - Latest live checks: RPC schema probe HTTP 404/PGRST202; no further fund mutations. Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
@@ -48,7 +47,9 @@
 | T6 focused | PASS | 2026-10-26 | 21/21 |
 | Migration parser | PASS | 2026-10-26 | `npm run check:migrations`; 0001–0012 |
 | Full suite | PASS | 2026-10-26 | `npm test`; 127/127 |
-| T6 live | UNVERIFIED | 2026-10-26 | 404 PGRST202; schema cache cannot resolve RPC |
+| T6 SELECT revoke | PASS | 2026-10-26 | User SQL Editor screenshot: authenticated SELECT false |
+| T6 RPC presence | UNVERIFIED | 2026-10-26 | Routine query result not visible in screenshot |
+| T6 live | UNVERIFIED | 2026-10-26 | Earlier 404 PGRST202; schema cache was not refreshed |
 
 ## KNOWN ISSUES AND RISKS
 - T4 is simulated only; no cash movement, PayPal payout or ledger entry.

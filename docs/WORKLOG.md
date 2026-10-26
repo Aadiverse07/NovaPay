@@ -1,8 +1,8 @@
 ## RESUME POINTER
 - Current task: finish T6 live verification, then continue Phase 6 T7.
-- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); user says 0012 applied.
-- Next step: obtain read-only SQL Editor results for both 0012 routine names and authenticated SELECT privilege; do not reload schema cache yet.
-- Pending human action: run read-only checks in docs/CONTEXT.md and report results.
+- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); screenshot confirms authenticated SELECT privilege is false.
+- Next step: user runs the routine-only SQL query in docs/CONTEXT.md and reports the returned rows; do not reload schema cache yet.
+- Pending human action: confirm routine names appear in `information_schema.routines`.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1047,3 +1047,6 @@ RESULT — 2026-10-26 15:00:53 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - RESULT: PASS; user-confirmed migration application recorded; no database commands or schema reload executed. NEXT: provide read-only SQL Editor verification queries and wait for their results.
 - NEXT: user runs read-only checks for routine presence and authenticated SELECT revocation; do not reload schema cache yet.
 - 2026-10-26 15:25 Asia/Kolkata — ABOUT TO: Add exact read-only catalog/grant queries to CONTEXT, validate handoff, and checkpoint the post-apply verification gate. WHY: handoff must let a fresh agent continue without asking what SQL to run; user prohibited cache reload.
+- 2026-10-26 15:27 Asia/Kolkata — ABOUT TO: Record the user's SQL Editor screenshot result for the authenticated SELECT privilege and note that the screenshot does not expose the routine query result. WHY: preserve verified evidence without inferring unshown query output; user prohibited schema-cache reload.
+- RESULT: PASS; screenshot confirms the SELECT revoke (`false`); routine output remains unverified because only the privilege query result is visible. Files updated: CONTEXT, TEST-REPORT, WORKLOG. NEXT: ask user to run the routine-only query; do not reload schema cache.
+- 2026-10-26 15:28 Asia/Kolkata — ABOUT TO: Make the pending SQL Editor block routine-only, remove stale claim that 0012 is absent, verify docs and checkpoint. WHY: the user supplied proof that the SELECT revoke now exists; only the routine output is missing.
