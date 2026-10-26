@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 15:52 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last checkpoint: `f5c8236 WIP Phase 6 task 6: fix transparency approval ordering`; latest live-verifier/documentation updates are pending local checkpoint.
+- Last checkpoint: `7d5820c WIP Phase 6 task 6: record live transparency verification`; T6 complete/live PASS, continuing to T7.
 - Phase/task: Phase 6 Fund Transparency, T6 complete and live-verified; prepare to continue T7.
 
 ## DONE
