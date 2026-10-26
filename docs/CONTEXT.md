@@ -1,77 +1,68 @@
-# NovaPay Continuity Context
+# NovaPay Phase 6 Handoff
 
 ## HEADER
-- Date/time: 2026-10-26, Asia/Kolkata.
-- Branch: `phase6-backend`; local-only.
-- Last completed checkpoint: `6801806 WIP Phase 6 task 3: enforce maintenance workflow`.
-- Current phase/task: Phase 6 Fund Transparency, T3 maintenance state machine; migration 0009 apply gate pending.
+- Updated: 2026-10-26 (Asia/Kolkata)
+- Branch: `phase6-backend`
+- Last commit: `2d8a1f6` (prior checkpoint; live-preflight docs are being checkpointed now)
+- Phase/task: Phase 6 Fund Transparency, T3 maintenance workflow; live apply gate cleared; full live workflow verification pending.
 
 ## DONE
-- STEP 0 and T1 complete; migrations 0001-0006 applied per user; ordinary owner JWT 0006 table reads passed and direct writes returned 403.
-- T2 migration 0007 applied; API checks and all five ordinary-user RPC denials passed.
-- Fixed $1 Sandbox contribution approved/captured exactly once; exact event `0U573441YN817132C` verified/processed; one receipt; summary received=100 and remaining=900 minor units.
-- Migration 0008 applied; original capture entry unchanged; balanced reversal and repost entries correct net revenue to account 4100 Donations.
-- Exact stored webhook replay x5 passed before and after migration 0008; no duplicate capture, receipt, or journal sources.
-- T3 workflow, routes, RPCs, and tests implemented locally. Focused tests 8/8 PASS; full suite 117/117 PASS; parser 0001-0009 PASS.
+- T1 contributions/campaigns and T2 capture accounting implemented, migrated, and verified. Capture event `0U573441YN817132C` received; receipt and ledger reconcile at 100 minor units. Original journal retained; reversal/repost credits 4100 Donations. Five exact webhook replays created no duplicates.
+- T3 routes, repositories, service-only RPCs, migration 0009 and tests implemented: `server/src/routes/funds.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/phase6-maintenance.test.js`, `server/test/phase6-migration.test.js`, `supabase/migrations/0009_maintenance_state_machine.sql`.
+- T3 local tests: focused 8/8 PASS; full suite 117/117 PASS; PostgreSQL 17 migration parser accepts 0001–0009.
+- User confirmed migration 0009 applied. Live API returned 200; selecting `maintenance_requests.requested_by` returned 200. Existing fixed Phase 3 owner/approver/accountant/viewer roles found. Ordinary owner JWT denied by all six 0009 RPCs (HTTP 403 each; first two probes corrected after an argument-name mismatch; no DB writes).
 
 ## IN PROGRESS
-- Migration `supabase/migrations/0009_maintenance_state_machine.sql` is ready but not applied.
-- T3 files: `server/src/routes/funds.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/phase6-maintenance.test.js`, `server/test/phase6-migration.test.js`, migration 0009, and continuity docs.
-- T3 exposes request creation, contractor creation, quotation, scope approval, contractor verification, and threshold-aware payment approval. Each DB action is a SECURITY DEFINER RPC, revoked from public/anon/authenticated and granted only to service_role.
-- New requests use `requested`; status constraint retains legacy values to avoid rewriting existing records. T3 RPCs enforce legal progression through `payment_approved`, requester cannot self-approve, and threshold >=10000 requires two different approvers.
+- Exact task: verify live T3 maintenance request → quotation → scope approval → contractor verification → payment approval using existing fixed Phase 3 org and user fixtures.
+- Planned live test records: deterministic names in existing verifier organization; inspect before create to allow safe resume. No new users or organizations.
+- Files being edited: continuity docs only (`docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`); no code edits currently.
+- Left: verify self-approval, skipped-state, foreign quotation, requester verification rejection, distinct approvers at threshold, API persisted state; log live results and checkpoint; then continue to T4 per Phase 6 prompt.
 
 ## NEXT STEPS
-1. User applies complete migration 0009 once in Supabase SQL Editor and replies “applied”.
-2. Verify live T3 request→quotation→scope approval→contractor verification→payment approval, skipped transitions, self-approval rejection, threshold, and ordinary JWT RPC denials.
-3. Checkpoint T3 live results and continue to T4.
+1. Run authenticated T3 lifecycle with fixed owner, approver, and accountant fixtures in `NovaPay Phase 3 Verification A`; use deterministic record identifiers and resumable state checks.
+2. Verify rejections for requester self-approval, invalid state skipping, and quotation belonging to another request; verify two distinct approvers required at 10,000 minor units.
+3. Append exact results to TEST-REPORT/WORKLOG and update CONTEXT/DECISIONS; checkpoint locally after 2–3 actions.
+4. Continue to Phase 6 T4.
 
 ## USER ACTIONS PENDING
-- Apply `supabase/migrations/0009_maintenance_state_machine.sql` once in the correct Supabase project: Dashboard > SQL Editor > New query > paste entire file > Run. Do not edit/rerun migrations 0001-0008. Reply “applied”; wait before live verification.
+- None for T3 migration; user confirmed 0009 applied.
 
 ## LIVE STATE
-- Supabase migrations 0001-0008 applied per user confirmation; 0009 not applied.
-- User reports tunnel/webhook server fixed.
-- T2 exact capture event verified/processed; contribution received, one receipt; summary receivedMinor=100/remainingMinor=900.
-- T2 journal correction verified: original unchanged, reversal/repost balanced; net revenue credit in 4100. Post-migration replay x5 remained idempotent.
+- Supabase migrations 0001–0008: previously applied. 0009: user-confirmed applied; `requested_by` live schema verified. T3 lifecycle behavior pending.
+- Tunnel/webhook: previously fixed; Phase 6 T2 capture and five replay checks passed. No current webhook event pending.
+- Last live check: 2026-10-26 API health/schema and ordinary-JWT 403 permission probes; no writes.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
-| Check | Result | Date | Command/evidence |
+| Check | Status | Date | Command/result |
 |---|---|---|---|
-| T1 ordinary-user RLS | PASS | 2026-10-26 | 11 table reads HTTP 200; 11 direct writes HTTP 403 |
-| T2 tests | PASS | 2026-10-26 | `npm test`: 110/110 before T2 account fix |
-| T2 approved capture/event/receipt/summary | PASS | 2026-10-26 | Exact resource verified/processed; one receipt; received=100, remaining=900 |
-| T2 account reclassification | PASS | 2026-10-26 | 0008 applied; original preserved; reversal/repost balanced; net account 4100 |
-| T2 exact webhook replay x5 | PASS | 2026-10-26 | Five HTTP 200 responses; no duplicate records |
-| T3 focused | PASS | 2026-10-26 | `node --test server/test/phase6-maintenance.test.js server/test/phase6-migration.test.js`: 8/8 |
-| T3 full regression | PASS | 2026-10-26 | `npm test`: 117/117; PostgreSQL parser accepted 0001-0009 |
-| T3 standalone migration check | PASS | 2026-10-26 | `npm run check:migrations`: 0001-0009 parsed |
-| T3 live state machine | UNVERIFIED | 2026-10-26 | Waiting for user to apply migration 0009 |
+| T2 webhook capture/replay | PASS | 2026-10-26 | Stored event verified; 5 replays; no duplicates |
+| T3 focused | PASS | 2026-10-26 | 8/8 tests |
+| T3 full regression | PASS | 2026-10-26 | `npm test`: 117/117; migrations 0001–0009 |
+| T3 migration parse | PASS | 2026-10-26 | `npm run check:migrations` |
+| T3 live schema/API preflight | PASS | 2026-10-26 | API 200; `requested_by` query 200 |
+| T3 ordinary JWT RPC denial | PASS | 2026-10-26 | Six RPC probes HTTP 403 |
+| T3 live workflow | UNVERIFIED | 2026-10-26 | Pending authenticated API lifecycle and edge cases |
 
 ## KNOWN ISSUES AND RISKS
-- T3 live behavior is unverified until migration 0009 is applied and live tests run.
-- Keep legacy statuses untouched; new transitions are through the migration 0009 service-only RPCs.
-- Do not edit/delete journal entries or lines; T2 correction uses appended reversal/repost entries.
+- Live T3 state transitions and threshold behavior are not yet verified.
+- Audit rows are append-only and restrict deletion; test setup must use only fixed verifier data and deterministic labels.
+- Keep legacy maintenance statuses intact; use the new T3 transition RPCs.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; a syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant it only to service_role; prove ordinary user JWT gets 403.
+- Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant it only to service_role; prove it by calling with an ordinary user JWT (expect 403).
 - PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only and ON DELETE RESTRICT; cleanup journal_entries first (lines cascade), then audit_log, organizations, auth.users with `scripts/cleanup-phase2-test-data.sql`. Reuse fixed named fixtures.
-- PayPal Sandbox buyer must be US Personal; seller USD only; use Visa. Webhook URL ends `/api/webhook`; `PAYPAL_WEBHOOK_ID` must match. Raw body is required for PayPal signature verification.
+- audit_log is insert-only and has ON DELETE RESTRICT; test cleanup must delete journal_entries first (lines go with them), then audit_log, organizations, auth.users, by a manual SQL script (`scripts/cleanup-phase2-test-data.sql`). Reuse fixed named test users/orgs; do not create new ones on every run.
+- PayPal sandbox buyer must be a US Personal account; seller USD only; use the Visa card at checkout; webhook URL must end in `/api/webhook` and `PAYPAL_WEBHOOK_ID` must match that webhook.
+- Raw body is needed for PayPal signature verification.
 - Never print `.env` values; use key names only.
-- Pledges are intent; only verified, posted captures are received. Simulated payments do not enter the real ledger.
-- Every expense needs a visible path to approval, quotation/invoice, payment, ledger entry, completion evidence; report every gap.
 
 ## DO NOT
-- Never push, use `--force`, weaken tests, edit applied migrations, commit `.env`, or print secrets.
-- Stay on `phase6-backend`; never commit/push to `backend` or `main`.
-- Do not edit `preview.html`, `dashboard.html`, `src/`, `assets/`.
-- Do not create another PayPal payment or manually modify posted journal rows.
+- Do not push. Do not commit to `backend` or `main`. Do not use `--force` or `npm audit fix --force`.
+- Do not weaken tests, edit applied migrations, commit `.env`, or touch protected frontend/design files.
 
 ## RESUME COMMANDS
-- `git branch --show-current`
 - `git status --short`
 - `npm test`
 - `npm run check:migrations`
-- `git diff --check`
