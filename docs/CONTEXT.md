@@ -3,8 +3,8 @@
 ## HEADER
 - Updated: 2026-10-26 15:52 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last checkpoint: `7d5820c WIP Phase 6 task 6: record live transparency verification`; T6 complete/live PASS, continuing to T7.
-- Phase/task: Phase 6 Fund Transparency, T6 complete and live-verified; prepare to continue T7.
+- Last checkpoint: `1790bf5 WIP Phase 6 task 6: refresh live checkpoint pointer`; T6 complete/live PASS, T7 audit pending.
+- Phase/task: Phase 6 Fund Transparency, T7 routes/docs audit; T1–T6 complete.
 
 ## DONE
 - T1–T2: contributions/campaigns and capture accounting; migrations 0006–0008 applied. Capture `0U573441YN817132C` received; receipt/ledger reconcile at 100 minor units. Auditable reversal/repost credits Donations 4100; five exact webhook replays caused no duplicates.
@@ -15,14 +15,15 @@
 - T6 local validation PASS: focused migration tests 10/10, `npm run check:migrations` through 0014, `npm test` 129/129. Live verification PASS after 0012–0014; details in TEST-REPORT.
 
 ## IN PROGRESS
-- Exact task: close T6 after passing live verification; next inspect the Phase 6 prompt and proceed to T7.
+- Exact task: complete T7 routes/docs acceptance audit; make minimal changes only where coverage is missing.
 - Files changed in T6 (initial implementation in `1138d0f`; migration 0013 in `1423eb7`; migration 0014 committed in `f5c8236`; verifier fix and final live docs pending checkpoint): `supabase/migrations/0012_fund_transparency_read_export.sql`, `supabase/migrations/0013_fix_transparency_campaign_json.sql`, `supabase/migrations/0014_fix_transparency_approval_order.sql`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/src/routes/funds.js`, `server/test/phase6-transparency.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `scripts/verify-phase6-transparency-live.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `docs/CONTEXT.md`.
 - User confirmed migrations 0012–0014 applied. T6 live verifier passed all read/privacy/export/security checks without manual schema-cache reload; test organization reused, no org or fund data created by verifier.
 
 ## NEXT STEPS
-1. Check the original Phase 6 prompt for the exact T7 requirements and scope.
-2. Update CONTEXT/WORKLOG for T7 and continue only authorized backend work.
-3. Keep docs current before/after long or live commands and checkpoint each numbered task.
+1. Audit every fund route/action for Zod validation, structured errors, payment/approval rate limits, and audit_log state-change coverage.
+2. Verify FRONTEND-CONTRACT, API, RUNBOOK and DECISIONS document every route, role, request/response, gap format and SIMULATED label.
+3. Fix missing T7 coverage with focused tests and docs, then run required checks and log each result.
+4. Check frontend diff is empty; checkpoint T7 locally and continue to the Phase Completion Gate.
 
 ## USER ACTIONS PENDING
 - None for T6; migrations 0012–0014 were user-confirmed applied.
