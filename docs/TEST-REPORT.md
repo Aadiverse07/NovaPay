@@ -764,3 +764,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `npm test` — PASS (2026-10-26): 117 passed, 0 failed, 0 skipped; PostgreSQL 17 parser accepted migrations 0001-0009; T3 maintenance workflow and service-role migration tests passed.
 - `npm run check:migrations` — STARTED (2026-10-26): standalone parser check for migrations 0001-0009; result pending.
 - `npm run check:migrations` — PASS (2026-10-26): PostgreSQL 17 parser accepted migrations 0001-0009, including `0009_maintenance_state_machine.sql`.
+
+## Phase 6 T3 — post-migration read-only live preflight — 2026-10-26
+- Migration 0009 apply: user confirmed “applied”; live PostgREST query selecting `maintenance_requests.requested_by` returned HTTP 200. This verifies schema presence; no migration ledger was queried.
+- API health: PASS; `GET /api/status` HTTP 200.
+- Fixed Phase 3 test organization/memberships: PASS; existing owner, approver, accountant, and viewer roles found. Auth magic link generated and verified in memory for an ordinary owner JWT; no token, IDs, or key values printed.
+- Service-only RPC access: PASS, six T3 RPC endpoints denied ordinary owner JWT with HTTP 403 each. Initial two probes used incorrect argument names and returned 404; corrected probes returned 403. No database writes.
+- Full maintenance workflow transitions, self-approval/skipped-state/foreign-quotation rejection, two distinct threshold approvals, and API persistence: UNVERIFIED pending the next T3 lifecycle check.

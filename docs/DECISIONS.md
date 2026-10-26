@@ -531,3 +531,9 @@
 - Reason: Avoid silently rewriting any existing maintenance records while enforcing the new transitions for the new API path.
 - Source: User-provided Phase 6 T3 state-machine requirements and existing `0006_fund_transparency.sql`, checked 2026-10-26.
 - Rejected alternatives: Edit applied migration 0006; bulk-map legacy operational states without audit evidence; permit client table writes.
+
+## 2026-10-26 — T3 live preflight scope
+- Question: How to verify migration 0009 permissions without risking state changes?
+- Choice: Probe each T3 RPC using the fixed ordinary owner JWT and exact function arguments, requiring HTTP 403 before running workflow actions.
+- Reason: `SECURITY DEFINER` maintenance actions are stateful and the client grant boundary must be proven first; corrected probes returned 403 for all six RPCs.
+- Source: Live Supabase/PostgREST check against the configured project, 2026-10-26. Rejected alternative: use a service-role RPC probe, which would mutate maintenance data and cannot prove ordinary-user denial.
