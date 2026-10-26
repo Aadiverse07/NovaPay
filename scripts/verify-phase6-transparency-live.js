@@ -28,7 +28,7 @@ function about(label,reason){journalLine('ABOUT TO',`${label}. Reason: ${reason}
 function outcome(ok,label,detail,next){journalLine('RESULT',`${ok?'PASS':'FAIL'}: ${label}; ${detail}. NEXT: ${next}`);}
 function assert(condition,message){if(!condition)throw new Error(message);}
 function q(values){return new URLSearchParams(values).toString();}
-async function request(url,options={}){const response=await fetch(url,{...options,signal:AbortSignal.timeout(20000)});let body=null;try{body=await response.json();}catch{}return{status:response.status,body,headers:response.headers};}
+async function request(url,options={}){const response=await fetch(url,{...options,signal:AbortSignal.timeout(20000)});let raw='';try{raw=await response.text();}catch{}let body=null;try{body=JSON.parse(raw);}catch{}return{status:response.status,body,headers:response.headers,text:async()=>raw};}
 async function service(path,options={}){return request(`${sb}${path}`,{...options,headers:{...serviceHeaders,...(options.headers||{})}});}
 async function step(label,reason,fn){
   about(label,reason);
