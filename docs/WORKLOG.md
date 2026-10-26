@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: fund-wiring from main; STEP 0 complete; T1 Fundraising view not started.
-- Last finished step: checked out main, fast-forwarded to origin/main 874e2e5, created/verified fund-wiring; npm ci; npm test 131/131; migrations 0001–0014 syntax check; restarted server, GET /api/status HTTP 200 (authenticated mode).
-- Next step: inspect docs/FRONTEND-CONTRACT.md and src/api-client.js plus only relevant existing view/handler ranges; wire Fundraising first.
-- Pending human action: none. Browser login/demo checks may be needed later; no order creation without explicit user approval.
+- Current task: fund-wiring, T1 view 2 (Maintenance); STEP 0 and Fundraising checkpoint complete.
+- Last finished step: synced main at 874e2e5; branch fund-wiring; npm ci; npm test 131/131; migrations 0001–0014 checked; port 3000 restarted, /api/status 200. Fundraising uses live campaigns/summaries/transparency, explicit pledge/order actions, demo label, loading/empty/error states.
+- Next step: inspect maintenance route contracts and current maintenance markup; wire stateful maintenance actions with illegal transitions disabled.
+- Pending human action: none. No PayPal order has been created.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1600,3 +1600,37 @@ RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV
 - 2026-10-26 — ABOUT TO: Strip trailing spaces from the two exact lines; the prior correction matcher included no trailing-space normalization and therefore did not match. WHY: resolve the remaining diff-check failure without altering historical entries.
 - RESULT: PASS; both task-local lines corrected and whitespace check passes. NEXT: stage only the four continuity documents and make the STEP 0 local checkpoint.
 - 2026-10-26 — ABOUT TO: Stage docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md and create the STEP 0 checkpoint on fund-wiring. WHY: save verified startup and baseline records after three task steps, with no .env in scope.
+- RESULT: PASS; STEP 0 docs checkpoint exit 0. NEXT: inspect minimal frontend contract/client and Fundraising view source.
+- 2026-10-26 — ABOUT TO: Locate Fundraising/Maintenance/Transparency markup, handlers and API client references by filename and matching lines. WHY: read the minimum source ranges before editing teammate UI.
+- 2026-10-26 — ABOUT TO: Read targeted contract route headings, api-client.js, and relevant dashboard.js selector/function ranges. WHY: avoid reading or rewriting unrelated modules and preserve existing UI structure.
+- RESULT: PASS; targeted routes and UI entry points identified; NEXT: read the exact three markup ranges and API contract definitions for the Fundraising view.
+- 2026-10-26 — ABOUT TO: Read the exact fund API contract section and the current dashboard view bootstrap/placeholder handlers. WHY: determine response shapes and replacement boundaries for Fundraising, without touching protected styling.
+- 2026-10-26 — ABOUT TO: Read only the three view markup blocks and bounded, truncated dashboard bootstrap lines. WHY: expose current UI structure without dumping the whole dashboard controller or unrelated design code.
+- RESULT: PASS; minimal markup/controller/contract ranges read; NEXT: inspect relevant live API helpers and server response mappings to identify exact safe request/response fields.
+- 2026-10-26 — ABOUT TO: Map actual fund route handlers and auth role accessors using route registrations and compact bounded contract lines. WHY: avoid guessing API details before wiring actions.
+- 2026-10-26 — ABOUT TO: Read route handler blocks for campaigns, summaries, pledges, orders and transparency, plus dashboard event/bootstrap hooks. WHY: use shipped server behavior as the source of truth for the view interactions.
+- RESULT: PASS; route/boot contract inspected; NEXT: implement Fundraising via a separate view controller file and existing dashboard script inclusion.
+- 2026-10-26 — ABOUT TO: Check whether the existing auth/bootstrap exposes organization role and inspect exact campaign summary fields. WHY: implement role-based write visibility without introducing an unsafe client-side permission guess.
+- RESULT: PASS; current auth role exposure and campaign shapes inspected; NEXT: choose safe read-only default or a supported role source before adding fundraiser controls.
+- 2026-10-26 — ABOUT TO: Confirm contribution receipt field and PayPal order response shape from the bounded backend and contract lines. WHY: ensure the Fundraising view displays only real backend receipt/order fields.
+- RESULT: PASS; API field map confirmed; NEXT: implement only fundraising dynamic rendering/actions with conservative role handling.
+- 2026-10-26 — ABOUT TO: Inspect repository transparency return projection for receipt fields and maintenance row shapes. WHY: keep Fundraising receipt list grounded in an existing read route without adding a new endpoint.
+- RESULT: PASS; transparency endpoint serves receipts and safe expense data; NEXT: implement Fundraising controller using campaigns, summaries, and transparency receipt projection.
+- 2026-10-26 — ABOUT TO: Read only the contribution and transparency projections in both repositories. WHY: verify receipt fields and avoid exposing sensitive raw donor/contractor/evidence data.
+- RESULT: PASS; repository projections bounded and reviewed; NEXT: build campaign cards and receipt rows from only returned safe fields.
+- 2026-10-26 — ABOUT TO: Read the final transparency projection lines and campaign creation field map. WHY: confirm which receipt properties are safe and available for the UI.
+- RESULT: PASS; no receipt list route exists separately; transparency projection shape confirmed; NEXT: render receipt numbers from contribution rows only when returned by transparency.
+- 2026-10-26 — ABOUT TO: Check whether the public API projection exposes receipt number/date and existing shared styling class names. WHY: avoid inventing receipt identifiers or new visual styles.
+- RESULT: PASS; use existing cards/forms and only show receipt details present in the API response; NEXT: implement Fundraising without hardcoded values.
+- 2026-10-26 — ABOUT TO: Add a Fundraising-only controller and load it after the existing live API module. WHY: wire live campaigns, computed summaries, pledges, explicit Sandbox order creation, receipts projection, loading/empty/error states, and preserve existing sample UI for demo mode.
+- RESULT: PASS; added `src/fund-views.js` and loaded it after `src/novapay-live.js`; only Fundraising live rendering/actions added. Static sample view remains for demo mode, live mode uses campaign list/summary/transparency, and write controls default hidden unless trusted organization role is present. NEXT: inspect diff/whitespace, document the receipt read-projection and role-source limits, then checkpoint T1 Fundraising.
+- 2026-10-26 — ABOUT TO: Review the Fundraising submission flow and check T6 SQL projection for receipt references. WHY: catch UI state loss after a pledge and confirm whether read API returns receipt identifiers.
+- RESULT: INFO; T6 transparency projection contains no receipt identifiers; pledge refresh currently replaces the order action. NEXT: preserve the order action after pledge and refresh the displayed pledge metric locally.
+- 2026-10-26 — ABOUT TO: Read the pledge form block only before applying the state fix. WHY: keep the correction localized to the Fundraising pledge behavior.
+- RESULT: PASS; issue is localized to the post-pledge rerender; NEXT: update pledge metric in place and remove the immediate full reload.
+- 2026-10-26 — ABOUT TO: Fix post-pledge rendering so the explicit PayPal Sandbox order control remains available and pledged total updates without a destructive rerender. WHY: preserve the action required by the workflow after the server records intent.
+- RESULT: PASS; pledge form now retains the order button after recording intent and updates pledged total in place; no automatic PayPal call. NEXT: review the view diff, note receipt/role limits, update checkpoint docs, and commit T1 Fundraising.
+- 2026-10-26 — ABOUT TO: Make receipt refresh failure independent from campaign/summary loading. WHY: a missing optional receipt projection should not suppress live fundraising totals.
+- RESULT: PASS; transparency failure now appears in the receipt subsection while campaigns and totals still render. NEXT: update T1 Fundraising handoff/decision records and locally checkpoint this view.
+- 2026-10-26 — ABOUT TO: Update CONTEXT/WORKLOG pointer and append the Fundraising design decision; preserve test state as unverified for this view until T4 checks. WHY: complete the required per-view checkpoint record.
+- RESULT: PASS; CONTEXT now points to Maintenance; Fundraising role/receipt constraints are explicit; no view-specific test was run or marked PASS. NEXT: stage Fundraising view and continuity docs, run staged whitespace review, and commit the checkpoint locally.
