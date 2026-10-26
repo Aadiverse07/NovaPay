@@ -1004,3 +1004,9 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ## Phase 6 T4 — PayPal Payouts execution probe — 2026-10-26
 - `POST https://api-m.sandbox.paypal.com/v1/payments/payouts` — FAIL for capability; HTTP 403, safe provider issue `PAYOUT_NOT_AVAILABLE`. OAuth was HTTP 200 with Payouts scope. The deterministic $0.01 probe created no batch and no payout; response contained no token, credential, or recipient in output.
 - T4 mode selection — PASS: SIMULATED is required for this configuration; no real payout claim, and simulated records must not create a ledger entry. See DECISIONS.md.
+
+## 2026-10-26 — Phase 6 T4 local validation
+- `node --test server/test/phase6-migration.test.js server/test/postgres-repos.test.js server/test/phase6-maintenance-payment.test.js` — PASS; 17 passed, 0 failed.
+- `npm run check:migrations` — PASS; PostgreSQL 17 SQL/PLpgSQL syntax OK for migrations 0001–0010.
+- `npm test` — PASS; 121 passed, 0 failed; embedded migration check accepted 0001–0010.
+- `node --check scripts/verify-phase6-payment-live.js` — PASS; verifier syntax valid; no live request executed.

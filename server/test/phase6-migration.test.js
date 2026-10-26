@@ -10,6 +10,8 @@ const accountingMigrationUrl = new URL('../../supabase/migrations/0008_fund_cont
 const accountingSql = await readFile(accountingMigrationUrl, 'utf8');
 const maintenanceMigrationUrl = new URL('../../supabase/migrations/0009_maintenance_state_machine.sql', import.meta.url);
 const maintenanceSql = await readFile(maintenanceMigrationUrl, 'utf8');
+const paymentMigrationUrl = new URL('../../supabase/migrations/0010_simulated_maintenance_payments.sql', import.meta.url);
+const paymentSql = await readFile(paymentMigrationUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -71,4 +73,23 @@ test('T3 maintenance RPCs enforce the state graph and are service_role-only', ()
   assert.match(maintenanceSql,/count\(distinct approver_id\)/i);
   assert.match(maintenanceSql,/v_quote\.amount_minor>=v_threshold/);
   assert.match(maintenanceSql,/maintenance_request_id\s*=\s*p_request/i);
+});
+
+test('T4 payment queue RPCs are service_role-only and simulated payments never post to the ledger', () => {
+  const names=['request_fund_maintenance_payment','decide_fund_maintenance_payment'];
+  for(const name of names){
+    assert.match(paymentSql,new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?security definer`,'i'),`${name} must be SECURITY DEFINER`);
+    assert.match(paymentSql,new RegExp(`revoke all on function public\\.${name}\\([^;]+ from public,anon,authenticated;`,'i'),`${name} must revoke client execution`);
+    assert.match(paymentSql,new RegExp(`grant execute on function public\\.${name}\\([^;]+ to service_role;`,'i'),`${name} must grant service_role only`);
+  }
+  assert.match(paymentSql,/proposal_type='maintenance-payment'/i);
+  assert.match(paymentSql,/fund_maintenance_request_id/);
+  assert.match(paymentSql,/fund_maintenance_payments_one_per_request/);
+  assert.match(paymentSql,/v_quote\.amount_minor/);
+  assert.match(paymentSql,/count\(distinct approver_id\)/i);
+  assert.match(paymentSql,/mode,status\)\s*values\([\s\S]*?'SIMULATED','paid'/i);
+  assert.match(paymentSql,/ledger_entry_id',null/);
+  assert.match(paymentSql,/simulated, no ledger entry/i);
+  assert.doesNotMatch(paymentSql,/insert into public\.journal_(?:entries|lines)/i);
+  assert.doesNotMatch(paymentSql,/api-m\.sandbox\.paypal\.com/i);
 });
