@@ -33,6 +33,12 @@ No request body. Roles `owner`, `admin`, and `accountant` may trigger a determin
 Migration `supabase/migrations/0005_ai.sql` defines `ai_usage`, `ai_cache`, `anomalies`, and `notifications`. RLS permits member reads only; authenticated clients have no direct write grants. All write and privileged RPCs are callable only by `service_role`. Apply numbered migrations in order and run `npm run check:migrations` before applying a new SQL file.
 
 
+## Fundraising and maintenance operations (Phase 6 T1–T3)
+
+All `/api/funds/*` endpoints require the Supabase bearer JWT and `X-Org-Id`. Campaign, pledge, PayPal-order, maintenance-request, contractor, quotation, approval, and payment-request operations are described with request/response examples and minimum roles in [FRONTEND-CONTRACT.md](./FRONTEND-CONTRACT.md#phase-6-campaigns-and-maintenance-operations-t1t4). Mutations call tenant-scoped service-only RPCs and append audit records. Pledges remain intent only until a verified posted capture. Payment requests enter the existing Approvals queue and are labelled `SIMULATED`; no payout or ledger entry occurs.
+
+The application enforces 300 requests per IP per 15 minutes and 240 requests per authenticated user per 15 minutes across API routes, including payment and approval actions. HTTP 429 uses `{ "error": { "code": "RATE_LIMITED" | "USER_RATE_LIMITED", "message": "..." } }`. Invalid inputs and business transition failures use structured errors.
+
 ## Fund maintenance payments (Phase 6 T4)
 
 ### `POST /api/funds/maintenance/:requestId/payment`
