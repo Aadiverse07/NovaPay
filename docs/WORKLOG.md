@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T4 payment gate; implementation is SIMULATED-only for this configured app.
-- Last finished step: deterministic PayPal Sandbox $0.01 probe returned HTTP 403 PAYOUT_NOT_AVAILABLE; no batch was created.
-- Next step: inspect existing Approvals queue integration and implement idempotent SIMULATED payment with explicit no-ledger gap.
-- Pending human action: none; real Sandbox Payouts are currently unavailable to the configured app.
+- Current task: Phase 6 T4 SIMULATED maintenance payment gate; migration 0010 not yet written.
+- Last finished step: PayPal Payouts unavailable (403 PAYOUT_NOT_AVAILABLE); existing queue supports typed approval items.
+- Next step: implement migration 0010 plus route, queue decision, repository adapters, and focused tests.
+- Pending human action: none until migration 0010 is ready and tested.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -708,3 +708,13 @@ ABOUT TO — 2026-10-26 14:16:16 Asia/Kolkata: POST one $0.01 payout to the exis
 RESULT — 2026-10-26 14:16:17 Asia/Kolkata: FAIL: payout create HTTP 403; batch status=unavailable; safe provider issue=PAYOUT_NOT_AVAILABLE. NEXT: if denied/unavailable, classify as SIMULATED and do not retry with a new ID.
 RESULT — PASS: deterministic /bin/zsh.01 Sandbox payout capability probe completed with status-only output; see preceding ABOUT/RESULT entries. NEXT: classify provider result and update DECISIONS/CONTEXT before implementing T4.
 RESULT — FAIL (provider capability): Sandbox OAuth succeeded with a Payouts scope, but POST /v1/payments/payouts returned HTTP 403 with safe issue `PAYOUT_NOT_AVAILABLE`. No payout batch was created and no money moved. NEXT: per T4, use SIMULATED mode everywhere, never call real payouts, and do not post simulated payments to the real ledger.
+RESULT — PASS: T4 mode decision checkpoint 2c667cd committed locally on phase6-backend. NEXT: map existing approval queue route and implement SIMULATED payment gate without any payout call or ledger posting.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Inspect the existing approval item schema, queue list/decision handlers, and payment ledger RPC conventions. Reason: determine the minimum way to make T4 initiation flow through the actual Approvals queue, not merely a separate funds endpoint.
+RESULT — PASS: generic approvals table can hold proposal types, status, reviewer, request payload, and result; existing queue lists those rows and decision route has invoice-specific handling plus generic decisions. T4 can add a maintenance-payment proposal type and route its decision to a DB RPC. NEXT: inspect exact list/decision adapters and migration contracts, then implement the smallest additive 0010 payment queue/RPC.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Read exact generic approval list mapping and decision control flow plus final T3 approval chain fields. Reason: wire maintenance payment approval into the existing queue without disturbing invoice/refund flows.
+RESULT — PASS: existing generic queue supports custom approval types in `approvals`; decision endpoint can branch on `proposalType`, and payment review can reuse its GET/list/count semantics. T4 design: create one deterministic maintenance-payment queue item only after all T3 gates; queue decision RPC finalizes exactly one SIMULATED payment, advances the workflow, leaves ledger_entry_id null, and exposes the no-ledger gap. NEXT: inspect approval mapping and migration test patterns, then implement additive migration 0010, route/repository/memory adapter, and focused coverage.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Inspect `mapApproval`, RLS grant conventions, and migration parser test helpers before authoring migration 0010 and route tests. Reason: preserve existing queue response contracts and service-role-only RPC discipline.
+RESULT — PASS: Postgres `mapApproval` currently omits request payload/fund request link; adding both will let the existing Approvals queue render maintenance context. Decision route can safely branch before generic refund execution. NEXT: inspect memory approval repository and route test helpers, then implement T4 in production and memory adapters.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Inspect memory approval repo internals and existing API test harness patterns for authenticated queue actions. Reason: ensure unit tests exercise the same request/list/decision path as the backend API.
+RESULT — PASS: Approvals queue maps proposal types and routes decisions by `proposalType`; existing shared queue can carry maintenance-payment review items without introducing a separate queue. NEXT: checkpoint T4 design and begin additive code/migration implementation.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Update T4 handoff with the approved SIMULATED-only payment design and exact implementation scope, verify branch/no `.env`/whitespace, then checkpoint locally. Reason: discovery established a safe T4 design before source edits.
