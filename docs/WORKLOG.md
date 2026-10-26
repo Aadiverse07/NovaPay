@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: T4 JS syntax, whitespace, protected-file and final commit checks.
-- Last finished step: final `npm test` PASS 131/131; final `npm run check:migrations` PASS 14/14.
-- Next step: run `node --check src/fund-views.js`, `git diff --check`, and protected-file `git diff --stat main`; then update docs and create final local commit.
-- Pending human action: browser checks at finish; no PayPal order.
+- Current task: T4 complete; final local checkpoint complete.
+- Last finished step: final commit `Fund views wiring, demo run, README` on `fund-wiring`; tests and protected-file check recorded.
+- Next step: user performs browser checks listed in docs/CONTEXT.md; then choose next task.
+- Pending human action: verify views, console/network, theme, mobile drawer, notifications and AI chat in browser. No PayPal order.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1853,3 +1853,6 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-26 22:55 IST | About to refresh CONTEXT and the RESUME POINTER with completed T4 checks and exact remaining browser actions; append the T4 documentation decision. WHY: the handoff currently describes T4 as pending despite completed checks.
 2026-10-26 22:55 IST | Result: refreshed CONTEXT to completed T4 state and added the decision explaining manual browser/PDF checks; no secret values included. Files touched: docs/CONTEXT.md, docs/DECISIONS.md, docs/WORKLOG.md. NEXT: verify final branch, changed-file set, clean whitespace and no tracked/staged .env, then make the exact requested local commit.
 2026-10-26 22:56 IST | About to stage the completed wiring and continuity docs and create the user-requested final commit on fund-wiring. WHY: all required code, API checks, syntax checks, and protected-file checks are complete; branch has no tracked .env.
+2026-10-26 22:56 IST | Result: final task commit created locally on fund-wiring as 14fcc93; no push; no .env tracked or staged. Files in final task diff from main: README.md, dashboard.html, src/fund-views.js, docs/CONTEXT.md, docs/DECISIONS.md, docs/TEST-REPORT.md, docs/WORKLOG.md. NEXT: checkpoint this post-commit result and pointer, then report tasks and manual browser actions.
+2026-10-26 22:57 IST | About to checkpoint the post-commit result in WORKLOG and make the handoff pointer identify the completed task commit. WHY: preserve an accurate continuation record after the commit action.
+2026-10-26 22:57 IST | Result: pointer now reflects completed T4 and pending browser checks; files touched: docs/WORKLOG.md. NEXT: commit the journal update locally and verify clean status.
