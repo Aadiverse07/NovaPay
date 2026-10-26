@@ -1000,3 +1000,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ## Phase 6 T4 — PayPal Sandbox Payouts capability preflight — 2026-10-26
 - OAuth client-credentials request to official Sandbox host — PASS; HTTP 200; token contained a Payouts scope. No token or credentials printed. This is capability preflight only; no payout request has been sent yet.
 - Official PayPal docs checked 2026-10-26: Sandbox Payouts API is documented and Payouts integration supports `PayPal-Request-Id` idempotency. App-specific payout execution remains UNVERIFIED pending the deterministic $0.01 probe.
+
+## Phase 6 T4 — PayPal Payouts execution probe — 2026-10-26
+- `POST https://api-m.sandbox.paypal.com/v1/payments/payouts` — FAIL for capability; HTTP 403, safe provider issue `PAYOUT_NOT_AVAILABLE`. OAuth was HTTP 200 with Payouts scope. The deterministic $0.01 probe created no batch and no payout; response contained no token, credential, or recipient in output.
+- T4 mode selection — PASS: SIMULATED is required for this configuration; no real payout claim, and simulated records must not create a ledger entry. See DECISIONS.md.

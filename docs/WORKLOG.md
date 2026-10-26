@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T4 payment gate; T1–T3 complete.
-- Last finished step: official docs and OAuth scope support Sandbox Payouts; no payout sent yet.
-- Next step: send the one deterministic $0.01 Sandbox capability probe and record only HTTP/status facts.
-- Pending human action: none.
+- Current task: Phase 6 T4 payment gate; implementation is SIMULATED-only for this configured app.
+- Last finished step: deterministic PayPal Sandbox $0.01 probe returned HTTP 403 PAYOUT_NOT_AVAILABLE; no batch was created.
+- Next step: inspect existing Approvals queue integration and implement idempotent SIMULATED payment with explicit no-ledger gap.
+- Pending human action: none; real Sandbox Payouts are currently unavailable to the configured app.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -701,3 +701,10 @@ ABOUT TO — 2026-10-26 Asia/Kolkata: Read the exact T4 table/approval schema an
 ABOUT TO — 2026-10-26 Asia/Kolkata: Read exact maintenance payment columns/FKs, approvals repo shape, and payment state RPC/test coverage; read-only. Reason: finish T4 design before a sandbox payout probe and ensure the approval queue can enforce the gate.
 RESULT — PASS: exact schema confirms payment rows require linked request/quotation/approval and ledger/payment refs; current API has no payment route, and the existing approval queue is invoice/refund-specific. The fixed Sandbox personal buyer fixture exists. NEXT: log and checkpoint the deterministic $0.01 Sandbox-only Payouts capability probe; no production endpoint or real-money account.
 ABOUT TO — 2026-10-26 Asia/Kolkata: Record current official PayPal capability evidence, OAuth scope result, T4 choice, and no-ledger-unless-real policy placeholder; update handoff and checkpoint before sending the authorized Sandbox probe. Reason: preserve the rationale and exact idempotency strategy before the external sandbox write.
+RESULT — PASS: T4 capability rationale checkpoint 4c1f394 committed locally on phase6-backend. NEXT: execute one deterministic /bin/zsh.01 Sandbox payout probe; use the same IDs if retry is needed.
+ABOUT TO — 2026-10-26 14:16:15 Asia/Kolkata: Request PayPal Sandbox OAuth token; read only. Reason: authenticate the deterministic payout capability probe without printing token or credentials.
+RESULT — 2026-10-26 14:16:16 Asia/Kolkata: PASS: OAuth HTTP 200; Payouts scope=true. NEXT: send one fixed $0.01 Sandbox payout with deterministic PayPal-Request-Id.
+ABOUT TO — 2026-10-26 14:16:16 Asia/Kolkata: POST one $0.01 payout to the existing fixed Sandbox Personal account using the fixed batch ID and deterministic PayPal-Request-Id. Reason: verify this app can execute Payouts in Sandbox; this cannot move real funds and safe retries reuse both identifiers.
+RESULT — 2026-10-26 14:16:17 Asia/Kolkata: FAIL: payout create HTTP 403; batch status=unavailable; safe provider issue=PAYOUT_NOT_AVAILABLE. NEXT: if denied/unavailable, classify as SIMULATED and do not retry with a new ID.
+RESULT — PASS: deterministic /bin/zsh.01 Sandbox payout capability probe completed with status-only output; see preceding ABOUT/RESULT entries. NEXT: classify provider result and update DECISIONS/CONTEXT before implementing T4.
+RESULT — FAIL (provider capability): Sandbox OAuth succeeded with a Payouts scope, but POST /v1/payments/payouts returned HTTP 403 with safe issue `PAYOUT_NOT_AVAILABLE`. No payout batch was created and no money moved. NEXT: per T4, use SIMULATED mode everywhere, never call real payouts, and do not post simulated payments to the real ledger.
