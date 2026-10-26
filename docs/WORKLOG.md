@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: finish T6 live verification, then continue Phase 6 T7.
-- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); checkpoint `1138d0f`; user confirmed 0012 applied; live call stopped at PGRST202 schema-cache miss.
+- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); checkpoint `73a1773`; user confirmed 0012 applied; live call stopped at PGRST202 schema-cache miss.
 - Next step: user checks both RPCs and authenticated table privilege in the API's Supabase project, runs `NOTIFY pgrst, 'reload schema';`, then agent reruns `node scripts/verify-phase6-transparency-live.js`.
 - Pending human action: verify 0012 objects exist in the exact API project and refresh PostgREST schema cache; details in docs/CONTEXT.md.
 
@@ -1034,3 +1034,5 @@ RESULT — 2026-10-26 15:00:53 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - RESULT: PASS; pointer updated; no secrets. NEXT: stage tracked/untracked T6 files, verify staged names exclude `.env`, and commit local WIP on `phase6-backend`.
 - RESULT: PASS; checkpoint `1138d0f` created locally on `phase6-backend`; 15 files include migration 0012, API/repository wiring, tests, verifier and docs; no `.env` staged; worktree clean immediately after commit. NEXT: record checkpoint hash at CONTEXT/WORKLOG top and checkpoint the exact handoff state.
 - 2026-10-26 15:12 Asia/Kolkata — ABOUT TO: Refresh handoff commit pointers to `1138d0f` and commit the updated continuation state. WHY: make a fresh agent resume from the committed T6 code and correct pending human action.
+- RESULT: PASS; handoff checkpoint `73a1773` created locally on `phase6-backend`; `git status` clean; no push. NEXT: wait for SQL Editor verification/schema reload, then rerun T6 live verifier.
+- 2026-10-26 15:13 Asia/Kolkata — ABOUT TO: Align the top handoff pointers with the latest documentation checkpoint `73a1773` and record this final pointer refresh. WHY: ensure the first lines identify the newest exact recovery state.
