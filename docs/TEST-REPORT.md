@@ -1022,3 +1022,4 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node --test server/test/phase6-maintenance-evidence.test.js server/test/phase6-migration.test.js server/test/postgres-repos.test.js` — PASS; 19 passed, 0 failed after null-decision and requester self-close hardening.
 - `npm run check:migrations` — PASS; PostgreSQL 17 SQL/PLpgSQL syntax OK for migrations 0001–0011 after final 0011 hardening.
 - `npm test` — PASS; 124 passed, 0 failed; embedded PostgreSQL 17 migration parser accepted migrations 0001–0011.
+- `node scripts/verify-phase6-completion-live.js` — PASS, live T5; migration 0011 columns visible; 3/3 RPC calls denied ordinary JWTs with HTTP 403; direct evidence table insert denied; fixed metadata-only row accepted by approver; request closed with review/closure stamps. No file uploaded and no users/orgs created.
