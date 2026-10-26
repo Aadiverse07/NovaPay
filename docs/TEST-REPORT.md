@@ -996,3 +996,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node scripts/verify-phase6-maintenance-live.js` — PASS; reused the existing fixed verifier organization, users, contractor, two requests, and quotations. Fresh API health and authenticated reads passed. Both requests reached `payment_approved`; 9999 minor units required one approver, exactly 10000 required two distinct approvers. Self-approval, skipped transition, foreign quotation, requester verification, and duplicate payment approval were rejected. No fixture users/orgs created; no PayPal transaction.
 
 - T3 live verification summary: PASS. Both 9999- and 10000-minor-unit requests reached `payment_approved`; threshold boundary behaved as configured, distinct approvers were required, and all rejection probes returned the expected structured 4xx response. The earlier attempts and corrections remain recorded above.
+
+## Phase 6 T4 — PayPal Sandbox Payouts capability preflight — 2026-10-26
+- OAuth client-credentials request to official Sandbox host — PASS; HTTP 200; token contained a Payouts scope. No token or credentials printed. This is capability preflight only; no payout request has been sent yet.
+- Official PayPal docs checked 2026-10-26: Sandbox Payouts API is documented and Payouts integration supports `PayPal-Request-Id` idempotency. App-specific payout execution remains UNVERIFIED pending the deterministic $0.01 probe.

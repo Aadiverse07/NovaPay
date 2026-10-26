@@ -3,8 +3,8 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`, local-only.
-- Last commit: `e7262cd WIP Phase 6 task 3: resume fixed live rows` (T3 live completion checkpoint pending).
-- Phase/task: Phase 6 Fund Transparency; T1–T3 complete; resume at T4 discovery.
+- Last commit: `4db25b0 WIP Phase 6 task 3: record live workflow pass`; T4 preflight checkpoint pending.
+- Phase/task: Phase 6 Fund Transparency; T1–T3 complete; current task T4 payment gate discovery.
 
 ## DONE
 - T1 contributions/campaigns and T2 capture accounting implemented, migrated, and verified. Capture `0U573441YN817132C` received; receipt and ledger reconcile at 100 minor units. Original journal retained; auditable reversal/repost credits 4100 Donations. Five exact webhook replays caused no duplicates.
@@ -14,12 +14,14 @@
 - T3 tests: focused route mapping 1/1; `npm test` 118/118; migration parser accepted 0001–0009.
 
 ## IN PROGRESS
-- Exact next task: inspect the Phase 6 prompt attachment and repository state for T4 requirements before changing code.
+- Exact next task: check current official PayPal Payouts Sandbox capability docs, then map existing payment, approval, and ledger code to T4 requirements.
 - Files edited in T3: `server/src/routes/funds.js`, `server/test/phase6-maintenance-route-errors.test.js`, `scripts/verify-phase6-maintenance-live.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`.
 - T3 verifier output journals each API operation and reuses deterministic names; existing live verification rows are append-only and remain in the fixed verifier organization.
 
 ## NEXT STEPS
-1. Read the Phase 6 source prompt and relevant T4 schema/routes/tests; define the exact next thin slice.
+1. Run deterministic $0.01 Sandbox Payouts probe to the fixed personal test receiver; output status only.
+2. Based on result, choose REAL behind a flag or SIMULATED with no ledger entry; record in DECISIONS.md.
+2. Inspect T4 payment/approval/ledger schema and routes; define the minimum additive implementation.
 2. Update WORKLOG before/after each action; update the resume pointer each step.
 3. Implement only the authorized T4 scope, add focused coverage, run relevant checks, and append exact test outcomes.
 4. WIP checkpoint every 2–3 steps; verify branch and no `.env`; never push.
@@ -48,7 +50,7 @@
 ## KNOWN ISSUES AND RISKS
 - Fixed T3 verifier data and append-only audit records remain in the dedicated Phase 3 verifier org; reuse these deterministic rows on reruns.
 - Some earlier report entries preserve failed attempts and a raw transcript caused by shell interpolation; later append-only corrections identify the accurate outcomes. No secrets were printed.
-- Live T4 behavior remains unverified until it is implemented and tested.
+- Official PayPal docs show Sandbox Payouts support; OAuth token has Payouts scope. A deterministic $0.01 Sandbox payout probe is pending to confirm this app can execute; no payout sent yet.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs inside one transaction; syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
