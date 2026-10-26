@@ -1,7 +1,7 @@
 ## RESUME POINTER
-- Current task: fund-wiring, T1 view 2 (Maintenance); STEP 0 and Fundraising checkpoint complete.
-- Last finished step: synced main at 874e2e5; branch fund-wiring; npm ci; npm test 131/131; migrations 0001–0014 checked; port 3000 restarted, /api/status 200. Fundraising uses live campaigns/summaries/transparency, explicit pledge/order actions, demo label, loading/empty/error states.
-- Next step: inspect maintenance route contracts and current maintenance markup; wire stateful maintenance actions with illegal transitions disabled.
+- Current task: fund-wiring, T1 view 3 (Transparency); STEP 0, Fundraising, Maintenance implementation checkpoints complete.
+- Last finished step: Fundraising live sources/actions wired; Maintenance reads transparency expenses and supports progressive workflow for requests created in this dashboard session; simulated payout/evidence cautions and disabled illegal/self actions included. Branch fund-wiring, latest view commit is Fundraising; maintenance checkpoint pending now.
+- Next step: wire Transparency read-only expenses/gaps/evidence references and role-gated CSV export.
 - Pending human action: none. No PayPal order has been created.
 
 ## Backfill
@@ -1634,3 +1634,22 @@ RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV
 - RESULT: PASS; transparency failure now appears in the receipt subsection while campaigns and totals still render. NEXT: update T1 Fundraising handoff/decision records and locally checkpoint this view.
 - 2026-10-26 — ABOUT TO: Update CONTEXT/WORKLOG pointer and append the Fundraising design decision; preserve test state as unverified for this view until T4 checks. WHY: complete the required per-view checkpoint record.
 - RESULT: PASS; CONTEXT now points to Maintenance; Fundraising role/receipt constraints are explicit; no view-specific test was run or marked PASS. NEXT: stage Fundraising view and continuity docs, run staged whitespace review, and commit the checkpoint locally.
+- RESULT: PASS; Fundraising checkpoint commit command exit 0. NEXT: inspect maintenance contract and view before editing.
+- 2026-10-26 — ABOUT TO: Inspect only maintenance markup, response projection, route matrix and transition logic. WHY: verify that an existing read endpoint supplies requests/quotes/contractors before wiring the workflow.
+- RESULT: INFO; maintenance route/projection ranges inspected; NEXT: summarize exact read/action availability and identify whether workflow list can be rendered from existing API.
+- 2026-10-26 — ABOUT TO: Read the expense SQL join and maintenance request/quotation mutation contracts. WHY: determine which workflow states and resources the canonical transparency endpoint actually returns.
+- RESULT: INFO; canonical GET returns only requests with maintenance-payment rows (inner join), so pending pre-payment requests/quotes cannot be listed; NEXT: inspect existing browser transaction views but do not invent missing backend data.
+- 2026-10-26 — ABOUT TO: Inspect the migration state graph and maintenance body schemas, limited to status updates and payload fields. WHY: disable actions from authoritative transitions rather than guessed labels.
+- RESULT: PASS; state graph and payload validators located; NEXT: wire progressive form actions against returned request.status values and expose existing transparency expenses.
+- 2026-10-26 — ABOUT TO: Add Maintenance rendering/actions based on transparency expenses plus API responses from requests created in this open dashboard session. WHY: current API has no GET list for pre-payment requests, contractors or quotations; keep the limitation explicit and do not invent persistence.
+- RESULT: PASS; Maintenance view now renders transparency expenses and session-created requests, progressive legal actions, status stages, simulated payment/evidence cautions, loading/empty/error states, and a refresh control. Pre-payment list reload limitation is visible. NEXT: inspect Maintenance source for legal transitions and remaining missing approvals link, then implement Transparency view.
+- 2026-10-26 — ABOUT TO: Connect Maintenance startup in the existing dashboard-ready callback and disable a second payment queue action after one is submitted. WHY: make the view actually load and avoid duplicate UI submission.
+- RESULT: PASS; Maintenance startup is now invoked after dashboard initialization; queued payment action disappears once an approval is returned. NEXT: wire Transparency read-only view and audit CSV export.
+- 2026-10-26 — ABOUT TO: Add the Transparency read-only view and audit CSV action using GET /api/funds/transparency and its explicit owner/admin export route. WHY: complete T1 while preserving API privacy omissions and rendering every returned gap.
+- RESULT: PASS; Transparency now reads live campaigns/expenses, displays approval, quote, payment, ledger, evidence privacy notes, every returned gap and simulated state, and offers role-gated CSV export; NEXT: review all three views against requirements, correct defects, and checkpoint T1.
+- 2026-10-26 — ABOUT TO: Tighten Maintenance controls for distinct approvers and evidence reviewers using identities known in the current session. WHY: disable duplicate/self-review actions; when the privacy-safe API omits identities, keep those actions disabled.
+- RESULT: PASS; payment approval action disables for the same approver when a second distinct approver is required; imported evidence review/close controls disable when the privacy projection omits submitter/requester identity. NEXT: inspect T1 combined changes and update handoff for the data-source limits.
+- 2026-10-26 — ABOUT TO: Record the current evidence submitter identity in tab-local workflow state after submission. WHY: disable same-user review immediately without revealing identities from the API.
+- RESULT: PASS; local evidence submits now track the submitter for same-user review disablement. NEXT: update the maintenance checkpoint docs and commit the view before starting Transparency.
+- 2026-10-26 — ABOUT TO: Set T1 Maintenance as finished/checkpointed in CONTEXT and WORKLOG, append its API-read limitation decision and unverified state. WHY: meet the per-view checkpoint requirement before moving to Transparency.
+- RESULT: PASS; CONTEXT and pointer now identify Transparency as next; TEST-REPORT marks both views UNVERIFIED pending runtime checks; DECISIONS records the missing pre-payment read contract and frontend-only boundary. NEXT: stage Maintenance and docs, whitespace-check, commit T1 Maintenance checkpoint.
