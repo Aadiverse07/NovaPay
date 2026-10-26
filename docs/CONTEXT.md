@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 15:09 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last commit: `5186848 WIP Phase 6 task 5: record live evidence closure`; T6 local changes not yet checkpointed.
+- Last commit: `1138d0f WIP Phase 6 task 6: add fund transparency export`; T6 code/docs/tests checkpointed locally.
 - Phase/task: Phase 6 Fund Transparency, T6 transparency/export; T1–T5 complete.
 
 ## DONE
