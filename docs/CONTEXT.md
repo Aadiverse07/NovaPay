@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`
-- Last commit: `5b19621 WIP Phase 6 task 3: record live migration preflight`
+- Last commit: `1ab3091 WIP Phase 6 task 3: map maintenance domain errors`
 - Phase/task: Phase 6 Fund Transparency, T3 maintenance workflow; live apply gate cleared; full live workflow verification pending.
 
 ## DONE

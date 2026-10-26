@@ -1,8 +1,8 @@
 ## RESUME POINTER
 - Current task: Phase 6 T3 live maintenance workflow verification; user confirmed migration 0009 applied.
-- Last finished step: live API 200/schema 200 and all six ordinary-owner JWT T3 RPC calls denied with HTTP 403; no writes; checkpoint `5b19621`.
-- Next step: checkpoint source/test/docs on `phase6-backend`, then run resumable T3 API lifecycle checks in existing Phase 3 Verification A org using fixed owner, approver, and accountant users.
-- Pending human action: none for T3 migration; no new user/org should be provisioned.
+- Last finished step: T3 SQLSTATE response fix, focused route test 1/1, full `npm test` 118/118; local checkpoint `1ab3091`.
+- Next step: run authenticated resumable T3 lifecycle checks in existing Phase 3 Verification A using fixed owner, approver, and accountant fixtures.
+- Pending human action: none for T3 migration; do not provision new users or organizations.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -451,3 +451,10 @@ RESULT — PASS:
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 1054.046375 118 passed/0 failed; migrations 0001–0009 parsed. Branch=phase6-backend; whitespace clean; no  in status. Files touched: server/src/routes/funds.js, server/test/phase6-maintenance-route-errors.test.js, docs/CONTEXT.md, docs/TEST-REPORT.md, docs/DECISIONS.md, docs/WORKLOG.md. NEXT: create local WIP checkpoint before fresh-server live T3 checks.
+RESULT — PASS: WIP checkpoint  committed locally on ; no push. NEXT: update resume pointer and run authenticated T3 lifecycle using the existing named fixtures.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Inspect the just-created checkpoint's documentation tail and working tree after shell interpolation warnings. Reason: determine whether command substitution inserted unintended output or only left a trailing-space report line, then preserve an accurate correction record.
+RESULT — PASS: checkpoint is `1ab3091` on `phase6-backend`; `npm test` completed twice with 118 passed, 0 failed, and migrations 0001–0009 parsed. The second suite's raw stdout was inserted into the append-only logs because unquoted heredoc backticks triggered command substitution; no secrets appeared, and earlier entries are retained. Files touched by this inspection: docs/WORKLOG.md. NEXT: inspect CONTEXT/checkpoint pointers and append a clean correction note before live work.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Inspect current CONTEXT header, WORKLOG resume pointer, and misplaced but real test transcript boundaries. Reason: repair stale handoff metadata and clarify the raw test-output append without deleting append-only history.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Correct handoff metadata and append-only log interpretation without deleting historical output; checkpoint the correction locally. Reason: inspection found CONTEXT/RESUME POINTER still named the prior commit, and a real second test run's stdout was appended through shell backtick expansion.
+RESULT — PASS: CONTEXT and resume pointer now reference `1ab3091`; TEST-REPORT/DECISIONS clarify the preserved transcript; no history removed. Files touched: docs/CONTEXT.md, docs/TEST-REPORT.md, docs/DECISIONS.md, docs/WORKLOG.md. NEXT: verify diff/branch and checkpoint the handoff correction.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Check branch, diff whitespace, and `.env` exclusion, then locally commit the corrected handoff docs. Reason: preserve an accurate restart pointer before continuing the live workflow.
