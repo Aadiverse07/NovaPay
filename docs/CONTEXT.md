@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`
-- Last commit: `2d8a1f6` (prior checkpoint; live-preflight docs are being checkpointed now)
+- Last commit: `5b19621 WIP Phase 6 task 3: record live migration preflight`
 - Phase/task: Phase 6 Fund Transparency, T3 maintenance workflow; live apply gate cleared; full live workflow verification pending.
 
 ## DONE
@@ -15,7 +15,8 @@
 ## IN PROGRESS
 - Exact task: verify live T3 maintenance request → quotation → scope approval → contractor verification → payment approval using existing fixed Phase 3 org and user fixtures.
 - Planned live test records: deterministic names in existing verifier organization; inspect before create to allow safe resume. No new users or organizations.
-- Files being edited: continuity docs only (`docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`); no code edits currently.
+- Live preflight found and fixed T3 SQLSTATE handling in `server/src/routes/funds.js`; focused test `server/test/phase6-maintenance-route-errors.test.js` confirms safe 4xx mapping. Full suite now 118/118 PASS.
+- Files being edited next: a fresh local server/API verification only; no further code edits unless live verification exposes a defect.
 - Left: verify self-approval, skipped-state, foreign quotation, requester verification rejection, distinct approvers at threshold, API persisted state; log live results and checkpoint; then continue to T4 per Phase 6 prompt.
 
 ## NEXT STEPS
@@ -38,10 +39,11 @@
 |---|---|---|---|
 | T2 webhook capture/replay | PASS | 2026-10-26 | Stored event verified; 5 replays; no duplicates |
 | T3 focused | PASS | 2026-10-26 | 8/8 tests |
-| T3 full regression | PASS | 2026-10-26 | `npm test`: 117/117; migrations 0001–0009 |
+| T3 full regression | PASS | 2026-10-26 | `npm test`: 118/118; migrations 0001–0009 |
 | T3 migration parse | PASS | 2026-10-26 | `npm run check:migrations` |
 | T3 live schema/API preflight | PASS | 2026-10-26 | API 200; `requested_by` query 200 |
 | T3 ordinary JWT RPC denial | PASS | 2026-10-26 | Six RPC probes HTTP 403 |
+| T3 domain error mapping | PASS | 2026-10-26 | focused test covers 5 SQLSTATEs; full `npm test` 118/118 |
 | T3 live workflow | UNVERIFIED | 2026-10-26 | Pending authenticated API lifecycle and edge cases |
 
 ## KNOWN ISSUES AND RISKS

@@ -22,6 +22,15 @@ const scopeApprovalBody = z.object({ quotationId: uuid, note: z.string().trim().
 const approvalBody = z.object({ note: z.string().trim().max(500).nullable().optional() }).strict();
 
 function sendFundError(error, res, next) {
+  const databaseErrors = {
+    '22023': [400, 'VALIDATION_ERROR', 'Maintenance request fields are invalid.'],
+    '23505': [409, 'CONFLICT', 'This maintenance action has already been recorded.'],
+    '23514': [409, 'FUND_STATE_CONFLICT', 'The maintenance request cannot make this transition.'],
+    '42501': [403, 'FUND_FORBIDDEN', 'This maintenance action is not allowed for this user.'],
+    P0002: [404, 'NOT_FOUND', 'The requested fund resource was not found.'],
+  };
+  const mapped = databaseErrors[error?.databaseCode];
+  if (mapped) return res.status(mapped[0]).json(structuredErrorBody(mapped[1], mapped[2]));
   if (error?.statusCode && error?.code) return res.status(error.statusCode).json(structuredErrorBody(error.code,error.message));
   return next(error);
 }
