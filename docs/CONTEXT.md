@@ -1,10 +1,10 @@
 # NovaPay Phase 6 Handoff
 
 ## HEADER
-- Updated: 2026-10-26 16:11 Asia/Kolkata.
+- Updated: 2026-10-26 16:17 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
 - Final Phase 6 commit: `c433232 Phase 6 thin slice: fund transparency (live verified)`; handoff-only pointer update pending.
-- Phase/task: Phase 6 Fund Transparency, T1–T7 complete and live-verified for T6; final commit `c433232` created locally.
+- Phase/task: Phase 6 complete; user authorized one-time push/tag/PR for `phase6-backend` only; release preflight confirmed clean.
 
 ## DONE
 - T1–T2: contributions/campaigns and capture accounting; migrations 0006–0008 applied. Capture `0U573441YN817132C` received; receipt/ledger reconcile at 100 minor units. Auditable reversal/repost credits Donations 4100; five exact webhook replays caused no duplicates.
@@ -15,17 +15,19 @@
 - T6/T7 validation PASS: `npm test` 131/131; `npm run check:migrations` through 0014; contract/rate-limit tests 2/2; `npm audit --omit=dev` reports 0 vulnerabilities. T6 live verification PASS after migrations 0012–0014.
 
 ## IN PROGRESS
-- Exact task: Phase 6 complete. Report verification and limitations, ask whether to continue to Phase 5, then stop.
+- Exact task: execute the user-authorized release steps for `phase6-backend`; then stop.
 - Files changed in T6 (initial implementation in `1138d0f`; migration 0013 in `1423eb7`; migration 0014 committed in `f5c8236`; verifier fix and final live docs pending checkpoint): `supabase/migrations/0012_fund_transparency_read_export.sql`, `supabase/migrations/0013_fix_transparency_campaign_json.sql`, `supabase/migrations/0014_fix_transparency_approval_order.sql`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/src/routes/funds.js`, `server/test/phase6-transparency.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `scripts/verify-phase6-transparency-live.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `docs/CONTEXT.md`.
 - User confirmed migrations 0012–0014 applied. T6 live verifier passed all read/privacy/export/security checks without manual schema-cache reload; existing fixed org/role users reused, no org or fund rows created by verifier. T7 documents route roles/examples, structured errors, inherited action limits and audit behavior; test ensures every mounted fund route has a contract heading.
 
 ## NEXT STEPS
-1. Confirm final Phase 6 docs/tests are committed locally with the required completion message.
-2. Report T6 live PASS; note Phase 2 safe is UNVERIFIED (fixed org absent), Phase 4 safe not run (script lacks safe mode), and strict origin/main frontend diff contains only the explicitly ignored font-fix commit.
-3. Ask whether to continue to Phase 5 and stop.
+1. Re-confirm `git branch --show-current` is `phase6-backend`, worktree is clean, and no `.env`/secrets are staged or tracked.
+2. Run exactly `git push -u origin phase6-backend`; never push main or force-push.
+3. Run exactly `git tag phase-6-thin-done && git push origin phase-6-thin-done`.
+4. Create PR into main with the user-provided title/body using `gh`; if unavailable, provide the specified compare URL.
+5. Stop and reply in the requested 3 lines.
 
 ## USER ACTIONS PENDING
-- None; T6 migrations 0012–0014 were user-confirmed applied.
+- User authorized pushing/tagging only `phase6-backend` and creating one PR. No further human action pending before the commands.
 
 ## LIVE STATE
 - Applied: migrations 0001–0014 (0012–0014 user-confirmed; 0012–0014 live exercised through T6 verifier).
