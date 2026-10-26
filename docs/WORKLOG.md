@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: T2 API-level 3-minute demo using fixed named test users and existing records only.
-- Last finished step: T1 Fundraising, Maintenance and Transparency views wired to current API capabilities; commits 87c30e9 and 2a6b2e6. STEP 0 baseline/server status PASS; no view-specific runtime test yet.
-- Next step: locate the supplied demo sequence and fixed test-user verification scripts; inspect side effects before running read-only demo checks. No new PayPal order.
-- Pending human action: browser-only checks at finish; no action needed now.
+- Current task: T2 API demo, preflight complete; live checks not yet run.
+- Last finished step: T1 views implemented/checkpointed; `npm test` 131/131 and migrations 0001–0014 passed; server status HTTP 200. Fixed T3 verifier reuses named requests/contractor/quotes when present and creates only if absent; no PayPal-order path.
+- Next step: run fixed-user maintenance verifier once, then fixed T5 completion verifier; follow with read-only authenticated checks for PayPal capture, ledger, transactions, AI, approvals and transparency.
+- Pending human action: browser checks at finish; no PayPal order creation.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1656,3 +1656,22 @@ RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV
 - RESULT: PASS; Maintenance checkpoint command exit 0. NEXT: implement and checkpoint Transparency.
 - 2026-10-26 — ABOUT TO: Mark all three T1 views implemented, set T2 demo as next, and record the Transparency API privacy limitations and UNVERIFIED runtime status. WHY: finish the per-view checkpoint before attempting live API demo calls.
 - RESULT: PASS; CONTEXT/WORKLOG now point to T2; TEST-REPORT labels T1 runtime UNVERIFIED; DECISIONS records evidence/receipt projection limits. NEXT: stage T1 Transparency checkpoint docs and commit locally on fund-wiring.
+- RESULT: PASS; Transparency checkpoint command exit 0. NEXT: locate and inspect the fixed-user demo procedure before T2 API calls.
+- 2026-10-26 — ABOUT TO: Locate the referenced 3-minute demo steps and available fixed-user Phase 6 verifier scripts by filename/heading only. WHY: select existing read-oriented verification instead of creating records or orders.
+- RESULT: INFO; demo document and verifier references listed above; NEXT: inspect candidate verifier startup/cleanup behavior and required environment key names before any API call.
+- 2026-10-26 — ABOUT TO: Identify any repository PDF/demo files, verifier step labels, and only relevant env key names. WHY: match the requested demo to existing fixed-user flows while ensuring no values or credentials are printed.
+- RESULT: INFO; repository has no PDF/demo artifact, fixed-user verifier steps and key names listed; NEXT: inspect verifier write/cleanup operations and the 3-minute script attachment before choosing safe read-only runs.
+- 2026-10-26 — ABOUT TO: Inspect maintenance/completion verifier actions and attached-file names only for writes, cleanup, or PayPal order creation. WHY: avoid replaying anything destructive or creating an order while executing the demo.
+- RESULT: INFO; no demo PDF found in repo; verifier contains deterministic write paths on fixed Phase 3/T4 fixtures. NEXT: inspect fixed IDs/state and exact 3-minute demo source availability; prefer direct reads and avoid repeated mutations unless the intended script is confirmed.
+- 2026-10-26 — ABOUT TO: Read fixed maintenance verifier fixture/state and completion verifier actions, redacting emails and avoiding all env values. WHY: decide whether the provided scripts safely run once against existing identities without creating a PayPal order.
+- RESULT: INFO; fixed fixture and action pattern inspected; NEXT: check exact idempotency and current statuses via read-only Supabase/API queries before any scenario mutation.
+- 2026-10-26 — ABOUT TO: Read only fixture environment variable names and the beginning of the original attached prompt for any embedded demo sequence. WHY: identify existing fixed sign-in roles and confirm whether the referenced PDF steps are present without exposing values.
+- RESULT: INFO; attachment has Phase 6 background/fixed-fixture guidance but not a 3-minute demo script; NEXT: use existing fixed-user live verifiers and documented API flow, recording the exact PDF step sequence UNVERIFIED.
+- 2026-10-26 — ABOUT TO: Identify fixed-user configuration names and exact read API paths for captures, ledger, approvals and AI. WHY: prepare a bounded T2 API check without printing user credentials or token values.
+- RESULT: INFO; configuration and API paths located; NEXT: read only the verifier config/env key names, then run bounded authenticated GETs and two AI messages.
+- 2026-10-26 — ABOUT TO: Extract only configured key names related to fixed test identities/orgs and the current fixed records, never values. WHY: determine whether authenticated API demo can reuse the preconfigured users and org without reading credentials into output.
+- RESULT: PASS; only key names were inspected and no values were printed. NEXT: choose the existing fixed-user verifier run and record its API actions and any durable records before execution.
+- 2026-10-26 — ABOUT TO: Inspect whether fixed maintenance test requests, contractors and quotations are looked up before insertion, and what state the script verifies. WHY: prevent duplicate live fixtures and avoid any unintended payment/provider call.
+- RESULT: INFO; verifier fixture re-use behavior inspected; NEXT: only run if fixed rows are found; otherwise keep demo read-only and mark missing route/data steps UNVERIFIED.
+- 2026-10-26 — ABOUT TO: Checkpoint T1 completion and T2 preflight findings before live API calls. WHY: keep the demo continuation recoverable and preserve that the referenced 3-minute PDF is not present in the repo/attachments inspected.
+- RESULT: PASS; T1 done, T2 preflight state saved; missing 3-minute PDF source explicitly marked UNVERIFIED. NEXT: stage continuity docs, whitespace-check, and make local T2-preflight WIP commit before live calls.
