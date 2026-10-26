@@ -1,8 +1,8 @@
 ## RESUME POINTER
 - Current task: finish T6 live verification, then continue Phase 6 T7.
-- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); checkpoint `73a1773`; user confirmed 0012 applied; live call stopped at PGRST202 schema-cache miss.
-- Next step: user checks both RPCs and authenticated table privilege in the API's Supabase project, runs `NOTIFY pgrst, 'reload schema';`, then agent reruns `node scripts/verify-phase6-transparency-live.js`.
-- Pending human action: verify 0012 objects exist in the exact API project and refresh PostgREST schema cache; details in docs/CONTEXT.md.
+- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); latest SQL Editor evidence shows 0012 is absent.
+- Next step: user applies `supabase/migrations/0012_fund_transparency_read_export.sql` and says `applied`; do not reload schema cache yet.
+- Pending human action: apply only migration 0012; exact steps in docs/CONTEXT.md.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1036,3 +1036,10 @@ RESULT — 2026-10-26 15:00:53 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - 2026-10-26 15:12 Asia/Kolkata — ABOUT TO: Refresh handoff commit pointers to `1138d0f` and commit the updated continuation state. WHY: make a fresh agent resume from the committed T6 code and correct pending human action.
 - RESULT: PASS; handoff checkpoint `73a1773` created locally on `phase6-backend`; `git status` clean; no push. NEXT: wait for SQL Editor verification/schema reload, then rerun T6 live verifier.
 - 2026-10-26 15:13 Asia/Kolkata — ABOUT TO: Align the top handoff pointers with the latest documentation checkpoint `73a1773` and record this final pointer refresh. WHY: ensure the first lines identify the newest exact recovery state.
+- 2026-10-26 15:18 Asia/Kolkata — ABOUT TO: Inspect migration inventory and exact T6 RPC/SELECT-revoke definitions; verify the recorded pending action. WHY: answer which migration contains the missing objects and provide the ordered SQL Editor apply step without refreshing PostgREST schema cache.
+- RESULT: PASS; migration inventory is exactly 0001–0012. Migration 0012 contains the two missing RPC definitions, revokes authenticated SELECT on fund tables (including `fund_contributions`), revokes client execute on both RPCs, and grants execute only to `service_role`. Context previously recorded 0012 as applied based on earlier confirmation, but the user's direct database checks show these objects/privileges are absent; supersede that claim. NEXT: correct CONTEXT, record the human check as UNVERIFIED/not applied in TEST-REPORT, append the apply-order decision, and checkpoint.
+- 2026-10-26 15:19 Asia/Kolkata — ABOUT TO: Correct handoff/docs to reflect the user-confirmed live database facts: migrations 0001–0011 applied, 0012 still needs application; tell the user to apply only 0012 and wait for their confirmation before any next action. WHY: database evidence overrides the earlier assumed apply state; user explicitly asked for per-migration confirmation and prohibited schema reload.
+- RESULT: FAIL; the docs update wrapper had a Python quoting syntax error, so CONTEXT and the resume pointer were not changed. Earlier TEST-REPORT/DECISIONS append operations before the failed wrapper did complete. NEXT: retry the handoff edits using robust multiline replacements, then inspect all changed docs.
+- 2026-10-26 15:20 Asia/Kolkata — ABOUT TO: Retry the CONTEXT/WORKLOG pointer correction with triple-quoted replacements. WHY: previous compound command appended test/decision evidence but failed before updating the contradictory handoff.
+- RESULT: PASS; CONTEXT now states only 0012 remains to apply and prohibits cache reload until user says applied; TEST-REPORT and DECISIONS record the human check and migration order. NEXT: verify docs and checkpoint, then present exact single migration instructions.
+- 2026-10-26 15:21 Asia/Kolkata — ABOUT TO: Correct the T6 file-list status in CONTEXT, verify handoff length/whitespace/branch, and stage the human-reported database state update. WHY: T6 code is already committed; only continuity docs now change.
