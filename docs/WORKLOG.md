@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: fund-wiring, T1 view 3 (Transparency); STEP 0, Fundraising, Maintenance implementation checkpoints complete.
-- Last finished step: Fundraising live sources/actions wired; Maintenance reads transparency expenses and supports progressive workflow for requests created in this dashboard session; simulated payout/evidence cautions and disabled illegal/self actions included. Branch fund-wiring, latest view commit is Fundraising; maintenance checkpoint pending now.
-- Next step: wire Transparency read-only expenses/gaps/evidence references and role-gated CSV export.
-- Pending human action: none. No PayPal order has been created.
+- Current task: T2 API-level 3-minute demo using fixed named test users and existing records only.
+- Last finished step: T1 Fundraising, Maintenance and Transparency views wired to current API capabilities; commits 87c30e9 and 2a6b2e6. STEP 0 baseline/server status PASS; no view-specific runtime test yet.
+- Next step: locate the supplied demo sequence and fixed test-user verification scripts; inspect side effects before running read-only demo checks. No new PayPal order.
+- Pending human action: browser-only checks at finish; no action needed now.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1653,3 +1653,6 @@ RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV
 - RESULT: PASS; local evidence submits now track the submitter for same-user review disablement. NEXT: update the maintenance checkpoint docs and commit the view before starting Transparency.
 - 2026-10-26 — ABOUT TO: Set T1 Maintenance as finished/checkpointed in CONTEXT and WORKLOG, append its API-read limitation decision and unverified state. WHY: meet the per-view checkpoint requirement before moving to Transparency.
 - RESULT: PASS; CONTEXT and pointer now identify Transparency as next; TEST-REPORT marks both views UNVERIFIED pending runtime checks; DECISIONS records the missing pre-payment read contract and frontend-only boundary. NEXT: stage Maintenance and docs, whitespace-check, commit T1 Maintenance checkpoint.
+- RESULT: PASS; Maintenance checkpoint command exit 0. NEXT: implement and checkpoint Transparency.
+- 2026-10-26 — ABOUT TO: Mark all three T1 views implemented, set T2 demo as next, and record the Transparency API privacy limitations and UNVERIFIED runtime status. WHY: finish the per-view checkpoint before attempting live API demo calls.
+- RESULT: PASS; CONTEXT/WORKLOG now point to T2; TEST-REPORT labels T1 runtime UNVERIFIED; DECISIONS records evidence/receipt projection limits. NEXT: stage T1 Transparency checkpoint docs and commit locally on fund-wiring.
