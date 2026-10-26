@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`, local-only.
-- Last commit: `4c1f394 WIP Phase 6 task 4: record payout capability probe`; T4 capability-result checkpoint pending.
+- Last commit: `2c667cd WIP Phase 6 task 4: select simulated payout mode`; T4 design checkpoint pending.
 - Phase/task: Phase 6 Fund Transparency; T1–T3 complete; current task T4 payment gate discovery.
 
 ## DONE
