@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: T2 API demo; Maintenance verifier completed with a fixed-fixture state mismatch.
-- Last finished step: fixed owner/approver/accountant sign-in and `/api/funds/campaigns` reads PASS 3/3; fixed threshold/contractor/request/quotation lookups PASS; T3 workflow verifier FAIL because request already `closed`, expected `payment_approved`. No PayPal order was created.
-- Next step: run the idempotent T5 completion verifier against the already closed fixed request, then do read-only authenticated capture/ledger/transaction/AI/approvals/transparency checks.
-- Pending human action: browser checks at finish; no order creation.
+- Current task: T2 API demo; fixed T3 maintenance lifecycle mismatch preserved, fixed T5 completion verification passed.
+- Last finished step: fixed owner/approver/accountant API access 3/3; completion script confirmed existing request `closed`, evidence accepted, 3/3 ordinary RPC 403, direct write denied, no user/org/file created.
+- Next step: perform read-only authenticated API checks for PayPal captures/transactions/ledger/approvals, and make two AI questions with expected code and cited LLM routes.
+- Pending human action: browser checks at finish; no PayPal order.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1730,3 +1730,54 @@ RESULT — 2026-10-26 16:20:05 Asia/Kolkata: FAIL: Verify under-threshold T3 lif
 - RESULT: INFO; fixed request is already at terminal closed state; NEXT: record verifier FAIL and do not reset/recreate fixtures; proceed with read-only checks on existing data.
 - 2026-10-26 — ABOUT TO: Record T2 maintenance verifier results and preserve the terminal fixed fixture state; update the resume pointer before the next API run. WHY: the existing T3 rows are closed, so blindly resetting them would violate reuse-only safety.
 - RESULT: PASS; T2 authentication and maintenance verifier outcomes appended; no fixture reset or order action. NEXT: staged-check and commit this T2 live-result checkpoint before completion/API reads.
+- RESULT: PASS; T2 maintenance result checkpoint exit 0. NEXT: run the fixed completion verifier, whose existing state is already closed.
+- 2026-10-26 — ABOUT TO: Run node scripts/verify-phase6-completion-live.js against the fixed T4 paid request. WHY: exercise existing evidence/review/close state and verify no new evidence is needed before proceeding; script contains no PayPal order call.
+ABOUT TO — 2026-10-26 16:20:39 Asia/Kolkata: Generate sign-in link for fixed owner user. Reason: reuse existing named test user without creating an account or resetting credentials
+RESULT — 2026-10-26 16:20:40 Asia/Kolkata: PASS: Generate sign-in link for fixed owner user; HTTP 200; one-time token stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:40 Asia/Kolkata: Exchange sign-in link for fixed owner JWT. Reason: obtain ordinary user identity for route and RPC permission checks
+RESULT — 2026-10-26 16:20:41 Asia/Kolkata: PASS: Exchange sign-in link for fixed owner JWT; HTTP 200; JWT stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:41 Asia/Kolkata: Generate sign-in link for fixed approver user. Reason: reuse existing named test user without creating an account or resetting credentials
+RESULT — 2026-10-26 16:20:41 Asia/Kolkata: PASS: Generate sign-in link for fixed approver user; HTTP 200; one-time token stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:41 Asia/Kolkata: Exchange sign-in link for fixed approver JWT. Reason: obtain ordinary user identity for route and RPC permission checks
+RESULT — 2026-10-26 16:20:41 Asia/Kolkata: PASS: Exchange sign-in link for fixed approver JWT; HTTP 200; JWT stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:41 Asia/Kolkata: Generate sign-in link for fixed accountant user. Reason: reuse existing named test user without creating an account or resetting credentials
+RESULT — 2026-10-26 16:20:42 Asia/Kolkata: PASS: Generate sign-in link for fixed accountant user; HTTP 200; one-time token stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:42 Asia/Kolkata: Exchange sign-in link for fixed accountant JWT. Reason: obtain ordinary user identity for route and RPC permission checks
+RESULT — 2026-10-26 16:20:43 Asia/Kolkata: PASS: Exchange sign-in link for fixed accountant JWT; HTTP 200; JWT stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:43 Asia/Kolkata: Find fixed Phase 3 verification organization. Reason: reuse the existing organization
+RESULT — 2026-10-26 16:20:43 Asia/Kolkata: PASS: Find fixed Phase 3 verification organization; one fixed organization found. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:43 Asia/Kolkata: Find fixed T4 paid maintenance request. Reason: reuse the already paid SIMULATED request from T4
+RESULT — 2026-10-26 16:20:44 Asia/Kolkata: PASS: Find fixed T4 paid maintenance request; fixed request status closed. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:44 Asia/Kolkata: Verify fixed accountant and approver memberships. Reason: confirm submission and reviewer roles in the fixed org
+RESULT — 2026-10-26 16:20:45 Asia/Kolkata: PASS: Verify fixed accountant and approver memberships; accountant and approver roles confirmed. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:45 Asia/Kolkata: Confirm migration 0011 schema visibility. Reason: read new evidence-review and request-close columns before calling T5 routes
+RESULT — 2026-10-26 16:20:47 Asia/Kolkata: PASS: Confirm migration 0011 schema visibility; all evidence and maintenance review columns visible. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:47 Asia/Kolkata: Deny ordinary JWT execution of submit_fund_completion_evidence. Reason: prove SECURITY DEFINER RPC is not executable by authenticated user role
+RESULT — 2026-10-26 16:20:47 Asia/Kolkata: PASS: Deny ordinary JWT execution of submit_fund_completion_evidence; HTTP 403. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:47 Asia/Kolkata: Deny ordinary JWT execution of review_fund_completion_evidence. Reason: prove SECURITY DEFINER RPC is not executable by authenticated user role
+RESULT — 2026-10-26 16:20:47 Asia/Kolkata: PASS: Deny ordinary JWT execution of review_fund_completion_evidence; HTTP 403. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:47 Asia/Kolkata: Deny ordinary JWT execution of close_fund_maintenance_request. Reason: prove SECURITY DEFINER RPC is not executable by authenticated user role
+RESULT — 2026-10-26 16:20:48 Asia/Kolkata: PASS: Deny ordinary JWT execution of close_fund_maintenance_request; HTTP 403. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:48 Asia/Kolkata: Deny direct authenticated evidence table write. Reason: prove existing RLS/grants still block direct client inserts
+RESULT — 2026-10-26 16:20:48 Asia/Kolkata: PASS: Deny direct authenticated evidence table write; HTTP 403; direct insert denied. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:48 Asia/Kolkata: Find deterministic T5 evidence metadata row. Reason: reuse the exact prior verifier row if this script resumes
+RESULT — 2026-10-26 16:20:49 Asia/Kolkata: PASS: Find deterministic T5 evidence metadata row; one existing row reused. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:49 Asia/Kolkata: Check fresh local API health. Reason: exercise current source against applied migration 0011
+RESULT — 2026-10-26 16:20:50 Asia/Kolkata: PASS: Check fresh local API health; HTTP 200. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:50 Asia/Kolkata: Confirm maintenance request reached reviewed state. Reason: ensure accepted evidence review advanced the request
+RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Confirm maintenance request reached reviewed state; request is closed. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 16:20:51 Asia/Kolkata: Verify final closure and evidence metadata. Reason: confirm reviewer/closure stamps and one accepted metadata row
+RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evidence metadata; one accepted metadata row; request closed with reviewer/closure stamps. NEXT: continue T5 live verification
+- RESULT: PASS; fixed completion verifier exit 0. NEXT: record its exact result; then run read-only API demo checks for capture, ledger, transactions, AI, approvals and transparency.
+- 2026-10-26 — ABOUT TO: Append the fixed T5 completion verifier PASS to TEST-REPORT and update the resume pointer. WHY: record this live run immediately; it verified existing metadata/evidence state without creating users/orgs or uploading a file.
+- RESULT: PASS; completion verifier live result appended immediately and CONTEXT/RESUME POINTER show next API checks. NEXT: inspect AI routing prompts and read endpoints, then run authenticated GETs and two AI messages.
+- 2026-10-26 — ABOUT TO: Read AI classifier examples, API route paths, and fixed organization selector without printing fixture emails. WHY: craft the requested code and cited-LLM questions and authenticate against the existing fixed org only.
+- RESULT: PASS; classifier and API endpoints inspected; NEXT: construct the authenticated read-only demo using existing owner fixture and API response summaries only.
+- 2026-10-26 — ABOUT TO: Read only fixed-user magic-link mechanics, demo API response shapes, and the AI request contract; redact email values. WHY: build the authenticated read-only T2 probe without leaking credentials or guessing routes.
+- RESULT: PASS; login and read endpoint contract inspected; NEXT: run one script that uses the fixed owner account to read status, capture/ledger/approvals/transparency, and send two minimal AI messages.
+- RESULT: FAIL; the AI source inspection command had an unmatched shell quote and did not run. NEXT: rerun using double-quoted patterns and record only source line references.
+- 2026-10-26 — ABOUT TO: Inspect AI retrieval/citation references and route classifier examples with shell-safe quoted patterns. WHY: select the intended cited LLM question before authenticated API calls.
+- RESULT: PASS; AI retrieval/citation source references inspected. NEXT: select the exact LLM question and run the authenticated read-only API demo.
+- 2026-10-26 — ABOUT TO: Read the AI router/service dispatch branches only. WHY: avoid consuming a live LLM request on a question that cannot cite organization evidence.
+- RESULT: PASS; dispatch and citation propagation inspected; NEXT: use one general evidence-based question classified as LLM, then verify returned citations and route metadata.
+- 2026-10-26 — ABOUT TO: Check branch/worktree and commit the recorded T2 completion result and current resume pointer. WHY: checkpoint two live-verifier outcomes and preserve a safe restart before the next authenticated API probe.

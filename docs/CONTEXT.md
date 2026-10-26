@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; base main at 874e2e5; local commits only, never push.
-- Phase/task: T1 complete; T2 API demo in progress; maintenance fixture state mismatch recorded.
+- Phase/task: T1 complete; T2 API demo in progress; completion verifier PASS and T3 lifecycle mismatch recorded.
 
 ## DONE
 - STEP 0 PASS: `npm ci`; `npm test` 131/131; migration syntax 0001–0014; server on port 3000 restarted and `/api/status` HTTP 200.
@@ -40,6 +40,7 @@
 | T1 view runtime | UNVERIFIED | 2026-10-26 | No view/browser runtime check yet |
 | Fixed test user sign-in/API | PASS 3/3 | 2026-10-26 | `node scripts/verify-phase6-maintenance-live.js` fixed roles read campaigns HTTP 200 |
 | Fixed T3 maintenance lifecycle | FAIL | 2026-10-26 | `node scripts/verify-phase6-maintenance-live.js`; existing request already `closed`, expected `payment_approved` |
+| Fixed T5 completion | PASS | 2026-10-26 | `node scripts/verify-phase6-completion-live.js`; closed, accepted evidence, ordinary RPC 403, no new users/orgs/files |
 
 ## KNOWN ISSUES AND RISKS
 - Role isn’t exposed by auth helper; write controls require trusted organization role in app_metadata, otherwise hidden. API remains authorization authority.
