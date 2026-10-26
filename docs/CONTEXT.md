@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; based on main at 874e2e5; local commits only, never push.
-- Phase/task: T1–T3 complete; T4 validation complete, final commit pending.
+- Phase/task: T1–T4 complete; final task commit 14fcc93 and journal checkpoint e9727c0 on fund-wiring.
 
 ## DONE
 - STEP 0: `npm ci`; `npm test` PASS 131/131; migrations 0001–0014 parse; server restarted and `/api/status` HTTP 200.
@@ -13,14 +13,13 @@
 - T4: `npm test` PASS 131/131; migrations PASS 14 files; `node --check src/fund-views.js` PASS; `git diff --check` PASS; protected-file diff against main empty.
 
 ## IN PROGRESS
-- Exact task: stage and make final local commit `Fund views wiring, demo run, README`.
+- Exact task: T4 complete; final local task commit `14fcc93` (`Fund views wiring, demo run, README`), followed by journal checkpoint `e9727c0`.
 - Edited files: `README.md`, `dashboard.html`, `src/fund-views.js`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. Verify branch `fund-wiring`, staged/tracked `.env` absence, and worktree changes.
-2. Commit locally as `Fund views wiring, demo run, README`; never push.
-3. Provide browser steps and stop for the user's next task.
+1. User performs the pending browser checks below.
+2. Continue with the next user-selected task; never push this branch.
 
 ## USER ACTIONS PENDING
 - Browser verification: sign in as fixed owner, open Fundraising/Maintenance/Transparency, inspect console and failed requests, switch light/dark, test mobile drawer, verify notifications and AI chat. No exact PDF was present in repo/attachments; the README demo follows the user's described API sequence.
