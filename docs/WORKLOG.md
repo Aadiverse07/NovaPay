@@ -1,7 +1,7 @@
 ## RESUME POINTER
-- Current task: Phase 6 T3 live maintenance verification; migration 0009 applied.
-- Last finished step: live verifier safely stopped after magic-link generation due to helper return unwrapping; no login/API call or DB write.
-- Next step: syntax-check fixed result handling, checkpoint the fix and docs, then rerun with deterministic fixtures.
+- Current task: Phase 6 T3 authenticated live maintenance verification; migration 0009 applied.
+- Last finished step: fixed users/org/roles and live threshold checked; contractor API POST stopped with 503 AUTH_UNAVAILABLE before maintenance writes.
+- Next step: checkpoint read-only auth preflight guard, then verify GET /api/funds/campaigns for owner/approver/accountant before retrying writes.
 - Pending human action: none.
 
 ## Backfill
@@ -483,3 +483,40 @@ RESULT — FAIL (safe stop): verifier failed reading `status` from an undefined 
 ABOUT TO — 2026-10-26 Asia/Kolkata: Patch `step()` to preserve raw HTTP response results while still unwrapping explicit journal wrappers; refresh CONTEXT and test log to show the safe failure and resume point.
 RESULT — PASS: helper corrected; syntax exit 0. NEXT: commit this safe fix before rerunning live verification.
 ABOUT TO — 2026-10-26 Asia/Kolkata: Verify branch/whitespace/no `.env` and locally checkpoint the verifier helper fix plus failure/resume documentation. Reason: preserve the recovery point before retrying live auth.
+RESULT — PASS: live verifier fix checkpoint 07abc23 committed locally on phase6-backend. NEXT: update resume pointer, then retry the live verifier; previous attempt made no database changes.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Retry `node scripts/verify-phase6-maintenance-live.js` after the result-unwrapping fix. Reason: first attempt stopped before login/API calls; this run journals every step and uses fixed named fixtures only.
+ABOUT TO — 2026-10-26 14:09:27 Asia/Kolkata: Generate one-time test link for fixed owner fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 14:09:28 Asia/Kolkata: PASS: Generate one-time test link for fixed owner fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:28 Asia/Kolkata: Exchange one-time link for fixed owner JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-26 14:09:28 Asia/Kolkata: PASS: Exchange one-time link for fixed owner JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:28 Asia/Kolkata: Generate one-time test link for fixed approver fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 14:09:28 Asia/Kolkata: PASS: Generate one-time test link for fixed approver fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:28 Asia/Kolkata: Exchange one-time link for fixed approver JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-26 14:09:29 Asia/Kolkata: PASS: Exchange one-time link for fixed approver JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:29 Asia/Kolkata: Generate one-time test link for fixed accountant fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 14:09:30 Asia/Kolkata: PASS: Generate one-time test link for fixed accountant fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:30 Asia/Kolkata: Exchange one-time link for fixed accountant JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-26 14:09:30 Asia/Kolkata: PASS: Exchange one-time link for fixed accountant JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:30 Asia/Kolkata: Find existing fixed T3 verification organization. Reason: reuse the established Phase 3 verification organization; never create another organization
+RESULT — 2026-10-26 14:09:30 Asia/Kolkata: PASS: Find existing fixed T3 verification organization; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:30 Asia/Kolkata: Verify fixed owner membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-26 14:09:31 Asia/Kolkata: PASS: Verify fixed owner membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:31 Asia/Kolkata: Verify fixed approver membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-26 14:09:31 Asia/Kolkata: PASS: Verify fixed approver membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:31 Asia/Kolkata: Verify fixed accountant membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-26 14:09:32 Asia/Kolkata: PASS: Verify fixed accountant membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:32 Asia/Kolkata: Check fresh local API health. Reason: exercise the current source code, including the SQLSTATE fix, on an ephemeral local port
+RESULT — 2026-10-26 14:09:32 Asia/Kolkata: PASS: Check fresh local API health; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:32 Asia/Kolkata: Check exact live two-person approval threshold. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 14:09:33 Asia/Kolkata: PASS: Check exact live two-person approval threshold; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:33 Asia/Kolkata: Inspect deterministic contractor. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 14:09:33 Asia/Kolkata: PASS: Inspect deterministic contractor; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 14:09:33 Asia/Kolkata: Create fixed verification contractor. Reason: exercise authenticated endpoint /api/funds/contractors as a fixed accountant fixture
+RESULT — 2026-10-26 14:09:43 Asia/Kolkata: PASS: Create fixed verification contractor; HTTP 503; error_code=AUTH_UNAVAILABLE. NEXT: continue the T3 verifier.
+RESULT — FAIL: retry exited 1; last step and next safe action are recorded in WORKLOG.md.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Inspect the last live verifier journal records, contractor RPC argument wiring, and schema fields; perform read-only contractor lookup in the fixed org. Reason: contractor endpoint returned 503 before any workflow request was created.
+RESULT — PASS: inspected safe failure path and source mappings; no request/contractor writes confirmed by verifier step order. NEXT: query fixed org contractor count/status and inspect the local API's error mapping metadata without printing provider messages or secrets.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Add read-only authenticated API preflight for each fixture before any creation endpoint, after the contractor attempt returned AUTH_UNAVAILABLE. Reason: distinguish invalid user JWT/membership from a contractor RPC failure with zero further writes.
+RESULT — PASS: added read-only authenticated API access checks for owner, approver, and accountant before contractor/request writes; syntax exit 0. Files touched: scripts/verify-phase6-maintenance-live.js, docs/TEST-REPORT.md, docs/WORKLOG.md. NEXT: checkpoint this guard and rerun only after verifying the auth preflight.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Refresh the handoff with the AUTH_UNAVAILABLE stop and new read-only auth guard; verify branch/whitespace/no `.env`; checkpoint locally. Reason: prior retry completed fixture reads but made no maintenance writes, and the next run must diagnose auth before creation.
+RESULT — PASS: handoff reflects safe auth failure and no maintenance writes; branch is phase6-backend, whitespace clean, no `.env` in status. NEXT: commit the read-only auth guard and handoff before the next live check.

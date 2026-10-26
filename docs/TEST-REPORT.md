@@ -980,3 +980,8 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node scripts/verify-phase6-maintenance-live.js` — FAIL; exit 1. See per-step WORKLOG entries for the last completed request and recovery point.
 
 - First live attempt detail: FAIL before login/API execution; the helper unwrapped a raw auth response as `undefined`. It generated one owner magic link, but did not exchange it, send email, call a maintenance API, or write database rows. Fixing the verifier before retry.
+
+## Phase 6 T3 — authenticated live maintenance workflow retry — 2026-10-26
+- `node scripts/verify-phase6-maintenance-live.js` — FAIL; exit 1. Resume from the last per-request RESULT in WORKLOG.md; deterministic rows must be reused.
+
+- Live retry failure detail: `POST /api/funds/contractors` returned HTTP 503 `AUTH_UNAVAILABLE`, before any contractor/request write. Fixed user magic-link exchange and role reads succeeded, but the API did not confirm membership authentication. Next retry now adds read-only authenticated campaign-list calls for all three actors before any mutation.

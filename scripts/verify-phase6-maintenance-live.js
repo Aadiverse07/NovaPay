@@ -213,6 +213,10 @@ try {
   apiBase = `http://127.0.0.1:${server.address().port}`;
   const health = await step('Check fresh local API health', 'exercise the current source code, including the SQLSTATE fix, on an ephemeral local port', () => request(`${apiBase}/api/status`));
   if (health.status !== 200) throw new Error('local-api-health-failed');
+  for (const label of Object.keys(fixture)) {
+    const read = await apiStep(`Verify authenticated API access for ${label}`, label, '/api/funds/campaigns');
+    expectStatus(read, [200], `authenticated-${label}-api-read`);
+  }
   const settings = await lookup(`fund_transparency_settings?${q({ select: 'two_person_approval_threshold_minor', org_id: `eq.${orgId}`, limit: '1' })}`, 'Check exact live two-person approval threshold');
   if (settings.length !== 1 || Number(settings[0].two_person_approval_threshold_minor) !== 10000) throw new Error('live-approval-threshold-is-not-10000');
   const contractor = await getContractor();
