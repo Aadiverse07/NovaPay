@@ -1073,3 +1073,11 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-26 — T2 fixed-user sign-in and campaign API access: PASS; owner, approver, accountant 3/3 returned HTTP 200 using fixed accounts.
 - 2026-10-26 — T2 maintenance T3 lifecycle verifier: FAIL; fixed self-approval fixture is already terminal `closed`, while verifier expects `payment_approved`; deterministic request/contractor/quotation lookups succeeded; no PayPal order; no fixture reset.
 - 2026-10-26 — T2 fixed T5 completion verification: PASS; fixed request `T3 Fixed Live Self Approval` remained `closed`, evidence was `accepted`, ordinary JWT RPC denials 3/3 HTTP 403, direct table write denied, 0 users/orgs created, no file uploaded. `node scripts/verify-phase6-completion-live.js`.
+- 2026-10-26 — T2 authenticated read/API probe (initial attempt): FAIL; first local `/api/status` request got `ECONNREFUSED 127.0.0.1:3000`; no API endpoint check ran after sign-in; no PayPal order created.
+- 2026-10-26 — T2 authenticated API probe (second attempt): FAIL; script timed out before emitting per-endpoint summary, so individual results are UNVERIFIED; no PayPal order route called. `node --input-type=module` fixed-owner API probe.
+- 2026-10-26 — T2 fixed owner sign-in and API status: PASS; existing owner magic-link session obtained; `/api/status` HTTP 200.
+- 2026-10-26 — T2 PayPal capture status: PASS; `GET /api/transactions?type=capture&limit=100` HTTP 200; 2 capture transactions, both `COMPLETED`.
+- 2026-10-26 — T2 ledger reconciliation: PASS; `GET /api/ledger/entries` HTTP 200 with 4 entries, 2 capture entries; USD trial-balance debits equal credits.
+- 2026-10-26 — T2 approvals: PASS; approvals GET HTTP 200 with 1 row; pending-count GET HTTP 200 with 0.
+- 2026-10-26 — T2 campaigns/transparency: PASS; campaigns GET HTTP 200 with 1 campaign; transparency GET HTTP 200 with 1 contribution, 1 expense, and `namesShown=false`.
+- 2026-10-26 — T2 PayPal order safety: PASS; no PayPal order endpoint called or order created.
