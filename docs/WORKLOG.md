@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: T2 API demo, preflight complete; live checks not yet run.
-- Last finished step: T1 views implemented/checkpointed; `npm test` 131/131 and migrations 0001–0014 passed; server status HTTP 200. Fixed T3 verifier reuses named requests/contractor/quotes when present and creates only if absent; no PayPal-order path.
-- Next step: run fixed-user maintenance verifier once, then fixed T5 completion verifier; follow with read-only authenticated checks for PayPal capture, ledger, transactions, AI, approvals and transparency.
-- Pending human action: browser checks at finish; no PayPal order creation.
+- Current task: T2 API demo; Maintenance verifier completed with a fixed-fixture state mismatch.
+- Last finished step: fixed owner/approver/accountant sign-in and `/api/funds/campaigns` reads PASS 3/3; fixed threshold/contractor/request/quotation lookups PASS; T3 workflow verifier FAIL because request already `closed`, expected `payment_approved`. No PayPal order was created.
+- Next step: run the idempotent T5 completion verifier against the already closed fixed request, then do read-only authenticated capture/ledger/transaction/AI/approvals/transparency checks.
+- Pending human action: browser checks at finish; no order creation.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1675,3 +1675,58 @@ RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV
 - RESULT: INFO; verifier fixture re-use behavior inspected; NEXT: only run if fixed rows are found; otherwise keep demo read-only and mark missing route/data steps UNVERIFIED.
 - 2026-10-26 — ABOUT TO: Checkpoint T1 completion and T2 preflight findings before live API calls. WHY: keep the demo continuation recoverable and preserve that the referenced 3-minute PDF is not present in the repo/attachments inspected.
 - RESULT: PASS; T1 done, T2 preflight state saved; missing 3-minute PDF source explicitly marked UNVERIFIED. NEXT: stage continuity docs, whitespace-check, and make local T2-preflight WIP commit before live calls.
+- RESULT: PASS; T2 preflight checkpoint exit 0. NEXT: execute only fixed-user idempotent maintenance verification, no PayPal order.
+- 2026-10-26 — ABOUT TO: Run node scripts/verify-phase6-maintenance-live.js once. WHY: exercise the existing fixed-user maintenance state machine on the real API; the script reuses fixed rows and contains no PayPal order or payout call.
+ABOUT TO — 2026-10-26 16:19:49 Asia/Kolkata: Generate one-time test link for fixed owner fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 16:19:51 Asia/Kolkata: PASS: Generate one-time test link for fixed owner fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:51 Asia/Kolkata: Exchange one-time link for fixed owner JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-26 16:19:52 Asia/Kolkata: PASS: Exchange one-time link for fixed owner JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:52 Asia/Kolkata: Generate one-time test link for fixed approver fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 16:19:53 Asia/Kolkata: PASS: Generate one-time test link for fixed approver fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:53 Asia/Kolkata: Exchange one-time link for fixed approver JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-26 16:19:54 Asia/Kolkata: PASS: Exchange one-time link for fixed approver JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:54 Asia/Kolkata: Generate one-time test link for fixed accountant fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-26 16:19:54 Asia/Kolkata: PASS: Generate one-time test link for fixed accountant fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:54 Asia/Kolkata: Exchange one-time link for fixed accountant JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-26 16:19:55 Asia/Kolkata: PASS: Exchange one-time link for fixed accountant JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:55 Asia/Kolkata: Find existing fixed T3 verification organization. Reason: reuse the established Phase 3 verification organization; never create another organization
+RESULT — 2026-10-26 16:19:55 Asia/Kolkata: PASS: Find existing fixed T3 verification organization; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:55 Asia/Kolkata: Verify fixed owner membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-26 16:19:56 Asia/Kolkata: PASS: Verify fixed owner membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:56 Asia/Kolkata: Verify fixed approver membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-26 16:19:56 Asia/Kolkata: PASS: Verify fixed approver membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:56 Asia/Kolkata: Verify fixed accountant membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-26 16:19:56 Asia/Kolkata: PASS: Verify fixed accountant membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:56 Asia/Kolkata: Check fresh local API health. Reason: exercise the current source code, including the SQLSTATE fix, on an ephemeral local port
+RESULT — 2026-10-26 16:19:57 Asia/Kolkata: PASS: Check fresh local API health; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:57 Asia/Kolkata: Verify authenticated API access for owner. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed owner fixture
+RESULT — 2026-10-26 16:19:59 Asia/Kolkata: PASS: Verify authenticated API access for owner; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:19:59 Asia/Kolkata: Verify authenticated API access for approver. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed approver fixture
+RESULT — 2026-10-26 16:20:00 Asia/Kolkata: PASS: Verify authenticated API access for approver; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:00 Asia/Kolkata: Verify authenticated API access for accountant. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed accountant fixture
+RESULT — 2026-10-26 16:20:01 Asia/Kolkata: PASS: Verify authenticated API access for accountant; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:01 Asia/Kolkata: Check exact live two-person approval threshold. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:02 Asia/Kolkata: PASS: Check exact live two-person approval threshold; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:02 Asia/Kolkata: Inspect deterministic contractor. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:02 Asia/Kolkata: PASS: Inspect deterministic contractor; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:02 Asia/Kolkata: Inspect deterministic request T3 Fixed Live Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:02 Asia/Kolkata: PASS: Inspect deterministic request T3 Fixed Live Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:02 Asia/Kolkata: Inspect deterministic request T3 Fixed Live Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:03 Asia/Kolkata: PASS: Inspect deterministic request T3 Fixed Live Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:03 Asia/Kolkata: Inspect deterministic quotation T3-LIVE-QUOTE-LOW. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:03 Asia/Kolkata: PASS: Inspect deterministic quotation T3-LIVE-QUOTE-LOW; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:03 Asia/Kolkata: Inspect deterministic quotation T3-LIVE-QUOTE-THRESHOLD. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:03 Asia/Kolkata: PASS: Inspect deterministic quotation T3-LIVE-QUOTE-THRESHOLD; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:03 Asia/Kolkata: Reload low request after quotation. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:04 Asia/Kolkata: PASS: Reload low request after quotation; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:04 Asia/Kolkata: Reload threshold request after quotation. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:04 Asia/Kolkata: PASS: Reload threshold request after quotation; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-26 16:20:04 Asia/Kolkata: Verify under-threshold T3 lifecycle. Reason: exercise requester self-approval rejection, skipped-state rejection, foreign-quotation rejection, contractor verification, and single-approver threshold
+ABOUT TO — 2026-10-26 16:20:04 Asia/Kolkata: Verify final state T3 Fixed Live Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-26 16:20:05 Asia/Kolkata: PASS: Verify final state T3 Fixed Live Self Approval; completed. NEXT: continue the T3 verifier.
+RESULT — 2026-10-26 16:20:05 Asia/Kolkata: FAIL: Verify under-threshold T3 lifecycle; unexpected-final-state-closed. NEXT: inspect this step; reuse deterministic rows and do not recreate them.
+- RESULT: FAIL; fixed maintenance live verifier exit 1; output captured without secrets. NEXT: append one T2 result line, then run the fixed T5 completion verifier if existing state is safe.
+- 2026-10-26 — ABOUT TO: Inspect only the latest maintenance verifier journal entries and captured summary. WHY: distinguish passed preflight checks from the fixture-state mismatch; never rerun a mutating fixed workflow blindly.
+- RESULT: INFO; fixed request is already at terminal closed state; NEXT: record verifier FAIL and do not reset/recreate fixtures; proceed with read-only checks on existing data.
+- 2026-10-26 — ABOUT TO: Record T2 maintenance verifier results and preserve the terminal fixed fixture state; update the resume pointer before the next API run. WHY: the existing T3 rows are closed, so blindly resetting them would violate reuse-only safety.
+- RESULT: PASS; T2 authentication and maintenance verifier outcomes appended; no fixture reset or order action. NEXT: staged-check and commit this T2 live-result checkpoint before completion/API reads.
