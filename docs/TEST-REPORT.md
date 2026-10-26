@@ -1063,3 +1063,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node --check scripts/verify-phase6-transparency-live.js && node --check server/test/phase6-contract.test.js && git diff --check` — PASS; both JS files parse and whitespace check is clean.
 - `git diff --exit-code f410e86 -- preview.html dashboard.html src assets` — PASS; no protected frontend changes after the separately committed/explicitly ignored font fix.
 - `node scripts/verify-phase4.js --safe` — UNVERIFIED/not run; no safe mode is implemented; normal script would create and clean live rows. Phase 2 safe was also UNVERIFIED because dedicated fixed Phase 2 orgs were absent; Phase 3 safe passed.
+
+- 2026-10-26 — `npm test`: UNVERIFIED; initial invocation output was truncated and the generated shell result line was malformed; immediately rerun below.
+- 2026-10-26 — `npm test`: PASS; 131 passed, 0 failed (captured final summary).
+- 2026-10-26 — `npm run check:migrations`: PASS; PostgreSQL syntax accepted for migrations 0001–0014 (14 files).
