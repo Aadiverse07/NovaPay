@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: T2 AI API questions; authenticated financial/fund read checks complete.
-- Last finished step: fixed owner sign-in/API status PASS; 2 capture transactions COMPLETED; 4 ledger entries, 2 capture entries, USD trial balance balanced; approvals 1/pending 0; campaigns 1; transparency 1 contribution/1 expense/namesShown=false; no PayPal order.
-- Next step: test AI arithmetic `route=code`, then one evidence-based `route=llm` request with citation count; the prior combined AI probe timed out and its route results are UNVERIFIED.
-- Pending human action: browser checks at finish; no PayPal order creation.
+- Current task: T3 README; T1/T2 checkpoints complete.
+- Last finished step: T2 fixed owner API demo: 2 captures completed, balanced ledger, approvals 1/pending 0, one campaign/contribution/expense; AI code answer 12 and LLM 3 citations; fixed closed maintenance request with accepted evidence appears in transparency as SIMULATED with gaps. No order created.
+- Next step: inspect README headings and RUNBOOK tunnel instructions; append non-UI real/simulated/run/demo sections only; then run all T4 checks.
+- Pending human action: browser checks at finish; no PayPal order.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1807,3 +1807,22 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 - RESULT: PASS; read-only endpoint probe exit 0; output contains per-endpoint HTTP/count summaries only. NEXT: append each observed API result to TEST-REPORT, then run AI messages individually.
 - 2026-10-26 — ABOUT TO: Append observed read-only T2 API results per endpoint, update CONTEXT and resume pointer, and checkpoint locally. WHY: the separated probe produced visible HTTP/count results for all requested non-AI reads.
 - RESULT: PASS; each observed T2 read result appended to TEST-REPORT; CONTEXT/pointer updated; no new order. NEXT: stage docs, whitespace-check, and create T2 read-results WIP checkpoint before AI API calls.
+- RESULT: PASS; read-results checkpoint exit 0. NEXT: run the code-route AI arithmetic question separately.
+- 2026-10-26 — ABOUT TO: POST exactly `{message:"What is 7 + 5?"}` to `/api/ai/chat` as the fixed owner. WHY: verify the deterministic code route without external FX or any organization write.
+- RESULT: PASS; code-route AI request exit 0; no context/browser data sent. NEXT: append the observed code-route result; run the cited LLM route once with a longer bounded timeout.
+- 2026-10-26 — ABOUT TO: Record the observed code-route AI result and update the next step. WHY: this was a separate live API request and must be logged before the next model call.
+- 2026-10-26 — ABOUT TO: Inspect the latest TEST-REPORT line for accidental literal escape characters. WHY: ensure the just-added live AI result is readable before continuing.
+- RESULT: INFO; inspect output above; NEXT: if a literal escape is present, correct only this newly added line, then run the LLM request.
+- 2026-10-26 — ABOUT TO: Inspect the tail of TEST-REPORT and WORKLOG to isolate only the malformed current AI-report append. WHY: preserve every older append-only entry while removing current-turn shell text from the report.
+- 2026-10-26 — ABOUT TO: Repair the malformed latest TEST-REPORT append, retain the valid AI code result, and correctly update CONTEXT/WORKLOG pointers. WHY: only the current append block is corrupted; earlier test entries must stay intact.
+- RESULT: PASS; malformed shell text removed only from the newest TEST-REPORT append; valid code-route result retained; CONTEXT and pointer updated. NEXT: inspect report tail and whitespace, then run one cited LLM request.
+- 2026-10-26 — ABOUT TO: Restore TEST-REPORT and CONTEXT to their committed versions, then reappend the AI code result cleanly. WHY: the repair script used a literal backslash-n join and collapsed report lines; only uncommitted current-turn changes are being discarded.
+- RESULT: PASS; TEST-REPORT and CONTEXT restored to their committed line structure; valid AI code result appended once; git diff --check clean. NEXT: run the single cited LLM request, then update context and checkpoint T2 results.
+- 2026-10-26 — ABOUT TO: Send one fixed-owner LLM message only: `Is the latest PayPal capture consistent with its ledger record? Cite the records used.` Use a 60-second timeout. WHY: test the requested cited LLM route using organization evidence, with no additional context or write action.
+- RESULT: PASS; single cited-LLM request exit 0; no order/write route called. NEXT: append route/citation result to TEST-REPORT and checkpoint T2.
+- 2026-10-26 — ABOUT TO: Append the separately observed AI LLM result immediately. WHY: this single live model request returned route/citation metadata and must be logged before more API activity.
+- RESULT: PASS; AI LLM result appended with route and citation count. NEXT: correlate the already closed fixed request with its transparency row using one read-only API GET, then checkpoint T2.
+- 2026-10-26 — ABOUT TO: Verify the fixed closed T3 maintenance record appears in the Transparency API, including accepted evidence and explicit gaps. WHY: establish the requested maintenance-through-transparency path with a single read-only request; no mutation/order.
+- RESULT: PASS; fixed closed-maintenance transparency read exit 0; no order or mutation. NEXT: append the observed maintenance/transparency result and update T2 checkpoint.
+- 2026-10-26 — ABOUT TO: Record maintenance-through-transparency PASS, mark T2 complete with the fixed-fixture mismatch/PDF limitation, and set T3 README as next. WHY: all requested read/AI routes have now been individually observed; preserve both passes and limitations.
+- RESULT: PASS; T2 read and AI results, maintenance transparency pass, T3 lifecycle mismatch, and PDF limitation are recorded; CONTEXT/RESUME POINTER now set to README. NEXT: stage docs and make a local T2 completion checkpoint before editing README.
