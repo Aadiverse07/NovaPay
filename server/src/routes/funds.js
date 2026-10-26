@@ -21,10 +21,14 @@ const quotationBody = z.object({ contractorId: uuid, amountMinor: z.number().int
 const scopeApprovalBody = z.object({ quotationId: uuid, note: z.string().trim().max(500).nullable().optional() }).strict();
 const approvalBody = z.object({ note: z.string().trim().max(500).nullable().optional() }).strict();
 const paymentRequestBody = z.object({}).strict();
+const evidenceBody = z.object({ kind: z.enum(['photo','invoice','inspection','other']), description: z.string().trim().min(1).max(2000), fileRef: z.string().trim().max(500).nullable().optional() }).strict();
+const evidenceReviewBody = z.object({ decision: z.enum(['accept','reject']), note: z.string().trim().max(500).nullable().optional() }).strict();
+const closeBody = z.object({}).strict();
 
 function sendFundError(error, res, next) {
   const databaseErrors = {
     '22023': [400, 'VALIDATION_ERROR', 'Maintenance request fields are invalid.'],
+    '23502': [400, 'VALIDATION_ERROR', 'Required maintenance evidence fields are missing.'],
     '23505': [409, 'CONFLICT', 'This maintenance action has already been recorded.'],
     '23514': [409, 'FUND_STATE_CONFLICT', 'The maintenance request cannot make this transition.'],
     '42501': [403, 'FUND_FORBIDDEN', 'This maintenance action is not allowed for this user.'],
@@ -145,6 +149,33 @@ export function fundRoutes({ config, paypal, repos }) {
     try{
       const approval=await repos.funds.requestMaintenancePayment({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,requestKey:req.id});
       return res.status(202).json({approval,mode:'SIMULATED',simulated:true,gap:'simulated, no ledger entry',message:'Payment request is queued for approval. PayPal Payouts are unavailable; no money will be sent and no ledger entry will be posted.'});
+    }catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/evidence', rbac(['owner','admin','accountant','resident']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    const parsed=evidenceBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Completion evidence metadata is invalid.'));
+    try{
+      const result=await repos.funds.submitCompletionEvidence({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,...parsed.data,requestKey:req.id});
+      return res.status(201).json(result);
+    }catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/evidence/:evidenceId/review', rbac(['owner','admin','approver']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success||!uuid.safeParse(req.params.evidenceId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request or evidence ID is invalid.'));
+    const parsed=evidenceReviewBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Completion evidence review is invalid.'));
+    try{
+      const result=await repos.funds.reviewCompletionEvidence({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,evidenceId:req.params.evidenceId,...parsed.data,requestKey:req.id});
+      return res.json(result);
+    }catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/close', rbac(['owner','admin','approver']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    if(!closeBody.safeParse(req.body||{}).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Close request body must be empty.'));
+    try{
+      const result=await repos.funds.closeMaintenanceRequest({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,requestKey:req.id});
+      return res.json(result);
     }catch(error){return sendFundError(error,res,next)}
   });
   return router;

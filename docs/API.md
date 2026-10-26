@@ -40,3 +40,39 @@ Migration `supabase/migrations/0005_ai.sql` defines `ai_usage`, `ai_cache`, `ano
 No request body. Requires `owner`, `admin`, `accountant`, or `approver`. The request must already be `payment_approved`, have its selected quotation and a verified contractor, and satisfy the configured distinct-approver threshold. This creates one idempotent `maintenance-payment` item in the existing `GET /api/approvals` queue; it does not send a payout.
 
 The queue decision is made with `POST /api/approvals/:approvalId/decision` by an `owner`, `admin`, or `approver` other than the maintenance requester. The resulting payment is explicitly `SIMULATED`; `paypalPayoutRef` and `ledgerEntryId` are null, no money is sent, and no ledger entry is posted. Responses include `gap: "simulated, no ledger entry"`. Repeated requests or approvals return the same queued/payment result. PayPal Payouts Sandbox returned `PAYOUT_NOT_AVAILABLE` for this application, so real payouts are disabled.
+
+## Completion evidence and maintenance close (Phase 6 T5)
+
+Evidence stores metadata only. `fileRef` is an optional reference string; NovaPay does not upload or store file contents. The response caution is: “Evidence supports, but does not prove, that work was done correctly.”
+
+### `POST /api/funds/maintenance/:requestId/evidence`
+
+Allowed roles: `owner`, `admin`, `accountant`, `resident`. Request:
+
+```json
+{"kind":"inspection","description":"Final inspection checklist and notes.","fileRef":"maintenance/inspection/REQ-1001.pdf"}
+```
+
+A `paid` request moves to `evidence_submitted`; additional metadata can be submitted in that state. Success is HTTP 201:
+
+```json
+{"request":{"id":"<uuid>","status":"evidence_submitted"},"evidence":{"id":"<uuid>","kind":"inspection","description":"Final inspection checklist and notes.","file_ref":"maintenance/inspection/REQ-1001.pdf","review_status":"pending"},"caution":"Evidence supports, but does not prove, that work was done correctly."}
+```
+
+Kinds are `photo`, `invoice`, `inspection`, or `other`. Description is 1–2000 characters and `fileRef` is at most 500 characters. No evidence can be submitted before payment is approved and recorded. Invalid metadata returns 400 `VALIDATION_ERROR`; invalid state returns 409 `FUND_STATE_CONFLICT`.
+
+### `POST /api/funds/maintenance/:requestId/evidence/:evidenceId/review`
+
+Allowed roles: `owner`, `admin`, `approver`; the requester and evidence submitter cannot review. Request:
+
+```json
+{"decision":"accept","note":"Reviewed against the completion checklist."}
+```
+
+`decision` is `accept` or `reject`; note is optional and at most 500 characters. A rejected item leaves the request in `evidence_submitted` so more evidence can be added. The request moves to `reviewed` after all submitted evidence has been reviewed and at least one item is accepted. Response contains the updated `request`, `evidence`, and the caution above. A repeated matching review is idempotent.
+
+### `POST /api/funds/maintenance/:requestId/close`
+
+Allowed roles: `owner`, `admin`, `approver`; the requester cannot close their own request. No request body. Close is allowed only from `reviewed` with accepted evidence. Success: `{ "request": { "id": "<uuid>", "status": "closed", "closed_by": "<uuid>", "closed_at": "<timestamp>" }, "closed": true }`. Repeated close is idempotent; premature close returns 409 `FUND_STATE_CONFLICT`.
+
+All three writes use tenant-checked service-role RPCs, leave direct client table writes blocked by RLS, and write audit-log records for evidence and workflow changes.

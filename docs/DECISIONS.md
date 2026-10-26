@@ -581,3 +581,10 @@
 - Reason: Read-only PostgREST returned SQLSTATE 42703: `column approvals.fund_maintenance_request_id does not exist`; the schema required for safe, idempotent payment processing is absent.
 - Source: configured Supabase PostgREST response checked 2026-10-26.
 - Rejected: attempt RPC/API writes or assume application based only on prior confirmation; unsafe while the live schema is unverified.
+
+## 2026-10-26 — T5 completion evidence flow
+- Question: How should metadata-only evidence be reviewed and how can a maintenance request close safely?
+- Choice: Add review metadata to evidence and reviewer/closure metadata to the request. Allow same-org owner/admin/accountant/resident to submit metadata; require owner/admin/approver reviewers distinct from requester and evidence submitter. Reviewer accepts or requests changes; move to `reviewed` only when at least one evidence is accepted and no evidence remains pending; close only from `reviewed` by a reviewer. Audit each evidence and state change.
+- Reason: This enforces completion evidence before close, preserves the existing state machine, gives a repair path for rejected evidence, and stores no files. API text states evidence supports but does not prove work correctness.
+- Source: Phase 6 prompt T5 (user attachment, read 2026-10-26), existing 0006 metadata table and 0009 status constraint.
+- Rejected: direct table writes, close without accepted evidence, or treating uploaded file contents as part of this thin slice.

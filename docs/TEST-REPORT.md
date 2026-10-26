@@ -1015,3 +1015,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node --check scripts/verify-phase6-payment-live.js` after adding HTTP/SQLSTATE diagnostics — PASS; no live request executed.
 - `node --check scripts/verify-phase6-payment-live.js` after applying the diagnostic change — PASS; syntax valid; no live request executed.
 - `node scripts/verify-phase6-payment-live.js` — PASS, live T4; migration 0010 visible; fixed 9999-minor-unit request entered existing Approvals queue; approval and retry returned the same payment ID; exactly one persisted SIMULATED paid row; PayPal/ledger refs null; request advanced to paid; no PayPal call and no users/orgs created. The prior run stopped at 42703 before mutations; this rerun passed after user reapplied migration.
+- `node --test server/test/phase6-maintenance-evidence.test.js server/test/phase6-migration.test.js server/test/postgres-repos.test.js` — FAIL; 18 passed, 1 failed. T5 migration/security and repository tests passed; route test reached closure but memory audit inspection missed `fund.maintenance.evidence_submitted` because of a field-name mismatch in the test adapter. No live operations.
+- `node --test server/test/phase6-maintenance-evidence.test.js server/test/phase6-migration.test.js server/test/postgres-repos.test.js` — PASS; 19 passed, 0 failed after correcting the memory adapter's audit organization filter. Earlier failed run remains recorded above.
+- `npm run check:migrations` — PASS; PostgreSQL 17 SQL/PLpgSQL syntax OK for migrations 0001–0011.
+- `npm test` — PASS; 124 passed, 0 failed; embedded migration check accepted 0001–0011.
+- `node --test server/test/phase6-maintenance-evidence.test.js server/test/phase6-migration.test.js server/test/postgres-repos.test.js` — PASS; 19 passed, 0 failed after null-decision and requester self-close hardening.
+- `npm run check:migrations` — PASS; PostgreSQL 17 SQL/PLpgSQL syntax OK for migrations 0001–0011 after final 0011 hardening.
+- `npm test` — PASS; 124 passed, 0 failed; embedded PostgreSQL 17 migration parser accepted migrations 0001–0011.

@@ -339,6 +339,15 @@ export function createPostgresRepositories(database) {
     async decideMaintenancePayment({ orgId, approvalId, reviewerId, decision, note, requestKey }) {
       return database.rpc('decide_fund_maintenance_payment', { p_org: orgId, p_approval_id: approvalId, p_reviewer: reviewerId, p_decision: decision, p_note: note || null, p_request_id: requestKey });
     },
+    async submitCompletionEvidence({ orgId, actorId, requestId, kind, description, fileRef, requestKey }) {
+      return database.rpc('submit_fund_completion_evidence', { p_org: orgId, p_actor: actorId, p_request: requestId, p_kind: kind, p_description: description, p_file_ref: fileRef || null, p_request_id: requestKey });
+    },
+    async reviewCompletionEvidence({ orgId, actorId, requestId, evidenceId, decision, note, requestKey }) {
+      return database.rpc('review_fund_completion_evidence', { p_org: orgId, p_actor: actorId, p_request: requestId, p_evidence: evidenceId, p_decision: decision, p_note: note || null, p_request_id: requestKey });
+    },
+    async closeMaintenanceRequest({ orgId, actorId, requestId, requestKey }) {
+      return database.rpc('close_fund_maintenance_request', { p_org: orgId, p_actor: actorId, p_request: requestId, p_request_id: requestKey });
+    },
   };
 
   return {
