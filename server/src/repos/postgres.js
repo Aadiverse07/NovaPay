@@ -25,7 +25,7 @@ function mapCapture(row) {
 }
 
 function mapApproval(row) {
-  return row && ({ approvalId: row.id, orgId: row.org_id, proposalType: row.proposal_type, captureId: row.capture_id, invoiceId: row.invoice_id || null, amount: row.amount_minor == null ? null : minorToMoney(row.amount_minor), amountMinor: row.amount_minor == null ? null : Number(row.amount_minor), currency: row.currency, status: row.status, decisionNote: row.decision_note, reviewerId: row.reviewer_id, result: row.result || null, createdAt: row.created_at, createdBy: row.created_by });
+  return row && ({ approvalId: row.id, orgId: row.org_id, proposalType: row.proposal_type, captureId: row.capture_id, invoiceId: row.invoice_id || null, fundMaintenanceRequestId: row.fund_maintenance_request_id || null, requestPayload: row.request_payload || {}, amount: row.amount_minor == null ? null : minorToMoney(row.amount_minor), amountMinor: row.amount_minor == null ? null : Number(row.amount_minor), currency: row.currency, status: row.status, decisionNote: row.decision_note, reviewerId: row.reviewer_id, result: row.result || null, createdAt: row.created_at, createdBy: row.created_by });
 }
 
 function mapInvoice(row, lines = []) {
@@ -332,6 +332,12 @@ export function createPostgresRepositories(database) {
     },
     async approveMaintenancePayment({ orgId, actorId, requestId, note, requestKey }) {
       return database.rpc('approve_fund_maintenance_payment', { p_org: orgId, p_actor: actorId, p_request: requestId, p_note: note || null, p_request_id: requestKey });
+    },
+    async requestMaintenancePayment({ orgId, actorId, requestId, requestKey }) {
+      return database.rpc('request_fund_maintenance_payment', { p_org: orgId, p_request: requestId, p_actor: actorId, p_request_id: requestKey });
+    },
+    async decideMaintenancePayment({ orgId, approvalId, reviewerId, decision, note, requestKey }) {
+      return database.rpc('decide_fund_maintenance_payment', { p_org: orgId, p_approval_id: approvalId, p_reviewer: reviewerId, p_decision: decision, p_note: note || null, p_request_id: requestKey });
     },
   };
 

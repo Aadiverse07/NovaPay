@@ -10,6 +10,24 @@ test('money repository helpers use integer minor units and reject excessive prec
   assert.throws(() => moneyToMinor('999999999999999999.00'));
 });
 
+test('Postgres funds repository uses T4 service-only queue RPCs and maps maintenance context', async () => {
+  const calls=[];
+  const database={
+    async rpc(name,args){calls.push({name,args});return name==='request_fund_maintenance_payment'?{approvalId:'APR-FUND-PAY-1',status:'pending'}:{status:'simulated'};},
+    async select(table){return table==='approvals'?[{id:'APR-FUND-PAY-1',org_id:'org-a',proposal_type:'maintenance-payment',fund_maintenance_request_id:'request-1',request_payload:{mode:'SIMULATED'},amount_minor:9999,currency:'USD',status:'pending'}]:[];},
+  };
+  const repos=createPostgresRepositories(database);
+  await repos.funds.requestMaintenancePayment({orgId:'org-a',actorId:'actor-a',requestId:'request-1',requestKey:'req-a'});
+  await repos.funds.decideMaintenancePayment({orgId:'org-a',approvalId:'APR-FUND-PAY-1',reviewerId:'reviewer-a',decision:'approve',note:'ok',requestKey:'req-b'});
+  const approval=await repos.approvals.get('APR-FUND-PAY-1','org-a');
+  assert.deepEqual(calls.map(call=>call.name),['request_fund_maintenance_payment','decide_fund_maintenance_payment']);
+  assert.equal(calls[0].args.p_request,'request-1');
+  assert.equal(calls[1].args.p_decision,'approve');
+  assert.equal(approval.proposalType,'maintenance-payment');
+  assert.equal(approval.fundMaintenanceRequestId,'request-1');
+  assert.deepEqual(approval.requestPayload,{mode:'SIMULATED'});
+});
+
 test('Postgres repositories scope tenant data and transactional calls by organization', async () => {
   const calls = [];
   const database = {

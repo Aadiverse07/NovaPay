@@ -567,3 +567,10 @@
 - Choice: Use SIMULATED mode for this deployment; do not call the Payouts endpoint and do not post simulated payments to the real ledger. Every API/report/export row must show `SIMULATED` and `simulated, no ledger entry` as an explicit gap.
 - Reason: OAuth returned HTTP 200 with a Payouts scope, but the deterministic one-cent Sandbox payout probe was rejected with HTTP 403 `PAYOUT_NOT_AVAILABLE`; no batch was created. The configured app cannot currently execute payouts, so a real payout must not be claimed.
 - Source: Live call to `https://api-m.sandbox.paypal.com/v1/payments/payouts`, fixed Sandbox receiver and deterministic `PayPal-Request-Id`, 2026-10-26; [PayPal Payouts SDK](https://developer.paypal.com/sdk/payouts), [Sandbox Payouts idempotency](https://developer.paypal.com/docs/payouts/standard/integrate-api/customize/), docs checked 2026-10-26. Rejected alternative: persist a real payout despite the provider's explicit `PAYOUT_NOT_AVAILABLE` response.
+
+## 2026-10-26 — T4 live verification fixture
+- Question: How to verify T4 against the user-confirmed 0010 migration without creating new live identities or records unnecessarily?
+- Choice: Reuse the existing fixed Phase 3 verifier organization/users and the already-approved 9999-minor-unit maintenance request; queue and approve one SIMULATED payment, then repeat the same approval ID.
+- Reason: Existing fixture is eligible for the single-approver path and repeats are deterministic; no external payout occurs and persisted state can prove null PayPal/ledger refs.
+- Source: repository fixture in `scripts/verify-phase6-maintenance-live.js` and T4 API/migration; checked 2026-10-26.
+- Rejected: create fresh live test users/orgs or use real PayPal payout; unnecessary and outside SIMULATED policy.

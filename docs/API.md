@@ -31,3 +31,12 @@ No request body. Roles `owner`, `admin`, and `accountant` may trigger a determin
 ## Persistence and access
 
 Migration `supabase/migrations/0005_ai.sql` defines `ai_usage`, `ai_cache`, `anomalies`, and `notifications`. RLS permits member reads only; authenticated clients have no direct write grants. All write and privileged RPCs are callable only by `service_role`. Apply numbered migrations in order and run `npm run check:migrations` before applying a new SQL file.
+
+
+## Fund maintenance payments (Phase 6 T4)
+
+### `POST /api/funds/maintenance/:requestId/payment`
+
+No request body. Requires `owner`, `admin`, `accountant`, or `approver`. The request must already be `payment_approved`, have its selected quotation and a verified contractor, and satisfy the configured distinct-approver threshold. This creates one idempotent `maintenance-payment` item in the existing `GET /api/approvals` queue; it does not send a payout.
+
+The queue decision is made with `POST /api/approvals/:approvalId/decision` by an `owner`, `admin`, or `approver` other than the maintenance requester. The resulting payment is explicitly `SIMULATED`; `paypalPayoutRef` and `ledgerEntryId` are null, no money is sent, and no ledger entry is posted. Responses include `gap: "simulated, no ledger entry"`. Repeated requests or approvals return the same queued/payment result. PayPal Payouts Sandbox returned `PAYOUT_NOT_AVAILABLE` for this application, so real payouts are disabled.

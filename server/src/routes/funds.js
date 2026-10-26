@@ -20,6 +20,7 @@ const contractorBody = z.object({ name: z.string().trim().min(1).max(160), payme
 const quotationBody = z.object({ contractorId: uuid, amountMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER), documentRef: z.string().trim().max(500).nullable().optional() }).strict();
 const scopeApprovalBody = z.object({ quotationId: uuid, note: z.string().trim().max(500).nullable().optional() }).strict();
 const approvalBody = z.object({ note: z.string().trim().max(500).nullable().optional() }).strict();
+const paymentRequestBody = z.object({}).strict();
 
 function sendFundError(error, res, next) {
   const databaseErrors = {
@@ -136,6 +137,15 @@ export function fundRoutes({ config, paypal, repos }) {
     const parsed=approvalBody.safeParse(req.body);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Payment approval fields are invalid.'));
     try{const result=await repos.funds.approveMaintenancePayment({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,...parsed.data,requestKey:req.id});return res.json(result);}
     catch(error){return sendFundError(error,res,next)}
+  });
+
+  router.post('/funds/maintenance/:requestId/payment', rbac(['owner','admin','accountant','approver']), async(req,res,next)=>{
+    if(!uuid.safeParse(req.params.requestId).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Maintenance request ID is invalid.'));
+    if(!paymentRequestBody.safeParse(req.body).success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Payment request body is invalid.'));
+    try{
+      const approval=await repos.funds.requestMaintenancePayment({orgId:req.orgId,actorId:req.user.id,requestId:req.params.requestId,requestKey:req.id});
+      return res.status(202).json({approval,mode:'SIMULATED',simulated:true,gap:'simulated, no ledger entry',message:'Payment request is queued for approval. PayPal Payouts are unavailable; no money will be sent and no ledger entry will be posted.'});
+    }catch(error){return sendFundError(error,res,next)}
   });
   return router;
 }
