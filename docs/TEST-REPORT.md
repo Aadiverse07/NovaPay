@@ -1070,3 +1070,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-26 — Fundraising and Maintenance browser/API interaction checks: UNVERIFIED; no view-specific browser session/API flow run yet; final T2/T4 steps pending.
 - 2026-10-26 — T1 Fundraising/Maintenance/Transparency runtime: UNVERIFIED; no API/browser view checks completed at the T1 checkpoint; T2/T4 pending.
 - 2026-10-26 — Exact referenced 3-minute PDF demo sequence: UNVERIFIED; no PDF found in repo or available attachments; executing the user-listed API checks and existing fixed-fixture verifiers instead.
+- 2026-10-26 — T2 fixed-user sign-in and campaign API access: PASS; owner, approver, accountant 3/3 returned HTTP 200 using fixed accounts.
+- 2026-10-26 — T2 maintenance T3 lifecycle verifier: FAIL; fixed self-approval fixture is already terminal `closed`, while verifier expects `payment_approved`; deterministic request/contractor/quotation lookups succeeded; no PayPal order; no fixture reset.
