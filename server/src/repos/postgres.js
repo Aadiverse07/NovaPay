@@ -1,4 +1,4 @@
-import { captureJournalLines, refundJournalLines } from '../services/ledger.js';
+import { captureJournalLines, fundContributionJournalLines, refundJournalLines } from '../services/ledger.js';
 
 const q = (values) => new URLSearchParams(values).toString();
 const journalLinesPayload = (lines) => lines.map((line) => ({ account_code: line.accountCode, debit_minor: line.debitMinor, credit_minor: line.creditMinor, currency: line.currency }));
@@ -17,7 +17,7 @@ export function moneyToMinor(value) {
 export const minorToMoney = (minor) => (Number(minor) / 100).toFixed(2);
 
 function mapOrder(row) {
-  return row && ({ id: row.paypal_order_id, dbId: row.id, orgId: row.org_id, requestKey: row.request_key, amount: minorToMoney(row.amount_minor), currency: row.currency, status: row.status, state: row.state, approveUrl: row.approve_url, capture: row.capture_response || null });
+  return row && ({ id: row.paypal_order_id, dbId: row.id, orgId: row.org_id, requestKey: row.request_key, fundContributionId: row.fund_contribution_id || null, amount: minorToMoney(row.amount_minor), currency: row.currency, status: row.status, state: row.state, approveUrl: row.approve_url, capture: row.capture_response || null });
 }
 
 function mapCapture(row) {
@@ -25,7 +25,7 @@ function mapCapture(row) {
 }
 
 function mapApproval(row) {
-  return row && ({ approvalId: row.id, orgId: row.org_id, proposalType: row.proposal_type, captureId: row.capture_id, invoiceId: row.invoice_id || null, amount: row.amount_minor == null ? null : minorToMoney(row.amount_minor), amountMinor: row.amount_minor == null ? null : Number(row.amount_minor), currency: row.currency, status: row.status, decisionNote: row.decision_note, reviewerId: row.reviewer_id, result: row.result || null, createdAt: row.created_at, createdBy: row.created_by });
+  return row && ({ approvalId: row.id, orgId: row.org_id, proposalType: row.proposal_type, captureId: row.capture_id, invoiceId: row.invoice_id || null, fundMaintenanceRequestId: row.fund_maintenance_request_id || null, requestPayload: row.request_payload || {}, amount: row.amount_minor == null ? null : minorToMoney(row.amount_minor), amountMinor: row.amount_minor == null ? null : Number(row.amount_minor), currency: row.currency, status: row.status, decisionNote: row.decision_note, reviewerId: row.reviewer_id, result: row.result || null, createdAt: row.created_at, createdBy: row.created_by });
 }
 
 function mapInvoice(row, lines = []) {
@@ -42,6 +42,14 @@ function mapInvoice(row, lines = []) {
 }
 
 export function createPostgresRepositories(database) {
+  async function captureLinesForOrder(providerCapture, orderId, orgId = null) {
+    const filters = { select: 'fund_contribution_id', paypal_order_id: `eq.${orderId}`, limit: '1' };
+    if (orgId) filters.org_id = `eq.${orgId}`;
+    const rows = await database.select('paypal_orders', q(filters));
+    const buildLines = rows?.[0]?.fund_contribution_id ? fundContributionJournalLines : captureJournalLines;
+    return journalLinesPayload(buildLines(providerCapture));
+  }
+
   const orders = {
     async get(id, orgId) {
       const rows = await database.select('paypal_orders', q({ select: '*', org_id: `eq.${orgId}`, paypal_order_id: `eq.${id}`, limit: '1' }));
@@ -81,13 +89,15 @@ export function createPostgresRepositories(database) {
     },
     async add(capture, orgId) {
       const providerCapture = { id: capture.id, gross: capture.value, fee: capture.fee, net: capture.net, currency: capture.currency, amount: { value: capture.value, currency_code: capture.currency } };
-      const result = await database.rpc('record_paypal_capture', { p_org: orgId, p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: journalLinesPayload(captureJournalLines(providerCapture)) });
+      const lines = await captureLinesForOrder(providerCapture, capture.orderId, orgId);
+      const result = await database.rpc('record_paypal_capture', { p_org: orgId, p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: lines });
       return mapCapture(result?.capture);
     },
     async addFromWebhook(capture) {
       const providerCapture = { id: capture.id, gross: capture.value, fee: capture.fee, net: capture.net, currency: capture.currency, amount: { value: capture.value, currency_code: capture.currency } };
-      const result = await database.rpc('record_paypal_capture_event', { p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: journalLinesPayload(captureJournalLines(providerCapture)) });
-      return { orgId: result?.orgId, capture: mapCapture(result?.result?.capture) };
+      const lines = await captureLinesForOrder(providerCapture, capture.orderId);
+      const result = await database.rpc('record_fund_paypal_capture_event', { p_paypal_order_id: capture.orderId, p_capture: { id: capture.id, amount: { minor: moneyToMinor(capture.value) }, fee_minor: capture.fee == null ? null : moneyToMinor(capture.fee), net_minor: capture.net == null ? null : moneyToMinor(capture.net), currency: capture.currency, status: capture.status, occurred_at: capture.occurredAt || null, provider_payload: capture.providerPayload || {} }, p_lines: lines });
+      return { orgId: result?.orgId, mismatch: Boolean(result?.mismatch), capture: mapCapture(result?.result?.capture) };
     },
     async refund(approvalId, orgId) {
       const rows = await database.select('approvals', q({ select: 'result', org_id: `eq.${orgId}`, id: `eq.${approvalId}`, limit: '1' }));
@@ -285,8 +295,69 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const funds = {
+    async listCampaigns(orgId) {
+      return database.select('fund_campaigns', q({ select: 'id,org_id,title,purpose,target_minor,currency,deadline,organiser,status,created_at', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: '100' }));
+    },
+    async createCampaign({ orgId, actorId, title, purpose, targetMinor, deadline, organiser, status, requestId }) {
+      return database.rpc('create_fund_campaign', { p_org: orgId, p_actor: actorId, p_title: title, p_purpose: purpose, p_target_minor: targetMinor, p_deadline: deadline || null, p_organiser: organiser, p_status: status, p_request_id: requestId });
+    },
+    async createPledge({ orgId, actorId, campaignId, amountMinor, requestId }) {
+      return database.rpc('create_fund_pledge', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId, p_amount_minor: amountMinor, p_request_id: requestId });
+    },
+    async getContribution(orgId, contributionId) {
+      const rows = await database.select('fund_contributions', q({ select: '*', org_id: `eq.${orgId}`, id: `eq.${contributionId}`, limit: '1' }));
+      return rows?.[0] || null;
+    },
+    async linkContributionOrder({ orgId, actorId, contributionId, requestKey, orderId, approveUrl, requestId }) {
+      return database.rpc('link_fund_contribution_order', { p_org: orgId, p_actor: actorId, p_contribution_id: contributionId, p_request_key: requestKey, p_paypal_order_id: orderId, p_approve_url: approveUrl, p_request_id: requestId });
+    },
+    async campaignSummary(orgId, campaignId) {
+      return database.rpc('get_fund_campaign_summary', { p_org: orgId, p_campaign_id: campaignId });
+    },
+    async createMaintenanceRequest({ orgId, actorId, campaignId, title, scope, estimateMinor, requestId }) {
+      return database.rpc('create_fund_maintenance_request', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId || null, p_title: title, p_scope: scope, p_estimate_minor: estimateMinor ?? null, p_request_id: requestId });
+    },
+    async createContractor({ orgId, actorId, name, paymentDestinationRef, requestId }) {
+      return database.rpc('create_fund_contractor', { p_org: orgId, p_actor: actorId, p_name: name, p_payment_destination_ref: paymentDestinationRef || null, p_request_id: requestId });
+    },
+    async addQuotation({ orgId, actorId, requestId, contractorId, amountMinor, documentRef, requestKey }) {
+      return database.rpc('add_fund_quotation', { p_org: orgId, p_actor: actorId, p_request: requestId, p_contractor: contractorId, p_amount_minor: amountMinor, p_document_ref: documentRef || null, p_request_id: requestKey });
+    },
+    async approveMaintenanceScope({ orgId, actorId, requestId, quotationId, note, requestKey }) {
+      return database.rpc('approve_fund_maintenance_scope', { p_org: orgId, p_actor: actorId, p_request: requestId, p_quotation: quotationId, p_note: note || null, p_request_id: requestKey });
+    },
+    async verifyMaintenanceContractor({ orgId, actorId, requestId, requestKey }) {
+      return database.rpc('verify_fund_maintenance_contractor', { p_org: orgId, p_actor: actorId, p_request: requestId, p_request_id: requestKey });
+    },
+    async approveMaintenancePayment({ orgId, actorId, requestId, note, requestKey }) {
+      return database.rpc('approve_fund_maintenance_payment', { p_org: orgId, p_actor: actorId, p_request: requestId, p_note: note || null, p_request_id: requestKey });
+    },
+    async requestMaintenancePayment({ orgId, actorId, requestId, requestKey }) {
+      return database.rpc('request_fund_maintenance_payment', { p_org: orgId, p_request: requestId, p_actor: actorId, p_request_id: requestKey });
+    },
+    async decideMaintenancePayment({ orgId, approvalId, reviewerId, decision, note, requestKey }) {
+      return database.rpc('decide_fund_maintenance_payment', { p_org: orgId, p_approval_id: approvalId, p_reviewer: reviewerId, p_decision: decision, p_note: note || null, p_request_id: requestKey });
+    },
+    async submitCompletionEvidence({ orgId, actorId, requestId, kind, description, fileRef, requestKey }) {
+      return database.rpc('submit_fund_completion_evidence', { p_org: orgId, p_actor: actorId, p_request: requestId, p_kind: kind, p_description: description, p_file_ref: fileRef || null, p_request_id: requestKey });
+    },
+    async reviewCompletionEvidence({ orgId, actorId, requestId, evidenceId, decision, note, requestKey }) {
+      return database.rpc('review_fund_completion_evidence', { p_org: orgId, p_actor: actorId, p_request: requestId, p_evidence: evidenceId, p_decision: decision, p_note: note || null, p_request_id: requestKey });
+    },
+    async closeMaintenanceRequest({ orgId, actorId, requestId, requestKey }) {
+      return database.rpc('close_fund_maintenance_request', { p_org: orgId, p_actor: actorId, p_request: requestId, p_request_id: requestKey });
+    },
+    async transparency({ orgId, actorId, campaignId = null }) {
+      return database.rpc('get_fund_transparency', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId });
+    },
+    async auditExport({ orgId, actorId, from = null, to = null }) {
+      return database.rpc('get_fund_audit_export', { p_org: orgId, p_actor: actorId, p_from: from, p_to: to });
+    },
+  };
+
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

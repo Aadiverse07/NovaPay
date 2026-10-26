@@ -219,3 +219,141 @@ Requires bearer token and `X-Org-Id`; updates only the matching organization's n
 ### `POST /api/anomalies/run`
 
 Requires bearer token and `X-Org-Id`; roles `owner`, `admin`, and `accountant` may run a deterministic scan. Returns scan time, transaction/event counts, finding/created counts, and newly persisted findings. Duplicate findings are deduplicated by organization/rule/evidence/day. Re-running does not create duplicate notifications. Scan/database errors use the standard structured error shape.
+
+## Phase 6 campaigns and maintenance operations (T1–T4)
+
+All routes require `Authorization: Bearer <Supabase JWT>` and `X-Org-Id`. New fund errors use `{ "error": { "code": "...", "message": "..." } }`; invalid bodies, IDs, and filters return 400 `VALIDATION_ERROR`, role failures return 403 `ROLE_FORBIDDEN` or `FUND_FORBIDDEN`, illegal workflow transitions return 409 `FUND_STATE_CONFLICT`, and missing/cross-org resources return 404. Every API call is limited to 300 requests per IP per 15 minutes; authenticated requests also have a 240-request per-user limit per 15 minutes. Payment and approval routes inherit these limits and return structured `RATE_LIMITED` or `USER_RATE_LIMITED` responses with HTTP 429. State-changing database RPCs append audit-log records.
+
+| Method and route | Minimum roles |
+|---|---|
+| `GET /api/funds/campaigns` | Any org member |
+| `POST /api/funds/campaigns` | owner, admin, accountant |
+| `GET /api/funds/campaigns/:campaignId/summary` | Any org member |
+| `POST /api/funds/campaigns/:campaignId/pledges` | owner, admin, accountant, approver |
+| `POST /api/funds/contributions/:contributionId/paypal-order` | owner, admin, accountant, approver |
+| `POST /api/funds/maintenance` | owner, admin, accountant, approver, resident |
+| `POST /api/funds/contractors` | owner, admin, accountant |
+| `POST /api/funds/maintenance/:requestId/quotations` | owner, admin, accountant |
+| `POST /api/funds/maintenance/:requestId/scope-approval` | owner, admin, approver |
+| `POST /api/funds/maintenance/:requestId/contractor-verification` | owner, admin, approver |
+| `POST /api/funds/maintenance/:requestId/payment-approval` | owner, admin, approver |
+| `POST /api/funds/maintenance/:requestId/payment` | owner, admin, accountant, approver |
+
+### `GET /api/funds/campaigns`
+
+Lists up to 100 campaigns for the selected org. Example response:
+
+```json
+{"campaigns":[{"id":"<uuid>","title":"Community Roof Project","purpose":"Replace common-area roofing.","targetMinor":50000,"currency":"USD","deadline":null,"organiser":"Community","status":"active","createdAt":"<timestamp>"}]}
+```
+
+### `POST /api/funds/campaigns`
+
+Request:
+
+```json
+{"title":"Community Roof Project","purpose":"Replace common-area roofing.","targetMinor":50000,"deadline":null,"organiser":"Community","status":"active"}
+```
+
+`status` is `draft|active` (default `active`); amounts are positive integer USD minor units. Returns HTTP 201 `{ "campaign": <campaign> }`. Creation is audited.
+
+### `GET /api/funds/campaigns/:campaignId/summary`
+
+Returns database-computed integer minor-unit figures:
+
+```json
+{"campaign":{"id":"<uuid>","title":"Community Roof Project","targetMinor":50000,"currency":"USD","status":"active"},"pledgedMinor":5000,"receivedMinor":2500,"allocatedMinor":0,"approvedExpensesMinor":0,"actualSpendingMinor":0,"remainingMinor":47500,"asOf":"<timestamp>","legalCaution":"Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only."}
+```
+
+Pledged amounts are intent only; only a verified, posted PayPal capture changes `receivedMinor` and creates a receipt. `remainingMinor = targetMinor - receivedMinor`.
+
+### `POST /api/funds/campaigns/:campaignId/pledges`
+
+Allowed roles are listed in the matrix. Request `{ "amountMinor": 2500 }`. Returns HTTP 201:
+
+```json
+{"contribution":{"id":"<uuid>","status":"pledged","amountMinor":2500,"currency":"USD","donorRef":"anonymous","countsAsFunds":false},"message":"Pledge recorded as intent only; it does not count as received funds."}
+```
+
+### `POST /api/funds/contributions/:contributionId/paypal-order`
+
+No request body. Creates or reuses an idempotent PayPal Sandbox order linked to the pledge. Returns HTTP 201 `{ "orderId":"<id>","status":"CREATED","approveUrl":"<PayPal approval URL>","amount":"25.00","currency":"USD","contributionId":"<uuid>" }`. The signed, verified completed capture webhook—not the approval redirect—posts the capture and marks the contribution received. Missing PayPal config returns 503 `PAYPAL_UNAVAILABLE`; orders over USD 10,000 return 400 `PAYPAL_AMOUNT_LIMIT`.
+
+### `POST /api/funds/maintenance`
+
+Allowed roles include resident requesters. Request `{ "campaignId":"<uuid>","title":"Roof repair","scope":"Replace damaged shingles.","estimateMinor":9999 }`; `campaignId` and `estimateMinor` may be null/omitted. Returns HTTP 201 `{ "request": { "id":"<uuid>","status":"requested", "title":"Roof repair" } }`. The request is audited.
+
+### `POST /api/funds/contractors`
+
+Allowed roles: owner, admin, accountant. Request `{ "name":"Northside Roofing","paymentDestinationRef":null }`; the destination reference is optional and must remain server-side. Returns HTTP 201 `{ "contractor": { "id":"<uuid>","name":"Northside Roofing","verification_status":"unverified" } }`. A contractor must be verified by an authorized reviewer before payment approval.
+
+### `POST /api/funds/maintenance/:requestId/quotations`
+
+Request `{ "contractorId":"<uuid>","amountMinor":9999,"documentRef":"quote-1001.pdf" }`; document reference is metadata, not an uploaded file. Returns HTTP 201 `{ "quotation": { "id":"<uuid>","amount_minor":9999 },"status":"quoting" }`.
+
+### `POST /api/funds/maintenance/:requestId/scope-approval`
+
+Request `{ "quotationId":"<uuid>","note":"Scope and quote reviewed." }`. Requires a quote belonging to this request and an approver other than the requester. Returns `{ "request": { "status":"scope_approved" }, "approval": { "step":"scope","decision":"approved" } }` and writes audit rows.
+
+### `POST /api/funds/maintenance/:requestId/contractor-verification`
+
+No request body. An owner/admin/approver distinct from the requester verifies the selected contractor. Returns `{ "request": { "status":"contractor_verified" }, "contractor": { "verification_status":"verified","verified_by":"<user UUID>","verified_at":"<timestamp>" } }`; verification is audited.
+
+### `POST /api/funds/maintenance/:requestId/payment-approval`
+
+Request `{ "note":"Payment reviewed." }` (optional). Requires a verified contractor and chosen quote. At or above the configured 10000-minor-unit threshold, two distinct approvers are required; the requester cannot approve their own request. Response `{ "status":"contractor_verified","approvals":1,"required":2,"approval":{"step":"payment","decision":"approved"} }` until threshold is met; then status is `payment_approved`. Every recorded approval is audited.
+
+### `POST /api/funds/maintenance/:requestId/payment`
+
+No request body. Checks the workflow gate and queues the payment in the existing Approvals queue; it does not execute a payout. Returns HTTP 202 `{ "approval": <approval>, "mode":"SIMULATED", "simulated":true,"gap":"simulated, no ledger entry","message":"Payment request is queued for approval. PayPal Payouts are unavailable; no money will be sent and no ledger entry will be posted." }`. Payment decision is completed through the existing `POST /api/approvals/:approvalId/decision` route. SIMULATED means no money movement and no ledger posting; always display the label and gap.
+
+The canonical read-only view for maintenance, quotations, approvals, payment and evidence links is `GET /api/funds/transparency`; there are no direct fund-table reads or standalone contractor/request list routes. Evidence submit/review/close and transparency/export are documented below.
+
+## Phase 6 maintenance completion evidence (T5)
+
+All requests require `Authorization: Bearer <Supabase access token>` and `X-Org-Id`. Responses use `{ "error": { "code": "...", "message": "..." } }` for structured failures. Evidence is metadata only; no file contents are uploaded. Always display the caution “Evidence supports, but does not prove, that work was done correctly.”
+
+### `POST /api/funds/maintenance/:requestId/evidence`
+
+Allowed roles: `owner`, `admin`, `accountant`, `resident`. Request:
+
+```json
+{"kind":"inspection","description":"Final inspection checklist and notes.","fileRef":"maintenance/inspection/REQ-1001.pdf"}
+```
+
+Success HTTP 201:
+
+```json
+{"request":{"id":"<uuid>","status":"evidence_submitted"},"evidence":{"id":"<uuid>","kind":"inspection","description":"Final inspection checklist and notes.","file_ref":"maintenance/inspection/REQ-1001.pdf","review_status":"pending"},"caution":"Evidence supports, but does not prove, that work was done correctly."}
+```
+
+Kinds: `photo|invoice|inspection|other`; description 1–2000 characters; `fileRef` optional, max 500 characters. Only a paid maintenance request accepts evidence; otherwise HTTP 409 `FUND_STATE_CONFLICT`. Invalid body/ID is HTTP 400 `VALIDATION_ERROR`.
+
+### `POST /api/funds/maintenance/:requestId/evidence/:evidenceId/review`
+
+Allowed roles: `owner`, `admin`, `approver`. Requester and evidence submitter cannot review. Request: `{ "decision": "accept", "note": "Reviewed against the completion checklist." }`; `decision` is `accept|reject`, note optional/max 500. Success returns updated `request`, `evidence`, and the caution string. Rejection keeps the request `evidence_submitted`; accepted evidence advances it to `reviewed` when no item remains pending and at least one item is accepted. Matching retries are idempotent. Invalid ID/body is 400; self-review is 403 `FUND_FORBIDDEN`; invalid state is 409 `FUND_STATE_CONFLICT`.
+
+### `POST /api/funds/maintenance/:requestId/close`
+
+Allowed roles: `owner`, `admin`, `approver`; requester cannot close their own request. No body. Requires `reviewed` status and at least one accepted evidence item. Success: `{ "request": { "id": "<uuid>", "status": "closed" }, "closed": true }`; repeated close is idempotent. Premature close is 409 `FUND_STATE_CONFLICT`; self-close is 403 `FUND_FORBIDDEN`.
+
+These actions use service-role-only RPCs and audit log records. Authenticated clients cannot query Phase 6 fund tables directly; use the scoped API/RPC endpoints for reads.
+
+
+## Phase 6 transparency and export (T6)
+
+### `GET /api/funds/transparency`
+
+Available to any authenticated member role, including donors and residents. Requires `X-Org-Id`; optional `campaignId=<uuid>` filters the selected org's campaign. The response includes safe campaign totals, contribution amounts/statuses with `donorRefHash` (SHA-256 scoped by org), and linked expense rows. Names, raw donor refs, contractor names, evidence descriptions/file paths, and reviewer/submitter IDs are omitted. `namesShown` is always `false`; include the returned `legalCaution` in the transparency view.
+
+Example expense row:
+
+```json
+{"requestId":"<uuid>","campaignId":"<uuid>","title":"Roof repair expense","status":"closed","amountMinor":9999,"currency":"USD","approvals":[{"id":"<uuid>","step":"payment","decision":"approved"}],"paymentApproval":{"id":"APR-FUND-PAY-...","status":"completed"},"quotation":{"id":"<uuid>","amountMinor":9999,"currency":"USD"},"invoice":null,"payment":{"id":"<uuid>","mode":"SIMULATED","status":"paid","amountMinor":9999},"paymentReference":null,"ledgerEntryId":null,"completionEvidence":[{"id":"<uuid>","kind":"inspection","reviewStatus":"accepted"}],"gaps":[{"gap":"no payment reference"},{"gap":"simulated, no ledger entry"}]}
+```
+
+Render every `gaps` item, including `{ "gap": "no quotation or invoice" }`, `{ "gap": "no payment approval" }`, `{ "gap": "no payment reference" }`, `{ "gap": "simulated, no ledger entry" }`, `{ "gap": "no ledger entry" }`, and `{ "gap": "no completion evidence" }`. Do not imply a SIMULATED row moved money or posted to the ledger. The endpoint has no write method. Direct Phase 6 fund table reads are revoked for authenticated clients; cross-org `X-Org-Id` returns 403.
+
+### `GET /api/funds/transparency/audit.csv`
+
+Allowed roles: `owner`, `admin`; optional inclusive UTC date filters `from=YYYY-MM-DD` and `to=YYYY-MM-DD`. Response is `text/csv`, attachment `fund-audit.csv`, headers `id,createdAt,action,entity,entityId,actorRef,requestId`. `actorRef` is pseudonymous; metadata and raw actor IDs are omitted. CSV quoting and formula prefixes are neutralized. Other roles receive 403; invalid/reversed dates receive 400 `VALIDATION_ERROR`.

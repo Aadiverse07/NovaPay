@@ -440,3 +440,178 @@
 - Source: Repository `src/fonts.css`, `src/dashboard.js`, `src/novapay-live.js`, `dashboard.html`, `preview.html`, checked 2026-10-25.
 - Rejected alternatives: Editing protected fonts/tokens stylesheets; inventing a replacement font or favicon; leaving static community/ledger values visible in authenticated mode.
 - User action: Add `assets/fonts/Montserrat-Variable.woff2`; the file is absent and the protected stylesheet must remain unchanged.
+
+## 2026-10-25 — Phase 6 branch and scope
+- Question: Which branch and scope govern the Fund Transparency work?
+- Choice: Work locally only on `phase6-backend`, backend-only, and leave the committed font fix untouched.
+- Reason: The user explicitly confirmed `phase6-backend` was created from main and asked to resume Phase 6 STEP 0; this supersedes the previous frontend session's branch/scope for the new task.
+- Source: User-provided Phase 6 prompt and resume instruction, 2026-10-25.
+- Rejected alternatives: Continue on `frontend-wiring`, change branches during work, or edit frontend/assets.
+
+## 2026-10-25 — Phase 6 T1 schema shape
+- Question: How should Fund Transparency data and workflow thresholds be represented without allowing direct client writes?
+- Choice: Add migration 0006 with organization-scoped tables and composite tenant foreign keys, authenticated member SELECT only, service-role writes, donor/resident membership roles, and seeded per-organization defaults (minimum one quotation; second approver threshold 10,000 minor USD units).
+- Reason: Matches the requested thin slice and existing RLS/composite-FK conventions; default rows exist for current and future organizations. No external facts used.
+- Source: User-provided Phase 6 prompt; `supabase/migrations/0001_foundation.sql`, `0002_financial_core.sql`, and `0005_ai.sql`, checked 2026-10-25.
+- Rejected alternatives: Editing an applied migration; granting authenticated writes; storing donor PII; using a global unscoped settings row.
+
+## 2026-10-26 — Phase 6 T1 live RLS verification
+- Question: How to prove migration 0006 is applied and client writes are denied without changing fixture data?
+- Choice: Reuse the fixed Phase 3 owner fixture, mint/verify a one-time magic-link token in memory, issue authenticated GETs and constraint-safe incomplete POST attempts against all 11 Phase 6 tables, and print only status codes.
+- Reason: Confirms actual PostgREST permissions with an ordinary user JWT; failed incomplete writes cannot create rows. No tokens, bodies, or key values were printed.
+- Source: User-confirmed SQL Editor application and live Supabase checks run 2026-10-26; repository fixture documented in `docs/CONTEXT.md`.
+- Rejected alternatives: Relying on static SQL checks alone; using the service-role JWT as the client proof; inserting test data during the permissions check.
+
+## 2026-10-26 — T2 donation capture integration
+- Question: How to distinguish a pledge from received funds and preserve idempotence across verified webhook replay?
+- Choice: Link each PayPal order to one organization-scoped contribution; use a new service-role-only SECURITY DEFINER RPC that delegates normal capture posting to the established ledger RPC and, in the same transaction, marks only matching verified completed captures received and inserts one receipt. Record amount/currency mismatches on the pledge without marking it received.
+- Reason: Keeps the existing signed webhook and ledger path authoritative and makes contribution/receipt updates atomic with capture processing. No third-party facts used.
+- Source: Phase 6 T2 requirements and existing `record_paypal_capture_event` implementation in `supabase/migrations/0002_financial_core.sql`, checked 2026-10-26.
+- Rejected alternatives: Count pledges as funds; mark received from browser/API request; create receipts before verified completed capture; reimplement ordinary capture ledger posting.
+
+## 2026-10-26 — Safe live T2 contribution fixture
+- Question: How to exercise the live campaign/pledge summary without initiating a real donation?
+- Choice: Use the fixed owner and a stable campaign title, reuse an existing matching pledge if present, and create at most one $1 pledged-only record; do not create a PayPal order or capture.
+- Reason: Verifies API-to-SQL summary and pledge semantics without moving money or creating repeat fixtures. No external facts used.
+- Source: Phase 6 live test instructions and user confirmation that migration 0007 was applied, checked 2026-10-26.
+- Rejected alternatives: Repeatedly creating new orgs/users/campaigns; treating a pledge as received; initiating buyer checkout during safe API verification.
+
+## 2026-10-26 — Phase 6 live donation human gate
+- Question: How to verify the live $1 donation flow without executing a purchase as the agent?
+- Choice: Create only the PayPal Sandbox order linked to the fixed campaign pledge, return its approval URL to the user, then stop for their explicit “approved” response before capture/webhook verification.
+- Reason: This is the specified Phase 6 live test gate; the human controls the US Personal buyer checkout and Visa step. No third-party purchase is completed by the agent.
+- Source: User-provided Phase 6 live test instructions, checked 2026-10-26.
+- Rejected alternatives: Capturing without buyer approval; initiating a different amount; creating repeated orders for the same fixed contribution.
+
+## 2026-10-26 — Restart stale local webhook receiver before capture
+- Question: How to ensure the approved live capture reaches the current webhook processor after the existing listener reported PayPal unconfigured?
+- Choice: Restart the repository's stale `node server/index.js` on port 3000 using current repository/environment configuration, confirm status reports PayPal configured, then capture the already-approved order once.
+- Reason: The order was created through current config but the old listener may not verify incoming PayPal signatures; using the configured port keeps the registered webhook route aligned with the local tunnel. No new purchase is created.
+- Source: Live `GET /api/status` on port 3000 and server process inspection, 2026-10-26; `server/index.js` starts the webhook worker.
+- Rejected alternatives: Capture while the callback receiver is stale; create another order; manually mark contribution received without a signed webhook.
+
+## 2026-10-26 — Status field correction
+- Question: Did the stale server report PayPal configuration missing?
+- Choice: Treat the earlier preflight as a field-name mistake; the status response uses `paypal`, not `paypalConfigured`. After restarting the server, the correct fields reported PayPal configured, connected, and webhook configured.
+- Reason: Do not change server/tunnel routing based on an absent response key. The configured server is now running on port 3000.
+- Source: `server/src/routes/status.js` and `GET /api/status`, checked 2026-10-26.
+- Rejected alternatives: Infer PayPal is disabled from an undefined response field; restart further processes without evidence.
+
+## 2026-10-26 — Retrieve missing signed PayPal event
+- Question: How to deliver the completed capture's original signed webhook when no matching event is in the local inbox?
+- Choice: Use PayPal's official event-list API filtered by the capture transaction ID; inspect the configured webhook URL/subscriptions without printing secrets; if the exact event exists, request PayPal's event resend and wait for the signed delivery to the existing listener.
+- Reason: Resending the original event preserves PayPal's signed event body and avoids fabricating a webhook or manually marking a contribution received.
+- Source: [PayPal Webhooks Events List API](https://developer.paypal.com/api/webhooks/v1/webhooks-events-list), checked 2026-10-26; API supports `transaction_id` filtering and event resend.
+- Rejected alternatives: Reconstruct a webhook body and claim it was PayPal-signed; manually update received status; create another payment.
+
+## 2026-10-26 — Pause after provider resend did not reach inbox
+- Question: What to do after PayPal accepts an exact-event resend but the event does not reach the application inbox?
+- Choice: Stop live T2 reconciliation and ask the user to inspect PayPal delivery status and tunnel forwarding; do not retry endlessly, replay a different event, or write contribution state manually.
+- Reason: Signature-verified delivery is required before recording donations; the exact event remained absent after a 25-second bounded poll.
+- Source: PayPal Sandbox event-list/resend result and Supabase inbox read, checked 2026-10-26.
+- Rejected alternatives: Treat the unrelated processed event as a match; create another order; manually mark received; fabricate or replay a payload.
+
+## 2026-10-26 — Preserve posted entry while reporting donation account misclassification
+- Question: Should the live Sandbox donation's balanced but misclassified journal entry be edited during a read-only verification request?
+- Choice: Leave the posted journal untouched; report that the credit is account 4000 (`Sales Revenue`) instead of 4100 (`Donations`). Any correction must use a new numbered migration with an auditable reclassification and fund-specific posting logic.
+- Reason: Journal history must remain auditable; user requested reconciliation checks, not a live financial correction. Migration 0007 is already applied and must not be edited.
+- Source: Live journal line/account read and `supabase/migrations/0002_financial_core.sql` account definitions; checked 2026-10-26.
+- Rejected alternatives: Directly update/delete posted journal lines; edit applied migration 0007; treat balanced totals as proof of correct fund accounting.
+
+## 2026-10-26 — Route fund contribution captures to Donations account
+- Question: How to distinguish fund contribution capture posting from ordinary PayPal sales captures?
+- Choice: Detect the linked `fund_contribution_id` on the PayPal order in the repository, use fund-specific journal lines that credit 4100, and add migration 0008 that reverses and reposts already misclassified fund capture entries without editing/deleting them.
+- Reason: Preserve generic Sales Revenue postings while ensuring donations use the seeded Donations account and existing journal history stays auditable.
+- Source: Live ledger reconciliation and account definitions in `supabase/migrations/0002_financial_core.sql`, checked 2026-10-26; user instruction in this conversation.
+- Rejected alternatives: Change all PayPal capture revenue to Donations; update/delete applied journal entries; edit applied migrations 0002/0007.
+
+## 2026-10-26 — Introduce maintenance state machine additively
+- Question: How should migration 0009 handle the legacy maintenance status values already accepted by migration 0006?
+- Choice: Add T3 workflow states and use `requested` for new requests while retaining legacy values in the check constraint for existing rows. All new state-changing operations go through SECURITY DEFINER RPCs with service_role-only execution.
+- Reason: Avoid silently rewriting any existing maintenance records while enforcing the new transitions for the new API path.
+- Source: User-provided Phase 6 T3 state-machine requirements and existing `0006_fund_transparency.sql`, checked 2026-10-26.
+- Rejected alternatives: Edit applied migration 0006; bulk-map legacy operational states without audit evidence; permit client table writes.
+
+## 2026-10-26 — T3 live preflight scope
+- Question: How to verify migration 0009 permissions without risking state changes?
+- Choice: Probe each T3 RPC using the fixed ordinary owner JWT and exact function arguments, requiring HTTP 403 before running workflow actions.
+- Reason: `SECURITY DEFINER` maintenance actions are stateful and the client grant boundary must be proven first; corrected probes returned 403 for all six RPCs.
+- Source: Live Supabase/PostgREST check against the configured project, 2026-10-26. Rejected alternative: use a service-role RPC probe, which would mutate maintenance data and cannot prove ordinary-user denial.
+
+## 2026-10-26 — T3 SQLSTATE response mapping
+- Question: How should expected maintenance RPC domain failures surface to clients?
+- Choice: Map only known Postgres domain SQLSTATEs in `fundRoutes` to stable 400/403/404/409 structured errors; suppress database messages.
+- Reason: live checks showed permission/transition rejections were being wrapped as 503 `DATABASE_UNAVAILABLE`, masking expected behavior and making clients treat rejected actions as outages.
+- Source: `supabase/migrations/0009_maintenance_state_machine.sql` SQLSTATE declarations and `server/src/services/supabase.js` RPC adapter, inspected 2026-10-26. Rejected alternative: expose PostgREST error messages or change global mapping shared by unrelated routes.
+
+## 2026-10-26 — Preserve append-only run history after shell interpolation
+- Question: How to correct the noisy raw test transcript appended to the report during checkpointing?
+- Choice: Keep the historical transcript and add a clarifying entry with the exact second-run result rather than deleting prior report lines.
+- Reason: Continuity protocol requires append-only logs; the output came from a real passing `npm test` rerun and contained no secrets.
+- Source: Local command output and `docs/TEST-REPORT.md`, checked 2026-10-26. Rejected alternative: rewrite the report tail and erase the earlier appended record.
+
+## 2026-10-26 — T3 live fixture strategy
+- Question: Which test data should the live state-machine workflow use?
+- Choice: Reuse the existing Phase 3 verifier organization and fixed owner, approver, accountant users; use deterministic maintenance request, contractor, and quotation names and resume existing rows.
+- Reason: T3 audit rows are append-only; adding users/orgs or creating new records per run would make safe recovery and cleanup harder. The accountant requester permits owner and approver to provide two distinct approvals at the exact threshold.
+- Source: Existing memberships and fixed-fixture scripts, read-only checked 2026-10-26. Rejected alternative: provision new identities/orgs or reset fixed users' passwords.
+
+## 2026-10-26 — T4 Payouts sandbox capability probe
+- Question: How to establish whether this configured app can actually create PayPal Payouts in Sandbox?
+- Choice: Send one $0.01 Sandbox-only payout to the repository's fixed US Personal Sandbox test account using a fixed `sender_batch_id` and deterministic `PayPal-Request-Id`; query its status in memory and print statuses only.
+- Reason: official docs confirm general Sandbox Payouts support and the app's OAuth token includes Payouts scope, but neither alone proves a payout succeeds for this app. The Phase 6 prompt explicitly requires checking current capability. Sandbox avoids real funds; deterministic identifiers make retries idempotent.
+- Source: [PayPal Payouts SDK](https://developer.paypal.com/sdk/payouts), [PayPal Payouts API customization and idempotency](https://developer.paypal.com/docs/payouts/standard/integrate-api/customize/), [PayPal Sandbox testing](https://developer.paypal.com/sandbox-testing/overview/); checked 2026-10-26. Rejected alternative: decide SIMULATED from docs/OAuth scope alone without testing app entitlement.
+
+## 2026-10-26 — T4 payment mode
+- Question: Should T4 use PayPal Payouts or a simulated payment?
+- Choice: Use SIMULATED mode for this deployment; do not call the Payouts endpoint and do not post simulated payments to the real ledger. Every API/report/export row must show `SIMULATED` and `simulated, no ledger entry` as an explicit gap.
+- Reason: OAuth returned HTTP 200 with a Payouts scope, but the deterministic one-cent Sandbox payout probe was rejected with HTTP 403 `PAYOUT_NOT_AVAILABLE`; no batch was created. The configured app cannot currently execute payouts, so a real payout must not be claimed.
+- Source: Live call to `https://api-m.sandbox.paypal.com/v1/payments/payouts`, fixed Sandbox receiver and deterministic `PayPal-Request-Id`, 2026-10-26; [PayPal Payouts SDK](https://developer.paypal.com/sdk/payouts), [Sandbox Payouts idempotency](https://developer.paypal.com/docs/payouts/standard/integrate-api/customize/), docs checked 2026-10-26. Rejected alternative: persist a real payout despite the provider's explicit `PAYOUT_NOT_AVAILABLE` response.
+
+## 2026-10-26 — T4 live verification fixture
+- Question: How to verify T4 against the user-confirmed 0010 migration without creating new live identities or records unnecessarily?
+- Choice: Reuse the existing fixed Phase 3 verifier organization/users and the already-approved 9999-minor-unit maintenance request; queue and approve one SIMULATED payment, then repeat the same approval ID.
+- Reason: Existing fixture is eligible for the single-approver path and repeats are deterministic; no external payout occurs and persisted state can prove null PayPal/ledger refs.
+- Source: repository fixture in `scripts/verify-phase6-maintenance-live.js` and T4 API/migration; checked 2026-10-26.
+- Rejected: create fresh live test users/orgs or use real PayPal payout; unnecessary and outside SIMULATED policy.
+
+## 2026-10-26 — 0010 live apply mismatch
+- Question: Proceed with T4 payment writes after user said migration 0010 was applied, when the configured project rejects the linkage column?
+- Choice: Stop before all payment/approval writes and request applying migration 0010 to the project configured for this workspace.
+- Reason: Read-only PostgREST returned SQLSTATE 42703: `column approvals.fund_maintenance_request_id does not exist`; the schema required for safe, idempotent payment processing is absent.
+- Source: configured Supabase PostgREST response checked 2026-10-26.
+- Rejected: attempt RPC/API writes or assume application based only on prior confirmation; unsafe while the live schema is unverified.
+
+## 2026-10-26 — T5 completion evidence flow
+- Question: How should metadata-only evidence be reviewed and how can a maintenance request close safely?
+- Choice: Add review metadata to evidence and reviewer/closure metadata to the request. Allow same-org owner/admin/accountant/resident to submit metadata; require owner/admin/approver reviewers distinct from requester and evidence submitter. Reviewer accepts or requests changes; move to `reviewed` only when at least one evidence is accepted and no evidence remains pending; close only from `reviewed` by a reviewer. Audit each evidence and state change.
+- Reason: This enforces completion evidence before close, preserves the existing state machine, gives a repair path for rejected evidence, and stores no files. API text states evidence supports but does not prove work correctness.
+- Source: Phase 6 prompt T5 (user attachment, read 2026-10-26), existing 0006 metadata table and 0009 status constraint.
+- Rejected: direct table writes, close without accepted evidence, or treating uploaded file contents as part of this thin slice.
+
+## 2026-10-26 — T6 privacy and audit export
+- Question: What may the read-only transparency view and audit export expose to satisfy linkage while protecting donor/actor data?
+- Choice: Transparency returns campaign totals, amounts/statuses, quote/payment/ledger links, sanitized evidence IDs/kinds/review status, and donor references hashed server-side; names, evidence descriptions/file paths, actor IDs and raw donor refs are omitted. Missing quote/invoice, payment reference, ledger entry, or evidence is represented as `{ "gap": "..." }`; SIMULATED rows expose `simulated, no ledger entry`. Audit CSV is owner/admin only, org-scoped, and exports event identity/time/action/entity/request ID plus a pseudonymous actor reference; omit arbitrary metadata and formula-neutralize cells.
+- Reason: current schema has no maintenance invoice FK and audit metadata can hold donor refs; the old CSV helper already handles quoting and formula prefixes.
+- Source: T6 requirements in user-provided Phase 6 prompt and current `0001`, `0006`, `0007` migrations plus `server/src/routes/reports.js`, checked 2026-10-26.
+- Rejected: expose raw metadata/file refs/actor IDs, return fabricated invoice links, or make transparency writes available.
+
+## 2026-10-26 — T6 direct table read boundary
+- Question: How to satisfy T6's requirement that transparency be read through the API/RPC while keeping direct table reads blocked?
+- Choice: Add an additive migration revoking `SELECT` from `authenticated` on Phase 6 fund tables; keep service-role server access and member-checked transparency RPC. Verify donor/resident direct table reads fail live.
+- Reason: Migration 0006 granted all authenticated members table reads, so RLS membership policies alone do not meet the endpoint-only privacy boundary in T6.
+- Source: Phase 6 T6 requirement in user-provided prompt and grants in `supabase/migrations/0006_fund_transparency.sql`, checked 2026-10-26.
+- Rejected: rely on the existing member RLS policy or client-side hiding; both still permit direct table queries.
+
+- 2026-10-26 — Question: after user confirmed 0012 applied, should the live verifier continue on PostgREST HTTP 404/PGRST202? Choice: stop before data checks, record live state UNVERIFIED, and require schema-cache refresh plus routine/privilege confirmation in the Supabase SQL Editor. Reason: the API cannot resolve `public.get_fund_transparency`; continuing would produce misleading endpoint/security results. Rejected: assume the migration is visible or bypass the API path. Source: live service-role RPC response, checked 2026-10-26 (no third-party fact).
+
+- 2026-10-26 — Question: which pending migration should be applied based on missing T6 RPCs and authenticated SELECT still being granted? Choice: apply only `supabase/migrations/0012_fund_transparency_read_export.sql`, after confirmed-applied migrations 0001–0011. Then pause for user confirmation before any later migration action; do not reload schema cache yet. Reason: 0012 defines both RPCs and revokes authenticated table SELECT, while all earlier migrations are recorded as applied. Rejected: reapply 0001–0011, create a patch migration, or refresh schema cache before 0012 is visible. Source: repo migration inventory and user-provided SQL Editor results, checked 2026-10-26.
+- 2026-10-26 — Question: what to do immediately after the user says migration 0012 was applied, while cache reload is prohibited? Choice: request/read the SQL Editor catalog and privilege checks first; do not issue `NOTIFY pgrst` or rely on stale REST schema visibility. Reason: confirm database state independently before changing API cache state. Rejected: reload immediately or treat apply confirmation alone as proof both SQL transaction and grants are present. Source: user instruction and reported apply, checked 2026-10-26.
+- 2026-10-26 — Question: how to fix the live T6 `42725 operator is not unique: unknown - unknown` error in the already-applied 0012 function? Choice: add migration 0013 that replaces only `get_fund_transparency`, builds campaign JSON from explicit allowlisted keys (excluding organiser) without the ambiguous subtraction operator, and reapplies service-role-only execute ACLs. Reason: live RPC with a valid member failed at runtime; 0012 is applied and must not be edited. Rejected: editing 0012, broad granting, or exposing the organiser field. Source: live PostgREST response and `0012_fund_transparency_read_export.sql`, checked 2026-10-26.
+- 2026-10-26 — Question: should the new T6 runtime correction be applied automatically or sent through the established SQL Editor gate? Choice: provide migration 0013 alone and wait for the user's `applied` confirmation; do not change schema cache. Reason: the live database is user-managed and the user requires confirmation after each migration. Rejected: applying from the agent or asking the user to rerun 0012. Source: user continuity/apply instructions and local migration 0013, checked 2026-10-26.
+- 2026-10-26 — Question: how should T6 handle live SQLSTATE 42703 `a.created_at` after migration 0013? Choice: add migration 0014 replacing `get_fund_transparency` to order approval-chain rows by `decided_at`, the actual `fund_approvals_chain` timestamp column, and preserve service-role-only grants. Reason: schema definition in 0006 has `decided_at` and no `created_at`; live RPC exposed the bad reference. Rejected: edit applied migrations 0012/0013 or add a nonexistent timestamp column solely to match the query. Source: live RPC error and `0006_fund_transparency.sql`, checked 2026-10-26.
+- 2026-10-26 — Question: should T6 live verification continue after the verifier reaches the owner CSV check but its helper lacks `.text()`? Choice: preserve raw response text alongside parsed JSON in the verifier helper and rerun with the same fixed fixtures. Reason: the run had already passed all role, RLS, org-boundary, RPC grant, donor/resident privacy and resident-export checks; only CSV body assertions were blocked by harness shape. Rejected: weaken/remove CSV assertions or classify the partial run as complete. Source: local verifier failure and passing rerun, checked 2026-10-26.
+
+- 2026-10-26 — Question: does T7 need a separate limiter just for payment/approval routes? Choice: retain the existing global per-IP (300/15 minutes) and authenticated per-user (240/15 minutes) API limiters, document that all fund/payment/approval actions inherit both, and add route-level integration checks proving 429 behavior on those actions. Reason: both controls already execute before routing/authenticated business logic; adding another arbitrary threshold would duplicate controls. Rejected: remove limits or introduce a second unconfigured threshold. Source: `server/src/app.js` rate-limit middleware and T7 requirements, checked 2026-10-26.
+- 2026-10-26 — Question: how to handle the Phase Completion Gate's frontend-diff and legacy safe-verifier checks? Choice: exclude the explicitly user-ignored font commit `f410e86` when checking for this task's frontend changes; record strict `origin/main` delta as that commit only. Run Phase 2/3 `--safe`; do not run Phase 4 because it has no `--safe` and its normal path writes live records. Reason: preserve protected frontend changes and avoid unintended live mutations while accurately reporting unverified checks. Rejected: edit/revert the font fix or run the mutating Phase 4 verifier as if safe. Source: user's instruction to ignore the standalone font commit, migration/protected file rules, and verifier source, checked 2026-10-26.
+- 2026-10-26 — Question: how to handle the explicit one-task release authorization? Choice: after confirming branch `phase6-backend`, clean status, no tracked `.env`/credential files, and no secret-like values (only examples/schema/test fixtures), checkpoint the work journal, re-confirm clean state, then push only this branch, tag it, and create the requested PR. Reason: follow the user’s explicit step order while retaining a clean checkout and never push main. Rejected: push other branches, force-push, or bypass the preflight. Source: user's one-task push approval in this chat, checked 2026-10-26.

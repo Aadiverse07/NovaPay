@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { captureJournalLines, isJournalBalanced, refundJournalLines } from '../src/services/ledger.js';
+import { captureJournalLines, fundContributionJournalLines, isJournalBalanced, refundJournalLines } from '../src/services/ledger.js';
 
 test('capture posting uses PayPal gross, fee and net values as balanced minor units', () => {
   const lines = captureJournalLines({ amount: { value: '125.00', currency_code: 'USD' }, seller_receivable_breakdown: { gross_amount: { value: '125.00' }, paypal_fee: { value: '3.25' }, net_amount: { value: '121.75' } } });
@@ -18,6 +18,17 @@ test('capture without a complete reported breakdown posts to clearing without in
     { accountCode: '1010', debitMinor: 1001, creditMinor: 0 },
     { accountCode: '4000', debitMinor: 0, creditMinor: 1001 },
   ]);
+});
+
+test('fund contribution captures credit Donations instead of Sales Revenue', () => {
+  const capture = { amount: { value: '10.00', currency_code: 'USD' }, seller_receivable_breakdown: { gross_amount: { value: '10.00' }, paypal_fee: { value: '0.59' }, net_amount: { value: '9.41' } } };
+  const lines = fundContributionJournalLines(capture);
+  assert.deepEqual(lines.map(({ accountCode, debitMinor, creditMinor }) => ({ accountCode, debitMinor, creditMinor })), [
+    { accountCode: '1000', debitMinor: 941, creditMinor: 0 },
+    { accountCode: '5000', debitMinor: 59, creditMinor: 0 },
+    { accountCode: '4100', debitMinor: 0, creditMinor: 1000 },
+  ]);
+  assert.equal(isJournalBalanced(lines), true);
 });
 
 test('refund posting uses the returned refund fee breakdown and does not presume fee reversal', () => {

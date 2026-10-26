@@ -27,6 +27,7 @@ import { reportRoutes } from './routes/reports.js';
 import { invoiceRoutes } from './routes/invoices.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { createAnomalyService, startAnomalyWorker } from './services/anomalies.js';
+import { fundRoutes } from './routes/funds.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
@@ -77,6 +78,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   app.use('/api', invoiceRoutes({ repos }));
   app.use('/api', notificationRoutes({ repos, runAnomalyScan }));
   app.use('/api', paypalRoutes({ config, paypal, repos, identity, fx }));
+  app.use('/api', fundRoutes({ config, paypal, repos }));
 
   app.use('/api', (req, res) => {
     if (req.path === '/status') return res.status(405).json({ error: 'Use GET for integration status.' });
@@ -95,7 +97,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
     const status = databaseStatus || error.statusCode || error.status || (error.type === 'entity.too.large' ? 413 : 500);
     const message = error.type === 'entity.too.large' ? 'Request body is too large.' : error.type === 'entity.parse.failed' ? 'Request body must be valid JSON.' : error.message || 'The request could not be completed.';
     if (status >= 500) Promise.resolve(repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed`, ok: false }, req.orgId)).catch(() => {});
-    const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path === '/api/fx/convert' || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
+    const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path === '/api/fx/convert' || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path.startsWith('/api/funds') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
     if (structuredRoute) {
       const code = status === 413 ? 'BODY_TOO_LARGE' : error.databaseCode ? ({ '22003': 'REFUND_AMOUNT_EXCEEDED', '22023': 'VALIDATION_ERROR', '23505': 'CONFLICT', '23514': 'LEDGER_UNBALANCED', P0002: 'NOT_FOUND' })[error.databaseCode] : status === 400 ? 'BAD_JSON' : error.code === 'DATABASE_UNAVAILABLE' ? error.code : 'INTERNAL_ERROR';
       return res.status(status).json({ error: { code, message: status >= 500 ? 'The request could not be completed.' : message } });
