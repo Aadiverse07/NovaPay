@@ -75,4 +75,21 @@ Allowed roles: `owner`, `admin`, `approver`; the requester and evidence submitte
 
 Allowed roles: `owner`, `admin`, `approver`; the requester cannot close their own request. No request body. Close is allowed only from `reviewed` with accepted evidence. Success: `{ "request": { "id": "<uuid>", "status": "closed", "closed_by": "<uuid>", "closed_at": "<timestamp>" }, "closed": true }`. Repeated close is idempotent; premature close returns 409 `FUND_STATE_CONFLICT`.
 
-All three writes use tenant-checked service-role RPCs, leave direct client table writes blocked by RLS, and write audit-log records for evidence and workflow changes.
+All three writes use tenant-checked service-role RPCs and write audit-log records for evidence and workflow changes. Fund table access is through the scoped API/RPC; authenticated clients cannot query these tables directly.
+
+
+## Fund transparency and audit export (Phase 6 T6)
+
+### `GET /api/funds/transparency`
+
+Available to any authenticated member role in the selected organization, including `donor` and `resident`. Optional `campaignId=<uuid>` filters one campaign. The endpoint returns campaign totals, contribution status/amounts with an org-scoped SHA-256 `donorRefHash`, and maintenance expense rows linked to approvals, quotation, payment, ledger and sanitized completion evidence. Names are always omitted; evidence descriptions, file references and reviewer/submitter identities are not exposed. `legalCaution` explains that real-money pooled funds, donations and third-party payouts depend on PayPal product eligibility and local rules; Sandbox demonstrates the workflow only.
+
+Each expense has a `gaps` array of objects such as `{ "gap": "no completion evidence" }`, `{ "gap": "no payment reference" }`, and `{ "gap": "simulated, no ledger entry" }`. SIMULATED rows are labeled in `payment.mode`, expose null payment/ledger references, and never imply a real payout. Example:
+
+```json
+{"orgId":"<uuid>","campaigns":[{"campaign":{"id":"<uuid>","title":"Community Roof Project"},"receivedMinor":2500,"actualSpendingMinor":0}],"contributions":[{"campaignId":"<uuid>","amountMinor":2500,"status":"received","donorRefHash":"<sha256>","countsAsFunds":true}],"expenses":[{"requestId":"<uuid>","approvals":[{"id":"<uuid>","step":"payment","decision":"approved"}],"quotation":{"id":"<uuid>","amountMinor":9999},"invoice":null,"payment":{"mode":"SIMULATED","status":"paid","amountMinor":9999},"paymentReference":null,"ledgerEntryId":null,"completionEvidence":[],"gaps":[{"gap":"no payment reference"},{"gap":"simulated, no ledger entry"},{"gap":"no completion evidence"}]}],"namesShown":false,"legalCaution":"Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only."}
+```
+
+### `GET /api/funds/transparency/audit.csv`
+
+Allowed roles: `owner`, `admin`. Optional `from=YYYY-MM-DD` and `to=YYYY-MM-DD` are inclusive UTC date filters. Returns `text/csv` with quoted/formula-neutralized columns `id,createdAt,action,entity,entityId,actorRef,requestId`; `actorRef` is a stable org-scoped hash. Arbitrary audit metadata is excluded. Invalid filters return 400 `VALIDATION_ERROR`. Both endpoints are read-only and organization-scoped; authenticated clients have no direct SELECT on Phase 6 fund tables.

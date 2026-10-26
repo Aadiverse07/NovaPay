@@ -41,6 +41,16 @@ test('Postgres funds repository calls T5 completion evidence and close RPCs', as
   assert.equal(calls[2].args.p_actor,'reviewer-a');
 });
 
+test('Postgres funds repository calls tenant-scoped T6 transparency and audit export RPCs', async () => {
+  const calls=[];const database={async rpc(name,args){calls.push({name,args});return name==='get_fund_transparency'?{expenses:[]}:[{action:'fund.test'}];}};
+  const repos=createPostgresRepositories(database);
+  await repos.funds.transparency({orgId:'org-a',actorId:'resident-a',campaignId:'campaign-a'});
+  await repos.funds.auditExport({orgId:'org-a',actorId:'admin-a',from:'2026-10-01',to:'2026-10-31'});
+  assert.deepEqual(calls.map(call=>call.name),['get_fund_transparency','get_fund_audit_export']);
+  assert.deepEqual(calls[0].args,{p_org:'org-a',p_actor:'resident-a',p_campaign_id:'campaign-a'});
+  assert.deepEqual(calls[1].args,{p_org:'org-a',p_actor:'admin-a',p_from:'2026-10-01',p_to:'2026-10-31'});
+});
+
 test('Postgres repositories scope tenant data and transactional calls by organization', async () => {
   const calls = [];
   const database = {

@@ -588,3 +588,19 @@
 - Reason: This enforces completion evidence before close, preserves the existing state machine, gives a repair path for rejected evidence, and stores no files. API text states evidence supports but does not prove work correctness.
 - Source: Phase 6 prompt T5 (user attachment, read 2026-10-26), existing 0006 metadata table and 0009 status constraint.
 - Rejected: direct table writes, close without accepted evidence, or treating uploaded file contents as part of this thin slice.
+
+## 2026-10-26 — T6 privacy and audit export
+- Question: What may the read-only transparency view and audit export expose to satisfy linkage while protecting donor/actor data?
+- Choice: Transparency returns campaign totals, amounts/statuses, quote/payment/ledger links, sanitized evidence IDs/kinds/review status, and donor references hashed server-side; names, evidence descriptions/file paths, actor IDs and raw donor refs are omitted. Missing quote/invoice, payment reference, ledger entry, or evidence is represented as `{ "gap": "..." }`; SIMULATED rows expose `simulated, no ledger entry`. Audit CSV is owner/admin only, org-scoped, and exports event identity/time/action/entity/request ID plus a pseudonymous actor reference; omit arbitrary metadata and formula-neutralize cells.
+- Reason: current schema has no maintenance invoice FK and audit metadata can hold donor refs; the old CSV helper already handles quoting and formula prefixes.
+- Source: T6 requirements in user-provided Phase 6 prompt and current `0001`, `0006`, `0007` migrations plus `server/src/routes/reports.js`, checked 2026-10-26.
+- Rejected: expose raw metadata/file refs/actor IDs, return fabricated invoice links, or make transparency writes available.
+
+## 2026-10-26 — T6 direct table read boundary
+- Question: How to satisfy T6's requirement that transparency be read through the API/RPC while keeping direct table reads blocked?
+- Choice: Add an additive migration revoking `SELECT` from `authenticated` on Phase 6 fund tables; keep service-role server access and member-checked transparency RPC. Verify donor/resident direct table reads fail live.
+- Reason: Migration 0006 granted all authenticated members table reads, so RLS membership policies alone do not meet the endpoint-only privacy boundary in T6.
+- Source: Phase 6 T6 requirement in user-provided prompt and grants in `supabase/migrations/0006_fund_transparency.sql`, checked 2026-10-26.
+- Rejected: rely on the existing member RLS policy or client-side hiding; both still permit direct table queries.
+
+- 2026-10-26 — Question: after user confirmed 0012 applied, should the live verifier continue on PostgREST HTTP 404/PGRST202? Choice: stop before data checks, record live state UNVERIFIED, and require schema-cache refresh plus routine/privilege confirmation in the Supabase SQL Editor. Reason: the API cannot resolve `public.get_fund_transparency`; continuing would produce misleading endpoint/security results. Rejected: assume the migration is visible or bypass the API path. Source: live service-role RPC response, checked 2026-10-26 (no third-party fact).

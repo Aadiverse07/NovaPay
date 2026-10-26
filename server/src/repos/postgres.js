@@ -348,6 +348,12 @@ export function createPostgresRepositories(database) {
     async closeMaintenanceRequest({ orgId, actorId, requestId, requestKey }) {
       return database.rpc('close_fund_maintenance_request', { p_org: orgId, p_actor: actorId, p_request: requestId, p_request_id: requestKey });
     },
+    async transparency({ orgId, actorId, campaignId = null }) {
+      return database.rpc('get_fund_transparency', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId });
+    },
+    async auditExport({ orgId, actorId, from = null, to = null }) {
+      return database.rpc('get_fund_audit_export', { p_org: orgId, p_actor: actorId, p_from: from, p_to: to });
+    },
   };
 
   return {

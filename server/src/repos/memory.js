@@ -303,6 +303,35 @@ export function createRepositories() {
     },
     async listCompletionEvidence(orgId,requestId) { return [...completionEvidenceRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===requestId); },
     async listFundAudit(orgId) { return fundAuditRows.filter(row=>row.org_id===orgId); },
+    async transparency({orgId,actorId,campaignId=null}) {
+      if(campaignId&&!campaignRows.has(this.key(orgId,campaignId)))throw maintenanceError('CAMPAIGN_NOT_FOUND',404,'Campaign was not found.');
+      const campaigns=await Promise.all([...campaignRows.values()].filter(row=>row.org_id===orgId&&(!campaignId||row.id===campaignId)).map(async row=>{
+        const summary=await this.campaignSummary(orgId,row.id);delete summary.campaign.organiser;return summary;
+      }));
+      const contributions=[...contributionRows.values()].filter(row=>row.orgId===orgId&&(!campaignId||row.campaignId===campaignId)).map(row=>({
+        id:row.id,campaignId:row.campaignId,amountMinor:row.amountMinor,status:row.status,donorRef:row.donorRef||row.donor_ref,createdAt:row.created_at,countsAsFunds:row.status==='received',currency:'USD',
+      }));
+      const expenses=[...maintenancePaymentRows.values()].filter(payment=>{
+        const request=maintenanceRows.get(this.key(orgId,payment.maintenance_request_id));return payment.org_id===orgId&&request&&(!campaignId||request.campaign_id===campaignId);
+      }).map(payment=>{
+        const request=maintenanceRows.get(this.key(orgId,payment.maintenance_request_id));
+        const quote=quotationRows.get(this.key(orgId,payment.quotation_id));
+        const evidence=[...completionEvidenceRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===request.id).map(row=>({id:row.id,kind:row.kind,reviewStatus:row.review_status,submittedAt:row.submitted_at,reviewedAt:row.reviewed_at}));
+        const approvals=[...maintenanceApprovalRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===request.id&&row.decision==='approved').map(row=>({id:row.id,step:row.step,decision:row.decision}));
+        const paymentApproval=[...approvalRepo.items.values()].find(row=>row.orgId===orgId&&row.proposalType==='maintenance-payment'&&row.fundMaintenanceRequestId===request.id);
+        const gaps=[];if(!quote)gaps.push({gap:'no quotation or invoice'});if(!paymentApproval)gaps.push({gap:'no payment approval'});
+        if(payment.paypal_payout_ref==null)gaps.push({gap:'no payment reference'});
+        if(payment.mode==='SIMULATED'&&payment.ledger_entry_id==null)gaps.push({gap:'simulated, no ledger entry'});
+        else if(payment.ledger_entry_id==null)gaps.push({gap:'no ledger entry'});
+        if(payment.mode!=='SIMULATED'&&payment.paypal_payout_ref==null)gaps.push({gap:'no payment reference'});
+        if(!evidence.length)gaps.push({gap:'no completion evidence'});
+        return {requestId:request.id,campaignId:request.campaign_id,title:request.title,status:request.status,amountMinor:payment.amount_minor,currency:'USD',approvals,paymentApproval:paymentApproval?{id:paymentApproval.approvalId,status:paymentApproval.status}:null,quotation:quote?{id:quote.id,amountMinor:quote.amount_minor,currency:quote.currency||'USD'}:null,invoice:null,payment:{id:payment.id,mode:payment.mode,status:payment.status,amountMinor:payment.amount_minor},paymentReference:payment.paypal_payout_ref||null,ledgerEntryId:payment.ledger_entry_id||null,completionEvidence:evidence,gaps};
+      });
+      return {orgId,campaigns,contributions,expenses,namesShown:false,legalCaution:'Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only.',asOf:new Date().toISOString()};
+    },
+    async auditExport({orgId,actorId,from=null,to=null}) {
+      return fundAuditRows.filter(row=>row.org_id===orgId&&(!from||!row.created_at||row.created_at.slice(0,10)>=from)&&(!to||!row.created_at||row.created_at.slice(0,10)<=to)).map(row=>({id:row.id||row.evidenceId||row.requestId||'audit-event',createdAt:row.created_at||new Date().toISOString(),action:row.action,entity:row.entity||'maintenance_request',entityId:row.entity_id||row.evidenceId||row.requestId||null,actorId:row.actorId||null,requestId:row.requestId||null}));
+    },
   };
   captures.funds = funds;
   const notifications = new MemoryNotificationsRepo();
