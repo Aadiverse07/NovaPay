@@ -555,3 +555,9 @@
 - Choice: Reuse the existing Phase 3 verifier organization and fixed owner, approver, accountant users; use deterministic maintenance request, contractor, and quotation names and resume existing rows.
 - Reason: T3 audit rows are append-only; adding users/orgs or creating new records per run would make safe recovery and cleanup harder. The accountant requester permits owner and approver to provide two distinct approvals at the exact threshold.
 - Source: Existing memberships and fixed-fixture scripts, read-only checked 2026-10-26. Rejected alternative: provision new identities/orgs or reset fixed users' passwords.
+
+## 2026-10-26 — T4 Payouts sandbox capability probe
+- Question: How to establish whether this configured app can actually create PayPal Payouts in Sandbox?
+- Choice: Send one $0.01 Sandbox-only payout to the repository's fixed US Personal Sandbox test account using a fixed `sender_batch_id` and deterministic `PayPal-Request-Id`; query its status in memory and print statuses only.
+- Reason: official docs confirm general Sandbox Payouts support and the app's OAuth token includes Payouts scope, but neither alone proves a payout succeeds for this app. The Phase 6 prompt explicitly requires checking current capability. Sandbox avoids real funds; deterministic identifiers make retries idempotent.
+- Source: [PayPal Payouts SDK](https://developer.paypal.com/sdk/payouts), [PayPal Payouts API customization and idempotency](https://developer.paypal.com/docs/payouts/standard/integrate-api/customize/), [PayPal Sandbox testing](https://developer.paypal.com/sandbox-testing/overview/); checked 2026-10-26. Rejected alternative: decide SIMULATED from docs/OAuth scope alone without testing app entitlement.
