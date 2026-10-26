@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T4 live verification blocked by missing migration 0010 schema on configured Supabase project.
-- Last finished step: WIP implementation checkpoint `b1c9ebd`; local tests 121/121 PASS; live auth/fixed fixture checks passed; read-only column check returned 42703.
-- Next step: user applies full `supabase/migrations/0010_simulated_maintenance_payments.sql` in the correct project's SQL Editor; after confirmation rerun verifier and finish idempotency checks.
-- Pending human action: apply the migration to the Supabase project configured by this repo, then reply `applied`.
+- Current task: Phase 6 T5 completion evidence and review.
+- Last finished step: T4 live PASS after migration 0010 became visible; fixed request approved once as SIMULATED; retry returned same payment ID; exactly one row with null ledger/provider refs.
+- Next step: inspect `fund_completion_evidence` schema and current routes/repos; implement metadata-only submission plus reviewer review/close, tests and docs.
+- Pending human action: none at this step.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -799,3 +799,51 @@ RESULT — PASS: verifier now includes safe 42703/status diagnostics; `node --ch
 ABOUT TO — 2026-10-26 Asia/Kolkata: Verify branch and final staged candidate status/no `.env`, then checkpoint the confirmed live schema blocker. Reason: preserve the exact 42703 failure and the pending human migration action before stopping.
 RESULT — PASS: branch phase6-backend, no `.env` in status, `git diff --check` clean, CONTEXT 79 lines. NEXT: commit this WIP handoff locally and wait for the user's migration apply confirmation; do not rerun payment flow before schema is visible.
 ABOUT TO — 2026-10-26 Asia/Kolkata: Commit T4 live apply-gate findings and continuity updates locally. Reason: preserve the confirmed HTTP 400/42703 blocker and exact human next steps before pausing.
+RESULT — PASS: WIP handoff checkpoint `e1fc6d9` committed locally on phase6-backend; no push. NEXT: update CONTEXT's commit pointer to e1fc6d9 and ask user to apply migration 0010 to the configured project; wait for `applied` before rerunning live T4.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Refresh the handoff commit hash after checkpoint e1fc6d9. Reason: ensure a fresh agent sees the current committed state and pending migration action.
+RESULT — PASS: CONTEXT now points to `e1fc6d9`; pending action remains apply migration 0010 to the configured Supabase project. NEXT: wait for user confirmation; resume only after migration column visibility succeeds.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Re-run `node scripts/verify-phase6-payment-live.js` after the user's latest `applied` confirmation. Reason: first confirm migration 0010 column visibility; only then continue with the fixed-fixture SIMULATED payment/queue/idempotency check.
+ABOUT TO — 2026-10-26 14:31:07 Asia/Kolkata: Generate one-time sign-in link for existing owner fixture. Reason: authenticate the fixed test user without creating users or resetting credentials
+RESULT — 2026-10-26 14:31:08 Asia/Kolkata: PASS: Generate one-time sign-in link for existing owner fixture; HTTP 200; token remains in memory. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:08 Asia/Kolkata: Exchange one-time sign-in link for owner JWT. Reason: obtain the ordinary user identity for API authorization
+RESULT — 2026-10-26 14:31:08 Asia/Kolkata: PASS: Exchange one-time sign-in link for owner JWT; HTTP 200; JWT remains in memory. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:08 Asia/Kolkata: Generate one-time sign-in link for existing approver fixture. Reason: authenticate the fixed test user without creating users or resetting credentials
+RESULT — 2026-10-26 14:31:09 Asia/Kolkata: PASS: Generate one-time sign-in link for existing approver fixture; HTTP 200; token remains in memory. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:09 Asia/Kolkata: Exchange one-time sign-in link for approver JWT. Reason: obtain the ordinary user identity for API authorization
+RESULT — 2026-10-26 14:31:09 Asia/Kolkata: PASS: Exchange one-time sign-in link for approver JWT; HTTP 200; JWT remains in memory. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:09 Asia/Kolkata: Generate one-time sign-in link for existing accountant fixture. Reason: authenticate the fixed test user without creating users or resetting credentials
+RESULT — 2026-10-26 14:31:10 Asia/Kolkata: PASS: Generate one-time sign-in link for existing accountant fixture; HTTP 200; token remains in memory. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:10 Asia/Kolkata: Exchange one-time sign-in link for accountant JWT. Reason: obtain the ordinary user identity for API authorization
+RESULT — 2026-10-26 14:31:10 Asia/Kolkata: PASS: Exchange one-time sign-in link for accountant JWT; HTTP 200; JWT remains in memory. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:10 Asia/Kolkata: Find fixed Phase 3 verifier organization. Reason: reuse the known existing org and avoid provisioning data
+RESULT — 2026-10-26 14:31:10 Asia/Kolkata: PASS: Find fixed Phase 3 verifier organization; one existing organization found. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:10 Asia/Kolkata: Find existing 9999-minor-unit payment_approved request. Reason: reuse T3 Fixed Live Self Approval, already approved below the two-person threshold
+RESULT — 2026-10-26 14:31:11 Asia/Kolkata: PASS: Find existing 9999-minor-unit payment_approved request; fixed request eligible; 9999 minor units. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:11 Asia/Kolkata: Verify fixed accountant and approver memberships. Reason: ensure expected roles in fixed organization before using their JWTs
+RESULT — 2026-10-26 14:31:12 Asia/Kolkata: PASS: Verify fixed accountant and approver memberships; both fixed roles confirmed. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:12 Asia/Kolkata: Confirm migration 0010 payment linkage is visible. Reason: read-only schema check that the user-applied migration reached the live project
+RESULT — 2026-10-26 14:31:12 Asia/Kolkata: PASS: Confirm migration 0010 payment linkage is visible; HTTP 200; column query succeeds. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:12 Asia/Kolkata: Check fresh local API health. Reason: run current source code against the applied live schema
+RESULT — 2026-10-26 14:31:13 Asia/Kolkata: PASS: Check fresh local API health; HTTP 200. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:13 Asia/Kolkata: Queue SIMULATED maintenance payment. Reason: request payment through the existing API queue; no provider call is made in this mode
+RESULT — 2026-10-26 14:31:14 Asia/Kolkata: PASS: Queue SIMULATED maintenance payment; HTTP 202; SIMULATED; no ledger entry. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:14 Asia/Kolkata: Read maintenance payment from existing approvals queue. Reason: confirm the maintenance item appears in GET /api/approvals
+RESULT — 2026-10-26 14:31:15 Asia/Kolkata: PASS: Read maintenance payment from existing approvals queue; queue item is pending maintenance-payment. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:15 Asia/Kolkata: Approve from existing queue. Reason: use fixed approver, who is distinct from the owner requester
+RESULT — 2026-10-26 14:31:17 Asia/Kolkata: PASS: Approve from existing queue; HTTP 200; SIMULATED paid; no PayPal or ledger reference. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:17 Asia/Kolkata: Retry same queue decision and verify idempotency. Reason: repeat the approval on the same ID; payment must not duplicate
+RESULT — 2026-10-26 14:31:19 Asia/Kolkata: PASS: Retry same queue decision and verify idempotency; same payment id returned. NEXT: continue T4 live verification
+ABOUT TO — 2026-10-26 14:31:19 Asia/Kolkata: Verify one live payment row, paid request and null ledger/provider refs. Reason: read persisted state after the idempotent retry
+RESULT — 2026-10-26 14:31:20 Asia/Kolkata: PASS: Verify one live payment row, paid request and null ledger/provider refs; one paid SIMULATED row; provider and ledger refs null; request paid. NEXT: continue T4 live verification
+RESULT — PASS: migration 0010 is visible; fixed live owner/accountant/approver fixtures authenticated; existing 9999-minor-unit request queued and approved through GET/POST `/api/approvals`; retry returned the same payment ID; exactly one persisted `SIMULATED` paid row; PayPal and ledger refs null; zero users/orgs created; no PayPal call. NEXT: append live PASS to TEST-REPORT, mark T4 complete in CONTEXT, inspect original phase prompt's T5 requirements, and checkpoint locally.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Read the original Phase 6 prompt's T5 section and verify the current worktree status. Reason: continue in the user's intended phase order after T4 live completion, without inventing scope.
+RESULT — PASS: original Phase 6 attachment contains T5 “COMPLETION EVIDENCE AND REVIEW”; worktree currently has only post-commit continuity/report edits and remains on phase6-backend. NEXT: read exact T5 acceptance criteria, then decide/implement the next concrete step and update handoff.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Read the exact T5 section from the original Phase 6 prompt attachment. Reason: identify required completion evidence before advancing past the finished T4 payment workflow.
+RESULT — PASS: T5 requires completion evidence metadata (description, kind, file ref), reviewer-role evidence review/closure, and API wording that evidence does not prove correctness. T6/T7 details follow; no user action is needed before continuing. NEXT: read remaining T5 test criteria and inspect current completion evidence schema/routes for gaps.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Read the remaining T5 acceptance/test criteria and inspect existing evidence routes/schema. Reason: define a minimal additive T5 implementation consistent with the Phase 6 prompt and current T3/T4 model.
+RESULT — PASS: original T5 confirms scope: submit completion evidence metadata only (no file storage), require reviewer role to review/close, and clarify evidence supports but does not prove work correctness. Current workspace already has the evidence table from 0006; route coverage remains to inspect. NEXT: mark T4 live PASS and current task T5 in CONTEXT, then locally checkpoint T4 completion before modifying T5 code.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Review the updated handoff for accurate T4 PASS/T5 current task, then verify branch/status and whitespace before checkpoint. Reason: ensure the next task resumes from the completed live payment evidence and no stale apply gate remains.
+RESULT — PASS: CONTEXT now points to T5 and records T4 live success, but review found one stale bullet claiming no payment write occurred (true only for the failed first probe). NEXT: correct that wording, update live migration range to 0001–0010, then checkpoint T4 closure.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Correct two stale T4 handoff statements and verify local checkpoint prerequisites. Reason: keep the continuation file factually consistent with the successful live verifier run.
+RESULT — PASS: stale statement corrected; live migration range now 0001–0010; branch is phase6-backend, only continuity/report docs are modified, `.env` ignored, whitespace clean. NEXT: commit T4 live completion locally and start T5 schema/route inspection.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Commit the T4 live completion evidence locally on phase6-backend. Reason: T4 local code/tests and live migration/payment/idempotency checks are complete; no `.env` is staged.

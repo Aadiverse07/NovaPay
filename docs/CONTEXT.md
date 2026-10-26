@@ -3,8 +3,8 @@
 ## HEADER
 - Updated: 2026-10-26 14:30 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last commit: `b1c9ebd WIP Phase 6 task 4: implement simulated maintenance payments`; diagnostics/doc updates are uncommitted.
-- Phase/task: Phase 6 Fund Transparency, task T4; local implementation complete, live verification paused at migration apply gate.
+- Last commit: `e1fc6d9 WIP Phase 6 task 4: record migration visibility blocker`; T4 live PASS documentation is being checkpointed now.
+- Phase/task: Phase 6 Fund Transparency, task T5; T4 implementation and live verification complete.
 
 ## DONE
 - T1–T2: contributions/campaigns and capture accounting implemented; migrations 0006–0008 applied and verified. Capture `0U573441YN817132C` received; receipt and ledger reconcile at 100 minor units. Auditable reversal/repost credits Donations (4100); five exact webhook replays caused no duplicates.
@@ -12,31 +12,28 @@
 - T4: PayPal Payouts Sandbox returned HTTP 403 `PAYOUT_NOT_AVAILABLE`; selected SIMULATED-only mode, explicit no-ledger gap. No payout batch or money moved.
 - T4 local code/docs: `supabase/migrations/0010_simulated_maintenance_payments.sql`, `server/src/routes/funds.js`, `server/src/routes/approvals.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/phase6-maintenance-payment.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `docs/API.md`, `scripts/verify-phase6-payment-live.js`.
 - T4 local tests: focused 17/17 PASS; `npm run check:migrations` accepted 0001–0010; `npm test` 121/121 PASS; verifier syntax PASS.
-- Live T4 preflight: fixed user magic-link auth, fixed org membership, and existing 9999 request eligibility all passed. No payment/approval write was attempted.
+- Live T4 verification: fixed user magic-link auth, org membership, and existing 9999 request eligibility passed; queue request and decision created exactly one SIMULATED payment; retry was idempotent.
 
 ## IN PROGRESS
-- Exact task: complete T4 live verification after migration 0010 is visible on the configured Supabase project.
-- Files in latest edit: `scripts/verify-phase6-payment-live.js`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`.
-- Last live read-only check: `approvals.fund_maintenance_request_id` query returned HTTP 400, SQLSTATE `42703`, `column approvals.fund_maintenance_request_id does not exist`. User earlier said applied, but configured project does not expose the column. No T4 payment request, approval, or mutation occurred.
-- Left: human applies migration 0010 to the correct project; then rerun verifier, confirm one SIMULATED payment, idempotent retry, null PayPal/ledger refs and request `paid`; update reports and continue T5.
+- Exact task: inspect existing completion-evidence schema/routes; implement T5 metadata submission and reviewer review/close flow with clear non-proof language.
+- Files being edited: none yet. Last completed files: migration 0010, funds/approvals routes and repositories, tests, API docs, and T4 live verifier.
+- T4 live: after user applied migration, 0010 column visibility passed; existing request entered the Approvals queue, was approved SIMULATED, retry returned the same payment ID, one row persisted, request is `paid`, PayPal/ledger refs are null; no PayPal call or new users/orgs.
+- Left: T5 implementation/tests/docs and its live verification after any needed migration apply.
 
 ## NEXT STEPS
-1. Human: open the Supabase project configured for this workspace, select **SQL Editor** → **New query**.
-2. Paste the complete contents of `supabase/migrations/0010_simulated_maintenance_payments.sql` and run it once. The configured project currently returns 42703 for its first added column, so the migration did not reach this schema.
-3. In the same SQL Editor, verify with: `select column_name from information_schema.columns where table_schema='public' and table_name='approvals' and column_name='fund_maintenance_request_id';` Expected: one row.
-4. Reply `applied` after the migration and verification query succeed.
-5. Agent: run `node scripts/verify-phase6-payment-live.js`; it uses only the existing fixed fixtures, writes only the SIMULATED queue/payment rows, and makes no PayPal call.
-6. Record live result in TEST-REPORT/WORKLOG/CONTEXT, checkpoint locally, then proceed to T5.
+1. Inspect existing evidence schema and T5 route/repository coverage.
+2. Add metadata-only evidence submission, reviewer-only review/close actions, audit entries, route docs, and tests; create an additive migration only if the schema needs changes.
+3. Run focused/full tests and migration checks, then live-verify with existing fixed fixtures and user-applied migration if required.
+4. Update TEST-REPORT/WORKLOG/CONTEXT and checkpoint locally before continuing to T6.
 
 ## USER ACTIONS PENDING
-- Apply migration 0010 in the Supabase project configured by this workspace. Exact steps and verification SQL are in NEXT STEPS above. Then reply `applied`.
-- No other human action pending. Do not repeat the live verifier before schema verification succeeds.
+- None at present. Migration 0010 is visible and T4 live verification passed.
 
 ## LIVE STATE
-- Supabase migrations 0001–0009: confirmed applied. Migration 0010: source exists and user reported applied, but configured project's PostgREST lacks `approvals.fund_maintenance_request_id` (HTTP 400 / SQLSTATE 42703); treat as NOT APPLIED here until verified.
+- Supabase migrations 0001–0010: confirmed applied and live-visible. Migration 0010: user-confirmed and live visibility verified after rerun.
 - Tunnel/webhook: previously fixed; T2 capture and five exact replays passed.
 - T3 fixture data and audit rows remain in `NovaPay Phase 3 Verification A`; reuse, do not recreate.
-- Last live test: T4 schema preflight FAIL (read-only); no T4 payment mutation. Last completed live flow: T3 PASS on 2026-10-26.
+- Last live test: T4 PASS on 2026-10-26; one SIMULATED payment, same ID on retry, no ledger/provider refs.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
@@ -48,11 +45,10 @@
 | T4 focused tests | PASS | 2026-10-26 | 17/17 |
 | Migration syntax | PASS | 2026-10-26 | `npm run check:migrations`; 0001–0010 |
 | Full suite | PASS | 2026-10-26 | `npm test`; 121/121 |
-| T4 live migration visibility | FAIL | 2026-10-26 | Read-only PostgREST; 42703 column missing |
-| T4 live payment/idempotency | UNVERIFIED | 2026-10-26 | Stopped before any payment write |
+| T4 initial migration visibility probe | FAIL (superseded) | 2026-10-26 | 42703 before user reapplied 0010 |
+| T4 live payment/idempotency | PASS | 2026-10-26 | Fixed existing request; one row; retry same ID; no ledger/provider refs |
 
 ## KNOWN ISSUES AND RISKS
-- Live T4 blocker: migration 0010 is absent from the configured project schema despite prior user confirmation; do not attempt RPC/payment writes before column verification.
 - T4 locally marks approved simulated payments `paid` for workflow demonstration; response/row state SIMULATED, provider/ledger refs null, no cash movement.
 - Fixed T3 verifier data and append-only audit entries remain in the dedicated organization.
 - Older worklog/report entries retain failed attempts and a shell-interpolation transcript; later append-only corrections identify accurate results. No secrets were intentionally emitted.
