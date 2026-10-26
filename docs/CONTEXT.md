@@ -3,51 +3,54 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; base main at 874e2e5; local commits only, never push.
-- Phase/task: T1 views and T2 API demo complete; T3 README is next.
+- Phase/task: T1–T3 complete; T4 final validation is next.
 
 ## DONE
-- STEP 0: npm ci; npm test PASS 131/131; migration syntax 0001–0014 PASS; port 3000 server restarted, `/api/status` HTTP 200.
-- T1 Fundraising, Maintenance, Transparency views wired in `src/fund-views.js`, included by `dashboard.html`. Existing demo content is labelled in demo mode; live views use APIs and loading/empty/error states.
-- T2 fixed-user API: sign-in/status PASS; 2 capture rows COMPLETED; 4 ledger entries/2 captures; USD trial balance balanced; 1 approval/0 pending; 1 campaign, 1 contribution, 1 expense; AI code route 12; AI LLM route returned 3 citations; fixed request closed with accepted evidence appears in transparency as SIMULATED with explicit gaps. No PayPal order created.
+- STEP 0: npm ci; npm test PASS 131/131; migrations 0001–0014 parse; server restarted, `/api/status` HTTP 200.
+- T1 Fundraising/Maintenance/Transparency views implemented in `src/fund-views.js`, loaded by `dashboard.html`; demo sample content labelled; live data uses APIs and loading/empty/error states.
+- T2 fixed-user API: 2 completed capture rows; 4 ledger entries/2 capture entries; USD trial balance balanced; approvals 1/0 pending; 1 campaign/contribution/expense; AI code answer 12; LLM 3 citations; closed maintenance row with accepted evidence appears in transparency as SIMULATED with explicit gaps. No PayPal order created.
+- T3 README appended real/simulated explanation, key names/run/tunnel steps, and a 3-minute demo using existing records; no existing UI section changed.
 
 ## IN PROGRESS
-- Exact task: T3 README section and T4 validation/docs/local final commit.
-- Edited files: dashboard.html, src/fund-views.js, docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md.
-- T2 maintenance lifecycle verifier FAIL: existing deterministic T3 request is already `closed`, while verifier expects `payment_approved`; it was preserved, not reset. The completion and transparency path passed on this existing closed row.
+- Exact task: T4 run requested validation, update final docs and commit locally.
+- Edited files: README.md, dashboard.html, src/fund-views.js, docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md.
+- T2 fixed T3 lifecycle verifier FAIL: request already `closed`, expected `payment_approved`; preserved existing data. Completion and transparency checks passed.
 
 ## NEXT STEPS
-1. Inspect README headings and append only non-UI documentation at the end.
-2. Add real/simulated distinction, setup key names/tunnel/npm start, and a 3-minute demo script using the existing capture (no new order).
-3. Run T4: npm test, migration check, node --check JS, git diff --check, protected-file diff from main.
-4. Update continuity docs; commit locally as `Fund views wiring, demo run, README`; never push.
+1. Run `npm test` and record exact count/result.
+2. Run `npm run check:migrations`.
+3. Run `node --check src/fund-views.js`.
+4. Run `git diff --check` and `git diff --stat main -- <protected paths>`; protected diff must be empty.
+5. Update CONTEXT/WORKLOG/TEST-REPORT/DECISIONS, then commit locally as `Fund views wiring, demo run, README`.
 
 ## USER ACTIONS PENDING
-- No action needed now. At finish give exact manual browser checks. The referenced 3-minute PDF was not found; the README/demo used the user-listed API steps and existing data.
+- Browser checks listed at finish. Exact referenced 3-minute PDF was not found; README uses the user-listed API steps and existing data.
 
 ## LIVE STATE
 - Prior handoff records migrations 0001–0014 applied; none changed.
-- Port 3000 is running in persistent terminal session 40038; `/api/status` HTTP 200; integrations report configured (no values recorded).
-- No PayPal order created. Fixed capture rows are completed; fixed maintenance request is closed with accepted evidence, SIMULATED payment and explicit gaps.
+- Persistent server session 40038 serves port 3000; `/api/status` HTTP 200; no key values recorded.
+- No PayPal order created; fixed capture rows completed; fixed maintenance request closed with accepted evidence and SIMULATED payment.
 
 ## TEST STATE
 | Check | Status | Date | Command |
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
-| npm test | PASS 131/131 | 2026-10-26 | `npm test` |
-| Migration syntax | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
-| API status/restart | PASS HTTP 200 | 2026-10-26 | `npm start`; GET `/api/status` |
-| T1 view browser/API runtime | UNVERIFIED | 2026-10-26 | No browser view loaded in this task |
-| T2 captures/ledger/approvals/transparency | PASS | 2026-10-26 | Fixed owner API GETs; counts recorded in TEST-REPORT |
-| T2 AI code | PASS | 2026-10-26 | `/api/ai/chat`; `code`, answer 12 |
-| T2 AI cited LLM | PASS | 2026-10-26 | `/api/ai/chat`; `llm`, 3 citations |
-| T2 T3 lifecycle verifier | FAIL | 2026-10-26 | Fixed request already closed, expected payment_approved |
-| Exact PDF demo sequence | UNVERIFIED | 2026-10-26 | No PDF found in repo/attachments |
+| npm test baseline | PASS 131/131 | 2026-10-26 | `npm test` |
+| Migration baseline | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
+| Authenticated read APIs | PASS | 2026-10-26 | fixed owner; captures, ledger, approvals, funds/transparency HTTP 200 |
+| AI code route | PASS | 2026-10-26 | `/api/ai/chat`; code result 12 |
+| AI cited LLM | PASS | 2026-10-26 | `/api/ai/chat`; llm, 3 citations |
+| Fixed T3 lifecycle verifier | FAIL | 2026-10-26 | fixture already closed; expected payment_approved |
+| Maintenance transparency | PASS | 2026-10-26 | closed; evidence accepted; SIMULATED and explicit gaps |
+| README scope/whitespace | PASS | 2026-10-26 | appended-only diff and `git diff --check` |
+| Browser views | UNVERIFIED | 2026-10-26 | Not opened in browser |
+| Exact PDF demo sequence | UNVERIFIED | 2026-10-26 | No PDF in repo/attachments |
 
 ## KNOWN ISSUES AND RISKS
-- Auth helper exposes no organization role. Write controls require trusted organization role in app_metadata; otherwise hidden. Backend remains authorization authority.
-- No pre-payment maintenance GET list; requests/contractors/quotes created in the current tab are ephemeral. Transparency omits requester/submitter IDs, receipt numbers and evidence file paths; UI states those limits and disables uncertain actions.
-- Maintenance payouts are SIMULATED; no money movement or ledger post. No new PayPal order created.
-- One earlier combined API probe failed before API status (server exited), and a buffered retry timed out; individual reads/AI were rerun separately and recorded.
+- Browser auth helper has no organization role accessor; controls require trusted organization role in app_metadata, otherwise hidden. Server enforces permissions.
+- No pre-payment maintenance GET list; current-tab requests/contractors/quotes are ephemeral. API omits receipt IDs, requester/submitter identity, evidence file paths; UI states limits and disables uncertain actions.
+- Maintenance payouts and invoice sends are SIMULATED. No PayPal order created.
+- T3 lifecycle script failed because the fixed request was already closed; do not reset it.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor is transactional; errors roll everything back. Never edit an applied migration; add a new numbered file.
