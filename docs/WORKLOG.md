@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: retry T2 authenticated API demo; server is running persistently in terminal session 40038.
-- Last finished step: initial probe failed before any API endpoint due server exit; `npm start` persistent session now returns `/api/status` HTTP 200. Fixed sign-in completed; no order created.
-- Next step: rerun read-only authenticated capture/ledger/transactions/approvals/transparency calls and two AI questions; capture summary only.
-- Pending human action: browser checks at finish; no order creation.
+- Current task: T2 AI API questions; authenticated financial/fund read checks complete.
+- Last finished step: fixed owner sign-in/API status PASS; 2 capture transactions COMPLETED; 4 ledger entries, 2 capture entries, USD trial balance balanced; approvals 1/pending 0; campaigns 1; transparency 1 contribution/1 expense/namesShown=false; no PayPal order.
+- Next step: test AI arithmetic `route=code`, then one evidence-based `route=llm` request with citation count; the prior combined AI probe timed out and its route results are UNVERIFIED.
+- Pending human action: browser checks at finish; no PayPal order creation.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1796,3 +1796,14 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 - RESULT: PASS; persistent local /api/status HTTP 200. NEXT: retry authenticated read-only API probe if HTTP 200.
 - 2026-10-26 — ABOUT TO: Checkpoint the failed probe, persistent server restart, and verified HTTP 200 before retrying the demo. WHY: preserve the precise state after the local process-lifecycle issue.
 - RESULT: PASS; CONTEXT and pointer reflect persistent server and initial failed attempt; TEST-REPORT retains the failure. NEXT: stage continuity docs, whitespace-check, and commit T2 server checkpoint before retry.
+- RESULT: PASS; T2 server checkpoint exit 0. NEXT: rerun authenticated API probe on persistent server.
+- 2026-10-26 — ABOUT TO: Retry bounded authenticated API demo on persistent port 3000 using the fixed owner/test org. WHY: validate PayPal capture transactions, ledger balance, approvals, funds transparency, and code/cited-LLM AI; only GETs plus two AI messages; no order creation.
+- RESULT: FAIL; authenticated API demo exit 1; no order creation requested or attempted. NEXT: log PASS/FAIL separately per endpoint and AI route; investigate any failed checks read-only.
+- 2026-10-26 — ABOUT TO: Record the timed-out authenticated probe as FAIL and recheck `/api/status`. WHY: the script buffered its summary; without per-endpoint output no individual API check can be marked PASS.
+- RESULT: FAIL; second authenticated API probe timed out before emitting its buffered summary; exact endpoint not identifiable; no order endpoint called. NEXT: record UNVERIFIED endpoint results for this run, check persistent server health, then split reads from AI with per-step output.
+- 2026-10-26 — ABOUT TO: Check persistent server health after the probe timeout. WHY: distinguish server exit from one slow API/provider call before another run.
+- RESULT: INFO; status result printed above. NEXT: if server is healthy, rerun the authenticated read calls without AI and print a summary after each endpoint.
+- 2026-10-26 — ABOUT TO: Run the fixed-owner authenticated read-only API checks individually with a status line after each endpoint and short per-request timeout. WHY: local server is HTTP 200; separate reads from the AI/provider timeout so only observed results are reported.
+- RESULT: PASS; read-only endpoint probe exit 0; output contains per-endpoint HTTP/count summaries only. NEXT: append each observed API result to TEST-REPORT, then run AI messages individually.
+- 2026-10-26 — ABOUT TO: Append observed read-only T2 API results per endpoint, update CONTEXT and resume pointer, and checkpoint locally. WHY: the separated probe produced visible HTTP/count results for all requested non-AI reads.
+- RESULT: PASS; each observed T2 read result appended to TEST-REPORT; CONTEXT/pointer updated; no new order. NEXT: stage docs, whitespace-check, and create T2 read-results WIP checkpoint before AI API calls.

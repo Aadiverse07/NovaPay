@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; base main at 874e2e5; local commits only, never push.
-- Phase/task: T1 complete; T2 API demo in progress; completion PASS, T3 lifecycle mismatch, and initial API probe connection failure recorded; server restarted persistently.
+- Phase/task: T1 complete; T2 API demo in progress; authenticated fixed-owner read checks PASS; T3 lifecycle mismatch and one failed buffered probe recorded; server running persistently.
 
 ## DONE
 - STEP 0 PASS: `npm ci`; `npm test` 131/131; migration syntax 0001–0014; server on port 3000 restarted and `/api/status` HTTP 200.
@@ -38,6 +38,7 @@
 | Migration syntax | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
 | API status before/after restart | PASS HTTP 200 | 2026-10-26 | `curl http://127.0.0.1:3000/api/status` |
 | Initial authenticated API probe | FAIL | 2026-10-26 | server exited; ECONNREFUSED before API requests |
+| Authenticated read API demo | PASS | 2026-10-26 | fixed owner; captures 2 completed; 4 ledger entries/2 captures; trial balance balanced; 1 approval/0 pending; 1 campaign, 1 contribution, 1 expense; no order |
 | Persistent server restart | PASS HTTP 200 | 2026-10-26 | `npm start` in persistent session; GET `/api/status` |
 | T1 view runtime | UNVERIFIED | 2026-10-26 | No view/browser runtime check yet |
 | Fixed test user sign-in/API | PASS 3/3 | 2026-10-26 | `node scripts/verify-phase6-maintenance-live.js` fixed roles read campaigns HTTP 200 |
