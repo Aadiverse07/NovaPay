@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; base main at 874e2e5; local commits only, never push.
-- Phase/task: T1 complete; T2 API demo is next.
+- Phase/task: T1 complete; T2 API demo preflight complete, execution pending.
 
 ## DONE
 - STEP 0 PASS: `npm ci`; `npm test` 131/131; migration syntax 0001–0014; server on port 3000 restarted and `/api/status` HTTP 200.
