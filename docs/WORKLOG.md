@@ -1,8 +1,8 @@
 ## RESUME POINTER
 - Current task: finish T6 repair/live verification, then continue Phase 6 T7.
-- Last finished step: 0012 objects/grants visible; valid-member RPC exposed SQLSTATE 42725; migration 0013 and regression test added; checkpoint `1423eb7`; local full suite 128/128 PASS.
-- Next step: user applies `supabase/migrations/0013_fix_transparency_campaign_json.sql` and says `applied`.
-- Pending human action: apply only migration 0013; do not reload schema cache.
+- Last finished step: 0013 resolved 42725; live RPC now reports 42703 for absent approval-chain `created_at`; migration 0014 added; local full suite 129/129 PASS.
+- Next step: user applies `supabase/migrations/0014_fix_transparency_approval_order.sql` and says `applied`.
+- Pending human action: apply only migration 0014; do not reload schema cache.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1099,3 +1099,52 @@ RESULT — 2026-10-26 15:17:05 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - RESULT: PASS; branch `phase6-backend`; root `.env` ignored and absent from Git status/index; CONTEXT 79 lines; `git diff --check` clean. NEXT: stage only reviewed T6 files, commit locally, refresh commit pointer if needed, then ask user to apply migration 0013.
 - RESULT: PASS; `1423eb7` committed migration 0013, regression test, and handoff locally on `phase6-backend`; worktree clean, no push. NEXT: apply 0013 in Supabase SQL Editor and say `applied`; no schema reload.
 - 2026-10-26 15:38 Asia/Kolkata — ABOUT TO: Refresh handoff pointers to checkpoint `1423eb7` and commit the final apply-gate state. WHY: preserve exact continuation state before asking the user to run migration 0013.
+- 2026-10-26 15:40 Asia/Kolkata — ABOUT TO: Record user confirmation that migration 0013 was applied, then run the fixed-fixture T6 live verifier without a manual schema-cache reload. WHY: validate the additive runtime correction against the intended Supabase project.
+ABOUT TO — 2026-10-26 15:19:48 Asia/Kolkata: Generate sign-in link for fixed owner. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:19:49 Asia/Kolkata: PASS: Generate sign-in link for fixed owner; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:49 Asia/Kolkata: Exchange sign-in link for fixed owner JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:19:50 Asia/Kolkata: PASS: Exchange sign-in link for fixed owner JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:50 Asia/Kolkata: Generate sign-in link for fixed approver. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:19:51 Asia/Kolkata: PASS: Generate sign-in link for fixed approver; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:51 Asia/Kolkata: Exchange sign-in link for fixed approver JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:19:51 Asia/Kolkata: PASS: Exchange sign-in link for fixed approver JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:51 Asia/Kolkata: Generate sign-in link for fixed accountant. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:19:52 Asia/Kolkata: PASS: Generate sign-in link for fixed accountant; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:52 Asia/Kolkata: Exchange sign-in link for fixed accountant JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:19:52 Asia/Kolkata: PASS: Exchange sign-in link for fixed accountant JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:52 Asia/Kolkata: Find fixed Phase 3 verifier organization. Reason: reuse the existing fixed organization
+RESULT — 2026-10-26 15:19:53 Asia/Kolkata: PASS: Find fixed Phase 3 verifier organization; one fixed organization. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:53 Asia/Kolkata: Find fixed donor test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:19:53 Asia/Kolkata: PASS: Find fixed donor test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:53 Asia/Kolkata: Check fixed donor membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:19:54 Asia/Kolkata: PASS: Check fixed donor membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:54 Asia/Kolkata: Find fixed resident test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:19:55 Asia/Kolkata: PASS: Find fixed resident test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:55 Asia/Kolkata: Check fixed resident membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:19:55 Asia/Kolkata: PASS: Check fixed resident membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:55 Asia/Kolkata: Generate sign-in link for fixed donor. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:19:56 Asia/Kolkata: PASS: Generate sign-in link for fixed donor; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:56 Asia/Kolkata: Exchange sign-in link for fixed donor JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:19:56 Asia/Kolkata: PASS: Exchange sign-in link for fixed donor JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:56 Asia/Kolkata: Generate sign-in link for fixed resident. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:19:56 Asia/Kolkata: PASS: Generate sign-in link for fixed resident; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:56 Asia/Kolkata: Exchange sign-in link for fixed resident JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:19:57 Asia/Kolkata: PASS: Exchange sign-in link for fixed resident JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:57 Asia/Kolkata: Find existing T4/T5 paid maintenance expense. Reason: reuse the fixed Phase 3 payment/evidence verification request
+RESULT — 2026-10-26 15:19:57 Asia/Kolkata: PASS: Find existing T4/T5 paid maintenance expense; request state closed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:19:57 Asia/Kolkata: Confirm migration 0012 visibility. Reason: verify read RPCs work through API only and schema is deployed
+RESULT — 2026-10-26 15:19:57 Asia/Kolkata: FAIL: Confirm migration 0012 visibility; transparency RPC schema/status HTTP 400. NEXT: inspect exact step; do not create new identities/orgs on rerun
+- RESULT: FAIL/UNVERIFIED; verifier stopped at its RPC preflight with HTTP 400 after the user reported 0013 applied. It reused existing fixed identities/memberships; no fund data changed. NEXT: capture the safe code/message using a valid member context to determine whether 0013 resolved SQLSTATE 42725.
+- 2026-10-26 15:41 Asia/Kolkata — ABOUT TO: Repeat valid-member service RPC diagnostic after 0013 apply, printing only status/code/message. WHY: identify the remaining runtime error without reloading schema cache or exposing IDs/secrets.
+- RESULT: PASS for the 0013 repair: the prior 42725 error is gone. Current live RPC returns HTTP 400 `42703 column a.created_at does not exist`; this identifies the next runtime defect. No fund mutation or cache reload. NEXT: inspect approval-chain schema/insert timestamps and correct the transparency aggregation in a new additive migration 0014.
+- 2026-10-26 15:42 Asia/Kolkata — ABOUT TO: Inspect migration 0009 approval-chain table definition and T6 SQL use of its timestamps. WHY: replace the nonexistent `created_at` reference with a real schema column in a new migration, leaving applied 0012/0013 unchanged.
+- 2026-10-26 15:42 Asia/Kolkata — ABOUT TO: Inspect the approval-chain table definition after live `42703`. WHY: verify the available ordering column before creating migration 0014; do not edit applied 0012/0013.
+- RESULT: PASS; `fund_approvals_chain` defines `decided_at timestamptz NOT NULL DEFAULT now()` and has no `created_at`; T6 function incorrectly orders by `a.created_at`. NEXT: add migration 0014 replacing that order with `a.decided_at`, plus regression coverage and validations.
+- 2026-10-26 15:43 Asia/Kolkata — ABOUT TO: Add migration 0014 to correct the approval aggregation order to `decided_at` and assert that it contains no nonexistent `a.created_at` reference. WHY: live RPC passes the prior 0013 JSON fix but encounters an invalid approval-chain column; preserve append-only migrations.
+- RESULT: FAIL; focused migration suite 9/10 because the new negative assertion also matched the migration comment phrase `created_at`, although SQL uses `a.decided_at`. Parser command did not run because `&&` stopped. No database activity. NEXT: narrow the assertion to the SQL token `order by a.created_at`; rerun focused tests and migration parser.
+- 2026-10-26 15:44 Asia/Kolkata — ABOUT TO: Narrow the 0014 regression assertion to reject only `order by a.created_at`, then rerun focused migration tests and `npm run check:migrations`. WHY: avoid matching explanatory comment text while still detecting the invalid SQL reference.
+- RESULT: PASS; focused migration tests 10/10 and PostgreSQL 17 migration parser accepted 0001–0014. Earlier failed assertion run remains logged and did not reach migration parser. NEXT: run the full suite before requesting user application of 0014.
+- 2026-10-26 15:45 Asia/Kolkata — ABOUT TO: Run full `npm test` after adding migration 0014 and correcting its regression assertion. WHY: confirm complete regression and migration parser before the next human apply gate.
+- 2026-10-26 15:45 Asia/Kolkata — ABOUT TO: Update handoff and append-only reports for the post-0013 live finding (`42703 a.created_at`), new migration 0014, and current local tests; then checkpoint. WHY: keep repo state resumable and ask the user to apply only the next numbered migration.
+- RESULT: PASS; full suite 129/129 passed; embedded parser accepted 0001–0014. CONTEXT now names the 42703 failure, accurate applied/pending migrations, exact files, and current tests. NEXT: verify diff/branch/ignored `.env`, then commit 0014 and handoff locally.
+- 2026-10-26 15:46 Asia/Kolkata — ABOUT TO: Validate current T6 diff, branch and `.env` staging state and checkpoint migration 0014 with its test/docs. WHY: tests pass, and the user must apply only this additive migration before the next live run.
