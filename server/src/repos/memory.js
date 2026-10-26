@@ -28,7 +28,29 @@ export class CapturesRepo {
   all(orgId) { return this.items.filter((capture) => capture.orgId === orgId); }
   get(id, orgId) { return this.items.find((capture) => capture.id === id && capture.orgId === orgId); }
   add(capture, orgId) { capture.orgId = orgId; if (!this.get(capture.id, orgId)) this.items.unshift(capture); return capture; }
-  addFromWebhook(capture) { const order = this.orders?.findByPayPalId(capture.orderId); if (!order) throw new Error('verified capture does not match a stored PayPal order'); return { orgId: order.orgId, capture: this.add(capture, order.orgId) }; }
+  async addFromWebhook(capture) {
+    const order = this.orders?.findByPayPalId(capture.orderId);
+    if (!order) throw new Error('verified capture does not match a stored PayPal order');
+    if (order.fundContributionId && this.funds) {
+      const contribution = await this.funds.getContribution(order.orgId, order.fundContributionId);
+      if (!contribution) throw new Error('verified capture contribution link is missing');
+      if (toMinor(capture.value) !== contribution.amountMinor || capture.currency !== 'USD') {
+        contribution.captureMismatch = true;
+        contribution.captureMismatchReason = 'Verified PayPal capture amount or currency does not match the pledge.';
+        return { orgId: order.orgId, mismatch: true };
+      }
+      const stored = this.add(capture, order.orgId);
+      if (capture.status === 'COMPLETED' && contribution.status === 'pledged') {
+        contribution.status = 'received';
+        contribution.paypalCaptureId = capture.id;
+        contribution.receivedAt = capture.occurredAt || new Date().toISOString();
+        contribution.captureMismatch = false;
+        contribution.receipt ||= { receiptNumber: `RCP-${contribution.id.replaceAll('-', '').slice(0,16).toUpperCase()}`, issuedAt: contribution.receivedAt };
+      }
+      return { orgId: order.orgId, capture: stored, mismatch: false };
+    }
+    return { orgId: order.orgId, capture: this.add(capture, order.orgId), mismatch: false };
+  }
   refund(approvalId, orgId) { return this.refunds.get(this.key(orgId, approvalId)); }
   saveRefund(approvalId, result, orgId) { this.refunds.set(this.key(orgId, approvalId), result); }
   isLocked(approvalId, orgId) { return this.locks.has(this.key(orgId, approvalId)); }
@@ -94,8 +116,226 @@ export function createRepositories() {
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
+  const campaignRows = new Map();
+  const contributionRows = new Map();
+  const maintenanceRows = new Map();
+  const contractorRows = new Map();
+  const quotationRows = new Map();
+  const maintenanceApprovalRows = new Map();
+  const maintenancePaymentRows = new Map();
+  const completionEvidenceRows = new Map();
+  const fundAuditRows = [];
+  const approvalRepo = new ApprovalsRepo(captures);
+  const maintenanceError = (code, statusCode, message) => Object.assign(new Error(message), { code, statusCode });
+  const funds = {
+    key(orgId, id) { return `${orgId}:${id}`; },
+    async listCampaigns(orgId) { return [...campaignRows.values()].filter((row) => row.orgId === orgId); },
+    async createCampaign(input) {
+      const row = { id: randomUUID(), org_id: input.orgId, orgId: input.orgId, title: input.title, purpose: input.purpose, target_minor: input.targetMinor, targetMinor: input.targetMinor, currency: 'USD', deadline: input.deadline || null, organiser: input.organiser, status: input.status, created_by: input.actorId };
+      campaignRows.set(this.key(input.orgId,row.id),row); return row;
+    },
+    async createPledge(input) {
+      const campaign = campaignRows.get(this.key(input.orgId,input.campaignId));
+      if (!campaign) throw Object.assign(new Error('campaign not found'),{statusCode:404});
+      if (campaign.status !== 'active') throw Object.assign(new Error('campaign is not accepting contributions'),{statusCode:409});
+      const row = { id: randomUUID(), org_id: input.orgId, orgId: input.orgId, campaign_id: input.campaignId, campaignId: input.campaignId, amount_minor: input.amountMinor, amountMinor: input.amountMinor, status: 'pledged', donor_ref: 'anonymous', donorRef: 'anonymous', created_by: input.actorId, createdBy: input.actorId, capture_mismatch: false, captureMismatch: false };
+      contributionRows.set(this.key(input.orgId,row.id),row); return row;
+    },
+    async getContribution(orgId,id) { return contributionRows.get(this.key(orgId,id)) || null; },
+    async linkContributionOrder(input) {
+      const contribution = await this.getContribution(input.orgId,input.contributionId);
+      const order = orders.byRequestKey(input.requestKey,input.orgId);
+      if (!contribution || !order || order.id !== input.orderId || toMinor(order.amount) !== contribution.amountMinor) throw new Error('PayPal order does not match contribution');
+      order.fundContributionId = contribution.id; order.approveUrl = input.approveUrl;
+      contribution.paypalOrderId = input.orderId;
+      return { contribution_id:contribution.id,paypal_order_id:input.orderId,approve_url:input.approveUrl };
+    },
+    async campaignSummary(orgId,id) {
+      const campaign=campaignRows.get(this.key(orgId,id));
+      if (!campaign) throw Object.assign(new Error('campaign not found'),{statusCode:404});
+      const contributions=[...contributionRows.values()].filter((row)=>row.orgId===orgId&&row.campaignId===id);
+      const pledgedMinor=contributions.filter((row)=>row.status==='pledged').reduce((sum,row)=>sum+row.amountMinor,0);
+      const receivedMinor=contributions.filter((row)=>row.status==='received').reduce((sum,row)=>sum+row.amountMinor,0);
+      return { campaign:{id:campaign.id,title:campaign.title,purpose:campaign.purpose,targetMinor:campaign.targetMinor,currency:'USD',deadline:campaign.deadline,organiser:campaign.organiser,status:campaign.status},pledgedMinor,receivedMinor,allocatedMinor:0,approvedExpensesMinor:0,actualSpendingMinor:0,remainingMinor:campaign.targetMinor-receivedMinor,asOf:new Date().toISOString(),legalCaution:'Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only.' };
+    },
+    async createMaintenanceRequest(input) {
+      if (input.campaignId && !campaignRows.has(this.key(input.orgId,input.campaignId))) throw maintenanceError('CAMPAIGN_NOT_FOUND',404,'Campaign was not found.');
+      const row={id:randomUUID(),org_id:input.orgId,campaign_id:input.campaignId||null,title:input.title,scope:input.scope,status:'requested',estimate_minor:input.estimateMinor||null,requested_by:input.actorId,created_at:new Date().toISOString()};
+      maintenanceRows.set(this.key(input.orgId,row.id),row);return row;
+    },
+    async createContractor(input) {
+      const row={id:randomUUID(),org_id:input.orgId,name:input.name,verification_status:'unverified',verified_by:null,verified_at:null,payment_destination_ref:input.paymentDestinationRef||null};
+      contractorRows.set(this.key(input.orgId,row.id),row);return row;
+    },
+    async addQuotation(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));const contractor=contractorRows.get(this.key(input.orgId,input.contractorId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(!contractor)throw maintenanceError('CONTRACTOR_NOT_FOUND',404,'Contractor was not found.');
+      if(!['requested','quoting'].includes(request.status))throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'A quotation can only be added while requested or quoting.');
+      const row={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,contractor_id:contractor.id,amount_minor:input.amountMinor,currency:'USD',document_ref:input.documentRef||null};
+      quotationRows.set(this.key(input.orgId,row.id),row);if(request.status==='requested')request.status='quoting';return row;
+    },
+    async approveMaintenanceScope(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));const quote=quotationRows.get(this.key(input.orgId,input.quotationId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status!=='quoting')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Scope approval requires quoting state.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot approve own request.');
+      if(!quote||quote.maintenance_request_id!==request.id)throw maintenanceError('QUOTATION_NOT_FOR_REQUEST',409,'Chosen quotation must belong to this request.');
+      const approval={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,step:'scope',approver_id:input.actorId,decision:'approved',note:input.note||null};
+      maintenanceApprovalRows.set(this.key(input.orgId,approval.id),approval);request.chosen_quotation_id=quote.id;request.contractor_id=quote.contractor_id;request.status='scope_approved';return {request,approval};
+    },
+    async verifyMaintenanceContractor(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status!=='scope_approved')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Contractor verification requires scope_approved state.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot verify own request.');
+      const contractor=contractorRows.get(this.key(input.orgId,request.contractor_id));
+      if(!contractor)throw maintenanceError('CONTRACTOR_NOT_FOUND',404,'Chosen contractor was not found.');
+      contractor.verification_status='verified';contractor.verified_by=input.actorId;contractor.verified_at=new Date().toISOString();request.status='contractor_verified';return {request,contractor};
+    },
+    async approveMaintenancePayment(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status!=='contractor_verified')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Payment approval requires contractor_verified state.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot approve own request.');
+      const quote=quotationRows.get(this.key(input.orgId,request.chosen_quotation_id));if(!quote)throw maintenanceError('QUOTATION_NOT_FOUND',404,'Chosen quotation was not found.');
+      const approvals=[...maintenanceApprovalRows.values()].filter(a=>a.org_id===input.orgId&&a.maintenance_request_id===request.id&&a.step==='payment'&&a.decision==='approved');
+      if(approvals.some(a=>a.approver_id===input.actorId))throw maintenanceError('DUPLICATE_APPROVER',409,'This approver already approved the payment.');
+      const approval={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,step:'payment',approver_id:input.actorId,decision:'approved',note:input.note||null};maintenanceApprovalRows.set(this.key(input.orgId,approval.id),approval);
+      const required=quote.amount_minor>=10000?2:1;const count=approvals.length+1;if(count>=required)request.status='payment_approved';
+      return {status:request.status,approvals:count,required,approval};
+    },
+    async requestMaintenancePayment(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      const existing=[...approvalRepo.items.values()].find(row=>row.orgId===input.orgId&&row.proposalType==='maintenance-payment'&&row.fundMaintenanceRequestId===request.id);
+      if(existing)return existing;
+      if(request.status!=='payment_approved')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Payment request requires payment_approved state.');
+      const quote=quotationRows.get(this.key(input.orgId,request.chosen_quotation_id));
+      if(!quote)throw maintenanceError('QUOTATION_NOT_FOUND',409,'Chosen quotation was not found.');
+      const contractor=contractorRows.get(this.key(input.orgId,request.contractor_id));
+      if(!contractor||contractor.verification_status!=='verified')throw maintenanceError('CONTRACTOR_NOT_VERIFIED',409,'Contractor must be verified.');
+      const approvals=[...maintenanceApprovalRows.values()].filter(a=>a.org_id===input.orgId&&a.maintenance_request_id===request.id&&a.step==='payment'&&a.decision==='approved');
+      const required=quote.amount_minor>=10000?2:1;
+      if(new Set(approvals.map(a=>a.approver_id)).size<required)throw maintenanceError('PAYMENT_APPROVALS_REQUIRED',409,'Payment approval threshold is not satisfied.');
+      const approvalId=`APR-FUND-PAY-${request.id.replaceAll('-','')}`;
+      const approval={approvalId,orgId:input.orgId,proposalType:'maintenance-payment',captureId:null,invoiceId:null,fundMaintenanceRequestId:request.id,amount:quote.amount_minor/100,amountMinor:quote.amount_minor,currency:'USD',status:'pending',requestPayload:{maintenanceRequestId:request.id,quotationId:quote.id,mode:'SIMULATED',gap:'simulated, no ledger entry'},createdBy:input.actorId,createdAt:new Date().toISOString()};
+      approvalRepo.save(approvalId,approval,input.orgId);
+      return approval;
+    },
+    async decideMaintenancePayment(input) {
+      const approval=approvalRepo.get(input.approvalId,input.orgId);
+      if(!approval||approval.proposalType!=='maintenance-payment')throw maintenanceError('PAYMENT_APPROVAL_NOT_FOUND',404,'Maintenance payment approval was not found.');
+      if(approval.status==='completed'&&input.decision==='approve')return approval.result;
+      if(approval.status==='rejected'&&input.decision==='reject')return approval.result;
+      if(approval.status!=='pending')throw maintenanceError('PAYMENT_APPROVAL_DECIDED',409,'Maintenance payment approval is already decided.');
+      if(input.decision==='reject'){
+        approval.status='rejected';approval.decisionNote=input.note||'';approval.reviewerId=input.reviewerId;
+        approval.result={approvalId:approval.approvalId,status:'rejected',mode:'SIMULATED',simulated:true,gap:'simulated, no ledger entry'};
+        return approval.result;
+      }
+      const request=maintenanceRows.get(this.key(input.orgId,approval.fundMaintenanceRequestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.requested_by===input.reviewerId)throw maintenanceError('SELF_APPROVAL_FORBIDDEN',403,'Requester cannot approve own request.');
+      if(request.status!=='payment_approved')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Maintenance request is not payment_approved.');
+      const quote=quotationRows.get(this.key(input.orgId,request.chosen_quotation_id));
+      const contractor=contractorRows.get(this.key(input.orgId,request.contractor_id));
+      if(!quote||!contractor||contractor.verification_status!=='verified')throw maintenanceError('PAYMENT_GATE_FAILED',409,'Chosen quotation and verified contractor are required.');
+      const prior=[...maintenanceApprovalRows.values()].filter(a=>a.org_id===input.orgId&&a.maintenance_request_id===request.id&&a.step==='payment'&&a.decision==='approved');
+      const required=quote.amount_minor>=10000?2:1;
+      if(new Set(prior.map(a=>a.approver_id)).size<required)throw maintenanceError('PAYMENT_APPROVALS_REQUIRED',409,'Payment approval threshold is not satisfied.');
+      const key=this.key(input.orgId,request.id);
+      let payment=maintenancePaymentRows.get(key);
+      if(!payment){
+        const finalApproval=prior.at(-1);
+        payment={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,quotation_id:quote.id,amount_minor:quote.amount_minor,approval_id:finalApproval.id,mode:'SIMULATED',paypal_payout_ref:null,ledger_entry_id:null,status:'paid'};
+        maintenancePaymentRows.set(key,payment);request.status='paid';
+      }
+      approval.status='completed';approval.decisionNote=input.note||'';approval.reviewerId=input.reviewerId;
+      approval.result={approvalId:approval.approvalId,status:'simulated',mode:'SIMULATED',simulated:true,paymentId:payment.id,maintenanceRequestId:request.id,amountMinor:payment.amount_minor,currency:'USD',paypalPayoutRef:null,ledgerEntryId:null,gap:'simulated, no ledger entry',legalCaution:'Real-money pooled funds and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only.'};
+      return approval.result;
+    },
+    async listMaintenancePayments(orgId) { return [...maintenancePaymentRows.values()].filter(row=>row.org_id===orgId); },
+    async submitCompletionEvidence(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      const existing=[...completionEvidenceRows.values()].find(row=>row.org_id===input.orgId&&row.request_id===input.requestKey);
+      if(existing){
+        if(existing.maintenance_request_id!==request.id||existing.submitted_by!==input.actorId||existing.kind!==input.kind||existing.description!==input.description||existing.file_ref!==(input.fileRef||null))throw maintenanceError('CONFLICT',409,'Evidence request ID was already used.');
+        return {request,evidence:existing,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+      }
+      if(!['paid','evidence_submitted'].includes(request.status))throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Completion evidence requires a paid maintenance request.');
+      if(!['photo','invoice','inspection','other'].includes(input.kind)||!input.description?.trim()||input.description.trim().length>2000||(input.fileRef||'').trim().length>500)throw maintenanceError('INVALID_EVIDENCE',400,'Completion evidence metadata is invalid.');
+      const evidence={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,kind:input.kind,description:input.description.trim(),file_ref:input.fileRef?.trim()||null,submitted_by:input.actorId,submitted_at:new Date().toISOString(),request_id:input.requestKey,review_status:'pending',reviewed_by:null,reviewed_at:null,review_note:null};
+      completionEvidenceRows.set(this.key(input.orgId,evidence.id),evidence);
+      if(request.status==='paid'){request.status='evidence_submitted';fundAuditRows.push({org_id:input.orgId,action:'fund.maintenance.evidence_submitted',requestId:request.id,actorId:input.actorId});}
+      fundAuditRows.push({org_id:input.orgId,action:'fund.completion_evidence.submitted',evidenceId:evidence.id,actorId:input.actorId});
+      return {request,evidence,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+    },
+    async reviewCompletionEvidence(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      const evidence=completionEvidenceRows.get(this.key(input.orgId,input.evidenceId));
+      if(!request||!evidence||evidence.maintenance_request_id!==request.id)throw maintenanceError('EVIDENCE_NOT_FOUND',404,'Completion evidence was not found.');
+      if(request.requested_by===input.actorId||evidence.submitted_by===input.actorId)throw maintenanceError('SELF_REVIEW_FORBIDDEN',403,'Requester or evidence submitter cannot review this evidence.');
+      if(!['accept','reject'].includes(input.decision))throw maintenanceError('INVALID_EVIDENCE_REVIEW',400,'Evidence review decision is invalid.');
+      if(evidence.review_status!=='pending'){
+        if((input.decision==='accept'&&evidence.review_status==='accepted')||(input.decision==='reject'&&evidence.review_status==='rejected'))return {request,evidence,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+        throw maintenanceError('EVIDENCE_ALREADY_REVIEWED',409,'Completion evidence was already reviewed.');
+      }
+      if(request.status!=='evidence_submitted')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Request is not awaiting evidence review.');
+      evidence.review_status=input.decision==='accept'?'accepted':'rejected';evidence.reviewed_by=input.actorId;evidence.reviewed_at=new Date().toISOString();evidence.review_note=input.note?.trim()||null;
+      fundAuditRows.push({org_id:input.orgId,action:`fund.completion_evidence.${evidence.review_status}`,evidenceId:evidence.id,actorId:input.actorId});
+      const rows=[...completionEvidenceRows.values()].filter(row=>row.org_id===input.orgId&&row.maintenance_request_id===request.id);
+      if(!rows.some(row=>row.review_status==='pending')&&rows.some(row=>row.review_status==='accepted')){
+        request.status='reviewed';request.reviewed_by=input.actorId;request.reviewed_at=new Date().toISOString();fundAuditRows.push({org_id:input.orgId,action:'fund.maintenance.reviewed',requestId:request.id,actorId:input.actorId});
+      }
+      return {request,evidence,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+    },
+    async closeMaintenanceRequest(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status==='closed')return {request,closed:true};
+      if(request.status!=='reviewed'||!request.reviewed_by)throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Request must be reviewed before close.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_REVIEW_FORBIDDEN',403,'Requester cannot close own maintenance request.');
+      if(![...completionEvidenceRows.values()].some(row=>row.org_id===input.orgId&&row.maintenance_request_id===request.id&&row.review_status==='accepted'))throw maintenanceError('ACCEPTED_EVIDENCE_REQUIRED',409,'Accepted completion evidence is required before close.');
+      request.status='closed';request.closed_by=input.actorId;request.closed_at=new Date().toISOString();fundAuditRows.push({org_id:input.orgId,action:'fund.maintenance.closed',requestId:request.id,actorId:input.actorId});
+      return {request,closed:true};
+    },
+    async listCompletionEvidence(orgId,requestId) { return [...completionEvidenceRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===requestId); },
+    async listFundAudit(orgId) { return fundAuditRows.filter(row=>row.org_id===orgId); },
+    async transparency({orgId,actorId,campaignId=null}) {
+      if(campaignId&&!campaignRows.has(this.key(orgId,campaignId)))throw maintenanceError('CAMPAIGN_NOT_FOUND',404,'Campaign was not found.');
+      const campaigns=await Promise.all([...campaignRows.values()].filter(row=>row.org_id===orgId&&(!campaignId||row.id===campaignId)).map(async row=>{
+        const summary=await this.campaignSummary(orgId,row.id);delete summary.campaign.organiser;return summary;
+      }));
+      const contributions=[...contributionRows.values()].filter(row=>row.orgId===orgId&&(!campaignId||row.campaignId===campaignId)).map(row=>({
+        id:row.id,campaignId:row.campaignId,amountMinor:row.amountMinor,status:row.status,donorRef:row.donorRef||row.donor_ref,createdAt:row.created_at,countsAsFunds:row.status==='received',currency:'USD',
+      }));
+      const expenses=[...maintenancePaymentRows.values()].filter(payment=>{
+        const request=maintenanceRows.get(this.key(orgId,payment.maintenance_request_id));return payment.org_id===orgId&&request&&(!campaignId||request.campaign_id===campaignId);
+      }).map(payment=>{
+        const request=maintenanceRows.get(this.key(orgId,payment.maintenance_request_id));
+        const quote=quotationRows.get(this.key(orgId,payment.quotation_id));
+        const evidence=[...completionEvidenceRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===request.id).map(row=>({id:row.id,kind:row.kind,reviewStatus:row.review_status,submittedAt:row.submitted_at,reviewedAt:row.reviewed_at}));
+        const approvals=[...maintenanceApprovalRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===request.id&&row.decision==='approved').map(row=>({id:row.id,step:row.step,decision:row.decision}));
+        const paymentApproval=[...approvalRepo.items.values()].find(row=>row.orgId===orgId&&row.proposalType==='maintenance-payment'&&row.fundMaintenanceRequestId===request.id);
+        const gaps=[];if(!quote)gaps.push({gap:'no quotation or invoice'});if(!paymentApproval)gaps.push({gap:'no payment approval'});
+        if(payment.paypal_payout_ref==null)gaps.push({gap:'no payment reference'});
+        if(payment.mode==='SIMULATED'&&payment.ledger_entry_id==null)gaps.push({gap:'simulated, no ledger entry'});
+        else if(payment.ledger_entry_id==null)gaps.push({gap:'no ledger entry'});
+        if(payment.mode!=='SIMULATED'&&payment.paypal_payout_ref==null)gaps.push({gap:'no payment reference'});
+        if(!evidence.length)gaps.push({gap:'no completion evidence'});
+        return {requestId:request.id,campaignId:request.campaign_id,title:request.title,status:request.status,amountMinor:payment.amount_minor,currency:'USD',approvals,paymentApproval:paymentApproval?{id:paymentApproval.approvalId,status:paymentApproval.status}:null,quotation:quote?{id:quote.id,amountMinor:quote.amount_minor,currency:quote.currency||'USD'}:null,invoice:null,payment:{id:payment.id,mode:payment.mode,status:payment.status,amountMinor:payment.amount_minor},paymentReference:payment.paypal_payout_ref||null,ledgerEntryId:payment.ledger_entry_id||null,completionEvidence:evidence,gaps};
+      });
+      return {orgId,campaigns,contributions,expenses,namesShown:false,legalCaution:'Real-money pooled funds, donations, and third-party payouts depend on PayPal product eligibility and local rules. Sandbox demonstrates the workflow only.',asOf:new Date().toISOString()};
+    },
+    async auditExport({orgId,actorId,from=null,to=null}) {
+      return fundAuditRows.filter(row=>row.org_id===orgId&&(!from||!row.created_at||row.created_at.slice(0,10)>=from)&&(!to||!row.created_at||row.created_at.slice(0,10)<=to)).map(row=>({id:row.id||row.evidenceId||row.requestId||'audit-event',createdAt:row.created_at||new Date().toISOString(),action:row.action,entity:row.entity||'maintenance_request',entityId:row.entity_id||row.evidenceId||row.requestId||null,actorId:row.actorId||null,requestId:row.requestId||null}));
+    },
+  };
+  captures.funds = funds;
   const notifications = new MemoryNotificationsRepo();
-  const repos = { orders, captures, approvals: new ApprovalsRepo(captures), events: new EventsRepo(), notifications };
+  const repos = { orders, captures, approvals: approvalRepo, events: new EventsRepo(), notifications, funds };
   repos.anomalies = new MemoryAnomaliesRepo(notifications);
   repos.ai = {
     usage: new AIUsageRepo(),

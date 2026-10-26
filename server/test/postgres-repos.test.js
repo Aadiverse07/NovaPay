@@ -10,6 +10,47 @@ test('money repository helpers use integer minor units and reject excessive prec
   assert.throws(() => moneyToMinor('999999999999999999.00'));
 });
 
+test('Postgres funds repository uses T4 service-only queue RPCs and maps maintenance context', async () => {
+  const calls=[];
+  const database={
+    async rpc(name,args){calls.push({name,args});return name==='request_fund_maintenance_payment'?{approvalId:'APR-FUND-PAY-1',status:'pending'}:{status:'simulated'};},
+    async select(table){return table==='approvals'?[{id:'APR-FUND-PAY-1',org_id:'org-a',proposal_type:'maintenance-payment',fund_maintenance_request_id:'request-1',request_payload:{mode:'SIMULATED'},amount_minor:9999,currency:'USD',status:'pending'}]:[];},
+  };
+  const repos=createPostgresRepositories(database);
+  await repos.funds.requestMaintenancePayment({orgId:'org-a',actorId:'actor-a',requestId:'request-1',requestKey:'req-a'});
+  await repos.funds.decideMaintenancePayment({orgId:'org-a',approvalId:'APR-FUND-PAY-1',reviewerId:'reviewer-a',decision:'approve',note:'ok',requestKey:'req-b'});
+  const approval=await repos.approvals.get('APR-FUND-PAY-1','org-a');
+  assert.deepEqual(calls.map(call=>call.name),['request_fund_maintenance_payment','decide_fund_maintenance_payment']);
+  assert.equal(calls[0].args.p_request,'request-1');
+  assert.equal(calls[1].args.p_decision,'approve');
+  assert.equal(approval.proposalType,'maintenance-payment');
+  assert.equal(approval.fundMaintenanceRequestId,'request-1');
+  assert.deepEqual(approval.requestPayload,{mode:'SIMULATED'});
+});
+
+test('Postgres funds repository calls T5 completion evidence and close RPCs', async () => {
+  const calls=[];
+  const database={async rpc(name,args){calls.push({name,args});return {status:'evidence_submitted'};}};
+  const repos=createPostgresRepositories(database);
+  await repos.funds.submitCompletionEvidence({orgId:'org-a',actorId:'submitter-a',requestId:'request-a',kind:'inspection',description:'Work completion checklist.',fileRef:'docs/checklist.pdf',requestKey:'req-submit'});
+  await repos.funds.reviewCompletionEvidence({orgId:'org-a',actorId:'reviewer-a',requestId:'request-a',evidenceId:'evidence-a',decision:'accept',note:'Reviewed metadata.',requestKey:'req-review'});
+  await repos.funds.closeMaintenanceRequest({orgId:'org-a',actorId:'reviewer-a',requestId:'request-a',requestKey:'req-close'});
+  assert.deepEqual(calls.map(call=>call.name),['submit_fund_completion_evidence','review_fund_completion_evidence','close_fund_maintenance_request']);
+  assert.equal(calls[0].args.p_file_ref,'docs/checklist.pdf');
+  assert.equal(calls[1].args.p_decision,'accept');
+  assert.equal(calls[2].args.p_actor,'reviewer-a');
+});
+
+test('Postgres funds repository calls tenant-scoped T6 transparency and audit export RPCs', async () => {
+  const calls=[];const database={async rpc(name,args){calls.push({name,args});return name==='get_fund_transparency'?{expenses:[]}:[{action:'fund.test'}];}};
+  const repos=createPostgresRepositories(database);
+  await repos.funds.transparency({orgId:'org-a',actorId:'resident-a',campaignId:'campaign-a'});
+  await repos.funds.auditExport({orgId:'org-a',actorId:'admin-a',from:'2026-10-01',to:'2026-10-31'});
+  assert.deepEqual(calls.map(call=>call.name),['get_fund_transparency','get_fund_audit_export']);
+  assert.deepEqual(calls[0].args,{p_org:'org-a',p_actor:'resident-a',p_campaign_id:'campaign-a'});
+  assert.deepEqual(calls[1].args,{p_org:'org-a',p_actor:'admin-a',p_from:'2026-10-01',p_to:'2026-10-31'});
+});
+
 test('Postgres repositories scope tenant data and transactional calls by organization', async () => {
   const calls = [];
   const database = {
@@ -46,6 +87,32 @@ test('capture reads disambiguate the order foreign key in PostgREST embeds', asy
   }
 });
 
+test('fund-linked synchronous and webhook captures send Donations account lines', async () => {
+  const calls = [];
+  const database = {
+    async select(table, query) {
+      calls.push({ kind: 'select', table, query });
+      return table === 'paypal_orders' ? [{ id: 'db-order', org_id: 'org-a', paypal_order_id: 'ORDER-FUND', fund_contribution_id: 'contribution-1' }] : [];
+    },
+    async rpc(name, args) {
+      calls.push({ kind: 'rpc', name, args });
+      return name === 'record_paypal_capture'
+        ? { capture: { paypal_capture_id: 'CAP-FUND', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', org_id: 'org-a' } }
+        : { orgId: 'org-a', result: { capture: { paypal_capture_id: 'CAP-FUND', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', org_id: 'org-a' } } };
+    },
+  };
+  const repos = createPostgresRepositories(database);
+  const capture = { id: 'CAP-FUND', orderId: 'ORDER-FUND', value: '10.00', fee: '0.59', net: '9.41', currency: 'USD', status: 'COMPLETED' };
+  await repos.captures.add(capture, 'org-a');
+  await repos.captures.addFromWebhook(capture);
+  const postings = calls.filter((call) => call.kind === 'rpc');
+  assert.deepEqual(postings.map((call) => call.name), ['record_paypal_capture', 'record_fund_paypal_capture_event']);
+  for (const { args } of postings) {
+    assert.equal(args.p_lines.find((line) => line.account_code === '4100')?.credit_minor, 1000);
+    assert.equal(args.p_lines.some((line) => line.account_code === '4000'), false);
+  }
+});
+
 test('approval repository exposes its public approvalId field for persistence checks', async () => {
   const database = {
     async select(table) { return table === 'approvals' ? [{ id:'APR-RESTORED', org_id:'org-a', proposal_type:'refund', capture_id:'CAP-1', amount_minor:100, currency:'USD', status:'pending' }] : []; },
@@ -69,7 +136,10 @@ test('AI proposal persistence uses the scoped pending-approval RPC with minor-un
 
 test('capture and refund persistence send the pure ledger mapping into atomic database RPCs', async () => {
   const calls = [];
-  const database = { async rpc(name, args) { calls.push({ name, args }); return { capture: { paypal_capture_id: 'CAP-1', amount_minor: 1000, currency: 'USD', status: 'COMPLETED' }, approval: { id: 'APR-1', amount_minor: 1000, currency: 'USD', status: 'completed' } }; } };
+  const database = {
+    async select() { return [{ fund_contribution_id: null }]; },
+    async rpc(name, args) { calls.push({ name, args }); return { capture: { paypal_capture_id: 'CAP-1', amount_minor: 1000, currency: 'USD', status: 'COMPLETED' }, approval: { id: 'APR-1', amount_minor: 1000, currency: 'USD', status: 'completed' } }; },
+  };
   const repos = createPostgresRepositories(database);
   await repos.captures.add({ id: 'CAP-1', orderId: 'ORDER-1', value: '10.00', fee: '0.50', net: '9.50', currency: 'USD', status: 'COMPLETED' }, 'org-a');
   assert.equal(calls[0].name, 'record_paypal_capture');
