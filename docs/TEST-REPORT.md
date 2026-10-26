@@ -971,3 +971,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ℹ duration_ms 975.220709 — PASS; ℹ tests 118;ℹ pass 118;ℹ fail 0;ℹ skipped 0;. PostgreSQL 17 migration parser accepted migrations 0001–0009.
 
 - Log clarification: the raw console transcript appended immediately after the focused route test is from a genuine second `npm test` invocation caused by unquoted shell backticks during documentation checkpointing. That second invocation also passed: migrations 0001–0009 parsed, 118 passed, 0 failed, 0 skipped. The blank line preceding the transcript is an accidental formatting artifact; append-only history was retained.
+
+## Phase 6 T3 — live verifier preparation — 2026-10-26
+- `node --check scripts/verify-phase6-maintenance-live.js` — PASS; script syntax valid. No live request was made by this check.
+- Full `npm test` — PASS; 118 passed, 0 failed, 0 skipped; migrations 0001–0009 parsed. See prior T3 database error mapping entry and its transcript clarification.

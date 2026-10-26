@@ -549,3 +549,9 @@
 - Choice: Keep the historical transcript and add a clarifying entry with the exact second-run result rather than deleting prior report lines.
 - Reason: Continuity protocol requires append-only logs; the output came from a real passing `npm test` rerun and contained no secrets.
 - Source: Local command output and `docs/TEST-REPORT.md`, checked 2026-10-26. Rejected alternative: rewrite the report tail and erase the earlier appended record.
+
+## 2026-10-26 — T3 live fixture strategy
+- Question: Which test data should the live state-machine workflow use?
+- Choice: Reuse the existing Phase 3 verifier organization and fixed owner, approver, accountant users; use deterministic maintenance request, contractor, and quotation names and resume existing rows.
+- Reason: T3 audit rows are append-only; adding users/orgs or creating new records per run would make safe recovery and cleanup harder. The accountant requester permits owner and approver to provide two distinct approvals at the exact threshold.
+- Source: Existing memberships and fixed-fixture scripts, read-only checked 2026-10-26. Rejected alternative: provision new identities/orgs or reset fixed users' passwords.
