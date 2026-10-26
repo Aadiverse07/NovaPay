@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: finish T6 live verification, then continue Phase 6 T7.
-- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); user confirmed 0012 applied; live call stopped at PGRST202 schema-cache miss.
+- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); checkpoint `1138d0f`; user confirmed 0012 applied; live call stopped at PGRST202 schema-cache miss.
 - Next step: user checks both RPCs and authenticated table privilege in the API's Supabase project, runs `NOTIFY pgrst, 'reload schema';`, then agent reruns `node scripts/verify-phase6-transparency-live.js`.
 - Pending human action: verify 0012 objects exist in the exact API project and refresh PostgREST schema cache; details in docs/CONTEXT.md.
 
@@ -1032,3 +1032,5 @@ RESULT — 2026-10-26 15:00:53 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - RESULT: FAIL for the compound command; branch `phase6-backend`, status and `git diff --check` completed cleanly, but a root `.env` exists so the command stopped before length/stat checks. No file contents were read or printed and no commit occurred. NEXT: check only ignore/tracking/status metadata for `.env`; proceed only if ignored and untracked, then verify diff and checkpoint.
 - 2026-10-26 15:11 Asia/Kolkata — ABOUT TO: Replace the stale top resume pointer with current T6 implementation/test/live state and pending SQL Editor steps. WHY: the current pointer is the first recovery surface for an interrupted session.
 - RESULT: PASS; pointer updated; no secrets. NEXT: stage tracked/untracked T6 files, verify staged names exclude `.env`, and commit local WIP on `phase6-backend`.
+- RESULT: PASS; checkpoint `1138d0f` created locally on `phase6-backend`; 15 files include migration 0012, API/repository wiring, tests, verifier and docs; no `.env` staged; worktree clean immediately after commit. NEXT: record checkpoint hash at CONTEXT/WORKLOG top and checkpoint the exact handoff state.
+- 2026-10-26 15:12 Asia/Kolkata — ABOUT TO: Refresh handoff commit pointers to `1138d0f` and commit the updated continuation state. WHY: make a fresh agent resume from the committed T6 code and correct pending human action.
