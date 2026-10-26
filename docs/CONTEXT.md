@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 15:09 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last commit: `d3dea48 WIP Phase 6 task 6: refresh resume pointer`; T6 code/docs/tests checkpointed locally.
+- Last commit: `abda174 WIP Phase 6 task 6: correct pending migration state`; latest action is user confirmation that 0012 was applied.
 - Phase/task: Phase 6 Fund Transparency, T6 transparency/export; T1–T5 complete.
 
 ## DONE
@@ -17,20 +17,26 @@
 ## IN PROGRESS
 - Exact task: finish T6 live verification after migration 0012 application.
 - Files changed in T6 (committed locally in `1138d0f`): `supabase/migrations/0012_fund_transparency_read_export.sql`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/src/routes/funds.js`, `server/test/phase6-transparency.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `scripts/verify-phase6-transparency-live.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `docs/CONTEXT.md`.
-- The user SQL Editor checks now confirm both 0012 RPC routines return zero rows and authenticated SELECT on `fund_contributions` is true. Treat migration 0012 as NOT APPLIED on the API project; this supersedes earlier apply confirmation. The live verifier returned HTTP 404 `PGRST202` and performed no fund data mutation.
+- Earlier SQL Editor checks showed both 0012 RPC routines absent and authenticated SELECT on `fund_contributions` enabled. User has since confirmed applying migration 0012. Fresh catalog/privilege checks are pending; do not reload schema cache yet.
 
 ## NEXT STEPS
-1. Apply only `supabase/migrations/0012_fund_transparency_read_export.sql` in the intended Supabase project SQL Editor; migrations 0001–0011 are already applied.
-2. Stop and wait for the user to confirm `applied`. Do not reload schema cache yet.
-3. After confirmation, run read-only routine/privilege checks; only after they show both functions and false direct SELECT, proceed to a schema reload.
-4. Rerun `node scripts/verify-phase6-transparency-live.js`; record outcomes and continue to T7 only after T6 passes.
+1. Ask user to run the read-only SQL Editor routine and privilege checks below; do not reload the schema cache.
+2. If both routine names appear and `authenticated_can_select` is false, record that database state.
+3. Only after the user authorizes/requests the next check, reload schema cache and rerun `node scripts/verify-phase6-transparency-live.js`.
+4. Record outcomes and continue to T7 only after T6 passes.
 
 ## USER ACTIONS PENDING
-- Apply exactly one migration: in the intended Supabase project's SQL Editor, paste the complete contents of `supabase/migrations/0012_fund_transparency_read_export.sql`, run once, then tell the agent `applied`. Do not run `NOTIFY pgrst, 'reload schema'` yet. Wait for the next check instructions.
+- Run these read-only checks in the same Supabase SQL Editor and report the results. Do not run `NOTIFY pgrst, 'reload schema'` yet:
+  ```sql
+  select routine_name from information_schema.routines
+  where specific_schema='public'
+    and routine_name in ('get_fund_transparency','get_fund_audit_export');
+  select has_table_privilege('authenticated','public.fund_contributions','SELECT') as authenticated_can_select;
+  ```
 
 ## LIVE STATE
 - Applied and live verified: migrations 0001–0011.
-- Migration 0012: NOT APPLIED per latest SQL Editor checks (0 routine rows; authenticated SELECT privilege true). Apply pending; do not reload schema yet.
+- Migration 0012: user confirmed applied; read-only catalog/grant verification pending. Earlier checks found 0 routine rows and authenticated SELECT true. Do not reload schema yet.
 - Tunnel/webhook fixed; T2 capture and five exact replays passed. Fixed T3/T4/T5 data remain in test organization; reuse only.
 - Latest live checks: RPC schema probe HTTP 404/PGRST202; no further fund mutations. Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 

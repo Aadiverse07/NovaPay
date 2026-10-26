@@ -1,8 +1,8 @@
 ## RESUME POINTER
 - Current task: finish T6 live verification, then continue Phase 6 T7.
-- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); latest SQL Editor evidence shows 0012 is absent.
-- Next step: user applies `supabase/migrations/0012_fund_transparency_read_export.sql` and says `applied`; do not reload schema cache yet.
-- Pending human action: apply only migration 0012; exact steps in docs/CONTEXT.md.
+- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); user says 0012 applied.
+- Next step: obtain read-only SQL Editor results for both 0012 routine names and authenticated SELECT privilege; do not reload schema cache yet.
+- Pending human action: run read-only checks in docs/CONTEXT.md and report results.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1043,3 +1043,7 @@ RESULT — 2026-10-26 15:00:53 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - 2026-10-26 15:20 Asia/Kolkata — ABOUT TO: Retry the CONTEXT/WORKLOG pointer correction with triple-quoted replacements. WHY: previous compound command appended test/decision evidence but failed before updating the contradictory handoff.
 - RESULT: PASS; CONTEXT now states only 0012 remains to apply and prohibits cache reload until user says applied; TEST-REPORT and DECISIONS record the human check and migration order. NEXT: verify docs and checkpoint, then present exact single migration instructions.
 - 2026-10-26 15:21 Asia/Kolkata — ABOUT TO: Correct the T6 file-list status in CONTEXT, verify handoff length/whitespace/branch, and stage the human-reported database state update. WHY: T6 code is already committed; only continuity docs now change.
+- 2026-10-26 15:24 Asia/Kolkata — ABOUT TO: Record user confirmation that migration 0012 was applied and prepare read-only SQL Editor checks for both routines and authenticated SELECT privilege. WHY: user confirmed the one pending migration; verify the database objects before any schema cache action.
+- RESULT: PASS; user-confirmed migration application recorded; no database commands or schema reload executed. NEXT: provide read-only SQL Editor verification queries and wait for their results.
+- NEXT: user runs read-only checks for routine presence and authenticated SELECT revocation; do not reload schema cache yet.
+- 2026-10-26 15:25 Asia/Kolkata — ABOUT TO: Add exact read-only catalog/grant queries to CONTEXT, validate handoff, and checkpoint the post-apply verification gate. WHY: handoff must let a fresh agent continue without asking what SQL to run; user prohibited cache reload.
