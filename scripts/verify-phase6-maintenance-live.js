@@ -49,7 +49,7 @@ async function step(label, why, action) {
     lastFinished = label;
     journal('RESULT', `PASS: ${label}; ${result?.detail || 'completed'}. NEXT: ${result?.next || 'continue the T3 verifier'}.`);
     updatePointer('continuing T3 verifier', result?.next || 'continue the T3 verifier');
-    return result?.value;
+    return result && typeof result === 'object' && Object.hasOwn(result, 'value') ? result.value : result;
   } catch (error) {
     const safe = String(error?.message || 'step failed').replace(/https?:\/\/\S+/g, '[URL]').replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]').slice(0, 140);
     journal('RESULT', `FAIL: ${label}; ${safe}. NEXT: inspect this step; reuse deterministic rows and do not recreate them.`);

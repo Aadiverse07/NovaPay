@@ -975,3 +975,8 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ## Phase 6 T3 — live verifier preparation — 2026-10-26
 - `node --check scripts/verify-phase6-maintenance-live.js` — PASS; script syntax valid. No live request was made by this check.
 - Full `npm test` — PASS; 118 passed, 0 failed, 0 skipped; migrations 0001–0009 parsed. See prior T3 database error mapping entry and its transcript clarification.
+
+## Phase 6 T3 — authenticated live maintenance workflow — 2026-10-26
+- `node scripts/verify-phase6-maintenance-live.js` — FAIL; exit 1. See per-step WORKLOG entries for the last completed request and recovery point.
+
+- First live attempt detail: FAIL before login/API execution; the helper unwrapped a raw auth response as `undefined`. It generated one owner magic link, but did not exchange it, send email, call a maintenance API, or write database rows. Fixing the verifier before retry.

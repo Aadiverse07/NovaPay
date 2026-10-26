@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`
-- Last commit: `6f068d9 WIP Phase 6 task 3: correct handoff pointer`; live verifier checkpoint is next.
+- Last commit: `51f97b4 WIP Phase 6 task 3: add live maintenance verifier`.
 - Phase/task: Phase 6 Fund Transparency, T3 maintenance workflow; live apply gate cleared; full live workflow verification pending.
 
 ## DONE
