@@ -574,3 +574,10 @@
 - Reason: Existing fixture is eligible for the single-approver path and repeats are deterministic; no external payout occurs and persisted state can prove null PayPal/ledger refs.
 - Source: repository fixture in `scripts/verify-phase6-maintenance-live.js` and T4 API/migration; checked 2026-10-26.
 - Rejected: create fresh live test users/orgs or use real PayPal payout; unnecessary and outside SIMULATED policy.
+
+## 2026-10-26 — 0010 live apply mismatch
+- Question: Proceed with T4 payment writes after user said migration 0010 was applied, when the configured project rejects the linkage column?
+- Choice: Stop before all payment/approval writes and request applying migration 0010 to the project configured for this workspace.
+- Reason: Read-only PostgREST returned SQLSTATE 42703: `column approvals.fund_maintenance_request_id does not exist`; the schema required for safe, idempotent payment processing is absent.
+- Source: configured Supabase PostgREST response checked 2026-10-26.
+- Rejected: attempt RPC/API writes or assume application based only on prior confirmation; unsafe while the live schema is unverified.

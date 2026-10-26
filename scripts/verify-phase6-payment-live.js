@@ -79,7 +79,7 @@ try {
   });
   const column = await step('Confirm migration 0010 payment linkage is visible', 'read-only schema check that the user-applied migration reached the live project', async () => {
     const r = await service(`/rest/v1/approvals?${q({ select: 'fund_maintenance_request_id', limit: '0' })}`);
-    assert(r.status === 200, '0010 approval linkage column not visible'); return { detail: `HTTP ${r.status}; column query succeeds` };
+    if (r.status !== 200) throw new Error(`0010 linkage column unavailable; HTTP ${r.status}; ${r.body?.code || 'no-code'}; ${String(r.body?.message || '').slice(0, 140)}`); return { detail: `HTTP ${r.status}; column query succeeds` };
   });
   const app = createApp({ config }); server = app.listen(0, '127.0.0.1'); await new Promise((resolve, reject) => { server.once('listening', resolve); server.once('error', reject); }); apiBase = `http://127.0.0.1:${server.address().port}`;
   const health = await step('Check fresh local API health', 'run current source code against the applied live schema', async () => { const r=await request(`${apiBase}/api/status`); assert(r.status===200,'local API health failed');return {detail:`HTTP ${r.status}`}; });
