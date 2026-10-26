@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: finish T6 live verification, then continue Phase 6 T7.
-- Last finished step: T6 implementation and local validation PASS (21 focused, 127 full); screenshot confirms authenticated SELECT privilege is false.
-- Next step: user runs the routine-only SQL query in docs/CONTEXT.md and reports the returned rows; do not reload schema cache yet.
-- Pending human action: confirm routine names appear in `information_schema.routines`.
+- Current task: finish T6 repair/live verification, then continue Phase 6 T7.
+- Last finished step: 0012 objects/grants visible; valid-member RPC exposed SQLSTATE 42725; migration 0013 and regression test added; local full suite 128/128 PASS.
+- Next step: user applies `supabase/migrations/0013_fix_transparency_campaign_json.sql` and says `applied`.
+- Pending human action: apply only migration 0013; do not reload schema cache.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1050,3 +1050,50 @@ RESULT — 2026-10-26 15:00:53 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - 2026-10-26 15:27 Asia/Kolkata — ABOUT TO: Record the user's SQL Editor screenshot result for the authenticated SELECT privilege and note that the screenshot does not expose the routine query result. WHY: preserve verified evidence without inferring unshown query output; user prohibited schema-cache reload.
 - RESULT: PASS; screenshot confirms the SELECT revoke (`false`); routine output remains unverified because only the privilege query result is visible. Files updated: CONTEXT, TEST-REPORT, WORKLOG. NEXT: ask user to run the routine-only query; do not reload schema cache.
 - 2026-10-26 15:28 Asia/Kolkata — ABOUT TO: Make the pending SQL Editor block routine-only, remove stale claim that 0012 is absent, verify docs and checkpoint. WHY: the user supplied proof that the SELECT revoke now exists; only the routine output is missing.
+- 2026-10-26 15:30 Asia/Kolkata — ABOUT TO: Record screenshot evidence that both 0012 RPCs exist and authenticated SELECT is false; then run the fixed-fixture live verifier without issuing a schema-cache reload. WHY: verify API behavior against the now-applied migration while respecting the instruction not to reload the cache yet.
+ABOUT TO — 2026-10-26 15:16:56 Asia/Kolkata: Generate sign-in link for fixed owner. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:16:56 Asia/Kolkata: PASS: Generate sign-in link for fixed owner; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:16:56 Asia/Kolkata: Exchange sign-in link for fixed owner JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:16:57 Asia/Kolkata: PASS: Exchange sign-in link for fixed owner JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:16:57 Asia/Kolkata: Generate sign-in link for fixed approver. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:16:58 Asia/Kolkata: PASS: Generate sign-in link for fixed approver; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:16:58 Asia/Kolkata: Exchange sign-in link for fixed approver JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:16:59 Asia/Kolkata: PASS: Exchange sign-in link for fixed approver JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:16:59 Asia/Kolkata: Generate sign-in link for fixed accountant. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:17:00 Asia/Kolkata: PASS: Generate sign-in link for fixed accountant; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:00 Asia/Kolkata: Exchange sign-in link for fixed accountant JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:17:00 Asia/Kolkata: PASS: Exchange sign-in link for fixed accountant JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:00 Asia/Kolkata: Find fixed Phase 3 verifier organization. Reason: reuse the existing fixed organization
+RESULT — 2026-10-26 15:17:01 Asia/Kolkata: PASS: Find fixed Phase 3 verifier organization; one fixed organization. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:01 Asia/Kolkata: Find fixed donor test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:17:01 Asia/Kolkata: PASS: Find fixed donor test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:01 Asia/Kolkata: Check fixed donor membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:17:01 Asia/Kolkata: PASS: Check fixed donor membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:01 Asia/Kolkata: Find fixed resident test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:17:02 Asia/Kolkata: PASS: Find fixed resident test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:02 Asia/Kolkata: Check fixed resident membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:17:02 Asia/Kolkata: PASS: Check fixed resident membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:02 Asia/Kolkata: Generate sign-in link for fixed donor. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:17:03 Asia/Kolkata: PASS: Generate sign-in link for fixed donor; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:03 Asia/Kolkata: Exchange sign-in link for fixed donor JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:17:03 Asia/Kolkata: PASS: Exchange sign-in link for fixed donor JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:03 Asia/Kolkata: Generate sign-in link for fixed resident. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:17:04 Asia/Kolkata: PASS: Generate sign-in link for fixed resident; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:04 Asia/Kolkata: Exchange sign-in link for fixed resident JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:17:04 Asia/Kolkata: PASS: Exchange sign-in link for fixed resident JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:04 Asia/Kolkata: Find existing T4/T5 paid maintenance expense. Reason: reuse the fixed Phase 3 payment/evidence verification request
+RESULT — 2026-10-26 15:17:05 Asia/Kolkata: PASS: Find existing T4/T5 paid maintenance expense; request state closed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:17:05 Asia/Kolkata: Confirm migration 0012 visibility. Reason: verify read RPCs work through API only and schema is deployed
+RESULT — 2026-10-26 15:17:05 Asia/Kolkata: FAIL: Confirm migration 0012 visibility; transparency RPC schema/status HTTP 400. NEXT: inspect exact step; do not create new identities/orgs on rerun
+- RESULT: FAIL/UNVERIFIED; after SQL Editor confirmed both routines and revoke, live verifier still failed at the transparency RPC probe with HTTP 400; no fund endpoint/security assertions ran. No schema reload. NEXT: inspect only the safe PostgREST error code/message from the RPC and determine whether this is API cache or function runtime behavior.
+- 2026-10-26 15:32 Asia/Kolkata — ABOUT TO: Read the safe PostgREST response code/message for the service-role transparency RPC after the HTTP 400. WHY: distinguish parameter/signature or SQL runtime failure without exposing config values or changing database state.
+- RESULT: PASS for function endpoint resolution; a service-role call with placeholder identities returned HTTP 403 `42501 organization membership required`, proving the RPC is visible through PostgREST and reaches its membership guard. NEXT: diagnose HTTP 400 using the existing fixed org/resident IDs in memory, printing only the safe status/code/message.
+- 2026-10-26 15:33 Asia/Kolkata — ABOUT TO: Resolve fixed org and resident IDs in memory and call the transparency RPC with valid member context; emit only HTTP status/code/message. WHY: locate SQL/runtime failure behind verifier HTTP 400 without exposing IDs/config or mutating rows.
+- RESULT: FAIL/UNVERIFIED; valid resident/org RPC probe returned HTTP 400 `42725 operator is not unique: unknown - unknown`. The function is visible and membership guard passed; no fund writes. Suspected ambiguous JSONB key-removal expression in applied 0012. NEXT: inspect the campaign summary JSON shape and migration tests, then add a new migration 0013 (never edit applied 0012) with a typed expression and regression coverage.
+- 2026-10-26 15:34 Asia/Kolkata — ABOUT TO: Inspect 0007 campaign summary output and T6 migration tests around campaign JSON shaping. WHY: identify the exact overloaded operator and retain only safe public campaign fields in a new corrective migration.
+- 2026-10-26 15:34 Asia/Kolkata — ABOUT TO: Add a new additive migration 0013 replacing `get_fund_transparency` with explicit safe campaign JSON fields and reaffirming service-role-only RPC grants; add a regression assertion. WHY: applied migration 0012 contains an ambiguous JSONB `-` expression causing live SQLSTATE 42725; applied migrations must remain unchanged.
+- RESULT: PASS; migration 0013 added as a new numbered file, leaves applied 0012 untouched, explicitly builds campaign JSON without the ambiguous `-` operator, and reasserts service-role-only execution. Focused migration tests passed 9/9; `npm run check:migrations` accepted 0001–0013. NEXT: run full `npm test`, then update handoff to mark 0013 awaiting user application.
+- 2026-10-26 15:36 Asia/Kolkata — ABOUT TO: Run full `npm test` with additive migration 0013 and its regression assertion. WHY: verify all application tests and parser after the runtime fix before asking the user to apply it.
+- RESULT: PASS; full suite passed 128/128; embedded migration parser accepted migrations 0001–0013. Files changed for T6 repair: new `supabase/migrations/0013_fix_transparency_campaign_json.sql` and regression assertion in `server/test/phase6-migration.test.js`; no live calls in this command. NEXT: update CONTEXT/TEST-REPORT/DECISIONS with 0013 pending apply and exact human step, then checkpoint locally.
+- 2026-10-26 15:37 Asia/Kolkata — ABOUT TO: Verify branch, `.env` staging state, handoff length and whitespace, then create local WIP checkpoint for migration 0013 and T6 runtime finding. WHY: local checks pass and user requires a checkpoint before the next manual migration step.
+- RESULT: PASS; branch `phase6-backend`; root `.env` ignored and absent from Git status/index; CONTEXT 79 lines; `git diff --check` clean. NEXT: stage only reviewed T6 files, commit locally, refresh commit pointer if needed, then ask user to apply migration 0013.

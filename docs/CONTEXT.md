@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 15:09 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
-- Last commit: `abda174 WIP Phase 6 task 6: correct pending migration state`; latest action is user confirmation that 0012 was applied.
+- Last commit: pending local T6 repair checkpoint; migration 0013 code/tests validate, full suite 128/128.
 - Phase/task: Phase 6 Fund Transparency, T6 transparency/export; T1–T5 complete.
 
 ## DONE
@@ -15,18 +15,18 @@
 - T6 local validation PASS: focused 21/21, `npm run check:migrations` 0001–0012, `npm test` 127/127, verifier syntax valid.
 
 ## IN PROGRESS
-- Exact task: finish T6 live verification after migration 0012 application.
-- Files changed in T6 (committed locally in `1138d0f`): `supabase/migrations/0012_fund_transparency_read_export.sql`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/src/routes/funds.js`, `server/test/phase6-transparency.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `scripts/verify-phase6-transparency-live.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `docs/CONTEXT.md`.
+- Exact task: fix T6 live SQLSTATE 42725 via new migration 0013, apply it, then finish T6 live verification.
+- Files changed in T6 (initial implementation committed locally in `1138d0f`; current repair is uncommitted): `supabase/migrations/0012_fund_transparency_read_export.sql`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/src/routes/funds.js`, `server/test/phase6-transparency.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `scripts/verify-phase6-transparency-live.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `docs/CONTEXT.md`.
 - Earlier SQL Editor checks showed both 0012 RPC routines absent and authenticated SELECT on `fund_contributions` enabled. User has since confirmed applying migration 0012. Fresh catalog/privilege checks are pending; do not reload schema cache yet.
 
 ## NEXT STEPS
-1. Ask user to run the read-only SQL Editor routine and privilege checks below; do not reload the schema cache.
-2. If both routine names appear and `authenticated_can_select` is false, record that database state.
-3. Only after the user authorizes/requests the next check, reload schema cache and rerun `node scripts/verify-phase6-transparency-live.js`.
-4. Record outcomes and continue to T7 only after T6 passes.
+1. Apply only `supabase/migrations/0013_fix_transparency_campaign_json.sql` in the intended Supabase SQL Editor; 0012 is applied and its routines/grants are verified.
+2. Tell the agent `applied`; no schema cache reload is needed/requested for this same-signature function body replacement.
+3. Rerun `node scripts/verify-phase6-transparency-live.js` and resolve any additional findings additively.
+4. Record outcomes; continue to T7 only after T6 live verification passes.
 
 ## USER ACTIONS PENDING
-- Run the routine-only read-only query below in the same Supabase SQL Editor and report its rows. The privilege check already returned false. Do not run `NOTIFY pgrst, 'reload schema'` yet:
+- Apply only migration 0013; no schema reload. In the intended Supabase project SQL Editor, paste/run the complete contents of `supabase/migrations/0013_fix_transparency_campaign_json.sql` once, then say `applied`.
   ```sql
   select routine_name from information_schema.routines
   where specific_schema='public'
@@ -35,9 +35,9 @@
 
 ## LIVE STATE
 - Applied and live verified: migrations 0001–0011.
-- Migration 0012: user confirmed applied; screenshot confirms authenticated SELECT false. Routine rows still need confirmation; do not reload schema yet.
+- Migration 0012: applied; screenshot confirms both routines exist and authenticated SELECT false. Migration 0013: pending; fixes 42725 by using explicit allowlisted campaign JSON fields, retains service-only execute.
 - Tunnel/webhook fixed; T2 capture and five exact replays passed. Fixed T3/T4/T5 data remain in test organization; reuse only.
-- Latest live checks: RPC schema probe HTTP 404/PGRST202; no further fund mutations. Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
+- Latest live checks: 0012 routines visible and direct SELECT revoke confirmed; valid member RPC returns HTTP 400/SQLSTATE 42725 (ambiguous unknown-minus-unknown operator); no fund writes. Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`.
 
 ## TEST STATE
 | Check | Status | Date | Command/result |
@@ -48,8 +48,8 @@
 | Migration parser | PASS | 2026-10-26 | `npm run check:migrations`; 0001–0012 |
 | Full suite | PASS | 2026-10-26 | `npm test`; 127/127 |
 | T6 SELECT revoke | PASS | 2026-10-26 | User SQL Editor screenshot: authenticated SELECT false |
-| T6 RPC presence | UNVERIFIED | 2026-10-26 | Routine query result not visible in screenshot |
-| T6 live | UNVERIFIED | 2026-10-26 | Earlier 404 PGRST202; schema cache was not refreshed |
+| T6 RPC presence/grant | PASS | 2026-10-26 | Screenshot lists both routines; authenticated SELECT false |
+| T6 live | UNVERIFIED | 2026-10-26 | Valid-member RPC returns 400/42725; repair 0013 pending |
 
 ## KNOWN ISSUES AND RISKS
 - T4 is simulated only; no cash movement, PayPal payout or ledger entry.
