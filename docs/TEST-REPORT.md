@@ -1010,3 +1010,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `npm run check:migrations` — PASS; PostgreSQL 17 SQL/PLpgSQL syntax OK for migrations 0001–0010.
 - `npm test` — PASS; 121 passed, 0 failed; embedded migration check accepted 0001–0010.
 - `node --check scripts/verify-phase6-payment-live.js` — PASS; verifier syntax valid; no live request executed.
+- `node scripts/verify-phase6-payment-live.js` — FAIL/UNVERIFIED live T4; fixed fixture authentication and request preconditions completed, but read-only PostgREST query for `approvals.fund_maintenance_request_id` did not return HTTP 200. Script stopped before any payment/approval mutation. Need inspect whether 0010 is applied and schema cache refreshed.
+- `GET /rest/v1/approvals?select=fund_maintenance_request_id&limit=0` using service-role headers — FAIL/UNVERIFIED live migration visibility; HTTP 400, SQLSTATE 42703 `column approvals.fund_maintenance_request_id does not exist`. Read-only check; T4 payment path was not called and no payment mutation occurred.
+- `node --check scripts/verify-phase6-payment-live.js` after adding HTTP/SQLSTATE diagnostics — PASS; no live request executed.
+- `node --check scripts/verify-phase6-payment-live.js` after applying the diagnostic change — PASS; syntax valid; no live request executed.
