@@ -771,3 +771,201 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Fixed Phase 3 test organization/memberships: PASS; existing owner, approver, accountant, and viewer roles found. Auth magic link generated and verified in memory for an ordinary owner JWT; no token, IDs, or key values printed.
 - Service-only RPC access: PASS, six T3 RPC endpoints denied ordinary owner JWT with HTTP 403 each. Initial two probes used incorrect argument names and returned 404; corrected probes returned 403. No database writes.
 - Full maintenance workflow transitions, self-approval/skipped-state/foreign-quotation rejection, two distinct threshold approvals, and API persistence: UNVERIFIED pending the next T3 lifecycle check.
+
+## Phase 6 T3 — database error mapping — 2026-10-26
+- `node --test server/test/phase6-maintenance-route-errors.test.js` — PASS; 1 test passed, 0 failed. Covered SQLSTATE 42501, 22023, 23505, 23514, P0002; verified structured safe errors and no database-message leak.
+- 
+> novapay@2.0.0 test
+> node scripts/check-migrations.js && node --test server/test/*.test.js
+
+0001_foundation.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0002_financial_core.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0003_fx_reports_invoices.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0004_fix_invoice_paid_amount.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0005_ai.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0006_fund_transparency.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0007_fund_contributions.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0008_fund_contribution_accounting.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0009_maintenance_state_machine.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+✔ daily user budget blocks a second distinct provider request with zero second call (22.199042ms)
+✔ concurrent reservations cannot exceed the organization budget (0.831041ms)
+✔ repeat safe answer is cached, but changed data version and another org miss (1.763667ms)
+✔ proposals, insufficient evidence, expired cache and too-long input are not cached or sent (3.101042ms)
+✔ daily usage resets at the UTC date boundary (0.096208ms)
+✔ read-only tools always scope database calls to the verified org, ignoring model/request org IDs (0.586291ms)
+✔ tool executor allow-lists names, blocks duplicate calls, and caps calls per request (0.164708ms)
+✔ tool calls time out and result bodies are bounded (5.533792ms)
+✔ invoice evidence drops names, emails, free-text descriptions, and model instructions (1.549541ms)
+✔ explanation evidence uses static allow-listed tools and extracts period filters (0.34375ms)
+✔ tool creation requires a verified organization context (0.14775ms)
+✔ intent router classifies 40+ normal, ambiguous, mixed-language, typo, and adversarial examples (3.1015ms)
+✔ FX intent wins over other instructions and returns only an allowed route with reason metadata (0.074209ms)
+✔ structured queries precede explanation, documents precede general fallback, and unknown goes to LLM (0.051917ms)
+✔ router dispatch attaches deterministic metadata and never trusts an input route field (0.083041ms)
+✔ AI sanitizer safely handles malformed JSON (2.117334ms)
+✔ AI sanitizer handles empty reply (2.3435ms)
+✔ AI sanitizer maps unknown proposal types to other (0.268042ms)
+✔ AI sanitizer removes foreign evidence IDs and keeps known IDs (0.186042ms)
+✔ AI sanitizer rejects unknown top-level fields and oversized output (0.2825ms)
+✔ AI sanitizer maps an unknown proposal type to a non-executable other suggestion (0.172208ms)
+✔ AI context drops buyer and unknown fields; user text redacts common sensitive values (4.970125ms)
+✔ PII redaction masks Unicode names, addresses, phone, account/card numbers, and tokens without near-match over-redaction (1.019167ms)
+✔ AI service rejects numeric claims absent from evidence and labels missing evidence (12.847833ms)
+✔ AI service refuses an unknown record ID embedded in prose (0.932625ms)
+✔ database text is fenced as escaped untrusted data and cannot add proposal instructions (0.790917ms)
+✔ provider failure becomes a safe temporary-unavailable response without exposing provider text (0.211916ms)
+✔ an AI refund proposal creates only a pending org-scoped approval and never calls PayPal (3.436917ms)
+✔ an uncited AI proposal does not create an approval (0.750541ms)
+✔ FX and structured refund questions bypass the LLM and report zero provider tokens (0.91925ms)
+✔ fee-rate spike uses trailing fee-bearing captures and exact threshold boundary (1.069875ms)
+✔ duplicate amount+payer requires a payer reference and a duplicate within the configured window (0.480083ms)
+✔ refund-rate spike is based on completed gross totals with an exact configured boundary (1.073583ms)
+✔ large payout, reconciliation mismatch, stale webhook and dead-letter boundaries (0.413334ms)
+✔ anomaly persistence is idempotent and creates a notification only once (0.401375ms)
+✔ scheduled anomaly worker scans known organizations and can stop cleanly (3.487084ms)
+✔ audit helper writes tenant, actor, request, and action fields without response bodies (1.068125ms)
+✔ audit helper reports failure without echoing provider details (0.354042ms)
+✔ legacy Phase 0 error keeps its string and adds a sibling route/status code (0.522ms)
+✔ new Phase 1 errors use the structured error object shape (0.234167ms)
+{"level":"info","requestId":"9d48399d-3032-451c-9299-6f914a3c04d6","method":"GET","path":"/api/transactions","status":401,"durationMs":4}
+{"level":"info","requestId":"e3f0c38e-c396-4cb6-9194-921b4e294504","method":"GET","path":"/api/transactions","status":400,"durationMs":2}
+{"level":"info","requestId":"1ccdf960-5fec-48e6-ae5b-8d7932c5e6b9","method":"GET","path":"/api/transactions","status":200,"durationMs":1}
+{"level":"info","requestId":"a1158f01-d705-4e0f-821d-5bee46738dae","method":"GET","path":"/api/ledger/entries","status":400,"durationMs":1}
+{"level":"info","requestId":"83838cb7-56f6-4d7d-98b0-fbc703c95a0f","method":"GET","path":"/api/ledger/entries","status":400,"durationMs":1}
+{"level":"info","requestId":"4f5ecc68-fcb3-4568-94d8-dc95b3277f75","method":"GET","path":"/api/ledger/entries","status":200,"durationMs":1}
+{"level":"info","requestId":"be8d0008-1d6d-4348-a1ea-e6e64119e9c6","method":"GET","path":"/api/ledger/trial-balance","status":403,"durationMs":0}
+{"level":"info","requestId":"4466b1b7-3252-43de-89c3-ff7775ad6a69","method":"GET","path":"/api/ledger/trial-balance","status":200,"durationMs":1}
+{"level":"info","requestId":"e4709816-cdd9-4ec8-8de7-773b477215eb","method":"GET","path":"/api/reconciliation","status":200,"durationMs":0}
+{"level":"info","requestId":"24a23ead-d1cd-4f2a-8881-a2d922c7885a","method":"GET","path":"/api/approvals","status":200,"durationMs":0}
+✔ Phase 2 read APIs validate filters, enforce tenant membership, and return structured errors (60.233416ms)
+{"level":"info","requestId":"64f56b68-bea8-4a3a-bb98-6961ac700521","method":"GET","path":"/api/transactions","status":503,"durationMs":1}
+✔ financial database failures return safe structured errors without provider details or stacks (7.316167ms)
+{"level":"info","requestId":"f2c4376c-63c9-4ed1-b5d3-be3215b216e5","method":"POST","path":"/api/approvals/register","status":400,"durationMs":4}
+{"level":"info","requestId":"530680a2-690e-4b92-a602-6e39991c520b","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":403,"durationMs":1}
+{"level":"info","requestId":"d42600f0-add4-4e64-b1c1-748f027cbba4","method":"POST","path":"/api/approvals/register","status":200,"durationMs":0}
+{"level":"info","requestId":"e5cf9f0d-b10b-4b3b-b9d7-a5bf4616d660","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":409,"durationMs":1}
+{"level":"info","requestId":"bcf25a42-3908-4a15-8788-9270e0756797","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":200,"durationMs":31}
+{"level":"info","requestId":"ac659f6c-de64-4399-ae4a-b2891acc3226","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":200,"durationMs":2}
+{"level":"info","requestId":"ad039711-92d2-4082-b569-33b8ffa15a7b","method":"GET","path":"/api/approvals/pending-count","status":200,"durationMs":1}
+✔ refund registration rejects over-capture amount and concurrent approval sends one PayPal refund (47.2255ms)
+{"level":"info","requestId":"e342a078-796f-4039-895c-b0a99560a586","method":"GET","path":"/api/events","status":401,"durationMs":3}
+{"level":"info","requestId":"fad381e3-bf10-4718-ad88-de444c2b7870","method":"GET","path":"/api/events","status":401,"durationMs":1}
+{"level":"info","requestId":"ee525fbc-b19d-4ecb-a10a-69b3a1a7e04b","method":"GET","path":"/api/events","status":403,"durationMs":0}
+{"level":"info","requestId":"0da9a4b3-31f2-4825-93dc-53acb088dda8","method":"GET","path":"/api/events","status":400,"durationMs":0}
+✔ auth requires a valid Supabase JWT and blocks cross-organization requests (45.185417ms)
+{"level":"info","requestId":"87c46428-9370-4bd5-ab4e-ca5959db9cdb","method":"GET","path":"/api/events","status":401,"durationMs":1}
+{"level":"info","requestId":"34bc7772-85b8-482d-b1a2-4d1a640305d7","method":"POST","path":"/api/ai/chat","status":401,"durationMs":0}
+{"level":"info","requestId":"97af6f17-2c03-4878-9147-c87ed76aece1","method":"POST","path":"/api/approvals/register","status":401,"durationMs":0}
+{"level":"info","requestId":"52412ced-b11c-4b9b-924e-e009690b9c6c","method":"POST","path":"/api/paypal/create-order","status":401,"durationMs":1}
+{"level":"info","requestId":"22e44201-275a-4ea1-8249-b13ae7e0be4c","method":"POST","path":"/api/paypal/capture","status":401,"durationMs":0}
+{"level":"info","requestId":"4feba48e-56fa-4479-b9ce-26d1dbfb3135","method":"POST","path":"/api/paypal/refund","status":401,"durationMs":0}
+{"level":"info","requestId":"7a3d4765-a810-4e54-90f3-26078b77db7d","method":"POST","path":"/api/onboarding","status":401,"durationMs":0}
+✔ every protected route rejects a missing bearer token (19.580083ms)
+{"level":"info","requestId":"7a516d87-8a99-489c-903d-cf3de1dc35f3","method":"POST","path":"/api/paypal/create-order","status":401,"durationMs":0}
+✔ unauthenticated malformed API JSON is rejected before body parsing (2.221417ms)
+{"level":"info","requestId":"557641a3-5dc7-4176-aadf-e1f215f91738","method":"POST","path":"/api/approvals/register","status":403,"durationMs":7}
+{"level":"info","requestId":"23832a74-3694-4e88-b7c1-1c35f85578f3","method":"POST","path":"/api/paypal/create-order","status":403,"durationMs":1}
+{"level":"info","requestId":"cacbf8bb-88ef-4450-8bf5-9ad0c2893996","method":"POST","path":"/api/paypal/capture","status":403,"durationMs":0}
+{"level":"info","requestId":"b8935a9e-b5c1-4eb9-aa77-a65ead8f3180","method":"POST","path":"/api/paypal/refund","status":403,"durationMs":0}
+✔ viewer cannot register an approval and new routes use structured error envelopes (14.473667ms)
+{"level":"info","requestId":"bc2a2747-5001-4a3f-8b5b-ab56e298a63e","method":"GET","path":"/api/public-config","status":200,"durationMs":1}
+{"level":"info","requestId":"f17667c0-8a64-4b1c-bada-65264e77d441","method":"POST","path":"/api/onboarding","status":400,"durationMs":2}
+{"level":"info","requestId":"a5c9083c-8727-40fd-a15a-16104882c5c7","method":"POST","path":"/api/onboarding","status":400,"durationMs":0}
+{"level":"info","requestId":"1049e1c4-683a-40d5-bb1f-59dec1fab969","method":"POST","path":"/api/onboarding","status":201,"durationMs":0}
+{"level":"info","requestId":"a32845a0-d646-419a-a28e-3acb79e52900","method":"POST","path":"/api/onboarding","status":200,"durationMs":0}
+✔ public config contains only Supabase URL and anon key, and onboarding is authenticated and repeat-safe (13.094542ms)
+{"level":"info","requestId":"92efc232-518c-48c3-840f-cc7462541dfc","method":"GET","path":"/api/status","status":200,"durationMs":0}
+{"level":"info","requestId":"e4ed3653-9d43-45a3-9a7b-5d2e7e7b9ecb","method":"GET","path":"/api/events","status":503,"durationMs":0}
+✔ degraded mode is explicit and protected API calls do not bypass authentication (4.424583ms)
+✔ request query values and provider secrets do not appear in server logs (3.471292ms)
+✔ capture posting uses PayPal gross, fee and net values as balanced minor units (1.874584ms)
+✔ capture without a complete reported breakdown posts to clearing without inventing a fee (0.164667ms)
+✔ fund contribution captures credit Donations instead of Sales Revenue (0.309958ms)
+✔ refund posting uses the returned refund fee breakdown and does not presume fee reversal (0.189667ms)
+✔ ledger mapping rejects malformed or inconsistent provider amounts (1.12975ms)
+✔ AI service calls the provider interface and preserves sanitization guardrails (20.5535ms)
+✔ Gemini adapter falls back to the configured model after a primary failure (19.659291ms)
+✔ Gemini adapter retries throttling once with bounded backoff, then uses one fallback (0.266875ms)
+✔ Gemini adapter bounds timeouts, retries once, and never logs response bodies or API keys (9.912209ms)
+✔ Gemini adapter uses the fallback once for malformed and empty provider responses (0.665292ms)
+✔ default provider is Gemini and Anthropic is selected only by explicit configuration (0.611125ms)
+✔ Gemini runtime configuration rejects models outside the verified free-tier allow-list (0.1685ms)
+✔ order amount accepts 0.01 through 10,000.00 with at most two decimals (0.737375ms)
+✔ PayPal request ID is deterministic sha256(scope:id) (0.769542ms)
+✔ approve URL requires https and a paypal.com hostname boundary (0.199667ms)
+✔ refund remaining amount subtracts completed and reserved refunds (0.194458ms)
+✔ webhook verification request embeds the exact raw event bytes (14.235375ms)
+✔ PayPal error activity logs expose only safe issue enums, not provider messages or debug ids (0.860834ms)
+✔ PayPal error activity keeps issue enums when provider omits name and labels unstructured bodies safely (0.625125ms)
+✔ FX conversion uses decimal integer arithmetic and half-up minor-unit rounding (0.467875ms)
+✔ FX service caches provider rates and returns source, timestamp, label, and separate fees (1.738583ms)
+✔ FX provider throttle reserves distinct slots for concurrent currency pairs (0.304208ms)
+✔ invoice draft recalculates line, tax, and grand totals while ignoring client totals (0.24725ms)
+✔ PayPal invoice create response extracts and validates the invoice id from its self href (0.200375ms)
+✔ invoice send logs create, id extraction, and send stages without exposing the invoice id (2.538833ms)
+✔ invalid PayPal invoice create response keeps the client error structured (0.712167ms)
+✔ simulated invoice send preserves approval and local tracking without calling PayPal (0.470333ms)
+✔ report totals computed from ledger views balance and match the underlying ledger fixture (0.379792ms)
+✔ CSV cells neutralize formula injection while preserving CSV quoting (0.316334ms)
+✔ invoice cannot be sent unless a send-invoice approval record exists (0.168208ms)
+{"level":"info","requestId":"3ed6134c-1fa5-463f-96fc-095215f0c16d","method":"GET","path":"/api/fx/convert","status":401,"durationMs":3}
+{"level":"info","requestId":"b7dfb35d-55df-4696-ac2c-1b5b4484d3c4","method":"GET","path":"/api/fx/convert","status":200,"durationMs":2}
+{"level":"info","requestId":"326c73b3-a26e-4340-bb09-3b26a912abcc","method":"GET","path":"/api/fx/convert","status":400,"durationMs":1}
+{"level":"info","requestId":"4a79dffc-1ce6-4b22-a10e-f85ba811e501","method":"GET","path":"/api/reports/profit-and-loss","status":200,"durationMs":1}
+{"level":"info","requestId":"1397552b-c22f-4af3-b0f6-dd950b45603b","method":"GET","path":"/api/reports/profit-and-loss","status":200,"durationMs":0}
+{"level":"info","requestId":"d761862f-f146-4db6-99ba-75fe34099310","method":"GET","path":"/api/reports/profit-and-loss","status":400,"durationMs":0}
+{"level":"info","requestId":"4be7f862-d840-457f-abb1-6aacefcc0eac","method":"POST","path":"/api/invoices","status":403,"durationMs":2}
+{"level":"info","requestId":"b8e29d9b-053e-45c2-aac3-1d10efeac047","method":"POST","path":"/api/invoices","status":400,"durationMs":1}
+{"level":"info","requestId":"66aa5d91-909c-43ff-9391-4230e3f12218","method":"POST","path":"/api/invoices","status":201,"durationMs":0}
+{"level":"info","requestId":"afd4b465-90de-42dd-a3fb-f1efa10b2cbf","method":"POST","path":"/api/invoices","status":400,"durationMs":0}
+✔ Phase 3 routes return tenant-scoped FX, report, and recalculated invoice shapes (54.618584ms)
+✔ Phase 4 tables have RLS, member-only reads, and no authenticated write grants (1.170458ms)
+✔ every new SECURITY DEFINER RPC revokes client execution and grants only service_role (2.225917ms)
+✔ pledges do not count as received funds and only a verified completed capture creates one receipt (2.394083ms)
+✔ verified capture amount mismatch is flagged and never marks the pledge received (0.168333ms)
+{"level":"info","requestId":"9938b304-a763-4c88-96f9-cf8021f8f4b7","method":"POST","path":"/api/funds/campaigns","status":201,"durationMs":5}
+{"level":"info","requestId":"ff8b1363-e7b9-4446-8318-2b0de2384665","method":"POST","path":"/api/funds/campaigns/8de47357-5911-45b5-b510-c40ead49af51/pledges","status":201,"durationMs":3}
+{"level":"info","requestId":"86e3d478-0ddf-477c-8b1b-1d23d6a234e0","method":"GET","path":"/api/funds/campaigns/8de47357-5911-45b5-b510-c40ead49af51/summary","status":200,"durationMs":1}
+{"level":"info","requestId":"e658ba0f-efed-4197-be9f-c9fa60b07d8b","method":"POST","path":"/api/funds/contributions/e182d2c4-d4d7-41c6-8611-03330314183e/paypal-order","status":201,"durationMs":1}
+{"level":"info","requestId":"c496e83a-9147-4b62-b30a-b02c7061186f","method":"POST","path":"/api/funds/contributions/e182d2c4-d4d7-41c6-8611-03330314183e/paypal-order","status":201,"durationMs":0}
+✔ campaign and pledge API labels intent only and creates an idempotent linked PayPal order (47.984375ms)
+✔ T3 database business rejections return safe, structured client errors (39.239958ms)
+✔ maintenance workflow allows only the next legal T3 transitions (2.880417ms)
+✔ maintenance workflow rejects skipped states, foreign quotations, requester self-approval, and duplicate approvers (0.671958ms)
+✔ payment approval threshold is two distinct approvers at exactly 10000 minor units (0.645625ms)
+✔ Phase 6 tables are tenant-scoped and expose only member reads to authenticated clients (1.201583ms)
+✔ Fund schema encodes contribution receipts, quotation selection, approvals, evidence, and defaults (0.194625ms)
+✔ Phase 6 SECURITY DEFINER RPCs are executable only by service_role (0.602167ms)
+✔ fund account correction uses append-only reversal and repost entries (0.195708ms)
+✔ T3 maintenance RPCs enforce the state graph and are service_role-only (1.116291ms)
+✔ money repository helpers use integer minor units and reject excessive precision (0.452ms)
+✔ Postgres repositories scope tenant data and transactional calls by organization (0.559334ms)
+✔ capture reads disambiguate the order foreign key in PostgREST embeds (0.126583ms)
+✔ fund-linked synchronous and webhook captures send Donations account lines (0.360042ms)
+✔ approval repository exposes its public approvalId field for persistence checks (0.096125ms)
+✔ AI proposal persistence uses the scoped pending-approval RPC with minor-unit amounts (0.105833ms)
+✔ capture and refund persistence send the pure ledger mapping into atomic database RPCs (0.189458ms)
+✔ AI usage reservations and cache persistence stay scoped to the verified organization (0.881459ms)
+✔ anomaly records, notification actions, webhook inputs and scheduled org scans are scoped (0.393875ms)
+✔ legacy API flow handles valid, invalid, unauthenticated, and repeated requests (40.852125ms)
+✔ AI route accepts legacy context fields but supplies only verified membership context (3.559458ms)
+✔ AI proposals stay pending until an approver uses the existing refund path exactly once (14.040667ms)
+✔ AI provider error bodies and keys do not reach responses or activity logs (373.372334ms)
+✔ notifications are organization scoped, read/dismiss only, and anomaly scans require an authorized role (4.868833ms)
+✔ invalid configuration fails fast without printing a stack trace (83.434417ms)
+✔ partial Supabase configuration fails fast without echoing secrets (80.825584ms)
+✔ Supabase service verifies bearer tokens with anon key and uses service role only server-side (12.506875ms)
+✔ invalid JWT is rejected; Supabase service outages fail closed (0.308041ms)
+✔ new Supabase secret keys are sent as apikey only, never as bearer JWTs (0.141625ms)
+✔ webhook verifier waits past the inbox initial state until processing is terminal (0.273917ms)
+✔ five duplicate verified webhook deliveries produce one journal source and preserve raw bytes (24.151208ms)
+✔ unverified webhook events are retained but never reach the posting path (4.068416ms)
+✔ verified invoice amount mismatch is handled without claiming a paid posting (0.125625ms)
+ℹ tests 118
+ℹ suites 0
+ℹ pass 118
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 975.220709 — PASS; ℹ tests 118;ℹ pass 118;ℹ fail 0;ℹ skipped 0;. PostgreSQL 17 migration parser accepted migrations 0001–0009.

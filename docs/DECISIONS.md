@@ -537,3 +537,9 @@
 - Choice: Probe each T3 RPC using the fixed ordinary owner JWT and exact function arguments, requiring HTTP 403 before running workflow actions.
 - Reason: `SECURITY DEFINER` maintenance actions are stateful and the client grant boundary must be proven first; corrected probes returned 403 for all six RPCs.
 - Source: Live Supabase/PostgREST check against the configured project, 2026-10-26. Rejected alternative: use a service-role RPC probe, which would mutate maintenance data and cannot prove ordinary-user denial.
+
+## 2026-10-26 — T3 SQLSTATE response mapping
+- Question: How should expected maintenance RPC domain failures surface to clients?
+- Choice: Map only known Postgres domain SQLSTATEs in `fundRoutes` to stable 400/403/404/409 structured errors; suppress database messages.
+- Reason: live checks showed permission/transition rejections were being wrapped as 503 `DATABASE_UNAVAILABLE`, masking expected behavior and making clients treat rejected actions as outages.
+- Source: `supabase/migrations/0009_maintenance_state_machine.sql` SQLSTATE declarations and `server/src/services/supabase.js` RPC adapter, inspected 2026-10-26. Rejected alternative: expose PostgREST error messages or change global mapping shared by unrelated routes.
