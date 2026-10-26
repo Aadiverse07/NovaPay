@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: T2 API demo; fixed T3 maintenance lifecycle mismatch preserved, fixed T5 completion verification passed.
-- Last finished step: fixed owner/approver/accountant API access 3/3; completion script confirmed existing request `closed`, evidence accepted, 3/3 ordinary RPC 403, direct write denied, no user/org/file created.
-- Next step: perform read-only authenticated API checks for PayPal captures/transactions/ledger/approvals, and make two AI questions with expected code and cited LLM routes.
-- Pending human action: browser checks at finish; no PayPal order.
+- Current task: retry T2 authenticated API demo; server is running persistently in terminal session 40038.
+- Last finished step: initial probe failed before any API endpoint due server exit; `npm start` persistent session now returns `/api/status` HTTP 200. Fixed sign-in completed; no order created.
+- Next step: rerun read-only authenticated capture/ledger/transactions/approvals/transparency calls and two AI questions; capture summary only.
+- Pending human action: browser checks at finish; no order creation.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1781,3 +1781,18 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 - 2026-10-26 — ABOUT TO: Read the AI router/service dispatch branches only. WHY: avoid consuming a live LLM request on a question that cannot cite organization evidence.
 - RESULT: PASS; dispatch and citation propagation inspected; NEXT: use one general evidence-based question classified as LLM, then verify returned citations and route metadata.
 - 2026-10-26 — ABOUT TO: Check branch/worktree and commit the recorded T2 completion result and current resume pointer. WHY: checkpoint two live-verifier outcomes and preserve a safe restart before the next authenticated API probe.
+- RESULT: PASS; T2 completion docs checkpoint exit 0. NEXT: run bounded authenticated read API and AI checks.
+- 2026-10-26 — ABOUT TO: Read only the remainder of the intent classifier to choose a route=llm prompt. WHY: keep the second AI request from being classified as retrieval/sql instead of the requested cited LLM route.
+- RESULT: PASS; exact classification rules inspected. NEXT: build the authenticated API script with one code FX message and one route=llm question based on organization evidence.
+- 2026-10-26 — ABOUT TO: Read only the LLM branch setup that chooses organization evidence and output citation enforcement. WHY: ensure the selected route=llm question can return grounded citations without including browser data.
+- RESULT: PASS; LLM branch requires org-scoped record evidence and citations. NEXT: use a general route=llm message that references the org payment evidence but avoids retrieval/structured route keywords.
+- 2026-10-26 — ABOUT TO: Run an authenticated, bounded API demo using the fixed owner fixture and fixed Phase 3 organization; only GETs plus two AI messages. WHY: check capture/ledger/transactions/approvals/transparency and code/LLM routes; do not create any PayPal order or financial record.
+- RESULT: FAIL; authenticated read/API demo exit 1; no PayPal order path called. NEXT: record each endpoint/AI result accurately and investigate only failed/unverified items.
+- 2026-10-26 — ABOUT TO: Record the failed authenticated API probe and inspect port 3000. WHY: the fixed-owner token was obtained, but the first local API request failed with ECONNREFUSED; no API endpoint checks or order actions ran.
+- RESULT: FAIL; authenticated probe could not connect to 127.0.0.1:3000 (ECONNREFUSED) before any API endpoint was reached; fixed-owner magic-link flow had completed; no order created. NEXT: append TEST-REPORT failure and start npm start in a persistent terminal session.
+- 2026-10-26 — ABOUT TO: Inspect port 3000 listener/process after the connection refusal. WHY: confirm no server is active before restarting.
+- 2026-10-26 — ABOUT TO: Start npm start in a persistent interactive terminal session. WHY: the previous background launch exited with its shell; keep the required port-3000 API process alive for demo checks.
+- 2026-10-26 — ABOUT TO: Check GET /api/status on the persistent server and record readiness. WHY: verify the session-backed server before retrying authenticated API calls.
+- RESULT: PASS; persistent local /api/status HTTP 200. NEXT: retry authenticated read-only API probe if HTTP 200.
+- 2026-10-26 — ABOUT TO: Checkpoint the failed probe, persistent server restart, and verified HTTP 200 before retrying the demo. WHY: preserve the precise state after the local process-lifecycle issue.
+- RESULT: PASS; CONTEXT and pointer reflect persistent server and initial failed attempt; TEST-REPORT retains the failure. NEXT: stage continuity docs, whitespace-check, and commit T2 server checkpoint before retry.

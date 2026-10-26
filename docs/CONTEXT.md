@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; base main at 874e2e5; local commits only, never push.
-- Phase/task: T1 complete; T2 API demo in progress; completion verifier PASS and T3 lifecycle mismatch recorded.
+- Phase/task: T1 complete; T2 API demo in progress; completion PASS, T3 lifecycle mismatch, and initial API probe connection failure recorded; server restarted persistently.
 
 ## DONE
 - STEP 0 PASS: `npm ci`; `npm test` 131/131; migration syntax 0001–0014; server on port 3000 restarted and `/api/status` HTTP 200.
@@ -37,6 +37,8 @@
 | npm test | PASS 131/131 | 2026-10-26 | `npm test` |
 | Migration syntax | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
 | API status before/after restart | PASS HTTP 200 | 2026-10-26 | `curl http://127.0.0.1:3000/api/status` |
+| Initial authenticated API probe | FAIL | 2026-10-26 | server exited; ECONNREFUSED before API requests |
+| Persistent server restart | PASS HTTP 200 | 2026-10-26 | `npm start` in persistent session; GET `/api/status` |
 | T1 view runtime | UNVERIFIED | 2026-10-26 | No view/browser runtime check yet |
 | Fixed test user sign-in/API | PASS 3/3 | 2026-10-26 | `node scripts/verify-phase6-maintenance-live.js` fixed roles read campaigns HTTP 200 |
 | Fixed T3 maintenance lifecycle | FAIL | 2026-10-26 | `node scripts/verify-phase6-maintenance-live.js`; existing request already `closed`, expected `payment_approved` |
