@@ -1,7 +1,7 @@
 ## RESUME POINTER
-- Current task: T3 README; T1/T2 checkpoints complete.
-- Last finished step: T2 fixed owner API demo: 2 captures completed, balanced ledger, approvals 1/pending 0, one campaign/contribution/expense; AI code answer 12 and LLM 3 citations; fixed closed maintenance request with accepted evidence appears in transparency as SIMULATED with gaps. No order created.
-- Next step: inspect README headings and RUNBOOK tunnel instructions; append non-UI real/simulated/run/demo sections only; then run all T4 checks.
+- Current task: T4 final validation, documentation checkpoint and local final commit.
+- Last finished step: T1/T2/T3 complete. README Phase 6 section appended; scope review and `git diff --check` passed; commit checkpoint is next.
+- Next step: commit README/T3 docs locally, run T4 tests/migration check/node syntax/protected diff, then final docs and required commit message.
 - Pending human action: browser checks at finish; no PayPal order.
 
 ## Backfill
@@ -1826,3 +1826,14 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 - RESULT: PASS; fixed closed-maintenance transparency read exit 0; no order or mutation. NEXT: append the observed maintenance/transparency result and update T2 checkpoint.
 - 2026-10-26 — ABOUT TO: Record maintenance-through-transparency PASS, mark T2 complete with the fixed-fixture mismatch/PDF limitation, and set T3 README as next. WHY: all requested read/AI routes have now been individually observed; preserve both passes and limitations.
 - RESULT: PASS; T2 read and AI results, maintenance transparency pass, T3 lifecycle mismatch, and PDF limitation are recorded; CONTEXT/RESUME POINTER now set to README. NEXT: stage docs and make a local T2 completion checkpoint before editing README.
+- RESULT: PASS; T2 completion checkpoint exit 0. NEXT: inspect README headings and RUNBOOK tunnel steps, then add only requested non-UI docs.
+- 2026-10-26 — ABOUT TO: Read README headings/end, RUNBOOK tunnel instructions, and `.env.example` key names only. WHY: append the Phase 6 demo section without changing existing UI documentation or exposing any values.
+- RESULT: PASS; README section layout, tunnel command and environment key names reviewed; NEXT: append a separate Phase 6 run/demo section after existing README content.
+- 2026-10-26 — ABOUT TO: Re-read only the RUNBOOK lines describing local server and tunnel/webhook setup. WHY: document the actual project procedure rather than inventing a tunnel command.
+- RESULT: PASS; tunnel guidance read; NEXT: append the requested non-UI real/simulated, run, and 3-minute demo sections to README only.
+- 2026-10-26 — ABOUT TO: Search only the runbook for tunnel/webhook commands. WHY: check whether a documented tunnel command exists before writing README instructions.
+- RESULT: INFO; no project tunnel command found in RUNBOOK; NEXT: document the generic tunnel requirement and exact webhook path/ID match without inventing a provider-specific command.
+- 2026-10-26 — ABOUT TO: Append Phase 6 real/simulated, run, tunnel, and 3-minute demo notes to the end of README only. WHY: satisfy T3 without changing any existing UI documentation; use only environment key names and existing demo data.
+- RESULT: PASS; appended the Phase 6 section at README end; no existing UI section changed; only env key names included. NEXT: inspect README diff for append-only scope and key-name safety, then proceed to T4 checks.
+- 2026-10-26 — ABOUT TO: Mark T3 README complete, record its append-only/scope review, update CONTEXT/DECISIONS/WORKLOG pointer, and commit a local checkpoint. WHY: save the requested real/simulated/run/demo documentation before T4 validation.
+- RESULT: PASS; T3 content and review recorded; CONTEXT/RESUME POINTER identify T4. NEXT: stage README and continuity docs, whitespace-check, and commit locally on fund-wiring.
