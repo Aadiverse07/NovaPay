@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: finish T6 repair/live verification, then continue Phase 6 T7.
-- Last finished step: 0012 objects/grants visible; valid-member RPC exposed SQLSTATE 42725; migration 0013 and regression test added; local full suite 128/128 PASS.
+- Last finished step: 0012 objects/grants visible; valid-member RPC exposed SQLSTATE 42725; migration 0013 and regression test added; checkpoint `1423eb7`; local full suite 128/128 PASS.
 - Next step: user applies `supabase/migrations/0013_fix_transparency_campaign_json.sql` and says `applied`.
 - Pending human action: apply only migration 0013; do not reload schema cache.
 
@@ -1097,3 +1097,5 @@ RESULT — 2026-10-26 15:17:05 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - RESULT: PASS; full suite passed 128/128; embedded migration parser accepted migrations 0001–0013. Files changed for T6 repair: new `supabase/migrations/0013_fix_transparency_campaign_json.sql` and regression assertion in `server/test/phase6-migration.test.js`; no live calls in this command. NEXT: update CONTEXT/TEST-REPORT/DECISIONS with 0013 pending apply and exact human step, then checkpoint locally.
 - 2026-10-26 15:37 Asia/Kolkata — ABOUT TO: Verify branch, `.env` staging state, handoff length and whitespace, then create local WIP checkpoint for migration 0013 and T6 runtime finding. WHY: local checks pass and user requires a checkpoint before the next manual migration step.
 - RESULT: PASS; branch `phase6-backend`; root `.env` ignored and absent from Git status/index; CONTEXT 79 lines; `git diff --check` clean. NEXT: stage only reviewed T6 files, commit locally, refresh commit pointer if needed, then ask user to apply migration 0013.
+- RESULT: PASS; `1423eb7` committed migration 0013, regression test, and handoff locally on `phase6-backend`; worktree clean, no push. NEXT: apply 0013 in Supabase SQL Editor and say `applied`; no schema reload.
+- 2026-10-26 15:38 Asia/Kolkata — ABOUT TO: Refresh handoff pointers to checkpoint `1423eb7` and commit the final apply-gate state. WHY: preserve exact continuation state before asking the user to run migration 0013.
