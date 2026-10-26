@@ -1,10 +1,10 @@
 # NovaPay Phase 6 Handoff
 
 ## HEADER
-- Updated: 2026-10-26 16:22 Asia/Kolkata.
+- Updated: 2026-10-26 16:23 Asia/Kolkata.
 - Branch: `phase6-backend`; local-only.
 - Final Phase 6 commit: `c433232 Phase 6 thin slice: fund transparency (live verified)`; handoff-only pointer update pending.
-- Phase/task: Phase 6 complete; branch `phase6-backend` pushed, release tag pushed, PR #3 created; one-task release authorization completed.
+- Phase/task: Phase 6 complete; final branch commit `785c5d5` pushed to origin; tag `phase-6-thin-done` pushed; PR #3 created/attached.
 
 ## DONE
 - T1–T2: contributions/campaigns and capture accounting; migrations 0006–0008 applied. Capture `0U573441YN817132C` received; receipt/ledger reconcile at 100 minor units. Auditable reversal/repost credits Donations 4100; five exact webhook replays caused no duplicates.
@@ -15,13 +15,13 @@
 - T6/T7 validation PASS: `npm test` 131/131; `npm run check:migrations` through 0014; contract/rate-limit tests 2/2; `npm audit --omit=dev` reports 0 vulnerabilities. T6 live verification PASS after migrations 0012–0014.
 
 ## IN PROGRESS
-- Exact task: release steps complete; no more release actions are authorized.
+- Exact task: release complete; no further code or release actions. Stop after syncing this journal checkpoint.
 - Files changed in T6 (initial implementation in `1138d0f`; migration 0013 in `1423eb7`; migration 0014 committed in `f5c8236`; verifier fix and final live docs pending checkpoint): `supabase/migrations/0012_fund_transparency_read_export.sql`, `supabase/migrations/0013_fix_transparency_campaign_json.sql`, `supabase/migrations/0014_fix_transparency_approval_order.sql`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/src/routes/funds.js`, `server/test/phase6-transparency.test.js`, `server/test/phase6-migration.test.js`, `server/test/postgres-repos.test.js`, `scripts/verify-phase6-transparency-live.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `docs/CONTEXT.md`.
 - User confirmed migrations 0012–0014 applied. T6 live verifier passed all read/privacy/export/security checks without manual schema-cache reload; existing fixed org/role users reused, no org or fund rows created by verifier. T7 documents route roles/examples, structured errors, inherited action limits and audit behavior; test ensures every mounted fund route has a contract heading.
 
 ## NEXT STEPS
-1. Complete final journal-only checkpoint and sync it to `phase6-backend` (same one-task authorization).
-2. Confirm clean branch state; stop.
+1. Sync this final journal-only checkpoint to `phase6-backend`.
+2. Stop; release steps are complete.
 
 ## USER ACTIONS PENDING
 - User-authorized release completed: branch `phase6-backend` pushed; tag `phase-6-thin-done` pushed; PR #3 created at https://github.com/Aadiverse07/NovaPay/pull/3. No more human action pending.
