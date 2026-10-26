@@ -969,3 +969,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 975.220709 — PASS; ℹ tests 118;ℹ pass 118;ℹ fail 0;ℹ skipped 0;. PostgreSQL 17 migration parser accepted migrations 0001–0009.
+
+- Log clarification: the raw console transcript appended immediately after the focused route test is from a genuine second `npm test` invocation caused by unquoted shell backticks during documentation checkpointing. That second invocation also passed: migrations 0001–0009 parsed, 118 passed, 0 failed, 0 skipped. The blank line preceding the transcript is an accidental formatting artifact; append-only history was retained.

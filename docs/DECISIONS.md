@@ -543,3 +543,9 @@
 - Choice: Map only known Postgres domain SQLSTATEs in `fundRoutes` to stable 400/403/404/409 structured errors; suppress database messages.
 - Reason: live checks showed permission/transition rejections were being wrapped as 503 `DATABASE_UNAVAILABLE`, masking expected behavior and making clients treat rejected actions as outages.
 - Source: `supabase/migrations/0009_maintenance_state_machine.sql` SQLSTATE declarations and `server/src/services/supabase.js` RPC adapter, inspected 2026-10-26. Rejected alternative: expose PostgREST error messages or change global mapping shared by unrelated routes.
+
+## 2026-10-26 — Preserve append-only run history after shell interpolation
+- Question: How to correct the noisy raw test transcript appended to the report during checkpointing?
+- Choice: Keep the historical transcript and add a clarifying entry with the exact second-run result rather than deleting prior report lines.
+- Reason: Continuity protocol requires append-only logs; the output came from a real passing `npm test` rerun and contained no secrets.
+- Source: Local command output and `docs/TEST-REPORT.md`, checked 2026-10-26. Rejected alternative: rewrite the report tail and erase the earlier appended record.
