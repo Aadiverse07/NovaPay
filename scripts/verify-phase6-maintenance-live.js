@@ -227,8 +227,10 @@ try {
   const lowQuote = await getQuotation(records.low, low.id, contractor.id);
   const thresholdQuote = await getQuotation(records.threshold, threshold.id, contractor.id);
   if (lowQuote.maintenance_request_id !== low.id || thresholdQuote.maintenance_request_id !== threshold.id) throw new Error('quotation-request-link-mismatch');
-  await step('Verify under-threshold T3 lifecycle', 'exercise requester self-approval rejection, skipped-state rejection, foreign-quotation rejection, contractor verification, and single-approver threshold', () => ensureStage(records.low, low, lowQuote, thresholdQuote, contractor));
-  await step('Verify exact-threshold T3 lifecycle', 'exercise requester/accountant separation, contractor verification, duplicate approver rejection, and two distinct approvers at exactly 10000 minor units', () => ensureStage(records.threshold, threshold, thresholdQuote, lowQuote, contractor));
+  const lowCurrent = await currentRequest(low.id, 'Reload low request after quotation');
+  const thresholdCurrent = await currentRequest(threshold.id, 'Reload threshold request after quotation');
+  await step('Verify under-threshold T3 lifecycle', 'exercise requester self-approval rejection, skipped-state rejection, foreign-quotation rejection, contractor verification, and single-approver threshold', () => ensureStage(records.low, lowCurrent, lowQuote, thresholdQuote, contractor));
+  await step('Verify exact-threshold T3 lifecycle', 'exercise requester/accountant separation, contractor verification, duplicate approver rejection, and two distinct approvers at exactly 10000 minor units', () => ensureStage(records.threshold, thresholdCurrent, thresholdQuote, lowQuote, contractor));
   const summary = { result: 'PASS', apiStatus: 200, ordinaryJwtRpcDenials: '6/6 HTTP 403 verified in preflight', lowAmountMinor: 9999, lowFinalStatus: 'payment_approved', thresholdAmountMinor: 10000, thresholdFinalStatus: 'payment_approved', thresholdApprovals: 2, thresholdApproversDistinct: true, apiSteps: apiSteps.length, fixtureUsersOrOrganizationsCreated: 0 };
   process.stdout.write(`${JSON.stringify(summary)}\n`);
 } catch (error) {

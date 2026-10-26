@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`
-- Last commit: `07abc23 WIP Phase 6 task 3: fix live verifier resume`; auth-preflight guard checkpoint pending.
+- Last commit: `01e09a6 WIP Phase 6 task 3: preflight live fixture auth`.
 - Phase/task: Phase 6 Fund Transparency, T3 maintenance workflow; live apply gate cleared; full live workflow verification pending.
 
 ## DONE

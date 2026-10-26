@@ -985,3 +985,9 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node scripts/verify-phase6-maintenance-live.js` — FAIL; exit 1. Resume from the last per-request RESULT in WORKLOG.md; deterministic rows must be reused.
 
 - Live retry failure detail: `POST /api/funds/contractors` returned HTTP 503 `AUTH_UNAVAILABLE`, before any contractor/request write. Fixed user magic-link exchange and role reads succeeded, but the API did not confirm membership authentication. Next retry now adds read-only authenticated campaign-list calls for all three actors before any mutation.
+
+- Auth preflight retry: FAIL before mutation; verifier exit 1. See WORKLOG per-step HTTP status/error code.
+
+- Correction to “Auth preflight retry” line above: all read-only authentication checks passed for owner, approver, and accountant. The run then created the deterministic contractor, two maintenance requests, and their quotations (HTTP 201), and stopped before transitions because the verifier held stale `requested` response objects after quotation creation. Those rows are retained and reused; no new user/org was created.
+
+- Correction to “Auth preflight retry” line above: all read-only authentication checks passed for owner, approver, and accountant. The run then created the deterministic contractor, two maintenance requests, and their quotations (HTTP 201), and stopped before transitions because the verifier held stale `requested` response objects after quotation creation. Those rows are retained and reused; no new user/org was created.
