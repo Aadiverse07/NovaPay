@@ -1081,3 +1081,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-26 — T2 approvals: PASS; approvals GET HTTP 200 with 1 row; pending-count GET HTTP 200 with 0.
 - 2026-10-26 — T2 campaigns/transparency: PASS; campaigns GET HTTP 200 with 1 campaign; transparency GET HTTP 200 with 1 contribution, 1 expense, and `namesShown=false`.
 - 2026-10-26 — T2 PayPal order safety: PASS; no PayPal order endpoint called or order created.
+- 2026-10-26 — T2 AI code route: PASS; `POST /api/ai/chat` with only `{message:"What is 7 + 5?"}` returned HTTP 200, route `code`, reason `deterministic_arithmetic`, answer `12`.
+- 2026-10-26 — T2 AI cited LLM route: PASS; `POST /api/ai/chat` with only `message` returned HTTP 200, route `llm`, reason `general_read_only_question`, 3 citations, insufficientEvidence=false. No order/write route called.
+- 2026-10-26 — T2 maintenance through transparency: PASS for existing fixed data; GET returned the fixed request `closed`, evidence `accepted`, payment `SIMULATED`, gaps `no payment reference` and `simulated, no ledger entry`; no ledger entry or order. `GET /api/funds/transparency`.
