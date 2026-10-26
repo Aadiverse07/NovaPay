@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: Phase 6 T6 complete; inspect original prompt and proceed to T7.
-- Last finished step: user applied 0012–0014; live verifier PASS on donor/resident reads, direct-read/RPC denials, org scoping, privacy/gap and audit CSV.
+- Last finished step: checkpoint `7d5820c`; user applied 0012–0014; live verifier PASS on donor/resident reads, direct-read/RPC denials, org scoping, privacy/gap and audit CSV.
 - Next step: check the Phase 6 prompt attachment for exact T7 requirements; preserve backend-only scope and update handoff before implementation.
 - Pending human action: none for T6; no manual schema reload performed.
 
@@ -1285,3 +1285,5 @@ RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV
 - 2026-10-26 15:53 Asia/Kolkata — ABOUT TO: Repair CONTEXT's stale pending-action snippet/known issue and update the actual WORKLOG pointer based on its current text. WHY: previous wrapper updated the body but stopped before the pointer correction.
 - RESULT: PASS; CONTEXT is 73 lines, lists all T6 files and applied migrations 0001–0014, records T6 live PASS, and has no T6 pending human action; `git diff --check` clean on `phase6-backend`. NEXT: commit final verifier fix and T6 evidence locally, then read the Phase 6 prompt to resume T7.
 - 2026-10-26 15:54 Asia/Kolkata — ABOUT TO: Stage final T6 documentation, verifier fix, and evidence; verify staged names and commit a local task checkpoint. WHY: T6 is fully validated and live; preserve the completed task before moving to T7.
+- RESULT: PASS; final T6 code/docs/verifier checkpoint `7d5820c` committed locally on `phase6-backend`; worktree clean, no push. NEXT: refresh pointer to `7d5820c`, then inspect source prompt for T7.
+- 2026-10-26 15:55 Asia/Kolkata — ABOUT TO: Commit the resume-pointer refresh for final T6 checkpoint `7d5820c`. WHY: make the first lines point at the exact validated and committed task state.
