@@ -123,6 +123,8 @@ export function createRepositories() {
   const quotationRows = new Map();
   const maintenanceApprovalRows = new Map();
   const maintenancePaymentRows = new Map();
+  const completionEvidenceRows = new Map();
+  const fundAuditRows = [];
   const approvalRepo = new ApprovalsRepo(captures);
   const maintenanceError = (code, statusCode, message) => Object.assign(new Error(message), { code, statusCode });
   const funds = {
@@ -254,6 +256,53 @@ export function createRepositories() {
       return approval.result;
     },
     async listMaintenancePayments(orgId) { return [...maintenancePaymentRows.values()].filter(row=>row.org_id===orgId); },
+    async submitCompletionEvidence(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      const existing=[...completionEvidenceRows.values()].find(row=>row.org_id===input.orgId&&row.request_id===input.requestKey);
+      if(existing){
+        if(existing.maintenance_request_id!==request.id||existing.submitted_by!==input.actorId||existing.kind!==input.kind||existing.description!==input.description||existing.file_ref!==(input.fileRef||null))throw maintenanceError('CONFLICT',409,'Evidence request ID was already used.');
+        return {request,evidence:existing,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+      }
+      if(!['paid','evidence_submitted'].includes(request.status))throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Completion evidence requires a paid maintenance request.');
+      if(!['photo','invoice','inspection','other'].includes(input.kind)||!input.description?.trim()||input.description.trim().length>2000||(input.fileRef||'').trim().length>500)throw maintenanceError('INVALID_EVIDENCE',400,'Completion evidence metadata is invalid.');
+      const evidence={id:randomUUID(),org_id:input.orgId,maintenance_request_id:request.id,kind:input.kind,description:input.description.trim(),file_ref:input.fileRef?.trim()||null,submitted_by:input.actorId,submitted_at:new Date().toISOString(),request_id:input.requestKey,review_status:'pending',reviewed_by:null,reviewed_at:null,review_note:null};
+      completionEvidenceRows.set(this.key(input.orgId,evidence.id),evidence);
+      if(request.status==='paid'){request.status='evidence_submitted';fundAuditRows.push({org_id:input.orgId,action:'fund.maintenance.evidence_submitted',requestId:request.id,actorId:input.actorId});}
+      fundAuditRows.push({org_id:input.orgId,action:'fund.completion_evidence.submitted',evidenceId:evidence.id,actorId:input.actorId});
+      return {request,evidence,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+    },
+    async reviewCompletionEvidence(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      const evidence=completionEvidenceRows.get(this.key(input.orgId,input.evidenceId));
+      if(!request||!evidence||evidence.maintenance_request_id!==request.id)throw maintenanceError('EVIDENCE_NOT_FOUND',404,'Completion evidence was not found.');
+      if(request.requested_by===input.actorId||evidence.submitted_by===input.actorId)throw maintenanceError('SELF_REVIEW_FORBIDDEN',403,'Requester or evidence submitter cannot review this evidence.');
+      if(!['accept','reject'].includes(input.decision))throw maintenanceError('INVALID_EVIDENCE_REVIEW',400,'Evidence review decision is invalid.');
+      if(evidence.review_status!=='pending'){
+        if((input.decision==='accept'&&evidence.review_status==='accepted')||(input.decision==='reject'&&evidence.review_status==='rejected'))return {request,evidence,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+        throw maintenanceError('EVIDENCE_ALREADY_REVIEWED',409,'Completion evidence was already reviewed.');
+      }
+      if(request.status!=='evidence_submitted')throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Request is not awaiting evidence review.');
+      evidence.review_status=input.decision==='accept'?'accepted':'rejected';evidence.reviewed_by=input.actorId;evidence.reviewed_at=new Date().toISOString();evidence.review_note=input.note?.trim()||null;
+      fundAuditRows.push({org_id:input.orgId,action:`fund.completion_evidence.${evidence.review_status}`,evidenceId:evidence.id,actorId:input.actorId});
+      const rows=[...completionEvidenceRows.values()].filter(row=>row.org_id===input.orgId&&row.maintenance_request_id===request.id);
+      if(!rows.some(row=>row.review_status==='pending')&&rows.some(row=>row.review_status==='accepted')){
+        request.status='reviewed';request.reviewed_by=input.actorId;request.reviewed_at=new Date().toISOString();fundAuditRows.push({org_id:input.orgId,action:'fund.maintenance.reviewed',requestId:request.id,actorId:input.actorId});
+      }
+      return {request,evidence,caution:'Evidence supports, but does not prove, that work was done correctly.'};
+    },
+    async closeMaintenanceRequest(input) {
+      const request=maintenanceRows.get(this.key(input.orgId,input.requestId));
+      if(!request)throw maintenanceError('MAINTENANCE_NOT_FOUND',404,'Maintenance request was not found.');
+      if(request.status==='closed')return {request,closed:true};
+      if(request.status!=='reviewed'||!request.reviewed_by)throw maintenanceError('INVALID_MAINTENANCE_STATE',409,'Request must be reviewed before close.');
+      if(request.requested_by===input.actorId)throw maintenanceError('SELF_REVIEW_FORBIDDEN',403,'Requester cannot close own maintenance request.');
+      if(![...completionEvidenceRows.values()].some(row=>row.org_id===input.orgId&&row.maintenance_request_id===request.id&&row.review_status==='accepted'))throw maintenanceError('ACCEPTED_EVIDENCE_REQUIRED',409,'Accepted completion evidence is required before close.');
+      request.status='closed';request.closed_by=input.actorId;request.closed_at=new Date().toISOString();fundAuditRows.push({org_id:input.orgId,action:'fund.maintenance.closed',requestId:request.id,actorId:input.actorId});
+      return {request,closed:true};
+    },
+    async listCompletionEvidence(orgId,requestId) { return [...completionEvidenceRows.values()].filter(row=>row.org_id===orgId&&row.maintenance_request_id===requestId); },
+    async listFundAudit(orgId) { return fundAuditRows.filter(row=>row.org_id===orgId); },
   };
   captures.funds = funds;
   const notifications = new MemoryNotificationsRepo();

@@ -28,6 +28,19 @@ test('Postgres funds repository uses T4 service-only queue RPCs and maps mainten
   assert.deepEqual(approval.requestPayload,{mode:'SIMULATED'});
 });
 
+test('Postgres funds repository calls T5 completion evidence and close RPCs', async () => {
+  const calls=[];
+  const database={async rpc(name,args){calls.push({name,args});return {status:'evidence_submitted'};}};
+  const repos=createPostgresRepositories(database);
+  await repos.funds.submitCompletionEvidence({orgId:'org-a',actorId:'submitter-a',requestId:'request-a',kind:'inspection',description:'Work completion checklist.',fileRef:'docs/checklist.pdf',requestKey:'req-submit'});
+  await repos.funds.reviewCompletionEvidence({orgId:'org-a',actorId:'reviewer-a',requestId:'request-a',evidenceId:'evidence-a',decision:'accept',note:'Reviewed metadata.',requestKey:'req-review'});
+  await repos.funds.closeMaintenanceRequest({orgId:'org-a',actorId:'reviewer-a',requestId:'request-a',requestKey:'req-close'});
+  assert.deepEqual(calls.map(call=>call.name),['submit_fund_completion_evidence','review_fund_completion_evidence','close_fund_maintenance_request']);
+  assert.equal(calls[0].args.p_file_ref,'docs/checklist.pdf');
+  assert.equal(calls[1].args.p_decision,'accept');
+  assert.equal(calls[2].args.p_actor,'reviewer-a');
+});
+
 test('Postgres repositories scope tenant data and transactional calls by organization', async () => {
   const calls = [];
   const database = {

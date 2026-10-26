@@ -219,3 +219,33 @@ Requires bearer token and `X-Org-Id`; updates only the matching organization's n
 ### `POST /api/anomalies/run`
 
 Requires bearer token and `X-Org-Id`; roles `owner`, `admin`, and `accountant` may run a deterministic scan. Returns scan time, transaction/event counts, finding/created counts, and newly persisted findings. Duplicate findings are deduplicated by organization/rule/evidence/day. Re-running does not create duplicate notifications. Scan/database errors use the standard structured error shape.
+
+## Phase 6 maintenance completion evidence (T5)
+
+All requests require `Authorization: Bearer <Supabase access token>` and `X-Org-Id`. Responses use `{ "error": { "code": "...", "message": "..." } }` for structured failures. Evidence is metadata only; no file contents are uploaded. Always display the caution “Evidence supports, but does not prove, that work was done correctly.”
+
+### `POST /api/funds/maintenance/:requestId/evidence`
+
+Allowed roles: `owner`, `admin`, `accountant`, `resident`. Request:
+
+```json
+{"kind":"inspection","description":"Final inspection checklist and notes.","fileRef":"maintenance/inspection/REQ-1001.pdf"}
+```
+
+Success HTTP 201:
+
+```json
+{"request":{"id":"<uuid>","status":"evidence_submitted"},"evidence":{"id":"<uuid>","kind":"inspection","description":"Final inspection checklist and notes.","file_ref":"maintenance/inspection/REQ-1001.pdf","review_status":"pending"},"caution":"Evidence supports, but does not prove, that work was done correctly."}
+```
+
+Kinds: `photo|invoice|inspection|other`; description 1–2000 characters; `fileRef` optional, max 500 characters. Only a paid maintenance request accepts evidence; otherwise HTTP 409 `FUND_STATE_CONFLICT`. Invalid body/ID is HTTP 400 `VALIDATION_ERROR`.
+
+### `POST /api/funds/maintenance/:requestId/evidence/:evidenceId/review`
+
+Allowed roles: `owner`, `admin`, `approver`. Requester and evidence submitter cannot review. Request: `{ "decision": "accept", "note": "Reviewed against the completion checklist." }`; `decision` is `accept|reject`, note optional/max 500. Success returns updated `request`, `evidence`, and the caution string. Rejection keeps the request `evidence_submitted`; accepted evidence advances it to `reviewed` when no item remains pending and at least one item is accepted. Matching retries are idempotent. Invalid ID/body is 400; self-review is 403 `FUND_FORBIDDEN`; invalid state is 409 `FUND_STATE_CONFLICT`.
+
+### `POST /api/funds/maintenance/:requestId/close`
+
+Allowed roles: `owner`, `admin`, `approver`; requester cannot close their own request. No body. Requires `reviewed` status and at least one accepted evidence item. Success: `{ "request": { "id": "<uuid>", "status": "closed" }, "closed": true }`; repeated close is idempotent. Premature close is 409 `FUND_STATE_CONFLICT`; self-close is 403 `FUND_FORBIDDEN`.
+
+These actions use service-role-only RPCs and audit log records. Authenticated clients can read evidence only through member-scoped RLS and cannot directly insert/update/delete evidence rows.

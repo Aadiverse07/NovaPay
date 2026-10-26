@@ -12,6 +12,8 @@ const maintenanceMigrationUrl = new URL('../../supabase/migrations/0009_maintena
 const maintenanceSql = await readFile(maintenanceMigrationUrl, 'utf8');
 const paymentMigrationUrl = new URL('../../supabase/migrations/0010_simulated_maintenance_payments.sql', import.meta.url);
 const paymentSql = await readFile(paymentMigrationUrl, 'utf8');
+const evidenceMigrationUrl = new URL('../../supabase/migrations/0011_completion_evidence_review.sql', import.meta.url);
+const evidenceSql = await readFile(evidenceMigrationUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -92,4 +94,23 @@ test('T4 payment queue RPCs are service_role-only and simulated payments never p
   assert.match(paymentSql,/simulated, no ledger entry/i);
   assert.doesNotMatch(paymentSql,/insert into public\.journal_(?:entries|lines)/i);
   assert.doesNotMatch(paymentSql,/api-m\.sandbox\.paypal\.com/i);
+});
+
+test('T5 completion evidence RPCs are service_role-only and require reviewed accepted evidence before closure', () => {
+  const names=['submit_fund_completion_evidence','review_fund_completion_evidence','close_fund_maintenance_request'];
+  for(const name of names){
+    assert.match(evidenceSql,new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?security definer`,'i'),`${name} must be SECURITY DEFINER`);
+    assert.match(evidenceSql,new RegExp(`revoke all on function public\\.${name}\\([^;]+ from public,anon,authenticated;`,'i'),`${name} must revoke client execution`);
+    assert.match(evidenceSql,new RegExp(`grant execute on function public\\.${name}\\([^;]+ to service_role;`,'i'),`${name} must grant service_role only`);
+  }
+  assert.match(evidenceSql,/review_status text not null default 'pending'/i);
+  assert.match(evidenceSql,/role in \('owner','admin','accountant','resident'\)/i);
+  assert.match(evidenceSql,/role in \('owner','admin','approver'\)/i);
+  assert.match(evidenceSql,/requester or evidence submitter cannot review/i);
+  assert.match(evidenceSql,/accepted completion evidence is required before close/i);
+  assert.match(evidenceSql,/Evidence supports, but does not prove, that work was done correctly/i);
+  assert.match(evidenceSql,/fund\.completion_evidence\.submitted/);
+  assert.match(evidenceSql,/fund\.maintenance\.reviewed/);
+  assert.match(evidenceSql,/fund\.maintenance\.closed/);
+  assert.doesNotMatch(evidenceSql,/insert into public\.(?:storage\.|files)/i);
 });
