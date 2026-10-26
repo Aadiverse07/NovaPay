@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: finish T6 repair/live verification, then continue Phase 6 T7.
-- Last finished step: 0013 resolved 42725; migration 0014 fixes approval ordering; checkpoint `f5c8236`; full suite 129/129 PASS.
-- Next step: user applies `supabase/migrations/0014_fix_transparency_approval_order.sql` and says `applied`.
-- Pending human action: apply only migration 0014; do not reload schema cache.
+- Current task: Phase 6 T6 complete; inspect original prompt and proceed to T7.
+- Last finished step: user applied 0012–0014; live verifier PASS on donor/resident reads, direct-read/RPC denials, org scoping, privacy/gap and audit CSV.
+- Next step: check the Phase 6 prompt attachment for exact T7 requirements; preserve backend-only scope and update handoff before implementation.
+- Pending human action: none for T6; no manual schema reload performed.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1150,3 +1150,138 @@ RESULT — 2026-10-26 15:19:57 Asia/Kolkata: FAIL: Confirm migration 0012 visibi
 - 2026-10-26 15:46 Asia/Kolkata — ABOUT TO: Validate current T6 diff, branch and `.env` staging state and checkpoint migration 0014 with its test/docs. WHY: tests pass, and the user must apply only this additive migration before the next live run.
 - RESULT: PASS; checkpoint `f5c8236` committed locally on `phase6-backend`; worktree clean and no push. NEXT: user applies only migration 0014 and says `applied`; then rerun the live verifier without manual schema reload.
 - 2026-10-26 15:47 Asia/Kolkata — ABOUT TO: Refresh the top handoff pointers to `f5c8236` and commit the final 0014 apply gate. WHY: make the continuation pointer match the latest code checkpoint before requesting the user's migration run.
+- 2026-10-26 15:49 Asia/Kolkata — ABOUT TO: Record user confirmation that migration 0014 was applied and rerun the fixed-fixture T6 live verifier without manual schema-cache reload. WHY: validate the approval timestamp correction against live data and continue T6 checks.
+ABOUT TO — 2026-10-26 15:22:10 Asia/Kolkata: Generate sign-in link for fixed owner. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:11 Asia/Kolkata: PASS: Generate sign-in link for fixed owner; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:11 Asia/Kolkata: Exchange sign-in link for fixed owner JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:11 Asia/Kolkata: PASS: Exchange sign-in link for fixed owner JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:11 Asia/Kolkata: Generate sign-in link for fixed approver. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:12 Asia/Kolkata: PASS: Generate sign-in link for fixed approver; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:12 Asia/Kolkata: Exchange sign-in link for fixed approver JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:13 Asia/Kolkata: PASS: Exchange sign-in link for fixed approver JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:13 Asia/Kolkata: Generate sign-in link for fixed accountant. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:13 Asia/Kolkata: PASS: Generate sign-in link for fixed accountant; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:13 Asia/Kolkata: Exchange sign-in link for fixed accountant JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:13 Asia/Kolkata: PASS: Exchange sign-in link for fixed accountant JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:13 Asia/Kolkata: Find fixed Phase 3 verifier organization. Reason: reuse the existing fixed organization
+RESULT — 2026-10-26 15:22:13 Asia/Kolkata: PASS: Find fixed Phase 3 verifier organization; one fixed organization. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:13 Asia/Kolkata: Find fixed donor test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:22:14 Asia/Kolkata: PASS: Find fixed donor test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:14 Asia/Kolkata: Check fixed donor membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:22:14 Asia/Kolkata: PASS: Check fixed donor membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:14 Asia/Kolkata: Find fixed resident test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:22:15 Asia/Kolkata: PASS: Find fixed resident test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:15 Asia/Kolkata: Check fixed resident membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:22:15 Asia/Kolkata: PASS: Check fixed resident membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:15 Asia/Kolkata: Generate sign-in link for fixed donor. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:16 Asia/Kolkata: PASS: Generate sign-in link for fixed donor; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:16 Asia/Kolkata: Exchange sign-in link for fixed donor JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:16 Asia/Kolkata: PASS: Exchange sign-in link for fixed donor JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:16 Asia/Kolkata: Generate sign-in link for fixed resident. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:17 Asia/Kolkata: PASS: Generate sign-in link for fixed resident; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:17 Asia/Kolkata: Exchange sign-in link for fixed resident JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:17 Asia/Kolkata: PASS: Exchange sign-in link for fixed resident JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:17 Asia/Kolkata: Find existing T4/T5 paid maintenance expense. Reason: reuse the fixed Phase 3 payment/evidence verification request
+RESULT — 2026-10-26 15:22:17 Asia/Kolkata: PASS: Find existing T4/T5 paid maintenance expense; request state closed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:17 Asia/Kolkata: Confirm migration 0012 visibility. Reason: verify read RPCs work through API only and schema is deployed
+RESULT — 2026-10-26 15:22:18 Asia/Kolkata: PASS: Confirm migration 0012 visibility; member-checked transparency RPC returned HTTP 200. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:18 Asia/Kolkata: Deny resident direct SELECT on fund_contributions. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:18 Asia/Kolkata: PASS: Deny resident direct SELECT on fund_contributions; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:18 Asia/Kolkata: Deny resident direct SELECT on fund_maintenance_payments. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:18 Asia/Kolkata: PASS: Deny resident direct SELECT on fund_maintenance_payments; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:18 Asia/Kolkata: Deny resident direct SELECT on fund_completion_evidence. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:19 Asia/Kolkata: PASS: Deny resident direct SELECT on fund_completion_evidence; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:19 Asia/Kolkata: Deny donor direct SELECT on fund_contributions. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:19 Asia/Kolkata: PASS: Deny donor direct SELECT on fund_contributions; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:19 Asia/Kolkata: Deny donor direct SELECT on fund_maintenance_payments. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:19 Asia/Kolkata: PASS: Deny donor direct SELECT on fund_maintenance_payments; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:19 Asia/Kolkata: Deny donor direct SELECT on fund_completion_evidence. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:19 Asia/Kolkata: PASS: Deny donor direct SELECT on fund_completion_evidence; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:19 Asia/Kolkata: Deny ordinary JWT execution of get_fund_transparency. Reason: prove service-role-only read RPC grants
+RESULT — 2026-10-26 15:22:20 Asia/Kolkata: PASS: Deny ordinary JWT execution of get_fund_transparency; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:20 Asia/Kolkata: Deny ordinary JWT execution of get_fund_audit_export. Reason: prove service-role-only read RPC grants
+RESULT — 2026-10-26 15:22:20 Asia/Kolkata: PASS: Deny ordinary JWT execution of get_fund_audit_export; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:20 Asia/Kolkata: Check fresh local API health. Reason: run current API source against the applied schema
+RESULT — 2026-10-26 15:22:21 Asia/Kolkata: PASS: Check fresh local API health; HTTP 200. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:21 Asia/Kolkata: Read transparency as donor. Reason: confirm role-specific read is org-scoped, privacy-safe and exposes gaps
+RESULT — 2026-10-26 15:22:22 Asia/Kolkata: PASS: Read transparency as donor; HTTP 200; 1 expense rows; raw refs/names absent. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:22 Asia/Kolkata: Read transparency as resident. Reason: confirm role-specific read is org-scoped, privacy-safe and exposes gaps
+RESULT — 2026-10-26 15:22:23 Asia/Kolkata: PASS: Read transparency as resident; HTTP 200; 1 expense rows; raw refs/names absent. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:23 Asia/Kolkata: Deny cross-org transparency request. Reason: verify fixed resident token cannot select another org via header
+RESULT — 2026-10-26 15:22:24 Asia/Kolkata: PASS: Deny cross-org transparency request; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:24 Asia/Kolkata: Deny audit CSV to resident. Reason: confirm export is restricted to owner/admin
+RESULT — 2026-10-26 15:22:25 Asia/Kolkata: PASS: Deny audit CSV to resident; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:25 Asia/Kolkata: Download org-scoped audit CSV as owner. Reason: verify CSV endpoint, safe columns, org scoping and no raw metadata
+RESULT — 2026-10-26 15:22:26 Asia/Kolkata: FAIL: Download org-scoped audit CSV as owner; r.text is not a function. NEXT: inspect exact step; do not create new identities/orgs on rerun
+- RESULT: PARTIAL PASS/UNVERIFIED; after 0014, migration visibility RPC returned 200; direct SELECT denied 6/6; ordinary JWT RPCs denied 2/2 with 403; donor/resident reads 2/2 returned 200 and passed privacy/gap checks; cross-org denied 403; resident CSV denied 403. Final owner CSV content check did not run because verifier request helper returns no `.text()` method. No fund data mutations; fixed test identities reused. NEXT: repair verifier response-text handling and rerun syntax/live verification.
+- 2026-10-26 15:50 Asia/Kolkata — ABOUT TO: Update verifier's shared request helper to preserve raw response text while parsing JSON, then run verifier syntax check. WHY: allow owner CSV content validation without consuming the response body twice.
+- RESULT: PASS; verifier syntax valid after preserving raw response text and parsed JSON. NEXT: rerun live verifier; fixed fixtures should all be reused.
+- 2026-10-26 15:51 Asia/Kolkata — ABOUT TO: Rerun `node scripts/verify-phase6-transparency-live.js` after fixing owner CSV response-text access. WHY: complete the final owner CSV content/scope/privacy assertion and confirm every T6 live check.
+ABOUT TO — 2026-10-26 15:22:47 Asia/Kolkata: Generate sign-in link for fixed owner. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:47 Asia/Kolkata: PASS: Generate sign-in link for fixed owner; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:47 Asia/Kolkata: Exchange sign-in link for fixed owner JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:47 Asia/Kolkata: PASS: Exchange sign-in link for fixed owner JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:47 Asia/Kolkata: Generate sign-in link for fixed approver. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:48 Asia/Kolkata: PASS: Generate sign-in link for fixed approver; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:48 Asia/Kolkata: Exchange sign-in link for fixed approver JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:49 Asia/Kolkata: PASS: Exchange sign-in link for fixed approver JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:49 Asia/Kolkata: Generate sign-in link for fixed accountant. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:49 Asia/Kolkata: PASS: Generate sign-in link for fixed accountant; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:49 Asia/Kolkata: Exchange sign-in link for fixed accountant JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:50 Asia/Kolkata: PASS: Exchange sign-in link for fixed accountant JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:50 Asia/Kolkata: Find fixed Phase 3 verifier organization. Reason: reuse the existing fixed organization
+RESULT — 2026-10-26 15:22:50 Asia/Kolkata: PASS: Find fixed Phase 3 verifier organization; one fixed organization. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:50 Asia/Kolkata: Find fixed donor test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:22:51 Asia/Kolkata: PASS: Find fixed donor test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:51 Asia/Kolkata: Check fixed donor membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:22:51 Asia/Kolkata: PASS: Check fixed donor membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:51 Asia/Kolkata: Find fixed resident test user. Reason: reuse the same named Phase 6 role fixture on every run
+RESULT — 2026-10-26 15:22:51 Asia/Kolkata: PASS: Find fixed resident test user; directory query completed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:51 Asia/Kolkata: Check fixed resident membership. Reason: inspect membership in the existing verifier organization
+RESULT — 2026-10-26 15:22:52 Asia/Kolkata: PASS: Check fixed resident membership; existing membership found. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:52 Asia/Kolkata: Generate sign-in link for fixed donor. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:52 Asia/Kolkata: PASS: Generate sign-in link for fixed donor; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:52 Asia/Kolkata: Exchange sign-in link for fixed donor JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:53 Asia/Kolkata: PASS: Exchange sign-in link for fixed donor JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:53 Asia/Kolkata: Generate sign-in link for fixed resident. Reason: authenticate existing test user without passwords or email delivery
+RESULT — 2026-10-26 15:22:53 Asia/Kolkata: PASS: Generate sign-in link for fixed resident; HTTP 200; token remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:53 Asia/Kolkata: Exchange sign-in link for fixed resident JWT. Reason: obtain ordinary JWT for API/RLS probes
+RESULT — 2026-10-26 15:22:53 Asia/Kolkata: PASS: Exchange sign-in link for fixed resident JWT; HTTP 200; JWT remains in memory. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:53 Asia/Kolkata: Find existing T4/T5 paid maintenance expense. Reason: reuse the fixed Phase 3 payment/evidence verification request
+RESULT — 2026-10-26 15:22:54 Asia/Kolkata: PASS: Find existing T4/T5 paid maintenance expense; request state closed. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:54 Asia/Kolkata: Confirm migration 0012 visibility. Reason: verify read RPCs work through API only and schema is deployed
+RESULT — 2026-10-26 15:22:54 Asia/Kolkata: PASS: Confirm migration 0012 visibility; member-checked transparency RPC returned HTTP 200. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:54 Asia/Kolkata: Deny resident direct SELECT on fund_contributions. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:54 Asia/Kolkata: PASS: Deny resident direct SELECT on fund_contributions; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:54 Asia/Kolkata: Deny resident direct SELECT on fund_maintenance_payments. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:55 Asia/Kolkata: PASS: Deny resident direct SELECT on fund_maintenance_payments; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:55 Asia/Kolkata: Deny resident direct SELECT on fund_completion_evidence. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:56 Asia/Kolkata: PASS: Deny resident direct SELECT on fund_completion_evidence; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:56 Asia/Kolkata: Deny donor direct SELECT on fund_contributions. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:56 Asia/Kolkata: PASS: Deny donor direct SELECT on fund_contributions; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:56 Asia/Kolkata: Deny donor direct SELECT on fund_maintenance_payments. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:56 Asia/Kolkata: PASS: Deny donor direct SELECT on fund_maintenance_payments; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:56 Asia/Kolkata: Deny donor direct SELECT on fund_completion_evidence. Reason: prove donors/residents must use the read-only endpoint rather than direct table access
+RESULT — 2026-10-26 15:22:57 Asia/Kolkata: PASS: Deny donor direct SELECT on fund_completion_evidence; HTTP 403; direct SELECT denied. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:57 Asia/Kolkata: Deny ordinary JWT execution of get_fund_transparency. Reason: prove service-role-only read RPC grants
+RESULT — 2026-10-26 15:22:57 Asia/Kolkata: PASS: Deny ordinary JWT execution of get_fund_transparency; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:57 Asia/Kolkata: Deny ordinary JWT execution of get_fund_audit_export. Reason: prove service-role-only read RPC grants
+RESULT — 2026-10-26 15:22:57 Asia/Kolkata: PASS: Deny ordinary JWT execution of get_fund_audit_export; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:57 Asia/Kolkata: Check fresh local API health. Reason: run current API source against the applied schema
+RESULT — 2026-10-26 15:22:58 Asia/Kolkata: PASS: Check fresh local API health; HTTP 200. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:58 Asia/Kolkata: Read transparency as donor. Reason: confirm role-specific read is org-scoped, privacy-safe and exposes gaps
+RESULT — 2026-10-26 15:22:59 Asia/Kolkata: PASS: Read transparency as donor; HTTP 200; 1 expense rows; raw refs/names absent. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:22:59 Asia/Kolkata: Read transparency as resident. Reason: confirm role-specific read is org-scoped, privacy-safe and exposes gaps
+RESULT — 2026-10-26 15:23:00 Asia/Kolkata: PASS: Read transparency as resident; HTTP 200; 1 expense rows; raw refs/names absent. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:23:00 Asia/Kolkata: Deny cross-org transparency request. Reason: verify fixed resident token cannot select another org via header
+RESULT — 2026-10-26 15:23:00 Asia/Kolkata: PASS: Deny cross-org transparency request; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:23:00 Asia/Kolkata: Deny audit CSV to resident. Reason: confirm export is restricted to owner/admin
+RESULT — 2026-10-26 15:23:01 Asia/Kolkata: PASS: Deny audit CSV to resident; HTTP 403. NEXT: continue T6 live verification
+ABOUT TO — 2026-10-26 15:23:01 Asia/Kolkata: Download org-scoped audit CSV as owner. Reason: verify CSV endpoint, safe columns, org scoping and no raw metadata
+RESULT — 2026-10-26 15:23:02 Asia/Kolkata: PASS: Download org-scoped audit CSV as owner; HTTP 200; CSV headers safe; no metadata/raw actor ID. NEXT: continue T6 live verification
+- RESULT: PASS; T6 live verifier completed successfully after migration 0014, without manual schema-cache reload. Migration visible; donor/resident reads 2/2; direct SELECT denials 6/6; ordinary JWT RPC denials 2/2 HTTP 403; cross-org denied; owner CSV passed header/privacy checks; resident CSV denied; donor refs hashed; no names shown; SIMULATED gaps visible; no org created. No fund data written by verification. NEXT: append final live PASS, mark migrations 0012–0014 applied and T6 complete in CONTEXT, then checkpoint the verifier fix and live evidence.
+- 2026-10-26 15:52 Asia/Kolkata — ABOUT TO: Record verifier syntax/live PASS, update T6 handoff to complete, and list the verifier script edit. WHY: preserve exact role/privacy/export results and current applied migration state.
+- RESULT: FAIL; bulk handoff script successfully refreshed CONTEXT but failed its exact-match assertion before rewriting the WORKLOG RESUME POINTER. The dangling SQL snippet in CONTEXT and stale pointer require correction. TEST-REPORT/DECISIONS appends and live PASS remain intact. NEXT: inspect actual pointer text, remove stale SQL snippet, correct known issue and current commit/file status, then retry.
+- 2026-10-26 15:53 Asia/Kolkata — ABOUT TO: Repair CONTEXT's stale pending-action snippet/known issue and update the actual WORKLOG pointer based on its current text. WHY: previous wrapper updated the body but stopped before the pointer correction.
+- RESULT: PASS; CONTEXT is 73 lines, lists all T6 files and applied migrations 0001–0014, records T6 live PASS, and has no T6 pending human action; `git diff --check` clean on `phase6-backend`. NEXT: commit final verifier fix and T6 evidence locally, then read the Phase 6 prompt to resume T7.
+- 2026-10-26 15:54 Asia/Kolkata — ABOUT TO: Stage final T6 documentation, verifier fix, and evidence; verify staged names and commit a local task checkpoint. WHY: T6 is fully validated and live; preserve the completed task before moving to T7.
