@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`, local-only.
-- Last commit: `4db25b0 WIP Phase 6 task 3: record live workflow pass`; T4 preflight checkpoint pending.
+- Last commit: `4c1f394 WIP Phase 6 task 4: record payout capability probe`; T4 capability-result checkpoint pending.
 - Phase/task: Phase 6 Fund Transparency; T1–T3 complete; current task T4 payment gate discovery.
 
 ## DONE
@@ -19,8 +19,8 @@
 - T3 verifier output journals each API operation and reuses deterministic names; existing live verification rows are append-only and remain in the fixed verifier organization.
 
 ## NEXT STEPS
-1. Run deterministic $0.01 Sandbox Payouts probe to the fixed personal test receiver; output status only.
-2. Based on result, choose REAL behind a flag or SIMULATED with no ledger entry; record in DECISIONS.md.
+1. Inspect current Approvals queue and implement T4 SIMULATED payment gating, idempotency, and explicit no-ledger response.
+2. Add route/repository/RPC and focused tests; do not call the unavailable Payouts API.
 2. Inspect T4 payment/approval/ledger schema and routes; define the minimum additive implementation.
 2. Update WORKLOG before/after each action; update the resume pointer each step.
 3. Implement only the authorized T4 scope, add focused coverage, run relevant checks, and append exact test outcomes.
@@ -50,7 +50,7 @@
 ## KNOWN ISSUES AND RISKS
 - Fixed T3 verifier data and append-only audit records remain in the dedicated Phase 3 verifier org; reuse these deterministic rows on reruns.
 - Some earlier report entries preserve failed attempts and a raw transcript caused by shell interpolation; later append-only corrections identify the accurate outcomes. No secrets were printed.
-- Official PayPal docs show Sandbox Payouts support; OAuth token has Payouts scope. A deterministic $0.01 Sandbox payout probe is pending to confirm this app can execute; no payout sent yet.
+- OAuth has Payouts scope, but live Sandbox payout POST returned HTTP 403 `PAYOUT_NOT_AVAILABLE`; no payout batch was created. T4 mode selected: SIMULATED, no ledger post.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs inside one transaction; syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
