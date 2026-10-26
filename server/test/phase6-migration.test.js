@@ -16,6 +16,8 @@ const evidenceMigrationUrl = new URL('../../supabase/migrations/0011_completion_
 const evidenceSql = await readFile(evidenceMigrationUrl, 'utf8');
 const transparencyMigrationUrl = new URL('../../supabase/migrations/0012_fund_transparency_read_export.sql', import.meta.url);
 const transparencySql = await readFile(transparencyMigrationUrl, 'utf8');
+const transparencyRepairUrl = new URL('../../supabase/migrations/0013_fix_transparency_campaign_json.sql', import.meta.url);
+const transparencyRepairSql = await readFile(transparencyRepairUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -130,4 +132,12 @@ test('T6 transparency and audit export RPCs are service_role-only and enforce te
   assert.match(transparencySql,/namesShown',false/i);
   assert.match(transparencySql,/revoke select on public\.fund_campaigns[\s\S]*?from authenticated/i);
   assert.doesNotMatch(transparencySql,/a\.metadata/);
+});
+
+test('T6 repair migration uses explicit safe campaign JSON and keeps RPC service-role-only', () => {
+  assert.match(transparencyRepairSql,/create or replace function public\.get_fund_transparency/i);
+  assert.match(transparencyRepairSql,/jsonb_build_object\([\s\S]*?'id',s\.summary->'campaign'->'id'[\s\S]*?'status',s\.summary->'campaign'->'status'/i);
+  assert.doesNotMatch(transparencyRepairSql,/summary->'campaign'\s*-\s*'organiser'/i);
+  assert.match(transparencyRepairSql,/revoke all on function public\.get_fund_transparency\(uuid,uuid,uuid\) from public,anon,authenticated/i);
+  assert.match(transparencyRepairSql,/grant execute on function public\.get_fund_transparency\(uuid,uuid,uuid\) to service_role/i);
 });
