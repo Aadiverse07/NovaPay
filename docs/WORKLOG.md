@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 6 T5 completion evidence/review/close implementation; migration 0011 is not applied.
-- Last finished step: T5 focused 19/19 PASS, migration check 0001–0011 PASS, full `npm test` PASS 124/124; docs/routes/repositories/tests and live verifier source added.
-- Next step: syntax-check the verifier, final review/diff, update CONTEXT/WORKLOG/TEST-REPORT, WIP checkpoint; then give exact SQL Editor steps and wait for `applied`.
-- Pending human action: after implementation and validation are checkpointed, apply migration 0011 before live T5 validation.
+- Current task: Phase 6 T5 live verification after user confirms migration 0011 applied.
+- Last finished step: checkpoint `dc77c09`; focused 19/19, migration check through 0011, full suite 124/124 PASS.
+- Next step: run fixed-fixture live verifier; if it passes, update T5 live results and advance to T6.
+- Pending human action: none unless schema or security gate fails.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -885,3 +885,59 @@ RESULT — PASS: `node --check scripts/verify-phase6-completion-live.js` and `gi
 ABOUT TO — 2026-10-26 Asia/Kolkata: Verify branch, full T5 change list, `.env` exclusion, whitespace, and CONTEXT length before local checkpoint. Reason: satisfy WIP checkpoint rules while ensuring the migration apply instructions and exact edited-file inventory are ready.
 RESULT — PASS: correct `phase6-backend` branch; `.env` ignored and absent; whitespace clean; CONTEXT is 75 lines; changes are limited to T5 migration, API/repositories/tests/verifier/docs. NEXT: create local WIP T5 checkpoint, update CONTEXT commit hash, then ask user to apply migration 0011 and wait.
 ABOUT TO — 2026-10-26 Asia/Kolkata: Commit validated T5 implementation and pending migration instructions locally. Reason: focused/full tests and migration syntax pass, current branch is correct, and no `.env` is included.
+RESULT — PASS: T5 WIP checkpoint `dc77c09` committed locally on phase6-backend; no push. NEXT: refresh CONTEXT with dc77c09 and request user apply migration 0011; wait for `applied` before running live checks.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Update CONTEXT's last-commit pointer to the new T5 checkpoint dc77c09. Reason: keep the handoff aligned with the locally committed implementation before the migration apply pause.
+RESULT — PASS: CONTEXT now points to `dc77c09`; migration 0011 remains unapplied and exact SQL Editor steps are in USER ACTIONS PENDING. NEXT: user applies migration and replies `applied`; then run the live T5 verifier.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Run `node scripts/verify-phase6-completion-live.js` after the user's migration 0011 confirmation. Reason: verify schema visibility and ordinary-JWT/direct-write denial first, then submit/review/close metadata on the fixed paid request if all gates pass.
+ABOUT TO — 2026-10-26 14:50:53 Asia/Kolkata: Generate sign-in link for fixed owner user. Reason: reuse existing named test user without creating an account or resetting credentials
+RESULT — 2026-10-26 14:50:55 Asia/Kolkata: PASS: Generate sign-in link for fixed owner user; HTTP 200; one-time token stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:55 Asia/Kolkata: Exchange sign-in link for fixed owner JWT. Reason: obtain ordinary user identity for route and RPC permission checks
+RESULT — 2026-10-26 14:50:55 Asia/Kolkata: PASS: Exchange sign-in link for fixed owner JWT; HTTP 200; JWT stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:55 Asia/Kolkata: Generate sign-in link for fixed approver user. Reason: reuse existing named test user without creating an account or resetting credentials
+RESULT — 2026-10-26 14:50:56 Asia/Kolkata: PASS: Generate sign-in link for fixed approver user; HTTP 200; one-time token stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:56 Asia/Kolkata: Exchange sign-in link for fixed approver JWT. Reason: obtain ordinary user identity for route and RPC permission checks
+RESULT — 2026-10-26 14:50:56 Asia/Kolkata: PASS: Exchange sign-in link for fixed approver JWT; HTTP 200; JWT stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:56 Asia/Kolkata: Generate sign-in link for fixed accountant user. Reason: reuse existing named test user without creating an account or resetting credentials
+RESULT — 2026-10-26 14:50:56 Asia/Kolkata: PASS: Generate sign-in link for fixed accountant user; HTTP 200; one-time token stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:56 Asia/Kolkata: Exchange sign-in link for fixed accountant JWT. Reason: obtain ordinary user identity for route and RPC permission checks
+RESULT — 2026-10-26 14:50:56 Asia/Kolkata: PASS: Exchange sign-in link for fixed accountant JWT; HTTP 200; JWT stays in memory. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:56 Asia/Kolkata: Find fixed Phase 3 verification organization. Reason: reuse the existing organization
+RESULT — 2026-10-26 14:50:57 Asia/Kolkata: PASS: Find fixed Phase 3 verification organization; one fixed organization found. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:57 Asia/Kolkata: Find fixed T4 paid maintenance request. Reason: reuse the already paid SIMULATED request from T4
+RESULT — 2026-10-26 14:50:57 Asia/Kolkata: PASS: Find fixed T4 paid maintenance request; fixed request status paid. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:57 Asia/Kolkata: Verify fixed accountant and approver memberships. Reason: confirm submission and reviewer roles in the fixed org
+RESULT — 2026-10-26 14:50:58 Asia/Kolkata: PASS: Verify fixed accountant and approver memberships; accountant and approver roles confirmed. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:58 Asia/Kolkata: Confirm migration 0011 schema visibility. Reason: read new evidence-review and request-close columns before calling T5 routes
+RESULT — 2026-10-26 14:50:59 Asia/Kolkata: PASS: Confirm migration 0011 schema visibility; all evidence and maintenance review columns visible. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:59 Asia/Kolkata: Deny ordinary JWT execution of submit_fund_completion_evidence. Reason: prove SECURITY DEFINER RPC is not executable by authenticated user role
+RESULT — 2026-10-26 14:50:59 Asia/Kolkata: PASS: Deny ordinary JWT execution of submit_fund_completion_evidence; HTTP 403. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:50:59 Asia/Kolkata: Deny ordinary JWT execution of review_fund_completion_evidence. Reason: prove SECURITY DEFINER RPC is not executable by authenticated user role
+RESULT — 2026-10-26 14:51:00 Asia/Kolkata: PASS: Deny ordinary JWT execution of review_fund_completion_evidence; HTTP 403. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:00 Asia/Kolkata: Deny ordinary JWT execution of close_fund_maintenance_request. Reason: prove SECURITY DEFINER RPC is not executable by authenticated user role
+RESULT — 2026-10-26 14:51:00 Asia/Kolkata: PASS: Deny ordinary JWT execution of close_fund_maintenance_request; HTTP 403. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:00 Asia/Kolkata: Deny direct authenticated evidence table write. Reason: prove existing RLS/grants still block direct client inserts
+RESULT — 2026-10-26 14:51:00 Asia/Kolkata: PASS: Deny direct authenticated evidence table write; HTTP 403; direct insert denied. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:00 Asia/Kolkata: Find deterministic T5 evidence metadata row. Reason: reuse the exact prior verifier row if this script resumes
+RESULT — 2026-10-26 14:51:01 Asia/Kolkata: PASS: Find deterministic T5 evidence metadata row; no row yet. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:01 Asia/Kolkata: Check fresh local API health. Reason: exercise current source against applied migration 0011
+RESULT — 2026-10-26 14:51:02 Asia/Kolkata: PASS: Check fresh local API health; HTTP 200. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:02 Asia/Kolkata: Submit metadata-only completion evidence. Reason: submit fixed description/kind/file-reference metadata; no file contents are stored
+RESULT — 2026-10-26 14:51:03 Asia/Kolkata: PASS: Submit metadata-only completion evidence; HTTP 201; metadata only; caution present. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:03 Asia/Kolkata: Accept fixed completion evidence as approver. Reason: reviewer differs from requester and evidence submitter
+RESULT — 2026-10-26 14:51:04 Asia/Kolkata: PASS: Accept fixed completion evidence as approver; HTTP 200; accepted; caution present. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:04 Asia/Kolkata: Confirm maintenance request reached reviewed state. Reason: ensure accepted evidence review advanced the request
+RESULT — 2026-10-26 14:51:04 Asia/Kolkata: PASS: Confirm maintenance request reached reviewed state; request is reviewed. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:04 Asia/Kolkata: Close maintenance request as approver. Reason: close only after evidence review reached reviewed
+RESULT — 2026-10-26 14:51:05 Asia/Kolkata: PASS: Close maintenance request as approver; HTTP 200; request closed. NEXT: continue T5 live verification
+ABOUT TO — 2026-10-26 14:51:05 Asia/Kolkata: Verify final closure and evidence metadata. Reason: confirm reviewer/closure stamps and one accepted metadata row
+RESULT — 2026-10-26 14:51:06 Asia/Kolkata: PASS: Verify final closure and evidence metadata; one accepted metadata row; request closed with reviewer/closure stamps. NEXT: continue T5 live verification
+RESULT — PASS: migration 0011 columns visible; all 3 service-only RPC calls denied ordinary user JWTs with HTTP 403; direct authenticated evidence insert denied. Fixed paid request accepted metadata-only evidence, approver review accepted it, request closed, final row/stamps verified; no users/orgs or files created. NEXT: append exact live T5 PASS, mark T5 complete and T6 current in CONTEXT, inspect T6 scope, and locally checkpoint.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Read exact T6 transparency/export requirements and refresh handoff from completed T5 to T6. Reason: continue the approved Phase 6 sequence and avoid missing route/privacy/export acceptance criteria.
+RESULT — PASS: T6 requires linked expense rows with explicit missing-link gaps, read-only org/campaign transparency scoped to donors/residents/members with names off and donor refs hashed, CSV audit export with formula injection protection, and legal caution text. PDF optional/skipped. NEXT: update CONTEXT to T5 live PASS/T6 current, then checkpoint T5 evidence before inspecting implementation.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Review CONTEXT after moving T6 current, correct any stale T5 apply-gate wording, and verify branch/status/no `.env` before T5 checkpoint. Reason: ensure handoff does not retain obsolete user actions from the applied migration.
+RESULT — FAIL: the context correction wrapper had a JavaScript syntax error; no docs changed. NEXT: retry the exact removal of obsolete T5 user actions and set the current last live check to T5.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Replace stale T5 migration instructions in CONTEXT with T6 steps and clear USER ACTIONS PENDING. Reason: migration 0011 is applied and T5 live verification passed.
+RESULT — PASS: stale T5 apply instructions removed; T6 next steps and no pending user action recorded; CONTEXT now reports T5 as latest live PASS. NEXT: verify branch/status/no `.env`, then checkpoint T5 live evidence before T6 implementation.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Verify branch, current docs-only changes, `.env` exclusion, whitespace and handoff length before the T5 live checkpoint. Reason: retain the live result and current T6 pointer in the required local branch.
+RESULT — PASS: branch phase6-backend, `.env` ignored and absent, whitespace clean, CONTEXT 73 lines; only handoff/test journal docs changed. NEXT: checkpoint T5 live evidence locally, then inspect T6 code.
+ABOUT TO — 2026-10-26 Asia/Kolkata: Commit the verified T5 live result and T6 handoff locally. Reason: preserve exact live security/workflow evidence before beginning the next numbered task.
