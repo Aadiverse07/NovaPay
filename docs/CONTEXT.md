@@ -3,61 +3,62 @@
 ## HEADER
 - Updated: 2026-10-26 Asia/Kolkata.
 - Branch: fund-wiring; base main at 874e2e5; local commits only, never push.
-- Phase/task: frontend wiring, STEP 0 complete; T1 view 1 (Fundraising) pending.
+- Phase/task: T1 views, Fundraising checkpoint complete; next Maintenance.
 
 ## DONE
-- Synced main and created fund-wiring; server dependencies installed with npm ci.
-- Baseline npm test PASS 131/131; npm run check:migrations PASS for 0001–0014.
-- Restarted port 3000 server; GET /api/status HTTP 200, authenticated mode, Supabase and PayPal configured (no values recorded).
+- Synced main and created fund-wiring; npm ci complete.
+- npm test PASS 131/131; npm run check:migrations PASS for 0001–0014.
+- Restarted server on port 3000; GET /api/status HTTP 200.
+- Fundraising live view implemented in src/fund-views.js and loaded by dashboard.html. Authenticated view reads campaigns, per-campaign summaries and transparency contributions; pledge/order controls are explicit; demo keeps existing sample content and gets a local sample badge.
 
 ## IN PROGRESS
-- Exact task: wire Fundraising, Maintenance, Transparency views from the API contract, preserving teammate styling.
-- Files being inspected: docs/FRONTEND-CONTRACT.md, src/api-client.js, dashboard.html, preview.html, relevant src JS files. No UI implementation edits yet.
-- Remaining: T1 three view checkpoints; T2 API demo; T3 README; T4 validation/docs/local commit.
+- Exact task: T1 Maintenance view, then Transparency view; no redesign.
+- Files edited so far: dashboard.html, src/fund-views.js, docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md.
+- Remaining: maintenance state machine/actions; transparency expense/gap/export view; T2 API demo; T3 README; T4 checks and final local commit.
 
 ## NEXT STEPS
-1. Inspect API client, contract route shapes, role/session state and current view handlers.
-2. Wire Fundraising only; add loading/empty/error states and role-aware controls; checkpoint docs and commit.
-3. Wire Maintenance, then Transparency with separate checkpoints/commits.
-4. Run API-level demo using fixed named users and existing data only; never create a PayPal order.
-5. Update README non-UI sections, run T4 checks, review protected-file diff and commit locally.
+1. Read only maintenance route contract/markup/backend state transitions.
+2. Wire maintenance records via the canonical transparency read route and supported writes; disable illegal actions.
+3. Checkpoint Maintenance; then wire Transparency and checkpoint.
+4. Run API-level demo with fixed users and existing data only; do not create PayPal order.
+5. Update README non-UI sections; perform T4 validation; commit locally.
 
 ## USER ACTIONS PENDING
-- None now. Browser-only manual checks will be listed with exact clicks at finish.
+- None at present; list manual browser checks at finish.
 
 ## LIVE STATE
-- Migrations 0001–0014 are recorded as applied in the prior handoff; no migrations changed here.
-- Server on port 3000 restarted and /api/status returned 200; mode authenticated, Supabase/PayPal/webhook configured, AI enabled. No secrets recorded.
-- No Phase 6 demo API calls run in this task yet. Do not create a PayPal order without user approval.
+- Prior handoff records migrations 0001–0014 applied; no migration changes here.
+- Server at port 3000 restarted; `/api/status` HTTP 200 (authenticated mode, Supabase/PayPal/webhook configured, AI enabled). No values recorded.
+- No demo API calls in this task; no new PayPal orders.
 
 ## TEST STATE
 | Check | Status | Date | Command |
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
-| Initial npm test invocation | UNVERIFIED | 2026-10-26 | `npm test`; tool summary truncated and shell journal line malformed |
-| npm test rerun | PASS, 131/131 | 2026-10-26 | `npm test` |
-| Migration syntax | PASS, 14 files | 2026-10-26 | `npm run check:migrations` |
-| Initial API status | PASS, HTTP 200 | 2026-10-26 | `curl http://127.0.0.1:3000/api/status` |
-| Restarted API status | PASS, HTTP 200 | 2026-10-26 | `npm start`; GET `/api/status` |
+| Initial npm test view | UNVERIFIED | 2026-10-26 | `npm test`; tool output truncated; corrected status recorded below |
+| npm test rerun | PASS 131/131 | 2026-10-26 | `npm test` |
+| Migration syntax | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
+| API before/after restart | PASS HTTP 200 | 2026-10-26 | `curl http://127.0.0.1:3000/api/status` |
+| Fundraising browser/API view | UNVERIFIED | 2026-10-26 | No view-specific runtime check yet; T4 checks pending |
 
 ## KNOWN ISSUES AND RISKS
-- Demo/live identity access depends on fixed named test users; use existing records only.
-- PayPal order creation is explicitly prohibited without user approval; payouts/invoice send may be simulated.
-- `npm ci` reported one dependency install script pending approval; install completed with 0 audited vulnerabilities.
-- Historical docs include earlier phases; the pointer above is authoritative for current work.
+- Current browser auth helper exposes no organization role. Fundraising write controls are hidden unless trusted `app_metadata.organization_role` or `app_metadata.org_role` is present; server still enforces each endpoint.
+- Current transparency read projection omits receipt numbers/issue times. UI shows only receipt identifiers when returned; otherwise it identifies the missing reference instead of inventing one.
+- PayPal order creation requires an explicit button click; avoid that action in T2 demo.
+- npm ci completed with 0 audited vulnerabilities; one install script was noted as pending approval.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs inside one transaction; errors roll back everything. Never edit an applied migration; add a new numbered file.
-- SECURITY DEFINER/posting RPCs must revoke execute from public, anon, authenticated and grant only service_role; prove ordinary JWT gets 403.
+- SECURITY DEFINER/posting RPCs must revoke execute from public, anon, authenticated and grant only service_role; ordinary JWT should get 403.
 - PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only with ON DELETE RESTRICT; test cleanup deletes journal_entries first, then audit_log, organizations, auth.users using scripts/cleanup-phase2-test-data.sql. Reuse fixed test identities.
+- audit_log is insert-only with ON DELETE RESTRICT; cleanup deletes journal_entries, audit_log, organizations, auth.users via scripts/cleanup-phase2-test-data.sql. Reuse fixed test identities.
 - PayPal Sandbox buyer is US Personal; seller USD only; webhook ends /api/webhook and PAYPAL_WEBHOOK_ID matches.
 - Raw body is required for PayPal signature verification.
 - Never print .env values; record key names only.
 
 ## DO NOT
-- Never push; commit only on fund-wiring. Never touch protected design files or assets.
-- No new PayPal order absent approval; no .env values in output or commits.
+- Never push; commit only on fund-wiring. Do not edit protected design files/assets.
+- Do not create a PayPal order without explicit approval. Do not include .env values.
 
 ## RESUME COMMANDS
 - `git branch --show-current`
