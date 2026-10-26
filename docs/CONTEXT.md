@@ -3,12 +3,12 @@
 ## HEADER
 - Updated: 2026-10-26 (Asia/Kolkata)
 - Branch: `phase6-backend`
-- Last commit: `1ab3091 WIP Phase 6 task 3: map maintenance domain errors`
+- Last commit: `6f068d9 WIP Phase 6 task 3: correct handoff pointer`; live verifier checkpoint is next.
 - Phase/task: Phase 6 Fund Transparency, T3 maintenance workflow; live apply gate cleared; full live workflow verification pending.
 
 ## DONE
 - T1 contributions/campaigns and T2 capture accounting implemented, migrated, and verified. Capture event `0U573441YN817132C` received; receipt and ledger reconcile at 100 minor units. Original journal retained; reversal/repost credits 4100 Donations. Five exact webhook replays created no duplicates.
-- T3 routes, repositories, service-only RPCs, migration 0009 and tests implemented: `server/src/routes/funds.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/phase6-maintenance.test.js`, `server/test/phase6-migration.test.js`, `supabase/migrations/0009_maintenance_state_machine.sql`.
+- T3 routes, repositories, service-only RPCs, migration 0009 and tests implemented: `server/src/routes/funds.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/phase6-maintenance.test.js`, `server/test/phase6-migration.test.js`, `supabase/migrations/0009_maintenance_state_machine.sql`; live verifier: `scripts/verify-phase6-maintenance-live.js`.
 - T3 local tests: focused 8/8 PASS; full suite 117/117 PASS; PostgreSQL 17 migration parser accepts 0001–0009.
 - User confirmed migration 0009 applied. Live API returned 200; selecting `maintenance_requests.requested_by` returned 200. Existing fixed Phase 3 owner/approver/accountant/viewer roles found. Ordinary owner JWT denied by all six 0009 RPCs (HTTP 403 each; first two probes corrected after an argument-name mismatch; no DB writes).
 
@@ -44,7 +44,7 @@
 | T3 live schema/API preflight | PASS | 2026-10-26 | API 200; `requested_by` query 200 |
 | T3 ordinary JWT RPC denial | PASS | 2026-10-26 | Six RPC probes HTTP 403 |
 | T3 domain error mapping | PASS | 2026-10-26 | focused test covers 5 SQLSTATEs; full `npm test` 118/118 |
-| T3 live workflow | UNVERIFIED | 2026-10-26 | Pending authenticated API lifecycle and edge cases |
+| T3 live workflow | UNVERIFIED | 2026-10-26 | Verifier syntax PASS; authenticated API lifecycle and edge cases pending |
 
 ## KNOWN ISSUES AND RISKS
 - Live T3 state transitions and threshold behavior are not yet verified.
