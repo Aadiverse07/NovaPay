@@ -82,7 +82,6 @@
   async function loadReport(){if(auth.mode!=="supabase")return;var d=reportDates(),q="?from="+d.from+"&to="+d.to+"&currency=USD";try{var r=await window.NovaPayApi.request("/api/reports/profit-and-loss"+q),f=await window.NovaPayApi.request("/api/reports/fees"+q),feeRows=Array.isArray(f.rows)?f.rows:[],fee=feeRows.reduce(function(a,x){return a+Number(x.fee_minor||0)},0)/100,t=r.totals||{};$("report-gross").textContent=moneyApi(Number(t.revenueMinor||0)/100,"USD");$("report-fees").textContent="− "+moneyApi(fee,"USD");$("report-refunds").textContent="− "+moneyApi(Number(t.refundsMinor||0)/100,"USD");$("report-net").textContent=moneyApi(Number(t.netIncomeMinor||0)/100,"USD");$("report-period-label").textContent="Period "+r.from+" to "+r.to+" · USD";var bars=$("report-bars"),rows=Array.isArray(r.rows)?r.rows:[],periods={};rows.filter(function(x){return x.account_type==="revenue"}).forEach(function(x){periods[x.period]=(periods[x.period]||0)+Number(x.amount_minor||0)/100});var entries=Object.keys(periods).sort().slice(-4),max=Math.max.apply(null,entries.map(function(k){return periods[k]}).concat([1]));bars.textContent="";entries.forEach(function(k){var item=document.createElement("div"),label=document.createElement("span"),bar=document.createElement("i"),amount=document.createElement("b");label.textContent=new Date(k+"T00:00:00").toLocaleDateString(undefined,{month:"short"});bar.style.setProperty("--bar",Math.max(12,periods[k]/max*100)+"%");amount.textContent=moneyApi(periods[k],"USD");item.appendChild(label);item.appendChild(bar);item.appendChild(amount);bars.appendChild(item)});if(!entries.length){bars.textContent="No revenue rows were returned for this period."}}catch(error){["report-gross","report-fees","report-refunds","report-net"].forEach(function(id){$(id).textContent="Unavailable"});$("report-period-label").textContent="Organization report unavailable: "+error.message}}
   var reportPeriod=$("report-period");if(reportPeriod)reportPeriod.addEventListener("change",loadReport);loadInvoices();loadReport();
   document.querySelectorAll('[data-ui-action="reports-export"]').forEach(function(button){button.addEventListener("click",async function(){if(auth.mode!=="supabase"){showToast("Demo mode: report export unavailable.");return}button.disabled=true;try{var d=reportDates(),csv=await window.NovaPayApi.request("/api/reports/profit-and-loss?from="+d.from+"&to="+d.to+"&currency=USD&format=csv",{responseType:"text"}),url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})),a=document.createElement("a");a.href=url;a.download="profit-and-loss.csv";a.click();URL.revokeObjectURL(url);showToast("Organization report CSV downloaded.")}catch(error){showToast("Report export failed: "+error.message)}finally{button.disabled=false}})});
-  document.querySelectorAll('[data-ui-action="invoice-create"]').forEach(function(button){button.addEventListener("click",function(){showToast("Invoice creation is not enabled in this view. Any invoice send remains SIMULATED.")})});
 
   function assistantRecords(){if(auth.mode!=="demo")return [];return [].slice.call(document.querySelectorAll("#transactions-table-body tr")).map(function(r){return{id:r.dataset.txId||"Unavailable",type:r.dataset.type||"Unavailable",status:r.dataset.status||"Unavailable",gross:r.cells[3]?r.cells[3].textContent:"Unavailable"}})}
   function updateAiDataStatus(){var el=$("ai-data-status");if(el)el.textContent=auth.mode==="demo"?"DEMO MODE · local illustrative examples only; no organization data is sent with your question.":"Organization-scoped answers use verified backend evidence. No browser transaction data is sent."}
@@ -92,8 +91,73 @@
   function renderAssistantProposal(proposal,records){var slot=$("ai-proposal-slot");slot.textContent="";var ref=String(proposal.txId||""),row=records.find(function(r){return r.id===ref}),knownType=["refund","dispute-evidence","hold-payout"].indexOf(proposal.type)>-1,sourceRow=row&&document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(row.id)+'"]'),sandboxRefund=!!(row&&row.source==="PayPal Sandbox"&&proposal.type==="refund"&&row.currency==="USD"&&Number(sourceRow&&sourceRow.dataset.amount)>0),card=document.createElement("article"),title=document.createElement("h4"),copy=document.createElement("p"),dl=document.createElement("dl"),button=document.createElement("button"),reason=String(proposal.reason||"No reason supplied."),canSend=!!row&&knownType&&(proposal.type!=="refund"||row.source!=="PayPal Sandbox"||sandboxRefund);card.className="ai-proposal-card";card.tabIndex=-1;title.textContent=knownType?({refund:"Refund suggestion","dispute-evidence":"Dispute evidence suggestion","hold-payout":"Payout review suggestion"}[proposal.type]):"Informational finding · simulated only";copy.textContent=reason;card.appendChild(document.createTextNode("AI suggestion for review"));var mode=document.createElement("span");mode.className="status info";mode.textContent=sandboxRefund?"PayPal Sandbox · approval required":"Simulated only";card.appendChild(mode);card.appendChild(title);card.appendChild(copy);[["Reference",ref||"Unavailable"],["Amount",row?row.gross:"Unavailable"],["Currency",row?row.currency:"Unavailable"],["Source",row?row.source:"NovaPay AI"]].forEach(function(pair){var wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=pair[0];dd.textContent=pair[1];wrap.appendChild(dt);wrap.appendChild(dd);dl.appendChild(wrap)});card.appendChild(dl);button.type="button";button.className="btn btn--primary";button.textContent="Send to Approvals";button.disabled=!canSend;button.addEventListener("click",function(){if(!canSend)return;var item={type:proposal.type,txId:row.id,title:String(proposal.title||title.textContent),reason:reason,display:row.gross,source:"NovaPay AI",simulatedOnly:true,requiresSandbox:sandboxRefund,evidence:row.id+" · "+row.type+" · "+row.gross+" · "+row.status};if(sandboxRefund){item.captureId=row.id;item.currency="USD";item.usd=Number(sourceRow.dataset.amount);item.simulatedOnly=false}NovaLive.addProposal(item);button.disabled=true;button.textContent="Sent to Approvals";$("ai-live-status").textContent="Proposal sent to Approvals. Review it there before any action."});card.appendChild(button);if(!row){var note=document.createElement("p");note.className="ai-proposal-warning";note.textContent="This proposal has no matching transaction reference in the available data, so it cannot be sent as an actionable item.";card.appendChild(note)}else if(!knownType){var note2=document.createElement("p");note2.className="ai-proposal-warning";note2.textContent="This action type is not supported and will remain informational; no action can be attempted.";card.appendChild(note2)}else if(proposal.type==="refund"&&row.source==="PayPal Sandbox"&&!sandboxRefund){var note3=document.createElement("p");note3.className="ai-proposal-warning";note3.textContent="This capture is missing a supported USD amount, so the refund suggestion cannot be sent as an actionable item.";card.appendChild(note3)}slot.appendChild(card);card.focus()}
   var aiBusy=false;
   function ask(q){q=(q||"").trim();if(!q||aiBusy)return;aiBusy=true;var box=$("ai-conversation"),status=$("ai-live-status"),send=$("ai-send");$("ai-proposal-slot").textContent="";status.textContent="Preparing an answer…";send.disabled=true;var pending=document.createElement("p");pending.className="ai-loading";pending.setAttribute("role","status");pending.textContent="NovaPay is checking organization records…";box.appendChild(pending);box.scrollTop=box.scrollHeight;var finish=function(response){pending.remove();appendAiMessage(q,response);status.textContent=response&&response.error?response.error:"Answer ready.";send.disabled=false;aiBusy=false};if(auth.mode==="supabase"&&window.NovaLive){NovaLive.assistantChat(q).then(finish,function(error){var msg=String(error.message||"Assistant request failed.");if(error.code==="AI_DAILY_BUDGET_EXCEEDED"||error.code==="AI_BUDGET_EXCEEDED")msg="AI usage limit reached: "+msg;finish({reply:msg,route:"llm",citations:[],error:msg})})}else if(auth.mode==="demo"){finish(localAnswer(q,assistantRecords()))}else{finish({reply:"Sign in to use the assistant.",route:"llm",citations:[]})}}
-  $("ai-send").addEventListener("click",function(){var input=$("ai-input"),q=input.value;ask(q);if(q.trim())input.value=""});
-  $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();var q=e.target.value;ask(q);if(q.trim())e.target.value=""}});
+  var aiAttachmentText="";
+  function askFromComposer(){var input=$("ai-input"),q=input.value.trim();if(aiAttachmentText)q=(q||"Please review the attached file.")+"\n\nAttached file content:\n"+aiAttachmentText;if(q&&!aiBusy){ask(q);input.value="";aiAttachmentText="";$("ai-attachment").hidden=true;$("ai-file-input").value=""}}
+  $("ai-send").addEventListener("click",askFromComposer);
+  $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();askFromComposer()}});
+  (function setupAssistantTools(){
+    var fileInput=$("ai-file-input"),upload=$("ai-upload"),attachment=$("ai-attachment"),attachmentName=$("ai-attachment-name"),removeFile=$("ai-attachment-remove"),mic=$("ai-mic"),visualizer=$("ai-voice-visualizer"),voiceLabel=$("ai-voice-label"),stopMic=$("ai-mic-stop"),bars=visualizer&&visualizer.querySelector(".ai-voice-bars"),recognition=null,stream=null,audioContext=null,raf=0;
+
+    function clearFile(){aiAttachmentText="";if(fileInput)fileInput.value="";if(attachment)attachment.hidden=true}
+    if(upload&&fileInput){upload.addEventListener("click",function(){fileInput.click()});fileInput.addEventListener("change",function(){var file=fileInput.files&&fileInput.files[0];if(!file)return;if(file.size>1024*1024){clearFile();$("ai-live-status").textContent="Choose a text file smaller than 1 MB.";return}var reader=new FileReader();reader.onload=function(){aiAttachmentText=String(reader.result||"");attachmentName.textContent=file.name;attachment.hidden=false;$("ai-live-status").textContent="Attached “"+file.name+"”. Its text will be included with your next question."};reader.onerror=function(){clearFile();$("ai-live-status").textContent="Could not read that file. Please try another text file."};reader.readAsText(file)})}
+    if(removeFile)removeFile.addEventListener("click",clearFile);
+    var row=mic&&mic.closest(".ai-chat-row"),wave=$("ai-dict-wave"),timeEl=$("ai-dict-time"),okBtn=$("ai-dict-confirm"),noBtn=$("ai-dict-cancel"),
+        active=false,pending=false,buffer="",interim="",startedAt=0,timerId=0,peak=0,lastPush=0,
+        strands=window.NovaStrands&&window.NovaStrands.create(wave,{listening:true,energy:.12,lightMode:document.documentElement.dataset.theme==="light"});
+    function cleanup(){
+      active=false;pending=false;cancelAnimationFrame(raf);raf=0;clearInterval(timerId);timerId=0;
+      if(recognition){var r=recognition;recognition=null;r.onend=null;r.onerror=null;r.onresult=null;try{r.abort()}catch(e){}}
+      if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
+      if(audioContext){try{audioContext.close()}catch(e){}audioContext=null}
+      if(strands){strands.setLevel(0);strands.setListening(false)}
+      if(row)row.classList.remove("is-dictating");
+      if(mic){mic.classList.remove("is-listening");mic.setAttribute("aria-label","Start voice input")}
+    }
+    function cancelDictation(){cleanup();buffer="";interim=""}
+    function confirmDictation(){
+      var text=(buffer+" "+interim).replace(/\s+/g," ").trim();cleanup();buffer="";interim="";
+      var input=$("ai-input");
+      if(text){input.value=(input.value?input.value.replace(/\s+$/,"")+" ":"")+text;$("ai-live-status").textContent=""}
+      else $("ai-live-status").textContent="No speech was detected. Try again.";
+      input.focus()
+    }
+    function stopListening(){if(active||pending)confirmDictation()}
+    function monitor(analyser){
+      var td=new Uint8Array(analyser.fftSize);peak=0;lastPush=performance.now();if(strands)strands.setListening(true);
+      function frame(now){
+        analyser.getByteTimeDomainData(td);var sum=0;
+        for(var q=0;q<td.length;q++){var d=(td[q]-128)/128;sum+=d*d}
+        var lvl=Math.min(1,Math.sqrt(sum/td.length)*5);peak=Math.max(lvl,peak*.82);
+        if(strands)strands.setLevel(peak);
+        if(now-lastPush>=60){peak*=.25;lastPush=now}
+        raf=requestAnimationFrame(frame)
+      }
+      raf=requestAnimationFrame(frame)
+    }
+    function startListening(){
+      var Speech=window.SpeechRecognition||window.webkitSpeechRecognition,status=$("ai-live-status");
+      if(!Speech){status.textContent="Voice input is not supported by this browser. Use Chrome or Edge, or type your question.";return}
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent="Microphone access requires a supported browser on HTTPS or localhost.";return}
+      if(active||pending)return;pending=true;status.textContent="";mic.classList.add("is-listening");buffer="";interim="";
+      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}}).then(function(media){
+        if(!pending){media.getTracks().forEach(function(t){t.stop()});return}
+        pending=false;active=true;stream=media;
+        var Ctx=window.AudioContext||window.webkitAudioContext;
+        if(Ctx){audioContext=new Ctx();var analyser=audioContext.createAnalyser();analyser.fftSize=1024;analyser.smoothingTimeConstant=.4;audioContext.createMediaStreamSource(stream).connect(analyser);monitor(analyser)}
+        row.classList.add("is-dictating");mic.setAttribute("aria-label","Stop voice input");
+        startedAt=Date.now();timeEl.textContent="0:00";timerId=setInterval(function(){var sec=Math.floor((Date.now()-startedAt)/1000);timeEl.textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0")},250);
+        recognition=new Speech();recognition.lang=navigator.language||"en-US";recognition.interimResults=true;recognition.continuous=true;
+        recognition.onresult=function(e){var fin="",tmp="";for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else tmp+=e.results[i][0].transcript}if(fin)buffer=(buffer?buffer+" ":"")+fin.trim();interim=tmp};
+        recognition.onerror=function(e){if(e.error==="not-allowed"||e.error==="service-not-allowed"){cancelDictation();status.textContent="Microphone permission denied."}else if(e.error==="network"||e.error==="audio-capture"){cancelDictation();status.textContent=e.error==="network"?"Speech service is unreachable. Check your connection.":"No microphone was found."}};
+        recognition.onend=function(){if(!active||!recognition)return;if(interim){buffer=(buffer?buffer+" ":"")+interim.trim();interim=""}try{recognition.start()}catch(err){}};
+        try{recognition.start()}catch(err){}
+      }).catch(function(){cancelDictation();status.textContent="Microphone access was denied or is unavailable."})
+    }
+    if(mic)mic.addEventListener("click",function(){if(active||pending)confirmDictation();else startListening()});
+    if(okBtn)okBtn.addEventListener("click",confirmDictation);if(noBtn)noBtn.addEventListener("click",cancelDictation);
+    document.addEventListener("keydown",function(e){if(!active)return;if(e.key==="Escape"){e.preventDefault();cancelDictation()}else if(e.key==="Enter"&&!e.isComposing){e.preventDefault();e.stopPropagation();confirmDictation()}},true);
+    window.addEventListener("pagehide",stopListening);
+  })();
   document.querySelectorAll("[data-ai-query]").forEach(function(b){b.addEventListener("click",function(){ask(b.dataset.aiQuery)})});
   updateAiDataStatus();
 
