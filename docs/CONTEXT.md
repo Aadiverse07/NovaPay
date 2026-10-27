@@ -18,7 +18,7 @@
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. Repair `scripts/verify-phase6-maintenance-live.js` is absent; updated `scripts/verify-phase6-maintenance-live.js` with run-unique requests and run-scoped FK-safe cleanup; helper regression tests pass (2/2); full suite 135/135. Live double-run pending.
+1. Repair `scripts/verify-phase6-maintenance-live.js` is absent; updated `scripts/verify-phase6-maintenance-live.js` with run-unique requests and run-scoped FK-safe cleanup; helper regression tests pass (2/2); full suite 135/135. Second live run PASS; first run overall remains UNVERIFIED due uncaptured exit.
 2. Fetch origin and check whether fund-wiring is merged; do not create Phase 5 branch.
 3. Create `docs/BROWSER-CHECKLIST.md`; then final local WIP checkpoint. The 3-minute demo remains the next demo activity.
 
@@ -53,6 +53,7 @@
 | JavaScript syntax/whitespace | PASS | 2026-10-27 | `node --check` on edited JS; `git diff --check` |
 
 ## KNOWN ISSUES AND RISKS
+- Requested `scripts/verify-phase6.js` is absent; the matching `scripts/verify-phase6-maintenance-live.js` was repaired. First live invocation final exit is UNVERIFIED; second invocation passed. Immutable audit history accumulates by design.
 - Historical `/api/events` 503 log is from degraded-mode auth (SUPABASE_NOT_CONFIGURED); no live server was running to reproduce another 503. Auth remains fail-closed.
 - Browser auth helper has no organization-role accessor; writes require trusted `app_metadata` role, otherwise hidden. API enforces permissions.
 - No persisted pre-payment maintenance GET list; requests/contractors/quotes are current-tab state. Some receipt/evidence details are not returned by API and are not fabricated.

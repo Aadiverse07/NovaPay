@@ -1,8 +1,10 @@
 ## RESUME POINTER
-- Current task: Phase 6 T3 live maintenance workflow verification; user confirmed migration 0009 applied. Current action: continuing T3 verifier.
-- Last finished step: Clean up this run’s maintenance rows.
-- Next step: continue the T3 verifier.
-- Pending human action: none for T3 migration; do not provision new users or organizations.
+- Current task: PREP BEFORE PHASE 5; verifier repair and repeat run complete; base check/checklist pending.
+- Last finished step: second live verifier PASS, 21 API steps; cleaned 2 run request rows; no users/orgs created; audit history retained.
+- DONE: fresh requests/quotes per run, run-scoped cleanup, helper tests 2/2, full npm test 135/135, migration check 14/14.
+- UNVERIFIED: first live verifier invocation final exit; its per-step journal and cleanup were PASS. Browser checklist not yet written.
+- Pending human action: browser checklist steps after file created; PR merge by teammate.
+- NEXT: `git fetch origin`; inspect `git branch -r --merged origin/main`, recommend base only; do not create Phase 5 branch. Then write browser checklist, update docs, local WIP commit.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2133,3 +2135,105 @@ RESULT — 2026-10-27 23:30:58 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-27 IST | RESULT: verifier process has stopped after all lifecycle stages and cleanup logged PASS, removing 2 run request rows and preserving audit history. CORRECTION: prior line claiming Supabase was unconfigured/no rows touched is inaccurate; the direct config probe did not load dotenv, but verifier imports dotenv and ran. Its exit summary was not captured. NEXT: mark first run's final status UNVERIFIED pending captured exit on repeat, then run the verifier again with full output capture.
 2026-10-27 IST | ABOUT TO: Record the first live run as UNVERIFIED for exit-code capture while retaining its successful per-step/cleanup evidence; checkpoint before second run.
 2026-10-27 IST | RESULT: inaccurate config/no-run statement corrected append-only; test/decision record first live invocation UNVERIFIED overall, with observed all-step and cleanup passes. NEXT: create WIP checkpoint, then rerun verifier with captured completion output.
+2026-10-27 IST | ABOUT TO: Run the live maintenance verifier a second time with output/exit capture. WHY: prove fresh request generation and run-scoped cleanup repeat against the fixed existing users/org; route list confirms no PayPal order/capture endpoint is invoked.
+ABOUT TO — 2026-10-27 23:31:34 Asia/Kolkata: Generate one-time test link for fixed owner fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-27 23:31:35 Asia/Kolkata: PASS: Generate one-time test link for fixed owner fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:35 Asia/Kolkata: Exchange one-time link for fixed owner JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-27 23:31:36 Asia/Kolkata: PASS: Exchange one-time link for fixed owner JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:36 Asia/Kolkata: Generate one-time test link for fixed approver fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-27 23:31:37 Asia/Kolkata: PASS: Generate one-time test link for fixed approver fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:37 Asia/Kolkata: Exchange one-time link for fixed approver JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-27 23:31:38 Asia/Kolkata: PASS: Exchange one-time link for fixed approver JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:38 Asia/Kolkata: Generate one-time test link for fixed accountant fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-27 23:31:38 Asia/Kolkata: PASS: Generate one-time test link for fixed accountant fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:38 Asia/Kolkata: Exchange one-time link for fixed accountant JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-27 23:31:38 Asia/Kolkata: PASS: Exchange one-time link for fixed accountant JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:38 Asia/Kolkata: Find existing fixed T3 verification organization. Reason: reuse the established Phase 3 verification organization; never create another organization
+RESULT — 2026-10-27 23:31:39 Asia/Kolkata: PASS: Find existing fixed T3 verification organization; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:39 Asia/Kolkata: Verify fixed owner membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-27 23:31:39 Asia/Kolkata: PASS: Verify fixed owner membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:39 Asia/Kolkata: Verify fixed approver membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-27 23:31:39 Asia/Kolkata: PASS: Verify fixed approver membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:39 Asia/Kolkata: Verify fixed accountant membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-27 23:31:40 Asia/Kolkata: PASS: Verify fixed accountant membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:40 Asia/Kolkata: Check fresh local API health. Reason: exercise the current source code, including the SQLSTATE fix, on an ephemeral local port
+RESULT — 2026-10-27 23:31:41 Asia/Kolkata: PASS: Check fresh local API health; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:41 Asia/Kolkata: Verify authenticated API access for owner. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed owner fixture
+RESULT — 2026-10-27 23:31:42 Asia/Kolkata: PASS: Verify authenticated API access for owner; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:42 Asia/Kolkata: Verify authenticated API access for approver. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed approver fixture
+RESULT — 2026-10-27 23:31:43 Asia/Kolkata: PASS: Verify authenticated API access for approver; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:43 Asia/Kolkata: Verify authenticated API access for accountant. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed accountant fixture
+RESULT — 2026-10-27 23:31:45 Asia/Kolkata: PASS: Verify authenticated API access for accountant; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:45 Asia/Kolkata: Check exact live two-person approval threshold. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:31:45 Asia/Kolkata: PASS: Check exact live two-person approval threshold; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:45 Asia/Kolkata: Inspect deterministic contractor. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:31:46 Asia/Kolkata: PASS: Inspect deterministic contractor; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:46 Asia/Kolkata: Create fixed request T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance as a fixed owner fixture
+RESULT — 2026-10-27 23:31:47 Asia/Kolkata: PASS: Create fixed request T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:47 Asia/Kolkata: Create fixed request T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance as a fixed accountant fixture
+RESULT — 2026-10-27 23:31:48 Asia/Kolkata: PASS: Create fixed request T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:48 Asia/Kolkata: Add fixed quotation T3-LIVE-ca2365d5-b7fa-4eab-9725-d0dfed8e0319-LOW. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/quotations as a fixed accountant fixture
+RESULT — 2026-10-27 23:31:49 Asia/Kolkata: PASS: Add fixed quotation T3-LIVE-ca2365d5-b7fa-4eab-9725-d0dfed8e0319-LOW; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:49 Asia/Kolkata: Add fixed quotation T3-LIVE-ca2365d5-b7fa-4eab-9725-d0dfed8e0319-THRESHOLD. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/quotations as a fixed accountant fixture
+RESULT — 2026-10-27 23:31:50 Asia/Kolkata: PASS: Add fixed quotation T3-LIVE-ca2365d5-b7fa-4eab-9725-d0dfed8e0319-THRESHOLD; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:50 Asia/Kolkata: Reload low request after quotation. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:31:51 Asia/Kolkata: PASS: Reload low request after quotation; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:51 Asia/Kolkata: Reload threshold request after quotation. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:31:51 Asia/Kolkata: PASS: Reload threshold request after quotation; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:51 Asia/Kolkata: Verify under-threshold T3 lifecycle. Reason: exercise requester self-approval rejection, skipped-state rejection, foreign-quotation rejection, contractor verification, and single-approver threshold
+ABOUT TO — 2026-10-27 23:31:51 Asia/Kolkata: Reject requester self-approval T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/scope-approval as a fixed owner fixture
+RESULT — 2026-10-27 23:31:52 Asia/Kolkata: PASS: Reject requester self-approval T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 403; error_code=FUND_FORBIDDEN. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:52 Asia/Kolkata: Reject skipped contractor verification T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/contractor-verification as a fixed approver fixture
+RESULT — 2026-10-27 23:31:53 Asia/Kolkata: PASS: Reject skipped contractor verification T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:53 Asia/Kolkata: Reject foreign quotation T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:31:55 Asia/Kolkata: PASS: Reject foreign quotation T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:55 Asia/Kolkata: Approve scope T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:31:56 Asia/Kolkata: PASS: Approve scope T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:56 Asia/Kolkata: Confirm scope state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:31:56 Asia/Kolkata: PASS: Confirm scope state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:56 Asia/Kolkata: Reject requester contractor verification T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/contractor-verification as a fixed owner fixture
+RESULT — 2026-10-27 23:31:57 Asia/Kolkata: PASS: Reject requester contractor verification T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 403; error_code=FUND_FORBIDDEN. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:57 Asia/Kolkata: Verify contractor T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/contractor-verification as a fixed approver fixture
+RESULT — 2026-10-27 23:31:58 Asia/Kolkata: PASS: Verify contractor T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:58 Asia/Kolkata: Confirm verified state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:31:59 Asia/Kolkata: PASS: Confirm verified state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:31:59 Asia/Kolkata: Approve below-threshold payment T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/ff89bb38-af1a-451f-9bdf-1c3a1444b68e/payment-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:32:00 Asia/Kolkata: PASS: Approve below-threshold payment T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:00 Asia/Kolkata: Confirm payment approval stage T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:00 Asia/Kolkata: PASS: Confirm payment approval stage T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:00 Asia/Kolkata: Verify final state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:00 Asia/Kolkata: PASS: Verify final state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Self Approval; completed. NEXT: continue the T3 verifier.
+RESULT — 2026-10-27 23:32:00 Asia/Kolkata: PASS: Verify under-threshold T3 lifecycle; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:00 Asia/Kolkata: Verify exact-threshold T3 lifecycle. Reason: exercise requester/accountant separation, contractor verification, duplicate approver rejection, and two distinct approvers at exactly 10000 minor units
+ABOUT TO — 2026-10-27 23:32:00 Asia/Kolkata: Reject skipped contractor verification T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/contractor-verification as a fixed approver fixture
+RESULT — 2026-10-27 23:32:01 Asia/Kolkata: PASS: Reject skipped contractor verification T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:01 Asia/Kolkata: Reject foreign quotation T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:32:02 Asia/Kolkata: PASS: Reject foreign quotation T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:02 Asia/Kolkata: Approve scope T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:32:03 Asia/Kolkata: PASS: Approve scope T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:03 Asia/Kolkata: Confirm scope state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:03 Asia/Kolkata: PASS: Confirm scope state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:03 Asia/Kolkata: Verify contractor T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/contractor-verification as a fixed owner fixture
+RESULT — 2026-10-27 23:32:04 Asia/Kolkata: PASS: Verify contractor T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:04 Asia/Kolkata: Confirm verified state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:04 Asia/Kolkata: PASS: Confirm verified state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:04 Asia/Kolkata: Inspect distinct threshold approvals T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:05 Asia/Kolkata: PASS: Inspect distinct threshold approvals T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:05 Asia/Kolkata: Record first threshold approval T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/payment-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:32:06 Asia/Kolkata: PASS: Record first threshold approval T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:06 Asia/Kolkata: Confirm payment approval stage T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:06 Asia/Kolkata: PASS: Confirm payment approval stage T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:06 Asia/Kolkata: Inspect threshold approvals before completion T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:07 Asia/Kolkata: PASS: Inspect threshold approvals before completion T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:07 Asia/Kolkata: Reject duplicate threshold approver T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/payment-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:32:07 Asia/Kolkata: PASS: Reject duplicate threshold approver T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 409; error_code=CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:07 Asia/Kolkata: Record second distinct threshold approval T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/1eab45e0-3bd5-4926-a564-262f00b5926c/payment-approval as a fixed owner fixture
+RESULT — 2026-10-27 23:32:09 Asia/Kolkata: PASS: Record second distinct threshold approval T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:09 Asia/Kolkata: Verify final state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:32:09 Asia/Kolkata: PASS: Verify final state T3 Verifier ca2365d5-b7fa-4eab-9725-d0dfed8e0319 Dual Approval; completed. NEXT: continue the T3 verifier.
+RESULT — 2026-10-27 23:32:09 Asia/Kolkata: PASS: Verify exact-threshold T3 lifecycle; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:32:09 Asia/Kolkata: Clean up this run’s maintenance rows. Reason: delete only IDs created by this run in FK order; preserve append-only audit history
+RESULT — 2026-10-27 23:32:11 Asia/Kolkata: PASS: Clean up this run’s maintenance rows; removed 2 run request rows; immutable audit records retained. NEXT: continue the T3 verifier.
+2026-10-27 IST | RESULT: second live verifier exit 0; captured output above includes final summary and cleanup count. NEXT: record exact result, fetch origin, and inspect merged branches; do not create Phase 5 branch.
+2026-10-27 IST | ABOUT TO: Append second live verifier PASS to TEST-REPORT and update CONTEXT/RESUME before WIP checkpoint. WHY: captured exit 0 proves the run-specific fixture/cleanup succeeds on repeat.
+2026-10-27 IST | RESULT: TEST-REPORT records second verifier PASS and CONTEXT/RESUME state reflects first-run exit uncertainty and next base check. Files touched: docs/TEST-REPORT.md, docs/CONTEXT.md, docs/WORKLOG.md. NEXT: checkpoint docs, then fetch origin and determine whether fund-wiring is merged.
