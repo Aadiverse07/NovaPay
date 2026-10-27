@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="src/fx.css">
 <link rel="stylesheet" href="src/hero-orbit.css">
 <link rel="stylesheet" href="src/auth-panel.css">
+<link rel="stylesheet" href="src/password-toggle.css">
 <link rel="stylesheet" href="src/logo-intro.css">
 <link rel="stylesheet" href="src/capabilities-holo.css">
 <link rel="stylesheet" href="src/hero-glass.css">
@@ -204,7 +205,6 @@
 
       <!-- LOGIN -->
       <div class="form-box Login">
-        <div class="auth-demo"><span class="auth-mark"><novapay-logo size="20" variant="mark"></novapay-logo></span><b>TEST LOGIN</b><br>user@novapay.app · novapay123</div>
         <h2 class="animation" id="modal-title" style="--out:0;--in:21">Login</h2>
         <form id="login-form">
           <div class="input-box animation" style="--out:1;--in:22">
@@ -213,7 +213,7 @@
           </div>
           <div class="input-box animation" style="--out:2;--in:23">
             <input id="login-password" type="password" autocomplete="current-password" required><label for="login-password">Password</label>
-            <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M144 144v48h160v-48a80 80 0 1 0-160 0zm-64 48v-48a144 144 0 1 1 288 0v48h16c35.3 0 64 28.7 64 64v192c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64z"/></svg>
+            <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M144 144v48h160v-48a80 80 0 1 0-160 0zm-64 48v-48a144 144 0 1 1 288 0v48h16c35.3 0 64 28.7 64 64v192c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64z"/></svg><button type="button" class="pw-toggle" data-pw-toggle="login-password" aria-label="Show password" aria-pressed="false" title="Show password"><svg class="pw-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="pw-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.5 0 10.5 7 10.5 7a17 17 0 0 1-3.2 4M6.6 6.7A16.6 16.6 0 0 0 1.5 12S5.5 19 12 19c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
           </div>
           <div class="auth-forgot animation" style="--out:2;--in:23">
             <button type="button" class="text-button" id="forgot-password">Forgot Password?</button>
@@ -230,13 +230,11 @@
       <div class="info-content Login">
         <span class="auth-mark animation" style="--out:0;--in:19"><novapay-logo size="26" variant="mark"></novapay-logo></span>
         <h2 class="animation" style="--out:0;--in:20">Welcome back!</h2>
-        <p class="animation" style="--out:1;--in:21">Sign in to your NovaPay workspace.</p>
-        <p class="auth-hint animation" style="--out:2;--in:22"><b>TEST LOGIN</b><br>user@novapay.app<br>novapay123</p>
+        <p class="animation" style="--out:1;--in:21">Work Smarter not Harder</p>
       </div>
 
       <!-- SIGN UP -->
       <div class="form-box Register">
-        <div class="auth-demo"><span class="auth-mark"><novapay-logo size="20" variant="mark"></novapay-logo></span><b>TEST LOGIN</b><br>Nothing is sent to a server.</div>
         <h2 class="animation" style="--out:0;--in:17">Sign Up</h2>
         <form id="signup-form">
           <div class="input-box animation" style="--out:1;--in:18">
@@ -249,7 +247,7 @@
           </div>
           <div class="input-box animation" style="--out:3;--in:20">
             <input id="signup-password" type="password" autocomplete="new-password" required><label for="signup-password">Password</label>
-            <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M144 144v48h160v-48a80 80 0 1 0-160 0zm-64 48v-48a144 144 0 1 1 288 0v48h16c35.3 0 64 28.7 64 64v192c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64z"/></svg>
+            <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M144 144v48h160v-48a80 80 0 1 0-160 0zm-64 48v-48a144 144 0 1 1 288 0v48h16c35.3 0 64 28.7 64 64v192c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64z"/></svg><button type="button" class="pw-toggle" data-pw-toggle="signup-password" aria-label="Show password" aria-pressed="false" title="Show password"><svg class="pw-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="pw-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.5 0 10.5 7 10.5 7a17 17 0 0 1-3.2 4M6.6 6.7A16.6 16.6 0 0 0 1.5 12S5.5 19 12 19c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
           </div>
           <div class="input-box animation" style="--out:4;--in:21;margin-top:16px;height:auto">
             <button class="auth-btn" type="submit">Create Account</button>
@@ -263,8 +261,7 @@
       <div class="info-content Register">
         <span class="auth-mark animation" style="--out:0;--in:15"><novapay-logo size="26" variant="mark"></novapay-logo></span>
         <h2 class="animation" style="--out:0;--in:16">Welcome!</h2>
-        <p class="animation" style="--out:1;--in:17">Create an account to explore NovaPay.</p>
-        <p class="auth-hint animation" style="--out:2;--in:18"><b>TEST LOGIN</b><br>No credentials are sent to a server.</p>
+        <p class="animation" style="--out:1;--in:17">Everything that makes your sales easy</p>
       </div>
     </div>
   </section>
@@ -288,5 +285,6 @@
 <script src="src/click-spark.js"></script>
 <script src="src/specular-buttons.js"></script>
 <!-- Pointer reveal animation removed. -->
+<script src="src/password-toggle.js"></script>
 </body>
 </html>

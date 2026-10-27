@@ -199,3 +199,15 @@
 @media (prefers-reduced-motion: reduce) {
   :root .modal.auth-split .curved-shape, :root .modal.auth-split .curved-shape2, :root .modal.auth-split .animation { transition-duration: .01s !important; transition-delay: 0s !important; }
 }
+
+/* Login / Sign Up side-panel logo: use the transparent artwork (no square backdrop) and brighten it. */
+:root .modal.auth-split .info-content .auth-mark .novapay-logo-svg {
+  content: url("../assets/novapay-mark-clean.png");
+  background: none;
+  filter: brightness(1.35) saturate(1.3) contrast(1.05) drop-shadow(0 0 10px rgba(255,255,255,.55)) drop-shadow(0 2px 8px rgba(0,30,90,.35));
+}
+
+/* Keep the welcome text where it was after the "test login" hint was removed (content is vertically centred,
+   so the freed space is added back as bottom padding). */
+:root .modal.auth-split .info-content.Login    { padding-bottom: 128px; }
+:root .modal.auth-split .info-content.Register { padding-bottom: 92px; }

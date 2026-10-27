@@ -1,0 +1,88 @@
+/* Transactions: premium motion layer (additive; respects reduced motion). */
+@property --tx-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+/* 1. Living border on the ledger + one-time light sweep over the header */
+#view-transactions .table-scroll::after {
+  content: ""; position: absolute; inset: 0; border-radius: 16px; padding: 1.5px; pointer-events: none; z-index: 3;
+  background: conic-gradient(from var(--tx-angle), transparent 0 62%, color-mix(in srgb, var(--info-text) 85%, white) 80%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: tx-orbit 7s linear infinite; opacity: .75;
+}
+@keyframes tx-orbit { to { --tx-angle: 360deg; } }
+#view-transactions.tx-enter .data-table thead th { position: relative; overflow: hidden; }
+#view-transactions.tx-enter .data-table thead th::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, white 70%, var(--info-text)) 50%, transparent 70%);
+  opacity: .45; animation: tx-sweep 1.1s .5s cubic-bezier(.3,.6,.2,1) forwards;
+}
+@keyframes tx-sweep { to { transform: translateX(120%); } }
+
+/* 2. Row: spotlight follows cursor, accent bar grows, ripple on click */
+#view-transactions .transaction-row td:first-child { position: relative; }
+#view-transactions .transaction-row td:first-child::before {
+  content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px;
+  background: linear-gradient(var(--info-text), color-mix(in srgb, var(--info-text) 30%, white));
+  transform: scaleY(0); transform-origin: center; transition: transform .35s cubic-bezier(.2,.9,.3,1.3);
+}
+#view-transactions .transaction-row:hover td:first-child::before,
+#view-transactions .transaction-row:focus-visible td:first-child::before { transform: scaleY(1); }
+.tx-ripple { position: absolute; border-radius: 50%; pointer-events: none; width: 20px; height: 20px; margin: -10px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--info-text) 45%, transparent), transparent 70%);
+  animation: tx-ripple .7s ease-out forwards; z-index: 2; }
+@keyframes tx-ripple { to { transform: scale(26); opacity: 0; } }
+
+/* 3. Type badges come alive on row hover */
+#view-transactions .tx-badge { display: inline-flex; transition: transform .3s cubic-bezier(.2,.9,.3,1.4), box-shadow .3s; }
+#view-transactions .transaction-row:hover .tx-badge { box-shadow: 0 0 0 4px color-mix(in srgb, var(--info-text) 14%, transparent), 0 6px 14px color-mix(in srgb, var(--info-text) 22%, transparent); }
+#view-transactions .transaction-row:hover .tx-badge.payment { animation: tx-fly-out .7s ease; }
+#view-transactions .transaction-row:hover .tx-badge.payout { animation: tx-rise .7s ease; }
+#view-transactions .transaction-row:hover .tx-badge.refund { animation: tx-spin-back .8s cubic-bezier(.3,.7,.2,1); }
+#view-transactions .tx-badge.dispute { animation: tx-alert 2.4s ease-in-out infinite; }
+@keyframes tx-fly-out { 40% { transform: translate(5px,-5px) scale(1.15); } 41% { opacity: 0; } 42% { transform: translate(-5px,5px); } 100% { transform: none; opacity: 1; } }
+@keyframes tx-rise { 50% { transform: translateY(-6px) scale(1.15); } }
+@keyframes tx-spin-back { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+@keyframes tx-alert { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.5); } 60% { box-shadow: 0 0 0 9px rgba(245,158,11,0); } }
+
+/* 4. Status chips: tick pop, review pulse, duplicate shimmer, refund nudge */
+#view-transactions .status { position: relative; overflow: hidden; }
+#view-transactions .tx-row-enter .status.ok::before { content: "✓ "; display: inline-block; animation: tx-tick .55s .35s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes tx-tick { from { transform: scale(0) rotate(-90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+#view-transactions .status.warn::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); animation: tx-shimmer 2.6s ease-in-out infinite; }
+@keyframes tx-shimmer { 60%,100% { transform: translateX(100%); } }
+#view-transactions .tx-row-enter .status.danger { animation: tx-nudge .6s .3s ease both; }
+@keyframes tx-nudge { 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }
+
+/* 5. Amount cells and counters */
+#view-transactions .tx-num { font-variant-numeric: tabular-nums; }
+#view-transactions .tx-result-count.tx-bump { animation: tx-bump .45s cubic-bezier(.2,1.5,.4,1); }
+@keyframes tx-bump { 40% { transform: translateY(-3px) scale(1.08); color: var(--info-text); } }
+
+/* 6. Controls */
+#view-transactions .filter-row input, #view-transactions .filter-row select { transition: box-shadow .3s, transform .3s, border-color .3s; }
+#view-transactions .filter-row input:focus, #view-transactions .filter-row select:focus {
+  transform: translateY(-2px); border-color: var(--info-text);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--info-text) 16%, transparent), 0 10px 24px color-mix(in srgb, var(--info-text) 16%, transparent); }
+#view-transactions #tx-reset:active { animation: tx-spin-back .5s; }
+#view-transactions #tx-empty:not([hidden]) { animation: tx-empty-in .6s cubic-bezier(.2,1.2,.3,1) both; }
+#view-transactions #tx-empty:not([hidden]) .empty-icon { display: inline-block; animation: tx-float 3s ease-in-out infinite; }
+@keyframes tx-empty-in { from { opacity: 0; transform: scale(.9) translateY(16px); } }
+@keyframes tx-float { 50% { transform: translateY(-8px) rotate(6deg); } }
+
+/* 7. Detail dialog: money-flow bar + glow */
+.transaction-dialog { position: relative; overflow: hidden; }
+.transaction-dialog::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; transform-origin: left;
+  background: linear-gradient(90deg, var(--info-text), #7dd3fc, var(--info-text)); background-size: 200% 100%; }
+#transaction-modal:not([hidden]) .transaction-dialog::before { animation: tx-flow 1.4s linear infinite, tx-grow .8s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes tx-flow { to { background-position: -200% 0; } }
+@keyframes tx-grow { from { transform: scaleX(0); } }
+#transaction-modal:not([hidden]) .transaction-modal-backdrop { backdrop-filter: blur(8px); }
+.transaction-detail-grid > div { transition: transform .25s, background .25s; }
+.transaction-detail-grid > div:hover { transform: translateY(-3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  #view-transactions .table-scroll::after, #view-transactions .tx-badge, #view-transactions .status,
+  #view-transactions .status::before, #view-transactions .status::after, #view-transactions #tx-empty,
+  #view-transactions #tx-empty .empty-icon, .transaction-dialog::before, .tx-ripple { animation: none !important; }
+}

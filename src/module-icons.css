@@ -1,0 +1,39 @@
+/* NovaPay module icons (supplied 3D icon set) — sidebar + module headers.
+   Light theme: soft light tile.  Dark theme: deep navy tile.  Artwork is transparent PNG, shared by both themes. */
+:root{
+  --mi-tile-bg:linear-gradient(145deg,#ffffff 0%,#e8efff 100%);
+  --mi-tile-border:rgba(47,79,208,.16);
+  --mi-tile-shadow:0 2px 8px rgba(30,60,160,.14),inset 0 1px 0 rgba(255,255,255,.9);
+  --mi-icon-filter:drop-shadow(0 2px 3px rgba(30,60,160,.22));
+}
+:root[data-theme="dark"]{
+  --mi-tile-bg:linear-gradient(145deg,#18274a 0%,#0c1730 100%);
+  --mi-tile-border:rgba(140,170,255,.18);
+  --mi-tile-shadow:0 2px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);
+  --mi-icon-filter:drop-shadow(0 2px 5px rgba(0,0,0,.55)) drop-shadow(0 0 6px rgba(90,140,255,.28));
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --mi-tile-bg:linear-gradient(145deg,#18274a 0%,#0c1730 100%);
+  --mi-tile-border:rgba(140,170,255,.18);
+  --mi-tile-shadow:0 2px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.07);
+  --mi-icon-filter:drop-shadow(0 2px 5px rgba(0,0,0,.55)) drop-shadow(0 0 6px rgba(90,140,255,.28));
+}}
+
+/* Sidebar */
+.dashboard-nav a span.nav-ai-logo.nav-np-tile{
+  width:38px;height:38px;flex:0 0 38px;border-radius:11px;padding:0;overflow:visible;
+  background:var(--mi-tile-bg);border:1px solid var(--mi-tile-border);box-shadow:var(--mi-tile-shadow);filter:none;
+}
+.dashboard-nav a .nav-mod-logo--np{width:32px;height:32px;max-height:none;object-fit:contain;border-radius:0;filter:var(--mi-icon-filter)}
+
+/* Module page headers */
+.page-intro:has(>.module-head-logo){display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:16px;align-items:start}
+.page-intro:has(>.module-head-logo)>*:not(.module-head-logo){grid-column:2}
+.module-head-logo{
+  grid-column:1;grid-row:1 / span 3;width:64px;height:64px;padding:7px;box-sizing:border-box;object-fit:contain;
+  border-radius:18px;background:var(--mi-tile-bg);border:1px solid var(--mi-tile-border);box-shadow:var(--mi-tile-shadow);
+}
+@media (max-width:520px){
+  .page-intro:has(>.module-head-logo){grid-template-columns:52px minmax(0,1fr);column-gap:12px}
+  .module-head-logo{width:52px;height:52px;padding:6px;border-radius:15px}
+}
