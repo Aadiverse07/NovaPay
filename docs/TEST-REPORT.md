@@ -1063,3 +1063,30 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - `node --check scripts/verify-phase6-transparency-live.js && node --check server/test/phase6-contract.test.js && git diff --check` — PASS; both JS files parse and whitespace check is clean.
 - `git diff --exit-code f410e86 -- preview.html dashboard.html src assets` — PASS; no protected frontend changes after the separately committed/explicitly ignored font fix.
 - `node scripts/verify-phase4.js --safe` — UNVERIFIED/not run; no safe mode is implemented; normal script would create and clean live rows. Phase 2 safe was also UNVERIFIED because dedicated fixed Phase 2 orgs were absent; Phase 3 safe passed.
+
+- 2026-10-26 — `npm test`: UNVERIFIED; initial invocation output was truncated and the generated shell result line was malformed; immediately rerun below.
+- 2026-10-26 — `npm test`: PASS; 131 passed, 0 failed (captured final summary).
+- 2026-10-26 — `npm run check:migrations`: PASS; PostgreSQL syntax accepted for migrations 0001–0014 (14 files).
+- 2026-10-26 — Fundraising and Maintenance browser/API interaction checks: UNVERIFIED; no view-specific browser session/API flow run yet; final T2/T4 steps pending.
+- 2026-10-26 — T1 Fundraising/Maintenance/Transparency runtime: UNVERIFIED; no API/browser view checks completed at the T1 checkpoint; T2/T4 pending.
+- 2026-10-26 — Exact referenced 3-minute PDF demo sequence: UNVERIFIED; no PDF found in repo or available attachments; executing the user-listed API checks and existing fixed-fixture verifiers instead.
+- 2026-10-26 — T2 fixed-user sign-in and campaign API access: PASS; owner, approver, accountant 3/3 returned HTTP 200 using fixed accounts.
+- 2026-10-26 — T2 maintenance T3 lifecycle verifier: FAIL; fixed self-approval fixture is already terminal `closed`, while verifier expects `payment_approved`; deterministic request/contractor/quotation lookups succeeded; no PayPal order; no fixture reset.
+- 2026-10-26 — T2 fixed T5 completion verification: PASS; fixed request `T3 Fixed Live Self Approval` remained `closed`, evidence was `accepted`, ordinary JWT RPC denials 3/3 HTTP 403, direct table write denied, 0 users/orgs created, no file uploaded. `node scripts/verify-phase6-completion-live.js`.
+- 2026-10-26 — T2 authenticated read/API probe (initial attempt): FAIL; first local `/api/status` request got `ECONNREFUSED 127.0.0.1:3000`; no API endpoint check ran after sign-in; no PayPal order created.
+- 2026-10-26 — T2 authenticated API probe (second attempt): FAIL; script timed out before emitting per-endpoint summary, so individual results are UNVERIFIED; no PayPal order route called. `node --input-type=module` fixed-owner API probe.
+- 2026-10-26 — T2 fixed owner sign-in and API status: PASS; existing owner magic-link session obtained; `/api/status` HTTP 200.
+- 2026-10-26 — T2 PayPal capture status: PASS; `GET /api/transactions?type=capture&limit=100` HTTP 200; 2 capture transactions, both `COMPLETED`.
+- 2026-10-26 — T2 ledger reconciliation: PASS; `GET /api/ledger/entries` HTTP 200 with 4 entries, 2 capture entries; USD trial-balance debits equal credits.
+- 2026-10-26 — T2 approvals: PASS; approvals GET HTTP 200 with 1 row; pending-count GET HTTP 200 with 0.
+- 2026-10-26 — T2 campaigns/transparency: PASS; campaigns GET HTTP 200 with 1 campaign; transparency GET HTTP 200 with 1 contribution, 1 expense, and `namesShown=false`.
+- 2026-10-26 — T2 PayPal order safety: PASS; no PayPal order endpoint called or order created.
+- 2026-10-26 — T2 AI code route: PASS; `POST /api/ai/chat` with only `{message:"What is 7 + 5?"}` returned HTTP 200, route `code`, reason `deterministic_arithmetic`, answer `12`.
+- 2026-10-26 — T2 AI cited LLM route: PASS; `POST /api/ai/chat` with only `message` returned HTTP 200, route `llm`, reason `general_read_only_question`, 3 citations, insufficientEvidence=false. No order/write route called.
+- 2026-10-26 — T2 maintenance through transparency: PASS for existing fixed data; GET returned the fixed request `closed`, evidence `accepted`, payment `SIMULATED`, gaps `no payment reference` and `simulated, no ledger entry`; no ledger entry or order. `GET /api/funds/transparency`.
+- 2026-10-26 — T3 README scope/whitespace review: PASS; only the requested Phase 6 section was appended, no existing UI section changed, `git diff --check` clean.
+- 2026-10-26 — `npm test`: PASS; 131 passed, 0 failed. Full suite passed after T1–T3 changes.
+- 2026-10-26 — `npm run check:migrations`: PASS; 14 migration files parsed successfully.
+- 2026-10-26 — `node --check src/fund-views.js`: PASS; exit 0.
+- 2026-10-26 — `git diff --check`: PASS; no whitespace errors.
+- 2026-10-26 — `git diff --stat main -- <protected files>`: PASS; empty diff.
