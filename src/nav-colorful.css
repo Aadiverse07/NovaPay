@@ -10,6 +10,5 @@
 .dashboard-nav a[data-view="invoices"]{--nt-bg:linear-gradient(135deg,#8b5cf6,#5b21b6);--nt-glow:rgba(139,92,246,.4)}
 .dashboard-nav a[data-view="reports"]{--nt-bg:linear-gradient(135deg,#f59e0b,#ea580c);--nt-glow:rgba(245,158,11,.4)}
 .dashboard-nav a[data-view="documents"]{--nt-bg:linear-gradient(135deg,#38bdf8,#2563eb);--nt-glow:rgba(56,189,248,.4)}
-.dashboard-nav a[data-view="fundraising"]{--nt-bg:linear-gradient(135deg,#fb7185,#e11d48);--nt-glow:rgba(251,113,133,.4)}
+.dashboard-nav a[data-view="community-funds"]{--nt-bg:linear-gradient(135deg,#fb7185,#7c3aed);--nt-glow:rgba(232,121,249,.4)}
 .dashboard-nav a[data-view="maintenance"]{--nt-bg:linear-gradient(135deg,#84cc16,#15803d);--nt-glow:rgba(132,204,22,.4)}
-.dashboard-nav a[data-view="transparency"]{--nt-bg:linear-gradient(135deg,#e879f9,#7c3aed);--nt-glow:rgba(232,121,249,.4)}

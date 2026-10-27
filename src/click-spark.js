@@ -13,7 +13,7 @@
 
   var bursts = [];
   var raf = 0;
-  var colors = ["#2f66f5", "#7a3ff2", "#42c7d5"];
+  var colors = ["#2563eb", "#087f78", "#06b6d4"];
   var duration = 520;
   var radius = 34;
   var count = 8;

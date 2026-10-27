@@ -1,0 +1,33 @@
+/* Animated-List style motion (spring entrances, gliding selection, edge fades, gliding stepper). */
+:root { --rb-spring: cubic-bezier(.22,1,.36,1); }
+.rb-host { position: relative; }
+.rb-item { opacity: 0; transform: translateY(18px) scale(.82); }
+.rb-item.rb-in { animation: rb-spring .68s var(--rb-spring) both; animation-delay: calc(var(--rb-i, 0) * 42ms); }
+@keyframes rb-spring { 0% { opacity: 0; transform: translateY(14px) scale(.94); } 72% { opacity: 1; transform: translateY(-2px) scale(1.005); } 100% { opacity: 1; transform: none; } }
+tr.rb-item.rb-in { animation-name: rb-spring-row; }
+@keyframes rb-spring-row { 0% { opacity: 0; transform: translateX(-18px); } 72% { opacity: 1; transform: translateX(2px); } 100% { opacity: 1; transform: none; } }
+.report-bars > .rb-item.rb-in { animation-name: rb-spring-bar; }
+@keyframes rb-spring-bar { 0% { opacity: 0; transform: translateY(28px) scaleY(.72); } 72% { opacity: 1; transform: translateY(-2px) scaleY(1.02); } 100% { opacity: 1; transform: none; } }
+
+/* Gliding selection pill */
+.rb-indicator { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; border-radius: 12px; opacity: 0;
+  border: 1px solid color-mix(in srgb, var(--mp-a) 45%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mp-a) 14%, transparent), color-mix(in srgb, #38bdf8 8%, transparent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mp-a) 10%, transparent), 0 10px 26px color-mix(in srgb, var(--mp-a) 18%, transparent);
+  transition: transform .5s var(--rb-spring), width .5s var(--rb-spring), height .5s var(--rb-spring), opacity .25s; }
+.rb-indicator.is-on { opacity: 1; }
+.rb-item:focus-visible { outline: none; }
+
+/* Scroll-edge fades */
+.rb-fade { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--rb-t, 0px), #000 calc(100% - var(--rb-b, 0px)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--rb-t, 0px), #000 calc(100% - var(--rb-b, 0px)), transparent 100%); }
+
+/* Gliding stepper: a glowing token travels through completed steps */
+.workflow-steps { position: relative; }
+.rb-step-token { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; border-radius: 999px; opacity: 0;
+  background: color-mix(in srgb, #22c55e 22%, transparent); box-shadow: 0 0 0 1px #22c55e, 0 0 16px rgba(34,197,94,.55);
+  transition: transform .55s var(--rb-spring), width .55s var(--rb-spring), height .55s var(--rb-spring), opacity .3s; }
+.rb-step-token.is-on { opacity: 1; }
+.workflow-steps span { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) { .rb-item { opacity: 1; transform: none; } .rb-item.rb-in { animation: none; } .rb-indicator, .rb-step-token { transition: none; } }
