@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: continuation checks complete; browser demo run-through awaits a browser-enabled session.
-- Last finished step: `npm ci` PASS; `npm test` PASS 133/133; `npm run check:migrations` PASS 14/14; local WIP checkpoint 6f0fd7c.
-- DONE: fund views, README, `/api/events` empty-state/cache fix, AI route badge; prior reload logged `/api/events` HTTP 200 and AI showed `Route · code` / `deterministic_arithmetic`.
-- UNVERIFIED: current 3-minute visual demo; browser inventory says browser use disabled. Package install emitted an install-script approval warning but completed.
-- Pending human action: enable browser use or follow README “Three-minute Phase 6 demo” steps with the fixed test org. Never create a PayPal order without explicit authorization.
-- NEXT: run existing-record 3-minute walkthrough when browser access is available; then Phase 5 only if time remains.
+- Current task: PREP BEFORE PHASE 5 on fund-wiring; verifier repair, base check and browser checklist pending.
+- Last finished step: fresh `npm test` PASS 133/133; `npm run check:migrations` PASS 14/14.
+- DONE: Phase 6 fund views/README; API cache bypass and `/api/events` empty state; AI badge field mapping.
+- UNVERIFIED: browser console; 3-minute visual demo.
+- Pending human action: teammate merge PR; manually run `docs/BROWSER-CHECKLIST.md` when created.
+- NEXT: check secrets/status, push only origin/fund-wiring, repair fixed maintenance verifier without weakening checks, fetch and inspect merge base, create browser checklist, update handoff and local checkpoint. Do not create Phase 5 branch.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1974,3 +1974,14 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-27 IST | Result: TEST-REPORT/DECISIONS/CONTEXT and RESUME POINTER updated; visual demo is explicitly UNVERIFIED, checks recorded PASS, no orders created. NEXT: verify branch/status/no `.env`, then checkpoint docs locally.
 2026-10-27 IST | About to create a local WIP checkpoint for current check results and demo limitation. WHY: continuity docs are updated, whitespace is clean, and no `.env` is tracked.
 2026-10-27 IST | Result: local WIP commit f90a36f created on fund-wiring; no push. NEXT: user can run the README demo when browser is enabled; Phase 5 only if time remains.
+2026-10-27 IST | ABOUT TO: Run ORIENT commands: branch, status and last 8 commits. WHY: confirm fund-wiring and current local/remote state before any push or edits.
+2026-10-27 IST | RESULT: ORIENT branch/status/log output recorded in terminal. NEXT: read RESUME POINTER and run required npm test and migration check.
+2026-10-27 IST | ABOUT TO: Read the RESUME POINTER. WHY: identify current verified state and next planned operation before required checks.
+2026-10-27 IST | RESULT: pointer says 133/133 tests previously passed, visual demo unverified, and next is demo then Phase 5 if time remains. NEXT: run fresh npm test.
+2026-10-27 IST | ABOUT TO: Run `npm test`. WHY: user explicitly requires a fresh complete test run during orientation.
+2026-10-27 IST | RESULT: npm test exit 0; exact count captured from output. NEXT: run npm run check:migrations.
+2026-10-27 IST | ABOUT TO: Run `npm run check:migrations`. WHY: complete fresh checks requested by ORIENT before considering the push.
+2026-10-27 IST | RESULT: migration check exit 0; all migration files and syntax are in command output. NEXT: inspect .env/secrets staged/tracked state and unpushed commits, then push only origin/fund-wiring.
+2026-10-27 IST | ABOUT TO: Record this turn's fresh test/migration results and correct handoff pointers before preparing the explicitly authorized branch push. WHY: current pointer says demo next; this task now requires verifier repair and base-branch determination.
+2026-10-27 IST | RESULT: TEST-REPORT records fresh 133/133 and 14/14 passes; RESUME POINTER and CONTEXT now point to verifier repair/base check/checklist and explicitly prohibit creating Phase 5 branch. Files touched: docs/WORKLOG.md, docs/TEST-REPORT.md, docs/CONTEXT.md. NEXT: inspect status, tracked/staged secret paths, and unpushed commit list; checkpoint docs before push.
+2026-10-27 IST | ABOUT TO: Commit current test results and corrected RESUME POINTER locally on fund-wiring. WHY: checkpoint after fresh required checks before authorized push.

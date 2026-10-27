@@ -1103,3 +1103,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-27 — `npm test`: PASS; 133 passed, 0 failed.
 - 2026-10-27 — `npm run check:migrations`: PASS; all 14 migrations parsed as PostgreSQL 17 SQL/PLpgSQL.
 - 2026-10-27 — README 3-minute visual demo run-through: UNVERIFIED; browser inventory says local browser use is disabled in Work settings. No PayPal order or other financial action was attempted.
+- 2026-10-27 — ORIENT `npm test`: PASS; 133 passed, 0 failed.
+- 2026-10-27 — ORIENT `npm run check:migrations`: PASS; all 14 migrations parsed successfully.
