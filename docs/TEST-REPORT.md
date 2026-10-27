@@ -1099,3 +1099,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-27 — `node --test server/test/api-client.test.js`: PASS; no-store cache option and X-Org-Id verified.
 - 2026-10-27 — `npm test`: PASS; 133 passed, 0 failed, including events snapshot-failure and API no-store regressions.
 - 2026-10-27 — Post-cache-fix authenticated dashboard reload: `/src/api-client.js` served HTTP 200 and subsequent `/api/events` request returned HTTP 200 in server logs; repeat-poll 304 no longer observed in this reload. Browser console inspection remains UNVERIFIED due unavailable computer-use permission.
+- 2026-10-27 — `npm ci`: PASS; 89 packages added/audited, 0 vulnerabilities (one package install-script approval warning; install completed).
+- 2026-10-27 — `npm test`: PASS; 133 passed, 0 failed.
+- 2026-10-27 — `npm run check:migrations`: PASS; all 14 migrations parsed as PostgreSQL 17 SQL/PLpgSQL.

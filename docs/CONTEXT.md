@@ -2,8 +2,8 @@
 
 ## HEADER
 - Updated: 2026-10-27 Asia/Kolkata.
-- Branch: fund-wiring; PR #3-style PR for fund-wiring is open (per user); last commits 0be75ac, d0457b9.
-- Phase/task: fund-wiring follow-up; events 503 and AI route badge fixes complete, local commit pending.
+- Branch: fund-wiring; PR #3-style PR is open (per user); current local HEAD before this docs checkpoint is c140952; latest remote update was c6e5277.
+- Phase/task: required continuation checks complete; next is 3-minute demo using fixed existing data.
 
 ## DONE
 - STEP 0: `npm ci`; `npm test` PASS 131/131; migrations 0001–0014 parse; server restarted and `/api/status` HTTP 200.
@@ -18,9 +18,8 @@
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. Human restarts `npm start`, reloads dashboard, checks console and AI badge.
-2. Human pushes `fund-wiring`; teammate merges the open PR.
-3. Run through the 3-minute demo; continue to Phase 5 only if time remains.
+1. Run through the 3-minute demo using fixed existing data only; do not create a new PayPal order.
+2. Continue to Phase 5 only if time remains.
 
 ## USER ACTIONS PENDING
 - Browser checks of `/api/events` 503 behavior and AI route badge are UNVERIFIED; restart `npm start`, reload dashboard, inspect console and badge. Human push and teammate merge are pending.
@@ -34,8 +33,9 @@
 | Check | Status | Date | Command |
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
-| Unit suite final | PASS 132/132 | 2026-10-27 | `npm test` |
-| Migration check final | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
+| Unit suite final | PASS 133/133 | 2026-10-27 | `npm test` |
+| Migration check final | PASS 14 files | 2026-10-27 | `npm run check:migrations` |
+| Dependency install | PASS 89 packages, 0 vulnerabilities | 2026-10-27 | `npm ci` |
 | JavaScript syntax | PASS | 2026-10-26 | `node --check src/fund-views.js` |
 | Whitespace | PASS | 2026-10-26 | `git diff --check` |
 | Protected files | PASS empty diff | 2026-10-26 | `git diff --stat main -- <protected paths>` |

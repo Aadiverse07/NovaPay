@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: handoff on fund-wiring; PR #3-style PR for fund-wiring is open (per user).
-- Last finished step: commits `0be75ac` (events empty state and AI route badge) and `d0457b9` (journal checkpoint).
-- DONE: fund views wired; README updated; `/api/events` empty-state fix; AI badge route fix; `npm test` PASS 132/132.
-- UNVERIFIED: browser check of `/api/events` 503 and AI badge.
-- Pending human actions: restart `npm start`; reload dashboard; check console and badge; push `fund-wiring`; teammate merges PR.
-- NEXT: run through the 3-minute demo, then Phase 5 only if time remains.
+- Current task: continue fund-wiring handoff; dependency install and required checks complete.
+- Last finished step: `npm ci` PASS; `npm test` PASS 133/133; `npm run check:migrations` PASS 14/14.
+- DONE: fund views, README, `/api/events` empty-state/cache fix, AI badge route fix; browser showed Route · code with `deterministic_arithmetic`; server log after cache fix showed `/api/events` HTTP 200.
+- UNVERIFIED: direct browser console inspection; HTTP status verified in server logs.
+- Pending human actions: none for current local checks; PR update push was completed earlier, latest docs/checkpoint may be local ahead.
+- NEXT: run through the 3-minute demo using fixed existing data only; then Phase 5 only if time remains. Never create a new PayPal order without authorization.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1952,3 +1952,16 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-27 IST | Result: `git push` succeeded; origin/fund-wiring advanced from 25b04d7 to c6e5277 with the no-store API cache fix and test included. NEXT: checkpoint the successful push result and verify final status; the browser console remains unavailable.
 2026-10-27 IST | About to verify final branch/status and ensure no environment file is tracked or staged. WHY: confirm the PR update is complete and protect secrets.
 2026-10-27 IST | Result: branch fund-wiring; origin push already succeeded through c6e5277; no .env tracked or staged. Current source/test commits are on origin; this final journal note remains local. NEXT: stop; user can inspect the dashboard with the server still running.
+2026-10-27 IST | About to verify current branch and worktree status as the first continuation action. WHY: resume only on the requested fund-wiring branch and detect pending local work.
+2026-10-27 IST | Result: branch/status displayed above. Files touched: docs/WORKLOG.md. NEXT: read RESUME POINTER, CONTEXT, and newest TEST-REPORT/DECISIONS entries.
+2026-10-27 IST | About to read the RESUME POINTER, CONTEXT handoff, and newest test/decision entries. WHY: select the precise next step without rereading unrelated history.
+2026-10-27 IST | Result: read pointer, handoff, and latest verification/decision entries; NEXT listed in pointer drives continuation after required checks. Files touched: docs/WORKLOG.md. NEXT: run `npm ci`, then `npm test` and `npm run check:migrations`, recording each result.
+2026-10-27 IST | About to run `npm ci` from the current fund-wiring checkout. WHY: user requires dependency install verification before resuming the handoff.
+2026-10-27 IST | Result: npm ci exit 0. NEXT: run npm test and record its result.
+2026-10-27 IST | About to run `npm test` on fund-wiring after successful `npm ci`. WHY: verify current full test suite before continuing from handoff.
+2026-10-27 IST | Result: npm test exit 0; inspect test totals in command output. NEXT: run npm run check:migrations and record result.
+2026-10-27 IST | About to run `npm run check:migrations` after `npm test` passed 133/133. WHY: verify the full migration parser check requested for continuation.
+2026-10-27 IST | Result: npm run check:migrations exit 0; output shows migration count and parser status. NEXT: append exact npm ci/test/migration results and correct handoff docs for current commits/status, then local WIP commit.
+2026-10-27 IST | About to append current `npm ci`, `npm test`, and migration-check results and align CONTEXT/RESUME POINTER with current branch commit and next demo step. WHY: tests are complete; handoff had stale 132-test count and prior commit references.
+2026-10-27 IST | Result: appended real check results and corrected stale handoff counts/commit references; NEXT now points to the 3-minute demo using existing data. Files touched: docs/TEST-REPORT.md, docs/CONTEXT.md, docs/WORKLOG.md. NEXT: check branch/worktree and confirm there are no .env changes, then WIP-commit these records.
+2026-10-27 IST | About to create a WIP checkpoint for the fresh dependency/test/migration results and corrected handoff. WHY: three verification steps have completed; user requires WIP commits every 2–3 steps.
