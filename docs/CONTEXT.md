@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-27 Asia/Kolkata.
 - Branch: fund-wiring; PR #3-style PR is open (per user); current local HEAD before this docs checkpoint is c140952; latest remote update was c6e5277.
-- Phase/task: PREP BEFORE PHASE 5; current turn fresh checks PASS 133/133, migrations 14/14; verifier repair implemented; live repeat verification pending.
+- Phase/task: PREP BEFORE PHASE 5; current turn fresh checks PASS 135/135, migrations 14/14; verifier repair implemented; live repeat verification pending.
 
 ## DONE
 - STEP 0: `npm ci`; `npm test` PASS 131/131; migrations 0001–0014 parse; server restarted and `/api/status` HTTP 200.
@@ -18,7 +18,7 @@
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. Repair `scripts/verify-phase6-maintenance-live.js` is absent; updated `scripts/verify-phase6-maintenance-live.js` with run-unique requests and run-scoped FK-safe cleanup; helper regression tests pass. Live double-run pending.
+1. Repair `scripts/verify-phase6-maintenance-live.js` is absent; updated `scripts/verify-phase6-maintenance-live.js` with run-unique requests and run-scoped FK-safe cleanup; helper regression tests pass (2/2); full suite 135/135. Live double-run pending.
 2. Fetch origin and check whether fund-wiring is merged; do not create Phase 5 branch.
 3. Create `docs/BROWSER-CHECKLIST.md`; then final local WIP checkpoint. The 3-minute demo remains the next demo activity.
 
@@ -34,7 +34,7 @@
 | Check | Status | Date | Command |
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
-| Unit suite final | PASS 133/133 | 2026-10-27 | `npm test` (fresh this turn) |
+| Unit suite final | PASS 135/135 | 2026-10-27 | `npm test` (fresh this turn) |
 | Visual 3-minute demo | UNVERIFIED | 2026-10-27 | Browser disabled in Work settings |
 | Verifier fixture/cleanup helper | PASS 2/2 | 2026-10-27 | `node --test server/test/phase6-maintenance-run.test.js` |
 | Migration check final | PASS 14 files | 2026-10-27 | `npm run check:migrations` (fresh this turn) |

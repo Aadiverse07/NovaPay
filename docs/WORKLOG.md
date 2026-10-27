@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: PREP BEFORE PHASE 5 on fund-wiring; verifier repair, base check and browser checklist pending.
-- Last finished step: fresh `npm test` PASS 133/133; `npm run check:migrations` PASS 14/14.
-- DONE: Phase 6 fund views/README; API cache bypass and `/api/events` empty state; AI badge field mapping.
-- UNVERIFIED: browser console; 3-minute visual demo.
-- Pending human action: teammate merge PR; manually run `docs/BROWSER-CHECKLIST.md` when created.
-- NEXT: check secrets/status, push only origin/fund-wiring, repair fixed maintenance verifier without weakening checks, fetch and inspect merge base, create browser checklist, update handoff and local checkpoint. Do not create Phase 5 branch.
+- Current task: PREP BEFORE PHASE 5; verifier implementation checkpoint 2ced258; full tests pass.
+- Last finished step: `npm test` PASS 135/135; focused helper tests PASS 2/2; migration check PASS 14/14.
+- DONE: maintenance verifier uses random per-run request/quotation identities; scoped business-row cleanup and repeatability tests added. Append-only audit entries are retained.
+- UNVERIFIED: verifier has not yet been run live twice.
+- Pending human action: none for verifier run; fixed named users/org must already exist. No PayPal order is used.
+- NEXT: inspect route calls/no-order safety and run verifier twice; then fetch origin/check merged base, create browser checklist, update docs and WIP-commit. Do not create Phase 5 branch.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2019,3 +2019,9 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-27 IST | ABOUT TO: Record verifier path mismatch and focused fixture/cleanup tests, then create a WIP checkpoint of the implementation. WHY: preserve the exact implementation before full-suite/live repeat verification.
 2026-10-27 IST | RESULT: test/decision/context docs now disclose exact verifier path, run-scoped cleanup, and immutable audit retention; no claims beyond focused test. NEXT: commit implementation/docs locally before full-suite and live repeated verification.
 2026-10-27 IST | ABOUT TO: Create the local WIP verifier repair checkpoint on fund-wiring. WHY: focused regression passed and implementation/docs are ready for full-suite and repeat live verification.
+2026-10-27 IST | RESULT: verifier implementation checkpoint 2ced258 committed locally; no push. NEXT: run full npm test, then inspect live verifier scope/no-order behavior before repeating it twice.
+2026-10-27 IST | ABOUT TO: Run full `npm test` after verifier code and helper tests are checkpointed. WHY: validate the whole repo before any live database workflow.
+2026-10-27 IST | RESULT: full npm test exit 0; output contains exact total. NEXT: inspect live verifier for PayPal order calls and confirm no fixture creation/cleanup targets outside current run before executing it twice.
+2026-10-27 IST | ABOUT TO: Record full suite PASS and inspect maintenance-live script for any PayPal order/capture route before live repeats. WHY: user authorized safe verifier repeat but explicitly prohibits new PayPal orders.
+2026-10-27 IST | RESULT: TEST-REPORT records full 135/135 PASS; CONTEXT/RESUME updated. Source search found only maintenance workflow payment-approval endpoints, no PayPal order/capture route. NEXT: checkpoint these records, then execute verifier twice; it will mutate only its unique maintenance workflow rows and preserve audit history.
+2026-10-27 IST | ABOUT TO: WIP-commit the 135/135 full test result and live-verifier safety review before executing repeat live runs. WHY: checkpoint after implementation and suite validation.
