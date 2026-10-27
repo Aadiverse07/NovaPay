@@ -13,7 +13,7 @@
 - T4: `npm test` PASS 131/131; migrations PASS 14 files; `node --check src/fund-views.js` PASS; `git diff --check` PASS; protected-file diff against main empty.
 
 ## IN PROGRESS
-- Exact task: events API/UI empty-state and AI route badge mapping fixes; final local WIP commit pending.
+- Exact task: events API/UI empty-state and AI route badge mapping fixes; local WIP commit created; see `docs/WORKLOG.md` latest entry.
 - Edited files: `server/src/routes/status.js`, `server/test/routes.test.js`, `src/novapay-live.js`, `src/dashboard.js`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
