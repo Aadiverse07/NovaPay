@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: continue fund-wiring handoff; dependency install and required checks complete.
-- Last finished step: `npm ci` PASS; `npm test` PASS 133/133; `npm run check:migrations` PASS 14/14.
-- DONE: fund views, README, `/api/events` empty-state/cache fix, AI badge route fix; browser showed Route · code with `deterministic_arithmetic`; server log after cache fix showed `/api/events` HTTP 200.
-- UNVERIFIED: direct browser console inspection; HTTP status verified in server logs.
-- Pending human actions: none for current local checks; PR update push was completed earlier, latest docs/checkpoint may be local ahead.
-- NEXT: run through the 3-minute demo using fixed existing data only; then Phase 5 only if time remains. Never create a new PayPal order without authorization.
+- Current task: continuation checks complete; browser demo run-through awaits a browser-enabled session.
+- Last finished step: `npm ci` PASS; `npm test` PASS 133/133; `npm run check:migrations` PASS 14/14; local WIP checkpoint 6f0fd7c.
+- DONE: fund views, README, `/api/events` empty-state/cache fix, AI route badge; prior reload logged `/api/events` HTTP 200 and AI showed `Route · code` / `deterministic_arithmetic`.
+- UNVERIFIED: current 3-minute visual demo; browser inventory says browser use disabled. Package install emitted an install-script approval warning but completed.
+- Pending human action: enable browser use or follow README “Three-minute Phase 6 demo” steps with the fixed test org. Never create a PayPal order without explicit authorization.
+- NEXT: run existing-record 3-minute walkthrough when browser access is available; then Phase 5 only if time remains.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1965,3 +1965,11 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-27 IST | About to append current `npm ci`, `npm test`, and migration-check results and align CONTEXT/RESUME POINTER with current branch commit and next demo step. WHY: tests are complete; handoff had stale 132-test count and prior commit references.
 2026-10-27 IST | Result: appended real check results and corrected stale handoff counts/commit references; NEXT now points to the 3-minute demo using existing data. Files touched: docs/TEST-REPORT.md, docs/CONTEXT.md, docs/WORKLOG.md. NEXT: check branch/worktree and confirm there are no .env changes, then WIP-commit these records.
 2026-10-27 IST | About to create a WIP checkpoint for the fresh dependency/test/migration results and corrected handoff. WHY: three verification steps have completed; user requires WIP commits every 2–3 steps.
+2026-10-27 IST | Result: local WIP checkpoint 6f0fd7c created on fund-wiring; no push. NEXT: continue the documented 3-minute demo using fixed existing data only, or record a blocker if its specific steps/data are unavailable.
+2026-10-27 IST | About to locate README demo-script section and relevant server/API verifier scripts for the next handoff step. WHY: find concrete 3-minute demo commands without creating orders or mutating fixtures.
+2026-10-27 IST | Result: located Phase 6 README section and candidate verification scripts; NEXT: inspect the exact demo steps and select only non-mutating checks using existing data.
+2026-10-27 IST | About to inspect browser availability for the README's read-only 3-minute demo steps. WHY: continue the documented NEXT step using the authenticated fixed organization; no new PayPal order will be created.
+2026-10-27 IST | Result: browser inventory reports local browser use disabled in Work settings; could not execute the visual 3-minute run-through. No browser actions or financial actions taken. NEXT: record demo as UNVERIFIED and hand off the existing-data walkthrough steps.
+2026-10-27 IST | About to update test/decision/context records with this browser-access limitation and the current passing package checks. WHY: accurately distinguish verified tests from the unavailable demo.
+2026-10-27 IST | Result: TEST-REPORT/DECISIONS/CONTEXT and RESUME POINTER updated; visual demo is explicitly UNVERIFIED, checks recorded PASS, no orders created. NEXT: verify branch/status/no `.env`, then checkpoint docs locally.
+2026-10-27 IST | About to create a local WIP checkpoint for current check results and demo limitation. WHY: continuity docs are updated, whitespace is clean, and no `.env` is tracked.

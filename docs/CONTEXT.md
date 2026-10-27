@@ -3,7 +3,7 @@
 ## HEADER
 - Updated: 2026-10-27 Asia/Kolkata.
 - Branch: fund-wiring; PR #3-style PR is open (per user); current local HEAD before this docs checkpoint is c140952; latest remote update was c6e5277.
-- Phase/task: required continuation checks complete; next is 3-minute demo using fixed existing data.
+- Phase/task: required continuation checks complete; visual demo UNVERIFIED because browser use is disabled.
 
 ## DONE
 - STEP 0: `npm ci`; `npm test` PASS 131/131; migrations 0001–0014 parse; server restarted and `/api/status` HTTP 200.
@@ -18,7 +18,7 @@
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. Run through the 3-minute demo using fixed existing data only; do not create a new PayPal order.
+1. Enable browser use or follow README “Three-minute Phase 6 demo” with the fixed existing data; do not create a new PayPal order.
 2. Continue to Phase 5 only if time remains.
 
 ## USER ACTIONS PENDING
@@ -34,6 +34,7 @@
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
 | Unit suite final | PASS 133/133 | 2026-10-27 | `npm test` |
+| Visual 3-minute demo | UNVERIFIED | 2026-10-27 | Browser disabled in Work settings |
 | Migration check final | PASS 14 files | 2026-10-27 | `npm run check:migrations` |
 | Dependency install | PASS 89 packages, 0 vulnerabilities | 2026-10-27 | `npm ci` |
 | JavaScript syntax | PASS | 2026-10-26 | `node --check src/fund-views.js` |
