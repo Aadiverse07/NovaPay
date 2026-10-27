@@ -1108,3 +1108,4 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-27 — Verifier path inspection: `scripts/verify-phase6.js` is absent; the matching fixed-request lifecycle code is in `scripts/verify-phase6-maintenance-live.js`. This was source inspection, not a verifier execution.
 - 2026-10-27 — `node --test server/test/phase6-maintenance-run.test.js`: PASS; 2 passed, 0 failed. Confirms each run gets distinct request/quote names and cleanup uses only supplied run IDs in FK order.
 - 2026-10-27 — `npm test` after repeatable verifier implementation: PASS; 135 passed, 0 failed.
+- 2026-10-27 — First live `node scripts/verify-phase6-maintenance-live.js` invocation: UNVERIFIED overall because command exit summary was not captured after the tool yielded; per-step journal records lifecycle PASS and cleanup PASS for 2 run requests, with immutable audit history retained. No PayPal order/capture endpoint was called.
