@@ -1,8 +1,10 @@
 ## RESUME POINTER
-- Current task: fund-wiring follow-up; events 503/empty-state and AI badge fixes implemented; full tests pass; WIP commit pending.
-- Last finished step: `npm test` PASS 132/132; route regression covers snapshot failure; edited JS syntax and diff whitespace checks pass.
-- Next step: verify clean branch/.env status, commit locally on fund-wiring, then report both fixes and the 503 cause.
-- Pending human action: browser-check activity empty states and AI route/reason hover; no production server log was available.
+- Current task: handoff on fund-wiring; PR #3-style PR for fund-wiring is open (per user).
+- Last finished step: commits `0be75ac` (events empty state and AI route badge) and `d0457b9` (journal checkpoint).
+- DONE: fund views wired; README updated; `/api/events` empty-state fix; AI badge route fix; `npm test` PASS 132/132.
+- UNVERIFIED: browser check of `/api/events` 503 and AI badge.
+- Pending human actions: restart `npm start`; reload dashboard; check console and badge; push `fund-wiring`; teammate merges PR.
+- NEXT: run through the 3-minute demo, then Phase 5 only if time remains.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -1903,3 +1905,7 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-27 IST | Result: WIP commit 0be75ac created locally on fund-wiring; no push. Files: server/src/routes/status.js, server/test/routes.test.js, src/novapay-live.js, src/dashboard.js, docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md. NEXT: checkpoint this post-commit journal result and verify clean status.
 2026-10-27 IST | About to checkpoint the post-commit result in WORKLOG and record the commit identifier in CONTEXT. WHY: leave a clean, accurate continuation record after the code commit.
 2026-10-27 IST | Result: CONTEXT updated with completed local commit status. Files touched: docs/CONTEXT.md, docs/WORKLOG.md. NEXT: make a docs-only journal checkpoint and verify clean status on fund-wiring.
+2026-10-27 IST | About to perform HANDOFF NOW: refresh pointer/CONTEXT, append final verification limits and handoff decision, then check status and commit locally. WHY: preserve exact continuation state; user explicitly said do not push.
+2026-10-27 IST | Result: RESUME POINTER, CONTEXT, TEST-REPORT and DECISIONS updated with requested done/unverified/pending/next state. Files touched: docs/WORKLOG.md, docs/CONTEXT.md, docs/TEST-REPORT.md, docs/DECISIONS.md. NEXT: inspect branch/status and `.env` state, then commit locally only.
+2026-10-27 IST | Result: branch/status checked; branch is fund-wiring and no `.env` is tracked or modified. NEXT: commit HANDOFF NOW docs locally; do not push.
+2026-10-27 IST | About to create local WIP handoff commit containing the updated pointer and docs. WHY: user requests a repo-resumable handoff and prohibits pushing.

@@ -2,7 +2,7 @@
 
 ## HEADER
 - Updated: 2026-10-27 Asia/Kolkata.
-- Branch: fund-wiring; based on main at 874e2e5; local commits only, never push.
+- Branch: fund-wiring; PR #3-style PR for fund-wiring is open (per user); last commits 0be75ac, d0457b9.
 - Phase/task: fund-wiring follow-up; events 503 and AI route badge fixes complete, local commit pending.
 
 ## DONE
@@ -18,11 +18,12 @@
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. Verify status, no `.env` staged/tracked, and commit locally on `fund-wiring`.
-2. User can manually confirm the events empty state and AI route/reason badge in browser.
+1. Human restarts `npm start`, reloads dashboard, checks console and AI badge.
+2. Human pushes `fund-wiring`; teammate merges the open PR.
+3. Run through the 3-minute demo; continue to Phase 5 only if time remains.
 
 ## USER ACTIONS PENDING
-- Browser verification: sign in as fixed owner, open Fundraising/Maintenance/Transparency, inspect console and failed requests, switch light/dark, test mobile drawer, verify notifications and AI chat. No exact PDF was present in repo/attachments; the README demo follows the user's described API sequence.
+- Browser checks of `/api/events` 503 behavior and AI route badge are UNVERIFIED; restart `npm start`, reload dashboard, inspect console and badge. Human push and teammate merge are pending.
 
 ## LIVE STATE
 - Prior user-confirmed applied migrations 0001–0014; no migration changed.
@@ -43,6 +44,7 @@
 | Browser views/theme/mobile/notifications/chat | UNVERIFIED | 2026-10-26 | manual browser checks pending |
 | Exact attached-PDF script | UNVERIFIED | 2026-10-26 | PDF unavailable in repo/attachments |
 | Events failure fallback | PASS | 2026-10-27 | `npm test`; route regression test |
+| Browser events 503 and AI badge | UNVERIFIED | 2026-10-27 | Manual dashboard check pending |
 | Events 503 cause | Confirmed | 2026-10-27 | degraded-auth log + `foundation.test.js`; `SUPABASE_NOT_CONFIGURED` before route |
 | AI route badge field mapping | PASS | 2026-10-27 | `npm test`; frontend reads `response.route` and reason |
 | JavaScript syntax/whitespace | PASS | 2026-10-27 | `node --check` on edited JS; `git diff --check` |
