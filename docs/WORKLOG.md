@@ -1973,3 +1973,4 @@ RESULT — 2026-10-26 16:20:51 Asia/Kolkata: PASS: Verify final closure and evid
 2026-10-27 IST | About to update test/decision/context records with this browser-access limitation and the current passing package checks. WHY: accurately distinguish verified tests from the unavailable demo.
 2026-10-27 IST | Result: TEST-REPORT/DECISIONS/CONTEXT and RESUME POINTER updated; visual demo is explicitly UNVERIFIED, checks recorded PASS, no orders created. NEXT: verify branch/status/no `.env`, then checkpoint docs locally.
 2026-10-27 IST | About to create a local WIP checkpoint for current check results and demo limitation. WHY: continuity docs are updated, whitespace is clean, and no `.env` is tracked.
+2026-10-27 IST | Result: local WIP commit f90a36f created on fund-wiring; no push. NEXT: user can run the README demo when browser is enabled; Phase 5 only if time remains.
