@@ -1095,3 +1095,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-27 — `node --check src/novapay-live.js && node --check src/dashboard.js && node --check server/src/routes/status.js`: PASS; all edited JavaScript parses.
 - 2026-10-27 — `git diff --check`: PASS; no whitespace errors.
 - 2026-10-27 — Browser verification of `/api/events` 503 empty state and AI badge route/reason: UNVERIFIED; dashboard reload and console inspection remain pending.
+- 2026-10-27 — Authenticated dashboard reload: `/api/events` returned HTTP 304 on repeated requests; the fetch client treats 304 as non-ok, causing its empty-state fallback. Browser console was not accessible through current computer-use permissions.
+- 2026-10-27 — `node --test server/test/api-client.test.js`: PASS; no-store cache option and X-Org-Id verified.
+- 2026-10-27 — `npm test`: PASS; 133 passed, 0 failed, including events snapshot-failure and API no-store regressions.
+- 2026-10-27 — Post-cache-fix authenticated dashboard reload: `/src/api-client.js` served HTTP 200 and subsequent `/api/events` request returned HTTP 200 in server logs; repeat-poll 304 no longer observed in this reload. Browser console inspection remains UNVERIFIED due unavailable computer-use permission.

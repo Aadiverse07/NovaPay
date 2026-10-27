@@ -43,10 +43,10 @@
 | Maintenance verifier expected state | FAIL | 2026-10-26 | existing row closed, verifier expected payment_approved |
 | Browser views/theme/mobile/notifications/chat | UNVERIFIED | 2026-10-26 | manual browser checks pending |
 | Exact attached-PDF script | UNVERIFIED | 2026-10-26 | PDF unavailable in repo/attachments |
-| Events failure fallback | PASS | 2026-10-27 | `npm test`; route regression test |
-| Browser events 503 and AI badge | UNVERIFIED | 2026-10-27 | Manual dashboard check pending |
+| Events failure fallback/cache bypass | PASS | 2026-10-27 | `npm test`; snapshot fallback, no-store test, post-reload `/api/events` HTTP 200 |
+| Browser events console | UNVERIFIED | 2026-10-27 | Console inaccessible; server log showed 304 before cache fix |
 | Events 503 cause | Confirmed | 2026-10-27 | degraded-auth log + `foundation.test.js`; `SUPABASE_NOT_CONFIGURED` before route |
-| AI route badge field mapping | PASS | 2026-10-27 | `npm test`; frontend reads `response.route` and reason |
+| AI route badge field mapping | PASS | 2026-10-27 | browser shows Route · code; tooltip/help deterministic_arithmetic |
 | JavaScript syntax/whitespace | PASS | 2026-10-27 | `node --check` on edited JS; `git diff --check` |
 
 ## KNOWN ISSUES AND RISKS
