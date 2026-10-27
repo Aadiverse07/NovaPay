@@ -1090,3 +1090,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-26 — `node --check src/fund-views.js`: PASS; exit 0.
 - 2026-10-26 — `git diff --check`: PASS; no whitespace errors.
 - 2026-10-26 — `git diff --stat main -- <protected files>`: PASS; empty diff.
+- 2026-10-27 — `node --test server/test/routes.test.js` (sandbox attempt): FAIL at setup; six HTTP-listener tests received `listen EPERM`, two non-listener tests passed. No assertion failure; rerun under full access passed as part of the full suite.
+- 2026-10-27 — `npm test`: PASS; 132 passed, 0 failed. Includes regression test `events route returns empty activity when the snapshot read fails`.
+- 2026-10-27 — `node --check src/novapay-live.js && node --check src/dashboard.js && node --check server/src/routes/status.js`: PASS; all edited JavaScript parses.
+- 2026-10-27 — `git diff --check`: PASS; no whitespace errors.

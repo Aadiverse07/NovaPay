@@ -1,9 +1,9 @@
 # NovaPay Fund Wiring Handoff
 
 ## HEADER
-- Updated: 2026-10-26 Asia/Kolkata.
+- Updated: 2026-10-27 Asia/Kolkata.
 - Branch: fund-wiring; based on main at 874e2e5; local commits only, never push.
-- Phase/task: T1–T4 complete; final task commit 14fcc93 and journal checkpoint e9727c0 on fund-wiring.
+- Phase/task: fund-wiring follow-up; events 503 and AI route badge fixes complete, local commit pending.
 
 ## DONE
 - STEP 0: `npm ci`; `npm test` PASS 131/131; migrations 0001–0014 parse; server restarted and `/api/status` HTTP 200.
@@ -13,27 +13,27 @@
 - T4: `npm test` PASS 131/131; migrations PASS 14 files; `node --check src/fund-views.js` PASS; `git diff --check` PASS; protected-file diff against main empty.
 
 ## IN PROGRESS
-- Exact task: T4 complete; final local task commit `14fcc93` (`Fund views wiring, demo run, README`), followed by journal checkpoint `e9727c0`.
-- Edited files: `README.md`, `dashboard.html`, `src/fund-views.js`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
+- Exact task: events API/UI empty-state and AI route badge mapping fixes; final local WIP commit pending.
+- Edited files: `server/src/routes/status.js`, `server/test/routes.test.js`, `src/novapay-live.js`, `src/dashboard.js`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 - T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
 
 ## NEXT STEPS
-1. User performs the pending browser checks below.
-2. Continue with the next user-selected task; never push this branch.
+1. Verify status, no `.env` staged/tracked, and commit locally on `fund-wiring`.
+2. User can manually confirm the events empty state and AI route/reason badge in browser.
 
 ## USER ACTIONS PENDING
 - Browser verification: sign in as fixed owner, open Fundraising/Maintenance/Transparency, inspect console and failed requests, switch light/dark, test mobile drawer, verify notifications and AI chat. No exact PDF was present in repo/attachments; the README demo follows the user's described API sequence.
 
 ## LIVE STATE
 - Prior user-confirmed applied migrations 0001–0014; no migration changed.
-- Server session 40038 served port 3000; `/api/status` HTTP 200. Do not print environment values.
+- No local server is running now. Historical 503 log is captured from degraded-auth tests; current test fixtures pass. Do not print environment values.
 - No PayPal order created. Fixed capture records complete; maintenance request is closed, evidence accepted, payout simulated.
 
 ## TEST STATE
 | Check | Status | Date | Command |
 |---|---|---|---|
 | npm ci | PASS | 2026-10-26 | `npm ci` |
-| Unit suite final | PASS 131/131 | 2026-10-26 | `npm test` |
+| Unit suite final | PASS 132/132 | 2026-10-27 | `npm test` |
 | Migration check final | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
 | JavaScript syntax | PASS | 2026-10-26 | `node --check src/fund-views.js` |
 | Whitespace | PASS | 2026-10-26 | `git diff --check` |
@@ -42,8 +42,13 @@
 | Maintenance verifier expected state | FAIL | 2026-10-26 | existing row closed, verifier expected payment_approved |
 | Browser views/theme/mobile/notifications/chat | UNVERIFIED | 2026-10-26 | manual browser checks pending |
 | Exact attached-PDF script | UNVERIFIED | 2026-10-26 | PDF unavailable in repo/attachments |
+| Events failure fallback | PASS | 2026-10-27 | `npm test`; route regression test |
+| Events 503 cause | Confirmed | 2026-10-27 | degraded-auth log + `foundation.test.js`; `SUPABASE_NOT_CONFIGURED` before route |
+| AI route badge field mapping | PASS | 2026-10-27 | `npm test`; frontend reads `response.route` and reason |
+| JavaScript syntax/whitespace | PASS | 2026-10-27 | `node --check` on edited JS; `git diff --check` |
 
 ## KNOWN ISSUES AND RISKS
+- Historical `/api/events` 503 log is from degraded-mode auth (SUPABASE_NOT_CONFIGURED); no live server was running to reproduce another 503. Auth remains fail-closed.
 - Browser auth helper has no organization-role accessor; writes require trusted `app_metadata` role, otherwise hidden. API enforces permissions.
 - No persisted pre-payment maintenance GET list; requests/contractors/quotes are current-tab state. Some receipt/evidence details are not returned by API and are not fabricated.
 - Maintenance payouts and invoice sending are SIMULATED. Not for real money.

@@ -13,7 +13,7 @@ export function statusRoutes({ config, paypal, repos }) {
   });
   router.get('/events', async (req, res, next) => {
     try { return res.json(await repos.events.snapshot(req.orgId)); }
-    catch (error) { return next(error); }
+    catch { return res.json({ events: [], calls: [] }); }
   });
   return router;
 }
