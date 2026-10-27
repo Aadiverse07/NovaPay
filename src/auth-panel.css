@@ -33,7 +33,16 @@
 :root[data-theme="light"] .modal.auth-split { box-shadow: 0 0 0 1px rgba(47,102,245,.12), 0 30px 90px rgba(47,102,245,.22); }
 :root[data-theme="dark"]  .modal.auth-split { box-shadow: 0 0 0 1px rgba(var(--glow-lav), .25), 0 0 46px rgba(var(--glow-lav), .28), 0 24px 80px rgba(0,0,0,.55); }
 
-:root .modal.auth-split .modal-close { z-index: 6; }
+:root .modal.auth-split .modal-close {
+  z-index: 20; left: 14px; right: auto; top: 14px;
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,.8); border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 92%, white);
+  color: #15213b; font-size: 25px; line-height: 1;
+  box-shadow: 0 4px 16px rgba(8,18,42,.24);
+}
+:root .modal.auth-split .modal-close:hover { background: white; color: #0b1731; }
+:root .modal.auth-split .modal-close:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
 :root .modal.auth-split .auth-stage { position: relative; width: 100%; height: 100%; }
 
@@ -42,10 +51,11 @@
   position: absolute; right: 0; top: -5px; height: 600px; width: 850px;
   background: var(--brand-gradient);
   border-bottom: 3px solid var(--auth-accent);
+  translate: 0 0;
   transform: rotate(10deg) skewY(40deg); transform-origin: bottom right;
   transition: 1.5s ease; transition-delay: 1.6s;
 }
-:root .modal.auth-split .auth-stage.active .curved-shape { transform: rotate(0) skewY(0); transition-delay: .5s; }
+:root .modal.auth-split .auth-stage.active .curved-shape { translate: 0 -54px; transform: rotate(0) skewY(0); transition-delay: .5s; }
 
 :root .modal.auth-split .curved-shape2 {
   position: absolute; left: 250px; top: 100%; height: 700px; width: 850px;
@@ -92,6 +102,17 @@
 :root .modal.auth-split .form-box.Register { pointer-events: none; }
 :root .modal.auth-split .auth-stage.active .form-box.Register { pointer-events: auto; }
 :root .modal.auth-split .auth-stage.active .form-box.Login { pointer-events: none; }
+
+/* Lift only the signup form content inside the fixed desktop panel. */
+@media (min-width: 761px) {
+  :root .modal.auth-split .auth-stage.active .form-box.Register { translate: 0 -32px; }
+  :root .modal.auth-split .auth-stage.active .info-content.Register { translate: 0 -32px; }
+  :root .modal.auth-split .form-box.Register,
+  :root .modal.auth-split .info-content.Register { translate: 0 0; transition: translate .7s ease; }
+}
+
+
+
 
 /* ---- inputs (underline style from the supplied design) ---- */
 :root .modal.auth-split .input-box { position: relative; width: 100%; height: 46px; margin-top: 20px; }
@@ -143,6 +164,9 @@
 }
 :root .modal.auth-split .auth-google:hover { border-color: var(--auth-link); color: var(--auth-link); }
 :root .modal.auth-split .auth-google .google-g { width: 20px; height: 20px; font-size: 11px; }
+:root .modal.auth-split .auth-google.animation {
+  transition: transform .7s ease, opacity .7s ease, filter .7s ease, border-color .3s, color .3s;
+}
 
 :root .modal.auth-split .auth-forgot { display: flex; justify-content: flex-end; margin-top: 8px; }
 :root .modal.auth-split .auth-forgot .text-button { font-size: 11px; }
@@ -175,3 +199,15 @@
 @media (prefers-reduced-motion: reduce) {
   :root .modal.auth-split .curved-shape, :root .modal.auth-split .curved-shape2, :root .modal.auth-split .animation { transition-duration: .01s !important; transition-delay: 0s !important; }
 }
+
+/* Login / Sign Up side-panel logo: use the transparent artwork (no square backdrop) and brighten it. */
+:root .modal.auth-split .info-content .auth-mark .novapay-logo-svg {
+  content: url("../assets/novapay-mark-clean.png");
+  background: none;
+  filter: brightness(1.35) saturate(1.3) contrast(1.05) drop-shadow(0 0 10px rgba(255,255,255,.55)) drop-shadow(0 2px 8px rgba(0,30,90,.35));
+}
+
+/* Keep the welcome text where it was after the "test login" hint was removed (content is vertically centred,
+   so the freed space is added back as bottom padding). */
+:root .modal.auth-split .info-content.Login    { padding-bottom: 128px; }
+:root .modal.auth-split .info-content.Register { padding-bottom: 92px; }
