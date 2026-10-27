@@ -1110,3 +1110,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-27 — `npm test` after repeatable verifier implementation: PASS; 135 passed, 0 failed.
 - 2026-10-27 — First live `node scripts/verify-phase6-maintenance-live.js` invocation: UNVERIFIED overall because command exit summary was not captured after the tool yielded; per-step journal records lifecycle PASS and cleanup PASS for 2 run requests, with immutable audit history retained. No PayPal order/capture endpoint was called.
 - 2026-10-27 — Second live `node scripts/verify-phase6-maintenance-live.js`: PASS; HTTP 200, under-threshold and exact-threshold requests reached `payment_approved`, 21 API steps, 0 users/orgs created, 2 run request rows cleaned, audit history preserved. No PayPal order/capture endpoint called.
+- 2026-10-27 — `npm run check:migrations` (PREP ORIENT): PASS; all 14 migration files parsed.
+- 2026-10-27 — Remote merge-base inspection: `git fetch origin` then `git branch -r --merged origin/main`; fund-wiring not merged. Recommended base is fund-wiring.

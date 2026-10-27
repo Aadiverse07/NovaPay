@@ -2,7 +2,7 @@
 
 ## HEADER
 - Updated: 2026-10-27 Asia/Kolkata.
-- Branch: fund-wiring; PR #3-style PR is open (per user); current local HEAD before this docs checkpoint is c140952; latest remote update was c6e5277.
+- Branch: fund-wiring; PR #3-style PR is open (per user). `origin/fund-wiring` was pushed through 0cfc368; later verifier/docs commits are local and unpushed. `origin/main` fetched at 91d1df4; fund-wiring is not merged.
 - Phase/task: PREP BEFORE PHASE 5; current turn fresh checks PASS 135/135, migrations 14/14; verifier repair implemented; live repeat verification pending.
 
 ## DONE
@@ -19,11 +19,11 @@
 
 ## NEXT STEPS
 1. Repair `scripts/verify-phase6-maintenance-live.js` is absent; updated `scripts/verify-phase6-maintenance-live.js` with run-unique requests and run-scoped FK-safe cleanup; helper regression tests pass (2/2); full suite 135/135. Second live run PASS; first run overall remains UNVERIFIED due uncaptured exit.
-2. Fetch origin and check whether fund-wiring is merged; do not create Phase 5 branch.
-3. Create `docs/BROWSER-CHECKLIST.md`; then final local WIP checkpoint. The 3-minute demo remains the next demo activity.
+2. Use fund-wiring as Phase 5 base because it is not merged to main; do not create Phase 5 branch yet.
+3. Human completes `docs/BROWSER-CHECKLIST.md`; then run the 3-minute demo. Phase 5 only if time remains.
 
 ## USER ACTIONS PENDING
-- Browser checks of `/api/events` 503 behavior and AI route badge are UNVERIFIED; restart `npm start`, reload dashboard, inspect console and badge. Human push and teammate merge are pending.
+- Browser checks are listed in `docs/BROWSER-CHECKLIST.md`; browser automation was unavailable. Human should fill PASS/FAIL, push any remaining local fund-wiring commits, and teammate merges the PR.
 
 ## LIVE STATE
 - Prior user-confirmed applied migrations 0001–0014; no migration changed.
@@ -53,6 +53,8 @@
 | JavaScript syntax/whitespace | PASS | 2026-10-27 | `node --check` on edited JS; `git diff --check` |
 
 ## KNOWN ISSUES AND RISKS
+- `scripts/verify-phase6.js` was not present; repaired actual matching `scripts/verify-phase6-maintenance-live.js`. First live run exit remains UNVERIFIED; second passed. Audit rows persist by design.
+- Remote branch was pushed through 0cfc368 at the permitted push step; subsequent commits are local, so PR currently needs those commits pushed by the human.
 - Requested `scripts/verify-phase6.js` is absent; the matching `scripts/verify-phase6-maintenance-live.js` was repaired. First live invocation final exit is UNVERIFIED; second invocation passed. Immutable audit history accumulates by design.
 - Historical `/api/events` 503 log is from degraded-mode auth (SUPABASE_NOT_CONFIGURED); no live server was running to reproduce another 503. Auth remains fail-closed.
 - Browser auth helper has no organization-role accessor; writes require trusted `app_metadata` role, otherwise hidden. API enforces permissions.

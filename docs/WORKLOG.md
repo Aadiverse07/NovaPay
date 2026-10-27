@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: PREP BEFORE PHASE 5; verifier repair and repeat run complete; base check/checklist pending.
-- Last finished step: second live verifier PASS, 21 API steps; cleaned 2 run request rows; no users/orgs created; audit history retained.
-- DONE: fresh requests/quotes per run, run-scoped cleanup, helper tests 2/2, full npm test 135/135, migration check 14/14.
-- UNVERIFIED: first live verifier invocation final exit; its per-step journal and cleanup were PASS. Browser checklist not yet written.
-- Pending human action: browser checklist steps after file created; PR merge by teammate.
-- NEXT: `git fetch origin`; inspect `git branch -r --merged origin/main`, recommend base only; do not create Phase 5 branch. Then write browser checklist, update docs, local WIP commit.
+- Current task: PREP BEFORE PHASE 5; verification, base check and checklist authoring complete; final local checkpoint pending.
+- Last finished step: local verifier 2ced258 plus logs; second live run PASS (21 API steps, 2 requests cleaned, no users/orgs created); full tests PASS 135/135.
+- DONE: fund-wiring, README, cache/empty-state and AI badge fixes; `docs/BROWSER-CHECKLIST.md` created; all 14 migrations parse.
+- UNVERIFIED: first live verifier invocation's exit; its step/cleanup log passes. Browser checks remain for human.
+- Pending human actions: complete checklist; push local commits since remote 0cfc368; teammate merges PR.
+- NEXT: use fund-wiring as Phase 5 base (not merged to origin/main); do not create branch yet. After human checklist/PR update, run 3-minute demo; Phase 5 only if time remains.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2237,3 +2237,11 @@ RESULT — 2026-10-27 23:32:11 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-27 IST | RESULT: second live verifier exit 0; captured output above includes final summary and cleanup count. NEXT: record exact result, fetch origin, and inspect merged branches; do not create Phase 5 branch.
 2026-10-27 IST | ABOUT TO: Append second live verifier PASS to TEST-REPORT and update CONTEXT/RESUME before WIP checkpoint. WHY: captured exit 0 proves the run-specific fixture/cleanup succeeds on repeat.
 2026-10-27 IST | RESULT: TEST-REPORT records second verifier PASS and CONTEXT/RESUME state reflects first-run exit uncertainty and next base check. Files touched: docs/TEST-REPORT.md, docs/CONTEXT.md, docs/WORKLOG.md. NEXT: checkpoint docs, then fetch origin and determine whether fund-wiring is merged.
+2026-10-27 IST | ABOUT TO: Run `git fetch origin` and inspect remote branches merged into `origin/main`. WHY: determine the correct base recommendation without creating a Phase 5 branch.
+2026-10-27 IST | RESULT: fetched origin and listed remote branches merged into origin/main; inspect output for fund-wiring inclusion. NEXT: record base recommendation, then author the requested browser checklist.
+2026-10-27 IST | RESULT: fetched origin/main at 91d1df4; `origin/fund-wiring` is absent from `git branch -r --merged origin/main`, so it is NOT merged. Recommended Phase 5 base: fund-wiring. NEXT: create browser checklist and update handoff; do not create branch or push.
+2026-10-27 IST | ABOUT TO: Create `docs/BROWSER-CHECKLIST.md` with exact manual clicks and blank PASS/FAIL column. WHY: browser automation is unavailable; user requested a hand-fillable checklist.
+2026-10-27 IST | RESULT: created `docs/BROWSER-CHECKLIST.md` with 7 exact manual checks and blank PASS/FAIL/Notes columns. NEXT: update CONTEXT/TEST-REPORT/DECISIONS/RESUME with branch recommendation, push caveat and verifier outcomes; then local WIP commit.
+2026-10-27 IST | ABOUT TO: Update CONTEXT/TEST-REPORT/DECISIONS and RESUME POINTER with fetched merge-base result, fresh verifier/test status, and the manual checklist path. WHY: prepare Phase 5 handoff without creating its branch.
+2026-10-27 IST | RESULT: CONTEXT, TEST-REPORT, DECISIONS and RESUME POINTER updated; origin merge check says fund-wiring is not merged, base recommendation fund-wiring; browser checklist available. NEXT: validate status/no secrets and whitespace, then local WIP commit; do not push or create Phase 5 branch.
+2026-10-27 IST | ABOUT TO: Create local WIP checkpoint for verifier/base/checklist work before the final post-verifier suite run. WHY: preserve completed outputs before fresh validation.

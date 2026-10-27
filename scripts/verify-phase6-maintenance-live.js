@@ -6,9 +6,9 @@ import { config } from '../server/src/config.js';
 import { buildMaintenanceRunFixtures, cleanupMaintenanceRun } from './phase6-maintenance-run.mjs';
 
 const journalPath = new URL('../docs/WORKLOG.md', import.meta.url);
-const sb = config.SUPABASE_URL.replace(/\/$/, '');
-const serviceKey = config.SUPABASE_SERVICE_ROLE_KEY;
-const anonKey = config.SUPABASE_ANON_KEY;
+const sb = (config.SUPABASE_URL || '').replace(/\/$/, '');
+const serviceKey = config.SUPABASE_SERVICE_ROLE_KEY || '';
+const anonKey = config.SUPABASE_ANON_KEY || '';
 const serviceHeaders = { apikey: serviceKey, ...(serviceKey.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${serviceKey}` }), 'Content-Type': 'application/json' };
 const anonHeaders = { apikey: anonKey, 'Content-Type': 'application/json' };
 const fixture = {
