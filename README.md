@@ -268,3 +268,32 @@ New: `src/logo-intro.css`, `src/logo-intro.js`, `assets/np-layer-n.png`, `np-lay
 - Sequence (~2.8s on page load): **N** draws up from its base → **P** grows out from its stem with the orbit swoosh → the pixel squares flicker on → **NovaPay** forms letter by letter.
 - Click the logo to replay (or call `window.novapayLogoReplay()`). `prefers-reduced-motion` shows the finished logo immediately.
 - To revert: restore the original `<a class="landing-brand">…</a>` block in `preview.html` and remove the two new tags.
+
+## Phase 6: what is real and what is simulated
+
+NovaPay connects to PayPal **Sandbox** for test payments and refunds, verifies signed webhooks, posts verified captures/refunds to the ledger, uses Supabase Auth with organization-scoped RLS, and answers organization questions with cited AI evidence through the configured free-tier Gemini model. These integrations are for testing and evaluation; **NovaPay is not for real money or production fundraising.**
+
+Invoice sending is **SIMULATED**: no PayPal invoice is created and no recipient is notified. Maintenance payouts are **SIMULATED** because PayPal Payouts Sandbox is unavailable; approval only queues the workflow, with no money sent and no ledger entry. A simulated payment must never be presented as a completed payout.
+
+## Run the Phase 6 backend
+
+1. Copy `.env.example` to the ignored local `.env` and configure the key names required for the services you use: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL`, and `PAYPAL_INVOICE_SEND_MODE`. Keep the service-role and provider keys on the server; never put them in browser code or commits.
+2. Install and start the service:
+
+   ```sh
+   npm ci
+   npm start
+   ```
+
+   The API and dashboard use port 3000 by default. Check `GET /api/status` before the demo.
+3. If testing a webhook, expose `http://localhost:3000` through a trusted HTTPS tunnel. In the PayPal Sandbox app, set the webhook URL to `https://<public-tunnel-host>/api/webhook`; configure the capture event used by the test, set `PAYPAL_WEBHOOK_ID` to that webhook's ID, and restart the server. The tunnel must forward raw webhook bytes for signature verification.
+
+## Three-minute Phase 6 demo
+
+Use the existing fixed test organization and records. This walkthrough creates no PayPal order.
+
+1. **Sign in and confirm the payment.** Sign in with an existing fixed test account. Open Transactions and locate a completed PayPal Sandbox capture.
+2. **Show the books.** Open Ledger and confirm the capture is posted and the USD trial balance balances. Open Approvals and show the current pending count.
+3. **Show both AI routes.** Ask `What is 7 + 5?` and point out the `code` route. Then ask `Is the latest PayPal capture consistent with its ledger record? Cite the records used.` and show the `llm` route and citation chips.
+4. **Follow the fund.** Open Fundraising and review the campaign summary. Open Maintenance and show the existing closed request, accepted evidence, and `SIMULATED` payment status. Open Transparency and point out the explicit gaps, including `no payment reference` and `simulated, no ledger entry`; owner/admin users can download the audit CSV.
+5. **Close with the boundary.** Captures and refunds are PayPal Sandbox operations with signed webhook verification; maintenance payouts and invoice sending are simulated. No production funds move.
