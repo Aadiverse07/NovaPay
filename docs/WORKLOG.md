@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: PREP BEFORE PHASE 5; verification, base check and checklist authoring complete; final local checkpoint pending.
-- Last finished step: local verifier 2ced258 plus logs; second live run PASS (21 API steps, 2 requests cleaned, no users/orgs created); full tests PASS 135/135.
-- DONE: fund-wiring, README, cache/empty-state and AI badge fixes; `docs/BROWSER-CHECKLIST.md` created; all 14 migrations parse.
-- UNVERIFIED: first live verifier invocation's exit; its step/cleanup log passes. Browser checks remain for human.
-- Pending human actions: complete checklist; push local commits since remote 0cfc368; teammate merges PR.
-- NEXT: use fund-wiring as Phase 5 base (not merged to origin/main); do not create branch yet. After human checklist/PR update, run 3-minute demo; Phase 5 only if time remains.
+- Current task: PREP BEFORE PHASE 5 complete; final local WIP checkpoint pending.
+- Last finished step: third live verifier PASS; two consecutive captured PASS runs, each 21 API steps, 2 run requests cleaned, no users/orgs created; audit rows retained.
+- DONE: fund views, README, `/api/events` cache/empty-state fixes, AI route badge, repeat-safe T3 verifier; `npm test` 135/135; migrations 14/14; browser checklist created.
+- UNVERIFIED: first live verifier invocation exit only; its steps and cleanup logged PASS. Browser checks await human.
+- Pending human actions: push remaining local commits using only `git push origin fund-wiring`; teammate merges PR; fill docs/BROWSER-CHECKLIST.md.
+- NEXT: after PR merge, use `main` only if fund-wiring is merged; otherwise base Phase 5 on fund-wiring. Do not create Phase 5 branch until requested; run 3-minute demo before Phase 5 if time remains.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2245,3 +2245,327 @@ RESULT — 2026-10-27 23:32:11 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-27 IST | ABOUT TO: Update CONTEXT/TEST-REPORT/DECISIONS and RESUME POINTER with fetched merge-base result, fresh verifier/test status, and the manual checklist path. WHY: prepare Phase 5 handoff without creating its branch.
 2026-10-27 IST | RESULT: CONTEXT, TEST-REPORT, DECISIONS and RESUME POINTER updated; origin merge check says fund-wiring is not merged, base recommendation fund-wiring; browser checklist available. NEXT: validate status/no secrets and whitespace, then local WIP commit; do not push or create Phase 5 branch.
 2026-10-27 IST | ABOUT TO: Create local WIP checkpoint for verifier/base/checklist work before the final post-verifier suite run. WHY: preserve completed outputs before fresh validation.
+2026-10-27 IST | RESULT: handoff checkpoint 2d15707 created locally; no push or Phase 5 branch creation. NEXT: run
+> novapay@2.0.0 test
+> node scripts/check-migrations.js && node --test server/test/*.test.js
+
+0001_foundation.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0002_financial_core.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0003_fx_reports_invoices.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0004_fix_invoice_paid_amount.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0005_ai.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0006_fund_transparency.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0007_fund_contributions.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0008_fund_contribution_accounting.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0009_maintenance_state_machine.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0010_simulated_maintenance_payments.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0011_completion_evidence_review.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0012_fund_transparency_read_export.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0013_fix_transparency_campaign_json.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+0014_fix_transparency_approval_order.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+✔ daily user budget blocks a second distinct provider request with zero second call (18.62125ms)
+✔ concurrent reservations cannot exceed the organization budget (0.942917ms)
+✔ repeat safe answer is cached, but changed data version and another org miss (1.346667ms)
+✔ proposals, insufficient evidence, expired cache and too-long input are not cached or sent (2.423833ms)
+✔ daily usage resets at the UTC date boundary (0.216416ms)
+✔ read-only tools always scope database calls to the verified org, ignoring model/request org IDs (0.91725ms)
+✔ tool executor allow-lists names, blocks duplicate calls, and caps calls per request (0.366625ms)
+✔ tool calls time out and result bodies are bounded (4.702041ms)
+✔ invoice evidence drops names, emails, free-text descriptions, and model instructions (2.101959ms)
+✔ explanation evidence uses static allow-listed tools and extracts period filters (0.70625ms)
+✔ tool creation requires a verified organization context (0.28325ms)
+✔ intent router classifies 40+ normal, ambiguous, mixed-language, typo, and adversarial examples (4.62425ms)
+✔ FX intent wins over other instructions and returns only an allowed route with reason metadata (0.068291ms)
+✔ structured queries precede explanation, documents precede general fallback, and unknown goes to LLM (0.053458ms)
+✔ router dispatch attaches deterministic metadata and never trusts an input route field (0.086375ms)
+✔ AI sanitizer safely handles malformed JSON (1.222125ms)
+✔ AI sanitizer handles empty reply (1.010167ms)
+✔ AI sanitizer maps unknown proposal types to other (0.113292ms)
+✔ AI sanitizer removes foreign evidence IDs and keeps known IDs (0.080708ms)
+✔ AI sanitizer rejects unknown top-level fields and oversized output (0.101792ms)
+✔ AI sanitizer maps an unknown proposal type to a non-executable other suggestion (0.063125ms)
+✔ AI context drops buyer and unknown fields; user text redacts common sensitive values (3.052833ms)
+✔ PII redaction masks Unicode names, addresses, phone, account/card numbers, and tokens without near-match over-redaction (0.730167ms)
+✔ AI service rejects numeric claims absent from evidence and labels missing evidence (9.025334ms)
+✔ AI service refuses an unknown record ID embedded in prose (0.325958ms)
+✔ database text is fenced as escaped untrusted data and cannot add proposal instructions (0.32625ms)
+✔ provider failure becomes a safe temporary-unavailable response without exposing provider text (0.086458ms)
+✔ an AI refund proposal creates only a pending org-scoped approval and never calls PayPal (2.587459ms)
+✔ an uncited AI proposal does not create an approval (0.297208ms)
+✔ FX and structured refund questions bypass the LLM and report zero provider tokens (0.478958ms)
+✔ fee-rate spike uses trailing fee-bearing captures and exact threshold boundary (1.207208ms)
+✔ duplicate amount+payer requires a payer reference and a duplicate within the configured window (0.629208ms)
+✔ refund-rate spike is based on completed gross totals with an exact configured boundary (0.758042ms)
+✔ large payout, reconciliation mismatch, stale webhook and dead-letter boundaries (0.3435ms)
+✔ anomaly persistence is idempotent and creates a notification only once (0.769791ms)
+✔ scheduled anomaly worker scans known organizations and can stop cleanly (2.757792ms)
+✔ authenticated API client bypasses conditional HTTP caching (13.813125ms)
+✔ audit helper writes tenant, actor, request, and action fields without response bodies (1.315375ms)
+✔ audit helper reports failure without echoing provider details (0.389834ms)
+✔ legacy Phase 0 error keeps its string and adds a sibling route/status code (0.526584ms)
+✔ new Phase 1 errors use the structured error object shape (0.059333ms)
+{"level":"info","requestId":"8eeaa5ff-02d3-4710-8511-606d0018d370","method":"GET","path":"/api/transactions","status":401,"durationMs":6}
+{"level":"info","requestId":"af5beb62-7657-49e6-8124-f2f30ff3b53b","method":"GET","path":"/api/transactions","status":400,"durationMs":2}
+{"level":"info","requestId":"9b470051-1f18-4736-b4de-700a525810f2","method":"GET","path":"/api/transactions","status":200,"durationMs":2}
+{"level":"info","requestId":"94b4c626-0005-4002-bd5a-394c3c7b314c","method":"GET","path":"/api/ledger/entries","status":400,"durationMs":1}
+{"level":"info","requestId":"7eb009f3-3400-4ac1-b2e9-272cfd412d19","method":"GET","path":"/api/ledger/entries","status":400,"durationMs":1}
+{"level":"info","requestId":"b9828cb0-1e05-45d5-bfdd-60d14ae505c0","method":"GET","path":"/api/ledger/entries","status":200,"durationMs":1}
+{"level":"info","requestId":"57058dd6-d664-47e2-ba3d-8638550c584f","method":"GET","path":"/api/ledger/trial-balance","status":403,"durationMs":1}
+{"level":"info","requestId":"db3a6e81-d47a-4a2a-8fa9-c814836f94c8","method":"GET","path":"/api/ledger/trial-balance","status":200,"durationMs":1}
+{"level":"info","requestId":"c68fea70-061f-4c66-89f6-f277b597c358","method":"GET","path":"/api/reconciliation","status":200,"durationMs":0}
+{"level":"info","requestId":"f0eaab9a-ff8d-42c6-9b5e-c41fde618076","method":"GET","path":"/api/approvals","status":200,"durationMs":0}
+✔ Phase 2 read APIs validate filters, enforce tenant membership, and return structured errors (72.177125ms)
+{"level":"info","requestId":"018e58d0-8917-4e1a-acb1-973568f3a2d7","method":"GET","path":"/api/transactions","status":503,"durationMs":5}
+✔ financial database failures return safe structured errors without provider details or stacks (12.744459ms)
+{"level":"info","requestId":"7759a3ef-4a62-4540-842c-e172829192f3","method":"POST","path":"/api/approvals/register","status":400,"durationMs":5}
+{"level":"info","requestId":"5443859c-d1a1-4b76-ba82-212a805faf0f","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":403,"durationMs":0}
+{"level":"info","requestId":"da61ae2b-ed81-4b19-a9e2-668014da74aa","method":"POST","path":"/api/approvals/register","status":200,"durationMs":1}
+{"level":"info","requestId":"e18e693c-3de2-430d-9c3d-53fcb25e5835","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":409,"durationMs":0}
+{"level":"info","requestId":"19eae029-c1fe-4d9c-a704-942bf57efe18","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":200,"durationMs":34}
+{"level":"info","requestId":"affeded8-8511-48cd-94ed-41be8f5c60aa","method":"POST","path":"/api/approvals/APR-ROUTE-1/decision","status":200,"durationMs":0}
+{"level":"info","requestId":"e3a7510c-fe0e-42ae-a2fd-9d829f41e0e0","method":"GET","path":"/api/approvals/pending-count","status":200,"durationMs":1}
+✔ refund registration rejects over-capture amount and concurrent approval sends one PayPal refund (50.885167ms)
+{"level":"info","requestId":"a6396a37-b52b-4c2c-b820-385b38aae5ae","method":"GET","path":"/api/events","status":401,"durationMs":6}
+{"level":"info","requestId":"836b5d97-073c-4e82-a420-84a396725c0f","method":"GET","path":"/api/events","status":401,"durationMs":0}
+{"level":"info","requestId":"5c0ca9c4-9663-455f-ad4a-8df0ab1ff59b","method":"GET","path":"/api/events","status":403,"durationMs":0}
+{"level":"info","requestId":"1c7919c2-168f-48f4-9ff7-02fd0f37bf99","method":"GET","path":"/api/events","status":400,"durationMs":1}
+✔ auth requires a valid Supabase JWT and blocks cross-organization requests (63.370708ms)
+{"level":"info","requestId":"e4a454d9-85b9-415e-8eec-707d8a703ccd","method":"GET","path":"/api/events","status":401,"durationMs":0}
+{"level":"info","requestId":"725da6d7-f05d-44c4-bb91-a8dd1f650ec6","method":"POST","path":"/api/ai/chat","status":401,"durationMs":0}
+{"level":"info","requestId":"2ab6df2a-4a1d-4f15-90ee-548f27e50c27","method":"POST","path":"/api/approvals/register","status":401,"durationMs":0}
+{"level":"info","requestId":"09250287-decc-47c2-9a6b-5753c0ce09ab","method":"POST","path":"/api/paypal/create-order","status":401,"durationMs":0}
+{"level":"info","requestId":"b15f87ef-ee20-4cc2-bfe4-20fe8dd33632","method":"POST","path":"/api/paypal/capture","status":401,"durationMs":0}
+{"level":"info","requestId":"e4756ce7-6d31-4542-9df0-97fe7428dacb","method":"POST","path":"/api/paypal/refund","status":401,"durationMs":0}
+{"level":"info","requestId":"ad6c990c-a057-45e7-bb48-f6c4bc9cc673","method":"POST","path":"/api/onboarding","status":401,"durationMs":1}
+✔ every protected route rejects a missing bearer token (21.470708ms)
+{"level":"info","requestId":"a8859e76-9c1c-4bd6-903f-72ca6df2b7b7","method":"POST","path":"/api/paypal/create-order","status":401,"durationMs":2}
+✔ unauthenticated malformed API JSON is rejected before body parsing (8.914041ms)
+{"level":"info","requestId":"0f74c42b-4db1-4873-b10a-61b3e22b7fbd","method":"POST","path":"/api/approvals/register","status":403,"durationMs":4}
+{"level":"info","requestId":"784c0bad-b1c3-4972-b436-88c0f243e6e4","method":"POST","path":"/api/paypal/create-order","status":403,"durationMs":1}
+{"level":"info","requestId":"df3762ca-e38d-453d-b650-3352554143d7","method":"POST","path":"/api/paypal/capture","status":403,"durationMs":1}
+{"level":"info","requestId":"c4dc4f86-573a-4230-8b65-ed20aefad9e2","method":"POST","path":"/api/paypal/refund","status":403,"durationMs":1}
+✔ viewer cannot register an approval and new routes use structured error envelopes (12.516417ms)
+{"level":"info","requestId":"b0f51bc8-b74e-40a6-ab33-6b046dd25a85","method":"GET","path":"/api/public-config","status":200,"durationMs":1}
+{"level":"info","requestId":"f41d9df2-38e6-42b1-8cff-ad3cabbf0c0e","method":"POST","path":"/api/onboarding","status":400,"durationMs":0}
+{"level":"info","requestId":"195fd8e3-f21f-4a1c-8b77-afe5f4a0e37e","method":"POST","path":"/api/onboarding","status":400,"durationMs":0}
+{"level":"info","requestId":"2919303d-527f-47c2-953d-fb3041658c3c","method":"POST","path":"/api/onboarding","status":201,"durationMs":0}
+{"level":"info","requestId":"d452695a-6e22-48d4-b66b-0d33262d9c0b","method":"POST","path":"/api/onboarding","status":200,"durationMs":0}
+✔ public config contains only Supabase URL and anon key, and onboarding is authenticated and repeat-safe (9.32725ms)
+{"level":"info","requestId":"bd4a1bd3-bf10-4c3c-a35a-453a23b78f36","method":"GET","path":"/api/status","status":200,"durationMs":0}
+{"level":"info","requestId":"025ae249-ce9c-4542-8ed6-b26da01e961c","method":"GET","path":"/api/events","status":503,"durationMs":1}
+✔ degraded mode is explicit and protected API calls do not bypass authentication (9.473125ms)
+✔ request query values and provider secrets do not appear in server logs (7.957125ms)
+✔ capture posting uses PayPal gross, fee and net values as balanced minor units (1.664916ms)
+✔ capture without a complete reported breakdown posts to clearing without inventing a fee (0.18025ms)
+✔ fund contribution captures credit Donations instead of Sales Revenue (0.165084ms)
+✔ refund posting uses the returned refund fee breakdown and does not presume fee reversal (0.313625ms)
+✔ ledger mapping rejects malformed or inconsistent provider amounts (0.349542ms)
+✔ AI service calls the provider interface and preserves sanitization guardrails (27.76375ms)
+✔ Gemini adapter falls back to the configured model after a primary failure (21.648292ms)
+✔ Gemini adapter retries throttling once with bounded backoff, then uses one fallback (0.321375ms)
+✔ Gemini adapter bounds timeouts, retries once, and never logs response bodies or API keys (11.093791ms)
+✔ Gemini adapter uses the fallback once for malformed and empty provider responses (0.827333ms)
+✔ default provider is Gemini and Anthropic is selected only by explicit configuration (0.884084ms)
+✔ Gemini runtime configuration rejects models outside the verified free-tier allow-list (0.147833ms)
+✔ order amount accepts 0.01 through 10,000.00 with at most two decimals (0.680208ms)
+✔ PayPal request ID is deterministic sha256(scope:id) (0.716958ms)
+✔ approve URL requires https and a paypal.com hostname boundary (0.196792ms)
+✔ refund remaining amount subtracts completed and reserved refunds (0.187916ms)
+✔ webhook verification request embeds the exact raw event bytes (17.07875ms)
+✔ PayPal error activity logs expose only safe issue enums, not provider messages or debug ids (0.460791ms)
+✔ PayPal error activity keeps issue enums when provider omits name and labels unstructured bodies safely (0.294833ms)
+✔ FX conversion uses decimal integer arithmetic and half-up minor-unit rounding (0.44875ms)
+✔ FX service caches provider rates and returns source, timestamp, label, and separate fees (1.659875ms)
+✔ FX provider throttle reserves distinct slots for concurrent currency pairs (0.618167ms)
+✔ invoice draft recalculates line, tax, and grand totals while ignoring client totals (0.519458ms)
+✔ PayPal invoice create response extracts and validates the invoice id from its self href (0.3865ms)
+✔ invoice send logs create, id extraction, and send stages without exposing the invoice id (4.1045ms)
+✔ invalid PayPal invoice create response keeps the client error structured (0.682375ms)
+✔ simulated invoice send preserves approval and local tracking without calling PayPal (0.48ms)
+✔ report totals computed from ledger views balance and match the underlying ledger fixture (0.309833ms)
+✔ CSV cells neutralize formula injection while preserving CSV quoting (0.325ms)
+✔ invoice cannot be sent unless a send-invoice approval record exists (0.180917ms)
+{"level":"info","requestId":"1bb6ac18-849b-46b6-b5af-18c493ee25c3","method":"GET","path":"/api/fx/convert","status":401,"durationMs":3}
+{"level":"info","requestId":"bb83fae7-dd88-4e00-a372-15340ef1a43d","method":"GET","path":"/api/fx/convert","status":200,"durationMs":2}
+{"level":"info","requestId":"c8db5912-fe1f-40e5-b7a5-88bd3f256ac0","method":"GET","path":"/api/fx/convert","status":400,"durationMs":1}
+{"level":"info","requestId":"633e9f6d-6278-4682-9e53-bb08d7173088","method":"GET","path":"/api/reports/profit-and-loss","status":200,"durationMs":1}
+{"level":"info","requestId":"d5609fc4-bedd-460f-a804-f9134b397301","method":"GET","path":"/api/reports/profit-and-loss","status":200,"durationMs":0}
+{"level":"info","requestId":"04987248-1466-4b66-9372-bf4b877b33bb","method":"GET","path":"/api/reports/profit-and-loss","status":400,"durationMs":1}
+{"level":"info","requestId":"93304136-cbd7-45d7-9c55-f404438fcc38","method":"POST","path":"/api/invoices","status":403,"durationMs":3}
+{"level":"info","requestId":"81ffecad-6155-4581-89b6-bfc59ab3a1d7","method":"POST","path":"/api/invoices","status":400,"durationMs":1}
+{"level":"info","requestId":"3bf6763e-190c-4020-996b-8ae475414fc8","method":"POST","path":"/api/invoices","status":201,"durationMs":1}
+{"level":"info","requestId":"4a954bb6-e521-48ae-b35e-1d7c8cae4724","method":"POST","path":"/api/invoices","status":400,"durationMs":0}
+✔ Phase 3 routes return tenant-scoped FX, report, and recalculated invoice shapes (62.317084ms)
+✔ Phase 4 tables have RLS, member-only reads, and no authenticated write grants (0.627584ms)
+✔ every new SECURITY DEFINER RPC revokes client execution and grants only service_role (1.012333ms)
+✔ every mounted Phase 6 fund route is documented in the frontend contract (0.5565ms)
+✔ payment approval and fund API requests are covered by authenticated and IP rate limits (273.450458ms)
+✔ pledges do not count as received funds and only a verified completed capture creates one receipt (3.442083ms)
+✔ verified capture amount mismatch is flagged and never marks the pledge received (0.173292ms)
+{"level":"info","requestId":"8a3d4b07-a1ff-4fe4-8aae-bf67d34e0545","method":"POST","path":"/api/funds/campaigns","status":201,"durationMs":6}
+{"level":"info","requestId":"a38478b7-5c5d-4398-9831-263f5cf3a73d","method":"POST","path":"/api/funds/campaigns/966453cb-086e-4312-8c16-376f6a1db429/pledges","status":201,"durationMs":1}
+{"level":"info","requestId":"80d902ac-c50c-410e-a965-d9aba167cc4f","method":"GET","path":"/api/funds/campaigns/966453cb-086e-4312-8c16-376f6a1db429/summary","status":200,"durationMs":1}
+{"level":"info","requestId":"c6d8f4ec-3a80-4a7d-8192-fc3b55586af1","method":"POST","path":"/api/funds/contributions/701f937e-4f2f-48c1-866c-9d03d241bb53/paypal-order","status":201,"durationMs":1}
+{"level":"info","requestId":"d076ce31-b17f-4a0e-a839-3f654b1cb249","method":"POST","path":"/api/funds/contributions/701f937e-4f2f-48c1-866c-9d03d241bb53/paypal-order","status":201,"durationMs":1}
+✔ campaign and pledge API labels intent only and creates an idempotent linked PayPal order (53.509542ms)
+✔ T5 completion evidence requires paid state and reviewer acceptance before audited close (87.06225ms)
+✔ T4 payment request enters existing approvals queue and completes once as SIMULATED without a ledger entry (50.552209ms)
+✔ T3 database business rejections return safe, structured client errors (69.357ms)
+✔ maintenance verifier gets fresh requests and quotation references for every run (0.509ms)
+✔ maintenance verifier cleanup is restricted to supplied run IDs and FK order (0.316958ms)
+✔ maintenance workflow allows only the next legal T3 transitions (5.814416ms)
+✔ maintenance workflow rejects skipped states, foreign quotations, requester self-approval, and duplicate approvers (0.858666ms)
+✔ payment approval threshold is two distinct approvers at exactly 10000 minor units (0.753291ms)
+✔ Phase 6 tables are tenant-scoped and expose only member reads to authenticated clients (1.249833ms)
+✔ Fund schema encodes contribution receipts, quotation selection, approvals, evidence, and defaults (0.176083ms)
+✔ Phase 6 SECURITY DEFINER RPCs are executable only by service_role (0.585792ms)
+✔ fund account correction uses append-only reversal and repost entries (0.203083ms)
+✔ T3 maintenance RPCs enforce the state graph and are service_role-only (0.7025ms)
+✔ T4 payment queue RPCs are service_role-only and simulated payments never post to the ledger (0.344083ms)
+✔ T5 completion evidence RPCs are service_role-only and require reviewed accepted evidence before closure (0.4065ms)
+✔ T6 transparency and audit export RPCs are service_role-only and enforce tenant/role boundaries (0.29ms)
+✔ T6 repair migration uses explicit safe campaign JSON and keeps RPC service-role-only (0.196292ms)
+✔ T6 approval-order repair uses the existing decided_at column and keeps RPC service-role-only (0.120833ms)
+✔ T6 transparency is org-scoped, privacy-safe, gap-explicit, and audit export is role-gated/formula-safe (31.743333ms)
+✔ money repository helpers use integer minor units and reject excessive precision (0.776458ms)
+✔ Postgres funds repository uses T4 service-only queue RPCs and maps maintenance context (0.499417ms)
+✔ Postgres funds repository calls T5 completion evidence and close RPCs (0.122792ms)
+✔ Postgres funds repository calls tenant-scoped T6 transparency and audit export RPCs (0.160542ms)
+✔ Postgres repositories scope tenant data and transactional calls by organization (0.2695ms)
+✔ capture reads disambiguate the order foreign key in PostgREST embeds (0.137875ms)
+✔ fund-linked synchronous and webhook captures send Donations account lines (0.357541ms)
+✔ approval repository exposes its public approvalId field for persistence checks (0.079917ms)
+✔ AI proposal persistence uses the scoped pending-approval RPC with minor-unit amounts (0.144667ms)
+✔ capture and refund persistence send the pure ledger mapping into atomic database RPCs (1.220667ms)
+✔ AI usage reservations and cache persistence stay scoped to the verified organization (1.14275ms)
+✔ anomaly records, notification actions, webhook inputs and scheduled org scans are scoped (0.195292ms)
+✔ legacy API flow handles valid, invalid, unauthenticated, and repeated requests (44.02775ms)
+✔ events route returns empty activity when the snapshot read fails (3.342666ms)
+✔ AI route accepts legacy context fields but supplies only verified membership context (2.152375ms)
+✔ AI proposals stay pending until an approver uses the existing refund path exactly once (16.397375ms)
+✔ AI provider error bodies and keys do not reach responses or activity logs (427.350334ms)
+✔ notifications are organization scoped, read/dismiss only, and anomaly scans require an authorized role (8.75825ms)
+✔ invalid configuration fails fast without printing a stack trace (100.734459ms)
+✔ partial Supabase configuration fails fast without echoing secrets (82.292541ms)
+✔ Supabase service verifies bearer tokens with anon key and uses service role only server-side (12.128ms)
+✔ invalid JWT is rejected; Supabase service outages fail closed (0.290875ms)
+✔ new Supabase secret keys are sent as apikey only, never as bearer JWTs (0.135ms)
+✔ webhook verifier waits past the inbox initial state until processing is terminal (0.283791ms)
+✔ five duplicate verified webhook deliveries produce one journal source and preserve raw bytes (30.983583ms)
+✔ unverified webhook events are retained but never reach the posting path (4.851583ms)
+✔ verified invoice amount mismatch is handled without claiming a paid posting (0.134084ms)
+ℹ tests 135
+ℹ suites 0
+ℹ pass 135
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1211.515417 after verifier change/attempt, then final docs and WIP checkpoint.
+2026-10-27 IST | ABOUT TO: Inspect the final WORKLOG lines after the handoff commit to confirm a shell-substitution quoting mistake did not append test output or expose sensitive data. WHY: the post-commit logging heredoc contained a backticked command.
+2026-10-27 IST | RESULT: inspected tail and line count for accidental shell substitution; NEXT: correct/annotate any malformed journal content, then run post-verifier npm test with output captured directly.
+2026-10-27 IST | ABOUT TO: Run the maintenance verifier once more and capture full exit/output, giving two consecutive fully captured PASS runs. WHY: the first invocation's exit was missed; repeatable behavior needs clear end-to-end evidence.
+ABOUT TO — 2026-10-27 23:34:09 Asia/Kolkata: Generate one-time test link for fixed owner fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-27 23:34:10 Asia/Kolkata: PASS: Generate one-time test link for fixed owner fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:10 Asia/Kolkata: Exchange one-time link for fixed owner JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-27 23:34:10 Asia/Kolkata: PASS: Exchange one-time link for fixed owner JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:10 Asia/Kolkata: Generate one-time test link for fixed approver fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-27 23:34:11 Asia/Kolkata: PASS: Generate one-time test link for fixed approver fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:11 Asia/Kolkata: Exchange one-time link for fixed approver JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-27 23:34:11 Asia/Kolkata: PASS: Exchange one-time link for fixed approver JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:11 Asia/Kolkata: Generate one-time test link for fixed accountant fixture. Reason: authenticate the existing named user without resetting its password or sending email
+RESULT — 2026-10-27 23:34:12 Asia/Kolkata: PASS: Generate one-time test link for fixed accountant fixture; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:12 Asia/Kolkata: Exchange one-time link for fixed accountant JWT. Reason: obtain an ordinary user token in memory for API and RLS checks
+RESULT — 2026-10-27 23:34:12 Asia/Kolkata: PASS: Exchange one-time link for fixed accountant JWT; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:12 Asia/Kolkata: Find existing fixed T3 verification organization. Reason: reuse the established Phase 3 verification organization; never create another organization
+RESULT — 2026-10-27 23:34:13 Asia/Kolkata: PASS: Find existing fixed T3 verification organization; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:13 Asia/Kolkata: Verify fixed owner membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-27 23:34:13 Asia/Kolkata: PASS: Verify fixed owner membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:13 Asia/Kolkata: Verify fixed approver membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-27 23:34:14 Asia/Kolkata: PASS: Verify fixed approver membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:14 Asia/Kolkata: Verify fixed accountant membership role. Reason: ensure the existing actor has the expected role in the one fixed verifier organization
+RESULT — 2026-10-27 23:34:14 Asia/Kolkata: PASS: Verify fixed accountant membership role; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:14 Asia/Kolkata: Check fresh local API health. Reason: exercise the current source code, including the SQLSTATE fix, on an ephemeral local port
+RESULT — 2026-10-27 23:34:16 Asia/Kolkata: PASS: Check fresh local API health; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:16 Asia/Kolkata: Verify authenticated API access for owner. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed owner fixture
+RESULT — 2026-10-27 23:34:17 Asia/Kolkata: PASS: Verify authenticated API access for owner; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:17 Asia/Kolkata: Verify authenticated API access for approver. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed approver fixture
+RESULT — 2026-10-27 23:34:19 Asia/Kolkata: PASS: Verify authenticated API access for approver; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:19 Asia/Kolkata: Verify authenticated API access for accountant. Reason: exercise authenticated endpoint /api/funds/campaigns as a fixed accountant fixture
+RESULT — 2026-10-27 23:34:20 Asia/Kolkata: PASS: Verify authenticated API access for accountant; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:20 Asia/Kolkata: Check exact live two-person approval threshold. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:20 Asia/Kolkata: PASS: Check exact live two-person approval threshold; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:20 Asia/Kolkata: Inspect deterministic contractor. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:20 Asia/Kolkata: PASS: Inspect deterministic contractor; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:20 Asia/Kolkata: Create fixed request T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance as a fixed owner fixture
+RESULT — 2026-10-27 23:34:21 Asia/Kolkata: PASS: Create fixed request T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:21 Asia/Kolkata: Create fixed request T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance as a fixed accountant fixture
+RESULT — 2026-10-27 23:34:22 Asia/Kolkata: PASS: Create fixed request T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:22 Asia/Kolkata: Add fixed quotation T3-LIVE-0670087b-eee6-48d4-ab83-1e553d204d40-LOW. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/quotations as a fixed accountant fixture
+RESULT — 2026-10-27 23:34:23 Asia/Kolkata: PASS: Add fixed quotation T3-LIVE-0670087b-eee6-48d4-ab83-1e553d204d40-LOW; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:23 Asia/Kolkata: Add fixed quotation T3-LIVE-0670087b-eee6-48d4-ab83-1e553d204d40-THRESHOLD. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/quotations as a fixed accountant fixture
+RESULT — 2026-10-27 23:34:24 Asia/Kolkata: PASS: Add fixed quotation T3-LIVE-0670087b-eee6-48d4-ab83-1e553d204d40-THRESHOLD; HTTP 201; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:24 Asia/Kolkata: Reload low request after quotation. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:24 Asia/Kolkata: PASS: Reload low request after quotation; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:24 Asia/Kolkata: Reload threshold request after quotation. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:24 Asia/Kolkata: PASS: Reload threshold request after quotation; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:24 Asia/Kolkata: Verify under-threshold T3 lifecycle. Reason: exercise requester self-approval rejection, skipped-state rejection, foreign-quotation rejection, contractor verification, and single-approver threshold
+ABOUT TO — 2026-10-27 23:34:24 Asia/Kolkata: Reject requester self-approval T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/scope-approval as a fixed owner fixture
+RESULT — 2026-10-27 23:34:25 Asia/Kolkata: PASS: Reject requester self-approval T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 403; error_code=FUND_FORBIDDEN. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:25 Asia/Kolkata: Reject skipped contractor verification T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/contractor-verification as a fixed approver fixture
+RESULT — 2026-10-27 23:34:26 Asia/Kolkata: PASS: Reject skipped contractor verification T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:26 Asia/Kolkata: Reject foreign quotation T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:27 Asia/Kolkata: PASS: Reject foreign quotation T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:27 Asia/Kolkata: Approve scope T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:28 Asia/Kolkata: PASS: Approve scope T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:28 Asia/Kolkata: Confirm scope state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:28 Asia/Kolkata: PASS: Confirm scope state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:28 Asia/Kolkata: Reject requester contractor verification T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/contractor-verification as a fixed owner fixture
+RESULT — 2026-10-27 23:34:29 Asia/Kolkata: PASS: Reject requester contractor verification T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 403; error_code=FUND_FORBIDDEN. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:29 Asia/Kolkata: Verify contractor T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/contractor-verification as a fixed approver fixture
+RESULT — 2026-10-27 23:34:30 Asia/Kolkata: PASS: Verify contractor T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:30 Asia/Kolkata: Confirm verified state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:31 Asia/Kolkata: PASS: Confirm verified state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:31 Asia/Kolkata: Approve below-threshold payment T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/c42352c3-9c18-44e1-8b83-b4b89e4fe724/payment-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:31 Asia/Kolkata: PASS: Approve below-threshold payment T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:31 Asia/Kolkata: Confirm payment approval stage T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:32 Asia/Kolkata: PASS: Confirm payment approval stage T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:32 Asia/Kolkata: Verify final state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:32 Asia/Kolkata: PASS: Verify final state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Self Approval; completed. NEXT: continue the T3 verifier.
+RESULT — 2026-10-27 23:34:32 Asia/Kolkata: PASS: Verify under-threshold T3 lifecycle; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:32 Asia/Kolkata: Verify exact-threshold T3 lifecycle. Reason: exercise requester/accountant separation, contractor verification, duplicate approver rejection, and two distinct approvers at exactly 10000 minor units
+ABOUT TO — 2026-10-27 23:34:32 Asia/Kolkata: Reject skipped contractor verification T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/contractor-verification as a fixed approver fixture
+RESULT — 2026-10-27 23:34:33 Asia/Kolkata: PASS: Reject skipped contractor verification T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:33 Asia/Kolkata: Reject foreign quotation T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:34 Asia/Kolkata: PASS: Reject foreign quotation T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 409; error_code=FUND_STATE_CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:34 Asia/Kolkata: Approve scope T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/scope-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:35 Asia/Kolkata: PASS: Approve scope T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:35 Asia/Kolkata: Confirm scope state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:35 Asia/Kolkata: PASS: Confirm scope state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:35 Asia/Kolkata: Verify contractor T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/contractor-verification as a fixed owner fixture
+RESULT — 2026-10-27 23:34:36 Asia/Kolkata: PASS: Verify contractor T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:36 Asia/Kolkata: Confirm verified state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:36 Asia/Kolkata: PASS: Confirm verified state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:36 Asia/Kolkata: Inspect distinct threshold approvals T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:37 Asia/Kolkata: PASS: Inspect distinct threshold approvals T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:37 Asia/Kolkata: Record first threshold approval T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/payment-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:38 Asia/Kolkata: PASS: Record first threshold approval T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:38 Asia/Kolkata: Confirm payment approval stage T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:39 Asia/Kolkata: PASS: Confirm payment approval stage T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:39 Asia/Kolkata: Inspect threshold approvals before completion T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:39 Asia/Kolkata: PASS: Inspect threshold approvals before completion T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:39 Asia/Kolkata: Reject duplicate threshold approver T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/payment-approval as a fixed approver fixture
+RESULT — 2026-10-27 23:34:40 Asia/Kolkata: PASS: Reject duplicate threshold approver T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 409; error_code=CONFLICT. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:40 Asia/Kolkata: Record second distinct threshold approval T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: exercise authenticated endpoint /api/funds/maintenance/34036006-dd45-43a9-aa5c-147509f72197/payment-approval as a fixed owner fixture
+RESULT — 2026-10-27 23:34:41 Asia/Kolkata: PASS: Record second distinct threshold approval T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; HTTP 200; error_code=none. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:41 Asia/Kolkata: Verify final state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval. Reason: read existing fixed verifier fixture state without mutating it
+RESULT — 2026-10-27 23:34:41 Asia/Kolkata: PASS: Verify final state T3 Verifier 0670087b-eee6-48d4-ab83-1e553d204d40 Dual Approval; completed. NEXT: continue the T3 verifier.
+RESULT — 2026-10-27 23:34:41 Asia/Kolkata: PASS: Verify exact-threshold T3 lifecycle; completed. NEXT: continue the T3 verifier.
+ABOUT TO — 2026-10-27 23:34:41 Asia/Kolkata: Clean up this run’s maintenance rows. Reason: delete only IDs created by this run in FK order; preserve append-only audit history
+RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s maintenance rows; removed 2 run request rows; immutable audit records retained. NEXT: continue the T3 verifier.
+2026-10-27 IST | RESULT: third live verifier invocation exit 0; captured final JSON summary above. NEXT: update reports to cite two consecutive captured PASS runs, then final local WIP checkpoint.
+2026-10-27 IST | ABOUT TO: Finalize report/handoff with the third live verifier result, two consecutive captured passes, remote base recommendation, manual checklist and current push boundary. WHY: complete PREP BEFORE PHASE 5 without creating its branch or making any additional push.
+2026-10-27 IST | RESULT: TEST-REPORT/CONTEXT/RESUME updated with third live PASS, base and push status; checklist retained. Files touched: docs/TEST-REPORT.md, docs/CONTEXT.md, docs/WORKLOG.md. NEXT: final status/no-secret/whitespace check and local WIP commit.
+2026-10-27 IST | ABOUT TO: Trim accidental trailing spaces from the WORKLOG line expanded by the earlier shell-substitution mistake, then rerun whitespace validation. WHY: keep the handoff diff clean without removing its test output record.
+2026-10-27 IST | RESULT: normalized trailing spaces and git diff --check exit 0. NEXT: locally WIP-commit final docs, checklist and recorded checks; do not push or create Phase 5 branch.
+2026-10-27 IST | ABOUT TO: Stage final handoff records and create a WIP commit on fund-wiring. WHY: checklist, test/base results and verifier outcomes are complete; no push permission remains to be used.

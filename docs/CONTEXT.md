@@ -53,6 +53,7 @@
 | JavaScript syntax/whitespace | PASS | 2026-10-27 | `node --check` on edited JS; `git diff --check` |
 
 ## KNOWN ISSUES AND RISKS
+- PR was up to date at pushed commit 0cfc368 with an empty unpushed list immediately after push; verifier/prep commits were made afterward and remain local.
 - `scripts/verify-phase6.js` was not present; repaired actual matching `scripts/verify-phase6-maintenance-live.js`. First live run exit remains UNVERIFIED; second passed. Audit rows persist by design.
 - Remote branch was pushed through 0cfc368 at the permitted push step; subsequent commits are local, so PR currently needs those commits pushed by the human.
 - Requested `scripts/verify-phase6.js` is absent; the matching `scripts/verify-phase6-maintenance-live.js` was repaired. First live invocation final exit is UNVERIFIED; second invocation passed. Immutable audit history accumulates by design.
