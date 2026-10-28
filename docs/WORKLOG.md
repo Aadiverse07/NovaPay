@@ -1,11 +1,9 @@
 ## RESUME POINTER
-- Current task: live document isolation verification; branch `phase5-backend`.
-- Last feature checkpoint: `ac25bfb`; live-check journal edits pending WIP commit; never push.
-- Config preflight: OCR and embeddings both read `GEMINI_API_KEY` (present); OCR model/timeout and embedding model/timeout names present in loaded config. Values not printed.
-- Server started; `/api/status` HTTP 200. One synthetic PDF with fixed Phase 3 owner A/org A was uploaded and processed/indexed. Org B aggregate AI/list/direct-fetch isolation assertion FAILED; exact subassertion not retained. Run-scoped document cleanup DELETE returned HTTP 200. Server stopped.
-- ACCEPTANCE: cross-tenant FAIL; delete cascade UNVERIFIED; Storage-object RLS UNVERIFIED (stopped after failure).
-- Next: await user authorization before investigating the cross-tenant failure. Do not rerun probes or change code without authorization.
-- Pending human action: authorize diagnosis of which Org B assertion failed; after a fix/approval, rerun with fixed users/orgs and sample files only.
+- Current task: diagnose cross-tenant document failure only; branch `phase5-backend`.
+- Last completed: confirmed fixed memberships (A->org A, B->org B; B has no org A membership); B checks were configured with own JWT and X-Org-Id org B; service role not used for B requests.
+- Live blocker: one synthetic upload returned HTTP 201; processing returned HTTP 429 `AI_DAILY_LIMIT`; run-scoped DELETE returned HTTP 200; server stopped. No Org B sub-check ran.
+- Sub-checks (a1 search endpoint candidate, a2 hybrid AI path, b list/get, c Storage RLS, d AI question): UNVERIFIED; recorded individually in TEST-REPORT.md. Current routes have no dedicated search endpoint.
+- Next: await user's direction after daily AI budget reset or other approved test setup; do not bypass budget or reuse stale document IDs; no code fix applied.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3259,3 +3257,23 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: inspect branch/status/staged names and tracked `.env`; WHY: confirm only continuity docs are committed and no secret file is staged.
 2026-10-28 | RESULT: phase5-backend confirmed; only continuity docs modified; `.env` not tracked; no files staged; next create local live-check WIP checkpoint.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 live check: cross-tenant failed`; WHY: preserve live outcomes and stop pointer locally; never push.
+2026-10-28 | ABOUT TO: verify branch/worktree and inspect live route surface for document search; WHY: isolate the reported cross-tenant failure without changing code or exposing credentials.
+2026-10-28 | RESULT: source confirms no dedicated document-search HTTP route; hybrid search is invoked by `/api/ai/chat` via `documentSearch.search`; existing `/api/documents` routes cover list/get by identifier; no code changes; next inspect API config/runtime, then start if needed.
+2026-10-28 | ABOUT TO: load only runtime presence booleans and check local API health; WHY: verify configured providers/service before generating the single synthetic sample.
+2026-10-28 | RESULT: GEMINI key presence true and Supabase configured; local API not running (ECONNREFUSED); no data changed; next start server.
+2026-10-28 | ABOUT TO: start npm server; WHY: live cross-tenant checks require the authenticated backend API.
+2026-10-28 | RESULT: server started; config key present; next run separated probes with membership assertion and own JWT/org B for every B request.
+2026-10-28 | ABOUT TO: execute one live synthetic sample sequence; WHY: isolate direct search path, AI hybrid path, list/get, Storage RLS, and AI question individually; stop at any failed assertion and clean only this run's document.
+2026-10-28 | RESULT: diagnostic script did not start; Node syntax error from local variable/function name collision (`api`); no network requests or rows changed; next rerun corrected read/write harness.
+2026-10-28 | ABOUT TO: rerun same separated diagnostic after renaming API base variable; WHY: prior failure was harness syntax before any live check, not a product assertion.
+2026-10-28 | ABOUT TO: collect separated cross-tenant probe output; WHY: live synthetic processing and individual API calls remain in progress; output is counts/status only.
+2026-10-28 | RESULT: setup membership check PASS: A belongs to org A only; B belongs to org B only and has no org A membership. B probes configured with own JWT/X-Org-Id org B; service role not used for B API/Storage requests. Synthetic upload 201 PASS; processing still running.
+2026-10-28 | ABOUT TO: await OCR/index and subsequent isolated probes; WHY: one sample upload is already made; do not create another.
+2026-10-28 | RESULT: sample processing stopped with HTTP 429 `AI_DAILY_LIMIT`; no Org B sub-check ran; run-scoped cleanup DELETE 200; fixed membership/JWT setup was verified; next stop server and record unverified probes.
+2026-10-28 | ABOUT TO: stop server started for this diagnostic; WHY: AI daily budget blocked OCR/index before cross-tenant checks, so no more live calls should be made.
+2026-10-28 | RESULT: server stopped; log confirms upload 201, process 429 and cleanup 200; next append per-subcheck statuses and resume pointer.
+2026-10-28 | ABOUT TO: append four subcheck outcomes and update RESUME POINTER/CONTEXT; WHY: record that isolation probes were blocked before execution, not infer a leak or pass.
+2026-10-28 | RESULT: TEST-REPORT records a1-a2, b, c, d as UNVERIFIED due HTTP 429 before checks; setup evidence and current route fact documented; next verify status/no .env and locally WIP-commit.
+2026-10-28 | ABOUT TO: inspect branch/status/tracked `.env` and staged names; WHY: prepare safe local continuity checkpoint only.
+2026-10-28 | RESULT: phase5-backend confirmed; only continuity docs modified; `.env` not tracked; no staged files; next commit diagnostic results locally.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant diagnosis blocked`; WHY: preserve membership/JWT evidence and the daily-budget blocker; never push.
