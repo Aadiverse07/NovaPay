@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 3 code complete on phase5-backend; final checks pass. Migration 0016 awaits human apply before live grant checks.
-- Last finished step: npm test PASS 163/163; npm run check:migrations PASS 16/16; node --check PASS on 14 changed JS files; git diff --check PASS.
-- DONE: embeddings (Gemini gemini-embedding-001, 768 dims), OCR text indexing, per-call ai_usage budget accounting, org-scoped hybrid retrieval/cited answers, accountant confirm/reject/delete with audit/cascade, extraction/answer injection tests.
-- NEXT: finish local WIP commit; then wait for human to apply supabase/migrations/0016_document_search_and_delete.sql and say applied. Verify ordinary JWT 403 and safe service-role calls. Do not start Part 4 until user says CONTINUE.
-- Pending human action: Supabase SQL Editor → New query → paste the entire 0016 file → Run once → wait for success → reply applied. Do not reload schema cache yet.
+- Current task: Phase 5 Part 3 code complete on phase5-backend; implementation checkpoint 6dba84b. Migration 0016 awaits human apply before live permission checks.
+- Last finished step: npm test PASS 163/163; npm run check:migrations PASS 16/16; node --check PASS for 14 changed JS files; git diff --check PASS.
+- DONE: Gemini gemini-embedding-001 at 768 dims; OCR-text indexing; per-call ai_usage budgets; org-scoped hybrid retrieval/cited answers; accountant confirm/reject/delete with audit/cascade; extraction/answer injection tests.
+- NEXT: human applies supabase/migrations/0016_document_search_and_delete.sql in Supabase SQL Editor and says applied. Verify ordinary JWT 403 and safe service-role calls without deleting real data. Do not start Part 4 until user says CONTINUE.
+- Pending human action: Supabase Dashboard → SQL Editor → New query → paste the entire 0016 file → Run once → wait for success → reply applied. Do not reload schema cache yet.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -3025,3 +3025,5 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 Asia/Kolkata | ABOUT TO inspect final CONTEXT lines and repository diff | validate all required continuity sections before WIP checkpoint.
 2026-10-28 Asia/Kolkata | RESULT: FAIL; commit wrapper had an unescaped backtick in its template string and did not execute. NEXT: retry with a command string that contains no template delimiter characters.
 2026-10-28 Asia/Kolkata | ABOUT TO retry Part 3 WIP checkpoint | previous wrapper failed before any command ran; verify branch and env paths, then commit locally.
+2026-10-28 Asia/Kolkata | RESULT: PASS; Part 3 implementation WIP commit 6dba84b created on phase5-backend; no env paths tracked/staged; no push. NEXT: refresh CONTEXT and top RESUME POINTER to the committed Part 3 checkpoint, then commit this handoff update locally.
+2026-10-28 Asia/Kolkata | ABOUT TO finalize Part 3 commit metadata in the handoff docs | make the resume pointer name the exact implementation checkpoint and the human migration action.
