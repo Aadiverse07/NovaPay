@@ -3413,3 +3413,15 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | RESULT: FAIL for the validation script only (Python parenthesis typo); the intended .env.example edit completed. NEXT: rerun the value-safe diff validator, then stage/commit.
 2026-10-28 | ABOUT TO: inspect git status and changed paths; WHY: ensure no .env or secret file is staged before the requested commit.
 2026-10-28 | RESULT: status inspected; next action is stage only .env.example and commit with the requested message.
+2026-10-28 | RESULT: PASS; committed .env.example and journal as a36d97f. NEXT: confirm no .env staged/tracked and run npm test.
+2026-10-28 | ABOUT TO: check status/tracked .env and run npm test; WHY: required pre-push verification.
+2026-10-28 | RESULT: npm test PASS, 165/165; .env not staged, tracked status flagged, and local values scanned without printing. NEXT: if no secret-like values, run remaining checks and record results; do not add .env.
+2026-10-28 | ABOUT TO: record test and push blocker in handoff docs; WHY: preserve actual verification and prevent unsafe publication of a tracked local .env.
+2026-10-28 | RESULT: recorded npm test PASS (165/165) and blocked push due to tracked .env with credential-like populated values; no .env values printed and no push attempted. NEXT: human must remove .env from tracking/history and rotate credentials before any push; then rerun checks.
+2026-10-28 | ABOUT TO: verify branch and inspect .env tracking/history metadata only; WHY: establish whether outgoing history contains the local environment file.
+2026-10-28 | RESULT: PASS; current branch phase5-backend; git ls-files .env and both requested .env history queries returned no entries. NEXT: refresh origin refs and inspect status plus ignore rules.
+2026-10-28 | ABOUT TO: fetch origin and inspect status/ignore patterns; WHY: verify origin/main history and ensure .env remains excluded while .env.example is included.
+2026-10-28 | RESULT: PASS; origin/main has no .env history entries; .gitignore currently ignores only .env; working tree contains prior docs edits. NEXT: ensure .env.* is ignored while .env.example is allowed, then commit ignore rule.
+2026-10-28 | ABOUT TO: update ignore rules and issue a no-op cached removal if applicable; WHY: prevent future .env variants from entering Git without excluding .env.example.
+2026-10-28 | RESULT: PASS; .env was already untracked and ignored; added .env.* ignore rule with !.env.example exception. NEXT: commit the ignore-rule hardening as requested.
+2026-10-28 | ABOUT TO: commit .gitignore and WORKLOG.md as Stop tracking .env; WHY: record and preserve the safe ignore rules.
