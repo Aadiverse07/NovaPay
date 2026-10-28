@@ -1189,3 +1189,4 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | Live delete cascade | UNVERIFIED | Cleanup DELETE for this run's synthetic document returned HTTP 200; chunks, search hits, Storage object and `document.deleted` audit row were not queried because processing had stopped the verification.
 2026-10-28 | Live Storage-object RLS | UNVERIFIED | No cross-org JWT Storage read was attempted; blocked before successful sample indexing. No RLS result inferred from policy text.
 2026-10-28 | Live server health | PASS | `GET /api/status` returned HTTP 200 with authenticated mode and Supabase configured; no credential values printed.
+2026-10-28 | Live document verification handoff | UNVERIFIED | Last run: sample upload 201, processing 503 before indexing, cleanup DELETE 200; no org B or Storage RLS probes. User reports PostgREST schema reload succeeded; root cause remains unknown pending Gemini configuration/restart.

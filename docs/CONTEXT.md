@@ -2,60 +2,68 @@
 
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
-- Branch: `phase5-backend`
-- Last code/doc commit before live verification: `54b53b6`
-- Current phase/task: Phase 5, live verification of document tenant isolation, delete cascade and Storage RLS
+- Branch: `phase5-backend`, based on main after PR #6
+- Last local commit: `844e6a4`; no Phase 5 changes pushed; no PR yet
+- Current phase/task: Phase 5 handoff; live document verification blocked at HTTP 503
 
 ## DONE
-- Part 4 Documents UI/API and documentation committed locally in `5a63d8e` and `54b53b6`.
-- Read-only preflight: server health HTTP 200; fixed Phase 3 owner A/B users and their named organizations exist. No users or organizations created.
-- Live test created one synthetic sample PDF in fixed org A; upload returned HTTP 201. Processing returned HTTP 503 before indexing. Cleanup DELETE for only that document returned HTTP 200. Server stopped.
-- No implementation code changed in this live verification. Files changed now: `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`.
+- Phase 5 Parts 1–4: upload/limits, OCR/validation, duplicate detection, embeddings/hybrid search, OCR router branch, Documents view wiring.
+- Migrations 0015 and 0016 are applied and live-verified.
+- `npm test` PASS 164/164; migrations PASS 16/16; protected-file diff empty.
+- Part 4 code/docs committed locally. No Phase 5 branch work pushed.
 
 ## IN PROGRESS
-- Exact task: live verification blocked at OCR/index processing HTTP 503. No org B search/fetch, Storage-object RLS, or delete-cascade assertions were run.
-- Next work requires user direction before diagnosing/fixing the 503. Do not label any blocked check PASS.
+- Live verification stopped after fixed owner A uploaded a synthetic sample (HTTP 201), then document processing returned HTTP 503 before indexing. Cleanup DELETE returned HTTP 200; cascade not verified.
+- Root cause is undiagnosed. User reports `notify pgrst, 'reload schema'` succeeded and is adding `GEMINI_API_KEY` to `.env`.
+- Suspects only: schema cache (now reloaded), missing/invalid Gemini key, embedding model/dimension mismatch, provider rate limit.
 
 ## NEXT STEPS
-1. Await user direction on whether to diagnose/fix the HTTP 503 processing failure.
-2. If authorized, inspect logs and document OCR/index provider failure without changing checks or using new users/orgs.
-3. Rerun using fixed Phase 3 owner A/B and org A/B only, with synthetic sample files.
-4. Complete cross-tenant, Storage RLS, and delete cascade checks; append actual results to TEST-REPORT.md.
+1. Human finishes `.env` and restarts `npm start`; diagnose one sample upload, read server logs; make only a small config/code fix and add a test if needed.
+2. Rerun cross-tenant retrieval, delete cascade and Storage-object RLS with fixed test users/orgs; append one result line per check.
+3. After human authorization, push `phase5-backend` and open a PR into main.
+4. Phase 7 hardening only if time remains.
 
 ## USER ACTIONS PENDING
-- User decision: authorize diagnosis/fix of document processing HTTP 503 before resuming the live checks.
+- Finish `.env` configuration and restart `npm start`.
+- Run `docs/BROWSER-CHECKLIST.md` with sample documents only.
+- After verification, authorize push of `phase5-backend` and PR into main.
 
 ## LIVE STATE
-- Migrations 0001–0016: user-confirmed applied; no new migration applied in this task.
-- Tunnel/webhook: last reported fixed by user; not checked.
-- Server started for verification and stopped afterward.
-- Fixed test users/orgs: preflight confirmed existing owner A/B accounts and orgs; no provisioning occurred.
+- Branch `phase5-backend`; based on main after PR #6. Last local commit `844e6a4`; no push/PR.
+- Migrations 0001–0016 user-confirmed applied; 0015/0016 live-verified.
+- Fixed Phase 3 owner accounts/orgs exist. No new users/orgs created in last attempt.
+- Last live run: API health 200; sample upload 201; process 503; cleanup DELETE 200; server stopped. Three acceptance checks remain UNVERIFIED.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| API health | PASS | `GET /api/status` HTTP 200; authenticated mode and Supabase configured. |
-| Cross-tenant retrieval/document fetch | UNVERIFIED | Upload 201; process 503 before indexing; org B probes not run. |
-| Delete cascade | UNVERIFIED | Cleanup DELETE 200; cascade contents/audit not inspected. |
-| Storage-object RLS | UNVERIFIED | No other-org JWT object read attempted. |
+| Duplicate upload flag | PASS | `npm test`; duplicate flag test. |
+| Wrong-total flag | PASS | `npm test`; arithmetic validation warning. |
+| Hidden-instruction injection | PASS | `npm test`; extraction and answer prompt-boundary checks. |
+| Cross-tenant retrieval | UNVERIFIED | HTTP 503 before indexing; org B probes not run. |
+| Delete cascade | UNVERIFIED | Cleanup DELETE 200; cascade rows/object/audit not checked. |
+| Storage-object RLS | UNVERIFIED | Cross-org JWT read not run. |
+| Unit/integration tests | PASS 164/164 | `npm test`. |
+| Migration syntax | PASS 16/16 | `npm run check:migrations`. |
+| Protected files | PASS, empty diff | `git diff --stat main -- <protected pathspecs>`. |
 
 ## KNOWN ISSUES AND RISKS
-- Document process returned HTTP 503; exact response code/body was not retained. No retry or fix attempted.
-- The cleanup DELETE returned 200 but cascade outcome was not independently verified.
-- Cross-tenant isolation, Storage-object RLS and audit row remain unverified.
+- Document processing HTTP 503 remains undiagnosed; no code changes made after the failed live run.
+- Browser checklist and the three live acceptance checks remain pending.
+- Use only fixed named test users/orgs and synthetic sample files; never print `.env` values.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor is transactional; never edit an applied migration; add a new numbered file.
-- SECURITY DEFINER/posting RPCs must revoke public/anon/authenticated and grant only service_role; prove ordinary JWT denial (403).
-- PostgREST embeds need explicit FK names when multiple relationships exist.
-- audit_log is insert-only/ON DELETE RESTRICT; cleanup journal entries, audit_log, orgs, then auth users; reuse fixed users/orgs.
-- PayPal sandbox buyer is US Personal, seller USD, Visa checkout, webhook URL ends `/api/webhook`, ID must match.
-- PayPal signature verification needs raw body.
+- Supabase SQL Editor runs one transaction; never edit an applied migration; add a numbered migration.
+- SECURITY DEFINER/posting RPCs: revoke public/anon/authenticated; grant only service_role; verify ordinary JWT gets 403.
+- PostgREST embeds need explicit FK names with multiple relationships.
+- audit_log is insert-only/ON DELETE RESTRICT; cleanup journal entries, audit_log, organizations, auth.users. Reuse fixed test identities.
+- PayPal sandbox buyer US Personal; seller USD; Visa checkout; webhook URL ends `/api/webhook`; webhook ID must match.
+- PayPal verification requires raw body.
 - Never print `.env` values; key names only.
 
 ## DO NOT LIST
-- Never push; do not change `main`/`backend`; do not edit protected design files or applied migrations; no force; no weakened tests; never commit `.env`.
+- Never push without explicit authorization; do not touch main/backend or protected design files; never force; do not weaken tests, edit applied migrations, or commit `.env`.
 
 ## RESUME COMMANDS
 - `git branch --show-current`
