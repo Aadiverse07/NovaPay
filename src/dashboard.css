@@ -468,11 +468,56 @@ body .sidebar-reopen{position:fixed;top:26px;left:10px;z-index:35;box-shadow:var
 .ai-dictation{display:none;flex:1 1 0;min-width:0;align-items:center;gap:10px;min-height:48px;padding:6px 8px;border:1px solid var(--border);border-radius:14px;background:var(--surface-sunken)}
 .ai-chat-row.is-dictating>*:not(.ai-dictation){display:none!important}
 .ai-chat-row.is-dictating .ai-dictation{display:flex}
-.ai-dict-wave{flex:0 1 88px;width:88px;min-width:64px;height:24px;margin-inline:auto}
+.ai-dict-wave{flex:1;min-width:0;height:32px}
 .ai-dict-wave canvas{display:block;width:100%;height:100%}
-.strands-container{position:relative;width:100%;height:100%;background:transparent;-webkit-tap-highlight-color:transparent}
 .ai-dict-time{min-width:34px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text-muted)}
 .ai-dict-btn{flex:none;width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:50%;background:var(--surface);color:var(--text);cursor:pointer;transition:transform .15s,background .2s}
 .ai-dict-btn:hover{transform:scale(1.06)}
 .ai-dict-btn--ok{background:var(--text);color:var(--surface);border-color:transparent}
 .ai-dict-btn:focus-visible{outline:2px solid var(--info-text);outline-offset:2px}
+
+/* Module headers: icon sits on the same line as the heading, vertically centred with it; description runs underneath */
+.page-intro.ai-page-intro:has(>.module-head-logo){align-items:center;row-gap:0}
+.page-intro.ai-page-intro:has(>.module-head-logo)>.module-head-logo{grid-column:1;grid-row:1;align-self:center}
+.page-intro.ai-page-intro:has(>.module-head-logo)>h2{grid-column:2;grid-row:1;align-self:center;margin:0;line-height:1.15}
+.page-intro.ai-page-intro:has(>.module-head-logo)>p{grid-column:2;grid-row:2;margin-top:10px}
+
+/* Module header logo stays still so it remains exactly centred on the heading (the float animation lifted it upward) */
+.module-head-logo{animation:none!important;transform:none!important}
+
+/* No glass effects on Ledger, Invoices, Reports, Community Funds and Maintenance:
+   gliding translucent hover highlight, pointer-following glass glow and card spotlight */
+:is(#view-ledger,#view-invoices,#view-reports,#view-community-funds,#view-maintenance) .rb-indicator{display:none!important}
+:is(#view-ledger,#view-invoices,#view-reports,#view-community-funds,#view-maintenance) .magic-bento-card::before,
+:is(#view-ledger,#view-invoices,#view-reports,#view-community-funds,#view-maintenance) .magic-bento-card::after,
+:is(#view-ledger,#view-invoices,#view-reports,#view-community-funds,#view-maintenance) :is(.dash-card,.module-card,.campaign-card,.kpi-card)::after{display:none!important}
+
+/* Compact popups: every detail dialog fits inside the screen and scrolls inside itself when needed */
+#transaction-modal{padding:12px}
+#transaction-modal .transaction-dialog{width:min(640px,100%);max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto!important;overflow-x:hidden;overscroll-behavior:contain;padding:18px 22px 20px;border-radius:18px}
+#transaction-modal .transaction-dialog>.modal-close{position:sticky;top:0;float:right;width:30px;height:30px;margin:-4px -8px 0 8px;font-size:18px;z-index:3}
+#transaction-modal .transaction-dialog h2{margin-top:2px;font-size:clamp(1.25rem,2.4vw,1.55rem);line-height:1.2}
+#transaction-modal .transaction-dialog>p{margin-top:3px;font-size:12.5px}
+#transaction-modal .section-kicker{font-size:10px;margin-bottom:2px}
+#transaction-modal .transaction-detail-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 12px}
+#transaction-modal .transaction-detail-grid>div{padding:8px 10px;border-radius:10px;min-width:0}
+#transaction-modal .transaction-detail-grid span{font-size:9px;letter-spacing:.07em}
+#transaction-modal .transaction-detail-grid strong{margin-top:2px;font-size:13px;line-height:1.3;overflow-wrap:anywhere}
+#transaction-modal .detail-note{padding:8px 12px;font-size:12px;border-radius:10px}
+#transaction-modal .tx-ai-controls{margin-top:12px;padding-top:12px;gap:8px}
+#transaction-modal .tx-ai-controls label{font-size:13px}
+#transaction-modal .tx-ai-controls input{min-height:36px;font-size:13px;padding:0 12px}
+#transaction-modal .tx-ai-controls .btn{min-height:36px;padding:0 16px;font-size:13px}
+#transaction-modal #tx-ai-answer{font-size:12.5px;margin:0}
+@media (max-width:600px){#transaction-modal .transaction-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:360px){#transaction-modal .transaction-detail-grid{grid-template-columns:1fr}}
+/* same safeguard for the other popups */
+.action-dialog,.approval-dialog{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.action-dialog{padding:22px}
+#transaction-modal .transaction-dialog>.btn,#transaction-modal .transaction-dialog>div>.btn[data-close-transaction]{margin-top:8px;min-height:36px;padding:0 18px;font-size:13px}
+#transaction-modal .tx-ai-controls .btn--primary{width:100%}
+
+/* Preserve the main branch microphone visualizer styles. */
+.ai-dict-wave{flex:0 1 88px;width:88px;min-width:64px;height:24px;margin-inline:auto}
+.ai-dict-wave canvas{display:block;width:100%;height:100%}
+.strands-container{position:relative;width:100%;height:100%;background:transparent;-webkit-tap-highlight-color:transparent}
