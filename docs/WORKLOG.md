@@ -1,9 +1,9 @@
 ## RESUME POINTER
 - Current task: Phase 5 Part 1 complete; branch `phase5-backend`; implementation WIP commit `eca1196`; no push.
 - Last finished step: final local checks complete: `npm test` PASS 140/140, migration syntax PASS 15/15, `node --check` PASS 6 files, `git diff --check` PASS. First `npm test` failed on missing injected-config default; fixed and reran PASS.
-- Migration: `supabase/migrations/0015_documents_rag.sql` exists and was NOT applied. User must enable `vector` in schema `extensions`, run the full migration once in Supabase SQL Editor (or linked CLI `supabase db push`), then say `applied`.
-- Runtime DB, pgvector, Storage policy and RLS verification remain UNVERIFIED until applied. No live API or browser checks were run.
-- NEXT: human applies migration 0015 using CONTEXT steps and replies `applied`; migration-dependent checks stay UNVERIFIED. Then STOP and wait for `CONTINUE` before Part 2.
+- Migration: user confirmed `supabase/migrations/0015_documents_rag.sql` applied on 2026-10-28. No direct live verification has run yet.
+- Runtime DB, pgvector, Storage policy and RLS verification remain UNVERIFIED pending live checks. No live API or browser checks were run.
+- NEXT: wait for user `CONTINUE` before Part 2. Do not treat user apply confirmation as runtime test evidence.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2878,3 +2878,14 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 14:54 IST — RESULT: PASS; CONTEXT is 75 lines (<150); test/decision tails include final 140/140 result and selected OCR/embedding defaults; only CONTEXT, DECISIONS and WORKLOG remain modified after implementation commit; final diff check clean.
 2026-10-28 | `git diff --check` (handoff docs after commit) | PASS | No whitespace errors.
 2026-10-28 14:54 IST — ABOUT TO: Stage the handoff pointer/context/decision update and final diff-check record. WHY: persist post-commit status and all current continuity docs in a small local WIP checkpoint.
+2026-10-28 14:55 IST — RESULT: PASS; handoff docs checkpoint committed locally as `75fa1c1` (`WIP Phase 5 task 1: finalize handoff`). NEXT: record that result, confirm final branch/worktree and stop for migration apply/CONTINUE.
+2026-10-28 14:55 IST — ABOUT TO: Check final branch, HEAD and remaining worktree changes without reading environment values. WHY: report exact local checkpoint and ensure no secret file was committed.
+2026-10-28 14:55 IST — RESULT: PASS; branch remains `phase5-backend`; HEAD is docs checkpoint `75fa1c1`; only WORKLOG has a final post-check result line unstaged; `git ls-files .env` and `.env` diff path are empty. No push. NEXT: stop and await human migration confirmation, then `CONTINUE`.
+2026-10-28 15:02 IST — ABOUT TO: Record the user-confirmed migration application and inspect branch/worktree state. WHY: update the continuation handoff without starting Part 2.
+2026-10-28 15:02 IST — RESULT: PASS; branch is phase5-backend; only the prior post-check WORKLOG line is modified; pointer and CONTEXT still say migration 0015 is pending. NEXT: record user confirmation, update migration live state and wait-for-CONTINUE pointer; do not claim runtime verification.
+2026-10-28 15:03 IST — ABOUT TO: Record the user-reported 0015 application in CONTEXT, TEST-REPORT and RESUME POINTER. WHY: migration is now reported applied, but no live schema/RLS/API test has run.
+2026-10-28 15:03 IST — RESULT: FAIL; migration-confirmation patch expected stale pointer text and applied no changes. NEXT: inspect exact current pointer and context lines, then patch only those exact text blocks.
+2026-10-28 15:04 IST — ABOUT TO: Replace the exact pending-migration statements shown in the current files and append the confirmation record. WHY: mark only the human-reported apply state, while leaving all live checks UNVERIFIED.
+2026-10-28 15:05 IST — RESULT: PASS; CONTEXT now shows user-confirmed 0015 application; TEST-REPORT records that this is not live test evidence; WORKLOG pointer now awaits `CONTINUE`. No live calls were made. NEXT: inspect status/no `.env`, then checkpoint the confirmation docs locally.
+2026-10-28 15:05 IST — RESULT: PASS; only CONTEXT, TEST-REPORT and WORKLOG changed; `.env` diff path empty; `git diff --check` clean.
+2026-10-28 15:05 IST — ABOUT TO: Create a local-only WIP documentation checkpoint for the applied-migration confirmation. WHY: persist the new resume state; no application changes and no push.
