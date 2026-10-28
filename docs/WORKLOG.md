@@ -1,10 +1,10 @@
 ## RESUME POINTER
 - Current task: sync Phase 6 follow-up changes onto main-derived `post-merge-sync`; Phase 5 is not started.
-- Last finished step: selective code/test port complete; `npm test` 135/135, migrations 14/14, `node --check` 9/9 passed; protected diff empty.
-- Pending: final rerun of whitespace/marker checks after doc rewrite, local checkpoint commit, then push ONLY `post-merge-sync` with authorized command.
-- Base recommendation: `post-merge-sync` until its PR merges; root backend entry remains `server/index.js`.
-- Human pending: browser checklist and explicit “APPROVED: start Phase 5”.
-- Next: finish final checks, update/commit docs, push `post-merge-sync`, report commit and pushed hash; then stop.
+- Last finished step: tested sync checkpoint `febb024` created locally; `npm test` 135/135, migrations 14/14, JS syntax 9/9, whitespace clean, marker grep clear, protected diff empty.
+- Next: push ONLY this branch using `git push -u origin post-merge-sync`, confirm zero unpushed commits, then stop.
+- Base recommendation: `post-merge-sync` until its PR merges; modern backend entry is `server/index.js`.
+- Human pending: complete `docs/BROWSER-CHECKLIST.md` and explicitly approve Phase 5.
+- No Phase 5 work or branch creation has occurred.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2718,3 +2718,9 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 - 2026-10-28 Asia/Kolkata | ABOUT TO: record successful marker scan and perform final whitespace/protected/secret/status checks | WHY: confirm the exact commit candidate remains safe and conflict-free.
 - 2026-10-28 Asia/Kolkata | RESULT: final git diff --check exit 0; protected paths empty if shown blank; tracked .env and unmerged paths shown above | FILES: docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: if safety checks are clean, make local sync commit then push only post-merge-sync.
 - 2026-10-28 Asia/Kolkata | ABOUT TO: stage verified sync changes and create local checkpoint commit | WHY: snapshot tested code and documentation on post-merge-sync before authorized push.
+- 2026-10-28 Asia/Kolkata | RESULT: local sync commit exit 0; see commit output | FILES: staged sync changes | NEXT: record commit hash in CONTEXT/RESUME POINTER and make final local docs checkpoint, then push only post-merge-sync.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: update CONTEXT and RESUME POINTER to the tested sync commit and push-only next step | WHY: make the new branch handoff accurate before the authorized push.
+- 2026-10-28 Asia/Kolkata | RESULT: CONTEXT and RESUME POINTER updated for tested commit febb024 and authorized push | FILES: docs/CONTEXT.md, docs/WORKLOG.md | NEXT: commit this final handoff pointer locally, then push only post-merge-sync.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: validate final handoff docs and push candidate before local checkpoint | WHY: confirm whitespace, marker, protected-file, secret-path, and unmerged-path conditions after pointer edits.
+- 2026-10-28 Asia/Kolkata | RESULT: final doc whitespace exit 0; marker scan exit 0; protected diff/unmerged/tracked-env values above | FILES: docs/WORKLOG.md | NEXT: if all safe, commit locally, then push only post-merge-sync.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: create local handoff checkpoint containing updated context and pointer | WHY: persist the current branch/base recommendation and approval gate before push.
