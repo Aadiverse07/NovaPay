@@ -62,6 +62,19 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (!response.ok) throw Object.assign(new Error('Document storage cleanup failed.'), { statusCode: 503, code: 'STORAGE_DELETE_FAILED' });
       return true;
     },
+    async download(bucket, objectPath) {
+      const encodedPath = objectPath.split('/').map(encodeURIComponent).join('/');
+      let response;
+      try {
+        response = await fetchImpl(`${apiUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodedPath}`, {
+          method: 'GET', headers: serviceHeaders, signal: AbortSignal.timeout(20000),
+        });
+      } catch {
+        throw Object.assign(new Error('Document storage is unavailable.'), { statusCode: 503, code: 'STORAGE_UNAVAILABLE' });
+      }
+      if (!response.ok) throw Object.assign(new Error('Document storage could not read the file.'), { statusCode: response.status === 404 ? 404 : 503, code: response.status === 404 ? 'DOCUMENT_FILE_NOT_FOUND' : 'STORAGE_DOWNLOAD_FAILED' });
+      return Buffer.from(await response.arrayBuffer());
+    },
   };
   const database = {
     async rpc(name, args) {

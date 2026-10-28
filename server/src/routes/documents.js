@@ -2,6 +2,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import express from 'express';
 import { PDFDocument } from 'pdf-lib';
 import { rbac } from '../middleware/auth.js';
+import { auditApiAction } from '../services/audit.js';
+import { createGeminiDocumentOCRProvider, validateDocumentExtraction } from '../services/documentOcr.js';
 
 export const DOCUMENT_BUCKET = 'novapay-documents';
 const MIME_TYPES = new Map([
@@ -30,11 +32,101 @@ async function pageCount(mime, bytes) {
   }
 }
 
-export function documentRoutes({ config, identity }) {
+export function documentRoutes({ config, identity, provider, events }) {
   const router = express.Router();
+  const ocrProvider = provider || createGeminiDocumentOCRProvider({ apiKey: config.GEMINI_API_KEY, model: config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite', timeoutMs: config.DOCUMENT_OCR_TIMEOUT_MS || 25000, events });
   const maxFileMb = config.DOCUMENT_MAX_FILE_MB || 10;
   const maxPages = config.DOCUMENT_MAX_PAGES || 10;
   const maxBytes = maxFileMb * 1024 * 1024;
+
+  router.post('/documents/:documentId/process', rbac(['owner', 'admin', 'accountant']), async (req, res, next) => {
+    let usageId = null;
+    let usageFinalized = false;
+    let documentId;
+    try {
+      const uuid = zodUuid(req.params.documentId);
+      if (!uuid) throw publicError(400, 'DOCUMENT_ID_INVALID', 'A valid document ID is required.');
+      documentId = uuid;
+      if (!config.GEMINI_API_KEY && !provider) throw publicError(503, 'OCR_NOT_CONFIGURED', 'Document OCR is not configured.');
+      const db = identity?.database;
+      if (!db?.select || !db?.rpc || !identity?.storage?.download) throw publicError(503, 'DOCUMENT_PROCESSING_UNAVAILABLE', 'Document processing is unavailable.');
+      const select = (params) => new URLSearchParams(params).toString();
+      const rows = await db.select('documents', select({ select: 'id,org_id,uploaded_by,filename,mime_type,byte_size,page_count,storage_path,sha256,status,duplicate_of,extraction,updated_at', id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, limit: '1' }));
+      const document = Array.isArray(rows) ? rows[0] : null;
+      if (!document) throw publicError(404, 'DOCUMENT_NOT_FOUND', 'Document not found.');
+      if (document.status === 'processed') return res.json({ document: { id: document.id, status: document.status, extraction: document.extraction }, cached: true });
+      if (document.status !== 'uploaded') throw publicError(409, 'DOCUMENT_NOT_READY', 'Document is not available for processing.');
+
+      const matches = await db.select('documents', select({ select: 'id', org_id: `eq.${req.orgId}`, sha256: `eq.${document.sha256}`, id: `neq.${documentId}`, order: 'created_at.asc', limit: '1' }));
+      const duplicate = Array.isArray(matches) ? matches[0] : null;
+      if (duplicate) {
+        await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.uploaded' }), {
+          status: 'rejected', duplicate_of: duplicate.id, extraction: { duplicateOf: duplicate.id, reason: 'duplicate_document' }, updated_at: new Date().toISOString(),
+        });
+        await auditApiAction(identity, req, { action: 'document.rejected', entity: 'document', entityId: documentId, metadata: { reason: 'duplicate_document', duplicateOf: duplicate.id } });
+        return res.status(409).json({ error: { code: 'DUPLICATE_DOCUMENT', message: 'This document duplicates another file in the organization.' }, duplicateOf: duplicate.id });
+      }
+
+      const claim = await db.rpc('claim_document_processing', {
+        p_org: req.orgId, p_document: documentId, p_actor: req.user.id,
+        p_concurrent_limit: config.DOCUMENT_MAX_CONCURRENT_JOBS_PER_ORG || 2,
+      });
+      if (!claim?.claimed) throw publicError(409, claim?.reason === 'concurrency_limit' ? 'DOCUMENT_PROCESSING_LIMIT' : 'DOCUMENT_NOT_READY', claim?.reason === 'concurrency_limit' ? 'The organization already has the maximum number of document jobs running.' : 'Document is no longer available for processing.');
+
+      let reserved;
+      try {
+        reserved = await db.rpc('reserve_ai_usage', {
+          p_org: req.orgId, p_user: req.user.id, p_route: 'ocr', p_model: config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite',
+          p_input_tokens: Math.max(1, Number(document.page_count) * 258 + 200),
+          p_user_limit: config.AI_DAILY_USER_LIMIT || 5, p_org_limit: config.AI_DAILY_ORG_LIMIT || 20,
+        });
+      } catch (error) {
+        await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processing' }), { status: 'uploaded', updated_at: new Date().toISOString() }).catch(() => {});
+        throw error;
+      }
+      if (!reserved?.allowed) {
+        await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processing' }), { status: 'uploaded', updated_at: new Date().toISOString() });
+        throw publicError(429, 'AI_DAILY_LIMIT', 'The daily AI request limit has been reached. Try again after the UTC day reset.');
+      }
+      usageId = reserved.usageId || reserved.usage_id;
+      if (!usageId) {
+        await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processing' }), { status: 'uploaded', updated_at: new Date().toISOString() });
+        throw publicError(503, 'AI_USAGE_UNAVAILABLE', 'The OCR usage reservation could not be recorded.');
+      }
+
+      const started = Date.now();
+      try {
+        const bytes = await identity.storage.download(DOCUMENT_BUCKET, document.storage_path);
+        const result = await ocrProvider.extract({ mimeType: document.mime_type, bytes, pageCount: document.page_count });
+        const normalized = validateDocumentExtraction(result.text);
+        await db.rpc('complete_ai_usage', {
+          p_usage_id: usageId, p_input_tokens: Number(result.usage?.inputTokens || Math.max(1, Number(document.page_count) * 258 + 200)),
+          p_output_tokens: Number(result.usage?.outputTokens || 0), p_latency_ms: Date.now() - started,
+          p_model: result.model || config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite', p_status: 'completed',
+        });
+        usageFinalized = true;
+        const extraction = { ...normalized, model: result.model || config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite' };
+        await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processing' }), { status: 'processed', extraction, updated_at: new Date().toISOString() });
+        return res.json({ document: { id: documentId, status: 'processed', extraction }, cached: false });
+      } catch (error) {
+        if (usageId && !usageFinalized) {
+          const invalid = error?.code === 'OCR_INVALID_RESPONSE' || error?.code === 'OCR_FIELD_VALIDATION';
+          await db.rpc('complete_ai_usage', {
+            p_usage_id: usageId, p_input_tokens: Math.max(1, Number(document.page_count) * 258 + 200), p_output_tokens: 0,
+            p_latency_ms: Date.now() - started, p_model: config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite', p_status: invalid ? 'invalid_response' : 'error',
+          }).catch(() => {});
+          usageFinalized = true;
+        }
+        await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processing' }), {
+          status: 'failed', extraction: { errorCode: error?.code || 'OCR_FAILED' }, updated_at: new Date().toISOString(),
+        }).catch(() => {});
+        throw error;
+      }
+    } catch (error) {
+      return next(error);
+    }
+  });
+
   router.post('/documents', express.raw({ type: [...MIME_TYPES.keys()], limit: maxBytes }), rbac(['owner', 'admin', 'accountant']), async (req, res, next) => {
     try {
       const mime = (req.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
@@ -75,4 +167,8 @@ export function documentRoutes({ config, identity }) {
     }
   });
   return router;
+}
+
+function zodUuid(value) {
+  return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : null;
 }

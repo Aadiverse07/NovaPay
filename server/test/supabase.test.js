@@ -53,3 +53,17 @@ test('document upload SQL rate limit is surfaced as HTTP 429 without database de
     return true;
   });
 });
+
+test('private Storage download uses the server-side service role and returns bytes without logging content', async () => {
+  let seen;
+  const bytes = Buffer.from('%PDF-test');
+  const services = createSupabaseServices(config, async (url, options) => {
+    seen = { url: String(url), options };
+    return new Response(bytes, { status: 200, headers: { 'content-type': 'application/pdf' } });
+  });
+  const downloaded = await services.storage.download('novapay-documents', 'org-id/document-id/sample file.pdf');
+  assert.equal(downloaded.toString(), bytes.toString());
+  assert.match(seen.url, /sample%20file\.pdf$/);
+  assert.equal(seen.options.headers.apikey, config.SUPABASE_SERVICE_ROLE_KEY);
+  assert.equal(seen.options.method, 'GET');
+});

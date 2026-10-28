@@ -12,6 +12,9 @@ const schema = z.object({
   LLM_API_KEY: z.string().optional().default(''),
   LLM_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
   LLM_FALLBACK_MODEL: z.string().min(1).default('gemini-3.1-flash-lite'),
+  GEMINI_API_KEY: z.string().trim().optional().default(''),
+  DOCUMENT_OCR_MODEL: z.enum(['gemini-3.5-flash-lite']).default('gemini-3.5-flash-lite'),
+  DOCUMENT_OCR_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(25000),
   AI_DAILY_USER_LIMIT: z.coerce.number().int().min(1).max(1000).default(5),
   AI_DAILY_ORG_LIMIT: z.coerce.number().int().min(1).max(10000).default(20),
   AI_MAX_INPUT_CHARS: z.coerce.number().int().min(100).max(1000).default(1000),
@@ -55,4 +58,5 @@ export const config = Object.freeze({
   resolvedLLMApiKey: parsed.data.LLM_API_KEY || (parsed.data.LLM_PROVIDER === 'anthropic' ? parsed.data.ANTHROPIC_API_KEY : ''),
   resolvedLLMModel: parsed.data.LLM_PROVIDER === 'anthropic' && !process.env.LLM_MODEL ? parsed.data.ANTHROPIC_MODEL : parsed.data.LLM_MODEL,
   hasAI: Boolean(parsed.data.LLM_API_KEY || (parsed.data.LLM_PROVIDER === 'anthropic' && parsed.data.ANTHROPIC_API_KEY)),
+  hasDocumentOCR: Boolean(parsed.data.GEMINI_API_KEY),
 });
