@@ -1,12 +1,14 @@
 import 'dotenv/config';
 import fs from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { createApp } from '../server/src/app.js';
 import { config } from '../server/src/config.js';
+import { buildMaintenanceRunFixtures, cleanupMaintenanceRun } from './phase6-maintenance-run.mjs';
 
 const journalPath = new URL('../docs/WORKLOG.md', import.meta.url);
-const sb = config.SUPABASE_URL.replace(/\/$/, '');
-const serviceKey = config.SUPABASE_SERVICE_ROLE_KEY;
-const anonKey = config.SUPABASE_ANON_KEY;
+const sb = (config.SUPABASE_URL || '').replace(/\/$/, '');
+const serviceKey = config.SUPABASE_SERVICE_ROLE_KEY || '';
+const anonKey = config.SUPABASE_ANON_KEY || '';
 const serviceHeaders = { apikey: serviceKey, ...(serviceKey.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${serviceKey}` }), 'Content-Type': 'application/json' };
 const anonHeaders = { apikey: anonKey, 'Content-Type': 'application/json' };
 const fixture = {
@@ -15,11 +17,9 @@ const fixture = {
   accountant: { email: 'novapay-phase3-accountant@example.test', role: 'accountant' },
 };
 const orgName = 'NovaPay Phase 3 Verification A';
-const records = {
-  contractor: 'T3 Fixed Live Verification Contractor',
-  low: { title: 'T3 Fixed Live Self Approval', documentRef: 'T3-LIVE-QUOTE-LOW', amountMinor: 9999, requester: 'owner' },
-  threshold: { title: 'T3 Fixed Live Dual Approval', documentRef: 'T3-LIVE-QUOTE-THRESHOLD', amountMinor: 10000, requester: 'accountant' },
-};
+const runId = randomUUID();
+const records = buildMaintenanceRunFixtures(runId);
+const runRows = { requests: [], quotations: [] };
 const tokens = {};
 const identities = {};
 let orgId;
@@ -101,12 +101,12 @@ function expectStatus(result, statuses, label) {
   if (!statuses.includes(result.status)) throw new Error(`${label}-unexpected-http-${result.status}`);
 }
 async function getRequest(def) {
-  const rows = await lookup(`maintenance_requests?${q({ select: 'id,status,requested_by,chosen_quotation_id,estimate_minor,title', org_id: `eq.${orgId}`, title: `eq.${def.title}`, limit: '2' })}`, `Inspect deterministic request ${def.title}`);
-  if (rows.length > 1) throw new Error('duplicate-deterministic-maintenance-request');
-  if (rows.length) return rows[0];
   const created = await apiStep(`Create fixed request ${def.title}`, def.requester, '/api/funds/maintenance', { method: 'POST', body: { title: def.title, scope: 'Fixed live T3 workflow verification; no work or payment will be performed.', estimateMinor: def.amountMinor } });
   expectStatus(created, [201], 'create-request');
-  return created.body.request;
+  const row = created.body.request;
+  if (!row?.id) throw new Error('created-request-id-missing');
+  runRows.requests.push(row);
+  return row;
 }
 async function getContractor() {
   const rows = await lookup(`fund_contractors?${q({ select: 'id,name', org_id: `eq.${orgId}`, name: `eq.${records.contractor}`, limit: '2' })}`, 'Inspect deterministic contractor');
@@ -114,15 +114,16 @@ async function getContractor() {
   if (rows.length) return rows[0];
   const created = await apiStep('Create fixed verification contractor', 'accountant', '/api/funds/contractors', { method: 'POST', body: { name: records.contractor } });
   expectStatus(created, [201], 'create-contractor');
+  runRows.contractor = created.body.contractor;
   return created.body.contractor;
 }
 async function getQuotation(def, requestId, contractorId) {
-  const rows = await lookup(`fund_quotations?${q({ select: 'id,maintenance_request_id,amount_minor,document_ref', org_id: `eq.${orgId}`, maintenance_request_id: `eq.${requestId}`, document_ref: `eq.${def.documentRef}`, limit: '2' })}`, `Inspect deterministic quotation ${def.documentRef}`);
-  if (rows.length > 1) throw new Error('duplicate-deterministic-quotation');
-  if (rows.length) return rows[0];
   const created = await apiStep(`Add fixed quotation ${def.documentRef}`, 'accountant', `/api/funds/maintenance/${requestId}/quotations`, { method: 'POST', body: { contractorId, amountMinor: def.amountMinor, documentRef: def.documentRef } });
   expectStatus(created, [201], 'add-quotation');
-  return created.body.quotation;
+  const row = created.body.quotation;
+  if (!row?.id) throw new Error('created-quotation-id-missing');
+  runRows.quotations.push(row);
+  return row;
 }
 async function assertRejected(label, actor, requestId, suffix, body, status, code) {
   const result = await apiStep(label, actor, `/api/funds/maintenance/${requestId}/${suffix}`, { method: 'POST', body });
@@ -231,12 +232,28 @@ try {
   const thresholdCurrent = await currentRequest(threshold.id, 'Reload threshold request after quotation');
   await step('Verify under-threshold T3 lifecycle', 'exercise requester self-approval rejection, skipped-state rejection, foreign-quotation rejection, contractor verification, and single-approver threshold', () => ensureStage(records.low, lowCurrent, lowQuote, thresholdQuote, contractor));
   await step('Verify exact-threshold T3 lifecycle', 'exercise requester/accountant separation, contractor verification, duplicate approver rejection, and two distinct approvers at exactly 10000 minor units', () => ensureStage(records.threshold, thresholdCurrent, thresholdQuote, lowQuote, contractor));
-  const summary = { result: 'PASS', apiStatus: 200, ordinaryJwtRpcDenials: '6/6 HTTP 403 verified in preflight', lowAmountMinor: 9999, lowFinalStatus: 'payment_approved', thresholdAmountMinor: 10000, thresholdFinalStatus: 'payment_approved', thresholdApprovals: 2, thresholdApproversDistinct: true, apiSteps: apiSteps.length, fixtureUsersOrOrganizationsCreated: 0 };
+  const cleanup = await step('Clean up this run’s maintenance rows', 'delete only IDs created by this run in FK order; preserve append-only audit history', cleanupRunRows);
+  const summary = { result: 'PASS', apiStatus: 200, ordinaryJwtRpcDenials: '6/6 HTTP 403 verified in preflight', lowAmountMinor: 9999, lowFinalStatus: 'payment_approved', thresholdAmountMinor: 10000, thresholdFinalStatus: 'payment_approved', thresholdApprovals: 2, thresholdApproversDistinct: true, apiSteps: apiSteps.length, fixtureUsersOrOrganizationsCreated: 0, runMaintenanceRowsCleaned: cleanup.requests, auditHistoryPreserved: true };
   process.stdout.write(`${JSON.stringify(summary)}\n`);
 } catch (error) {
   process.stdout.write(`FAIL ${String(error?.message || 'T3 live verification failed').replace(/https?:\/\/\S+/g, '[URL]').slice(0, 180)}; inspect docs/WORKLOG.md for the exact failed step.\n`);
   process.exitCode = 1;
 } finally {
+  if (runRows.requests.length || runRows.contractor) {
+    try { await cleanupRunRows(); }
+    catch (error) {
+      process.stdout.write(`FAIL run-scoped-cleanup ${String(error?.message || 'failed').slice(0, 120)}; inspect only this run’s IDs.\n`);
+      process.exitCode = 1;
+    }
+  }
   console.log = oldLog;
   if (server) await new Promise((resolve) => server.close(resolve));
+}
+
+async function cleanupRunRows() {
+  const result = await cleanupMaintenanceRun({ orgId, requests: runRows.requests, contractor: runRows.contractor, service });
+  runRows.requests = [];
+  runRows.quotations = [];
+  runRows.contractor = null;
+  return { value: result, detail: `removed ${result.requests} run request rows; immutable audit records retained` };
 }
