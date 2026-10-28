@@ -43,3 +43,13 @@ test('new Supabase secret keys are sent as apikey only, never as bearer JWTs', a
   assert.equal(seen.apikey, 'sb_secret_new-format');
   assert.equal(Object.hasOwn(seen, 'Authorization'), false);
 });
+
+test('document upload SQL rate limit is surfaced as HTTP 429 without database details', async () => {
+  const services = createSupabaseServices(config, async () => new Response(JSON.stringify({ code: 'P0001', message: 'document upload rate limit reached' }), { status: 400 }));
+  await assert.rejects(services.database.rpc('reserve_document_upload', {}), (error) => {
+    assert.equal(error.statusCode, 429);
+    assert.equal(error.code, 'DOCUMENT_UPLOAD_RATE_LIMITED');
+    assert.equal(error.message, 'Document upload rate limit reached.');
+    return true;
+  });
+});

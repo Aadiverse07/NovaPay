@@ -1131,3 +1131,14 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | Conflict-marker grep (final) | PASS | No marker strings found in JS/CSS/HTML/Markdown outside node_modules.
 2026-10-28 | `npm test` on phase5-backend | PASS | 135 passed, 0 failed.
 2026-10-28 | `npm run check:migrations` on phase5-backend | PASS | Migrations 0001–0014 parsed successfully.
+2026-10-28 | `node --test server/test/documents-upload.test.js` | PASS | 4 passed, 0 failed (initial focused Part 1 coverage).
+2026-10-28 | `npm test` (first Part 1 run) | FAIL | Migration parser passed 15/15 and new tests passed, but existing app tests failed because injected partial configs omitted DOCUMENT_MAX_FILE_MB; fixed with route defaults.
+2026-10-28 | `npm test` (after route defaults) | PASS | 140 passed, 0 failed; migration parser parsed 15/15.
+2026-10-28 | `npm run check:migrations` | PASS | 15/15 numbered migrations parsed; 0015 remains unapplied.
+2026-10-28 | `node --check` (changed JS files) | PASS | 6 files parsed.
+2026-10-28 | `git diff --check` | PASS | no whitespace errors.
+2026-10-28 | Migration runtime/Storage policy test on Supabase | UNVERIFIED | 0015 was not applied per instruction.
+2026-10-28 | `npm test` (final Part 1 source including processing-claim RPC) | PASS | 140 passed, 0 failed; parser included migration 0015.
+2026-10-28 | `npm run check:migrations` (final Part 1 migration) | PASS | 15/15 parsed; 0015 not applied.
+2026-10-28 | `node --check` (final changed JS files) | PASS | Six files parsed successfully.
+2026-10-28 | `git diff --check` (final Part 1 source/docs) | PASS | No whitespace errors.
