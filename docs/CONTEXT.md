@@ -1,73 +1,68 @@
-# NovaPay Post-Merge Sync Handoff
+# NovaPay Phase 5 Planning Handoff
 
 ## HEADER
 - Updated: 2026-10-28 Asia/Calcutta.
-- Branch: `post-merge-sync`, created from `origin/main` at `af42d6b`; sync code commit `febb024` and handoff commit `d90b7bd` were pushed; remote matched HEAD at last check.
-- Current phase/task: PREP BEFORE PHASE 5, sync task 6/7. Phase 5 has not started.
-- Last completed published checkpoint: `d90b7bd` on `origin/post-merge-sync`; zero unpushed commits at last check.
+- Branch: `phase5-backend`, created from updated `origin/main`; current HEAD `a2a5eb26a0a6319fbb3595d2804124dcf1acf498`.
+- Phase/task: Phase 5 PLANNING ONLY, task 3/5; blocked pending the Build Blueprint PDF. No Phase 5 code started.
 
 ## DONE
-- PRs #3 and #4 (fund-wiring) and teammate PR #5 are merged to main; main also includes the later UI sync commit `9b5fe89` and merge `af42d6b`.
-- `origin/main` health checked in a detached temp worktree: `npm ci` PASS (89 packages), `npm test` PASS 131/131, migrations 0001–0014 PASS.
-- Phase 6 backend pieces confirmed on main: `server/index.js`, `server/src/routes/funds.js`, `supabase/migrations/0001`–`0014`, `scripts/verify-phase6-maintenance-live.js`, `src/`, `docs/`.
-- PR #5 first-parent diff: 12 icon assets plus dashboard/preview and UI source/CSS modules (33 files, 1,866 insertions, 46 deletions). It did not change root `server.js`.
-- Selective sync carries: repeat-safe maintenance verifier and tests; `/api/events` empty fallback and test; API `cache: no-store` and test; assistant response route/reason/citations and message-only request wiring.
+- Saved the prior uncommitted post-merge-sync WORKLOG and its delta to `/tmp/novapay-post-merge-sync-WORKLOG.md` and `.patch`; re-applied the branch-switch entry on phase5-backend.
+- Updated local main from origin/main and created `phase5-backend` from it; no code/commit/push on main.
+- `npm ci` PASS: 89 packages, 0 vulnerabilities.
+- `npm test` PASS: 135/135.
+- `npm run check:migrations` PASS: 0001–0014 parse.
+- Read WORKLOG pointer, CONTEXT, newest TEST-REPORT and DECISIONS entries.
+- Inspected `/Users/aditya/Paypal_hackathon/PaypalFinal.png`; Week 5 visibly lists community/automation, fundraising and maintenance fund management, invoice automation, rate limiting/security, UX polish/testing.
 
 ## IN PROGRESS
-- Exact task: no code work remains; current branch is published and awaiting browser checks/PR merge/Phase 5 approval.
-- Edited files: `scripts/phase6-maintenance-run.mjs`, `scripts/verify-phase6-maintenance-live.js`, `server/src/routes/status.js`, `server/test/api-client.test.js`, `server/test/phase6-maintenance-run.test.js`, `server/test/routes.test.js`, `src/api-client.js`, `src/dashboard.js`, `src/novapay-live.js`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
-- Main HTML, styling, protected design files, and `assets/` remain from main; no conflict markers/unmerged paths were found.
+- Exact task: planning only; the referenced NovaPay Build Blueprint PDF was not found in repo, Codex attachments, Downloads, Desktop, or the user workspace search.
+- Files edited this task: `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`.
+- Do not infer detailed tasks, files, migrations, acceptance criteria, or simulation boundaries from the image alone.
 
 ## NEXT STEPS
-1. Human completes `docs/BROWSER-CHECKLIST.md` and reviews/merges the sync PR.
-2. Recheck the base after merge.
-3. Await explicit Phase 5 approval. Do not start Phase 5 yet.
+1. Ask the user to reattach the NovaPay Build Blueprint PDF or provide its exact accessible path.
+2. Read its Phase 5 section alongside `PaypalFinal.png`.
+3. Write the requested planning-only scope: tasks, files, migrations, later acceptance statuses, and simulated boundaries.
+4. Commit the plan docs locally and reply `AWAITING PLAN OK`.
+5. Do not write Phase 5 code until the user replies `PLAN OK`.
 
 ## USER ACTIONS PENDING
-- Fill PASS/FAIL for browser-only steps in `docs/BROWSER-CHECKLIST.md` (sign-in/dashboard, events Network/console, AI badge/hover, Fundraising/Maintenance/Transparency, theme, mobile drawer, notifications).
-- Review/merge the new sync PR after push.
-- Explicitly approve Phase 5 with “APPROVED: start Phase 5”.
+- Provide the missing NovaPay Build Blueprint PDF (reattach it or provide an accessible exact path).
+- After receiving the plan, explicitly reply `PLAN OK` before any Phase 5 implementation.
 
 ## LIVE STATE
-- User-confirmed migrations 0001–0014 applied; 0003 status: applied. No migrations changed in this sync.
-- User previously reported tunnel and webhook fixed; current tunnel/webhook state not rechecked in this task.
-- No live API/browser tests run in this sync. Last captured live T3 verifier PASS was 2026-10-27; see TEST-REPORT/WORKLOG.
-- Config key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`.
+- Prior user-confirmed migrations 0001–0014 applied; 0003 applied. No migration was changed or applied in this task.
+- Tunnel/webhook status was not rechecked this task; user last reported them fixed.
+- Tests this task were local only; no real Supabase, PayPal, webhook, or browser checks were run.
+- Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`.
 
 ## TEST STATE
 | Check | Status | Date | Command |
 |---|---|---|---|
-| Main install | PASS, 89 packages, 0 vulnerabilities | 2026-10-28 | `npm ci` in detached `origin/main` worktree |
-| Main unit suite | PASS 131/131 | 2026-10-28 | `npm test` in detached `origin/main` worktree |
-| Main migrations | PASS 14/14 | 2026-10-28 | `npm run check:migrations` in detached `origin/main` worktree |
-| Synced unit suite | PASS 135/135 | 2026-10-28 | `npm test` |
-| Synced migrations | PASS 14/14 | 2026-10-28 | `npm run check:migrations` |
-| Changed JS/MJS syntax | PASS, 9 files | 2026-10-28 | explicit loop of `node --check` |
-| `git diff --check` | PASS | 2026-10-28 | `git diff --check` |
-| Conflict-marker scan | PASS, no unresolved markers | 2026-10-28 | grep scan across source/docs, excluding node_modules |
-| Protected paths | PASS, empty diff | 2026-10-28 | `git diff --stat origin/main -- <protected paths>` |
-| Browser/manual checks | UNVERIFIED | 2026-10-28 | `docs/BROWSER-CHECKLIST.md` |
+| Dependency install | PASS, 89 packages, 0 vulnerabilities | 2026-10-28 | `npm ci` |
+| Unit suite | PASS 135/135 | 2026-10-28 | `npm test` |
+| Migration parser | PASS, 14 files | 2026-10-28 | `npm run check:migrations` |
+| Blueprint Phase 5 scope | UNVERIFIED | 2026-10-28 | PDF not located; user input needed |
+| PaypalFinal.png | inspected | 2026-10-28 | visual review |
 
 ## KNOWN ISSUES AND RISKS
-- Main's root `server.js` is a legacy standalone server added in 9b5fe89 after PR #5; package startup uses `server/index.js`, which remains present. Do not use root server as backend replacement.
-- `git cherry` marks many old commits as unmatched because PR #4 was squash-merged; use the file-level diff and recorded selected changes, not cherry-pick all history.
-- Browser verification remains pending. First historical live verifier invocation remains UNVERIFIED; later captured invocations passed.
-- Invoice sending and maintenance payouts are SIMULATED; this is not for real money.
+- Phase 5 scope is not sufficiently specified without the Blueprint; the image provides only a high-level roadmap card.
+- Invoice sending and maintenance payouts remain SIMULATED in the existing product; Phase 5 scope may change only if the Blueprint explicitly says so.
+- Browser checklist from prior work remains pending.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll back all. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT receives 403.
+- Supabase SQL Editor runs inside one transaction; errors roll everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT gets 403.
 - PostgREST embeds need explicit foreign-key names when multiple relationships exist.
-- `audit_log` is insert-only with ON DELETE RESTRICT; delete journal_entries first, then audit_log, organizations, auth.users using `scripts/cleanup-phase2-test-data.sql`; reuse fixed users/orgs.
+- `audit_log` is insert-only with ON DELETE RESTRICT; cleanup journal_entries first, then audit_log, organizations, auth.users using `scripts/cleanup-phase2-test-data.sql`; reuse fixed users/orgs.
 - PayPal Sandbox buyer must be a US Personal account; seller USD only; use Visa at checkout; webhook URL ends `/api/webhook` and `PAYPAL_WEBHOOK_ID` matches.
 - Raw body is needed for PayPal signature verification.
 - Never print `.env` values; use key names only.
 
 ## DO NOT
-- Never push `fund-wiring` or `main`; never force-push; only push `post-merge-sync` under current authorization.
-- Do not start Phase 5 until explicit approval.
-- Do not edit protected files (`tokens.css`, `base.css`, `fonts.css`, `tailwind.novapay.preset.*`, `theme.js`, hero/fx/brand reveal/logo files, or `assets/`).
-- Do not edit applied migrations, weaken tests, or commit `.env`.
+- Never push; never force-push; do not touch main beyond the requested fetch/pull.
+- Do not write Phase 5 code until explicit `PLAN OK`.
+- Do not edit applied migrations or protected design files; do not weaken tests or commit `.env`.
 
 ## RESUME COMMANDS
 ```sh
@@ -75,6 +70,4 @@ git branch --show-current
 git status --short --branch
 npm test
 npm run check:migrations
-git diff --check
-git log origin/main..post-merge-sync --oneline
 ```

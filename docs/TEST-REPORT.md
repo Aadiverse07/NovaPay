@@ -1129,3 +1129,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `npm run check:migrations` after sync/docs | PASS | Migrations 0001–0014 parsed successfully.
 2026-10-28 | Conflict-marker grep (first final scan) | FAIL | Matched the literal marker tokens inside the CONTEXT.md test command description; no unmerged Git paths. Removed that literal description and reran.
 2026-10-28 | Conflict-marker grep (final) | PASS | No marker strings found in JS/CSS/HTML/Markdown outside node_modules.
+2026-10-28 | `npm test` on phase5-backend | PASS | 135 passed, 0 failed.
+2026-10-28 | `npm run check:migrations` on phase5-backend | PASS | Migrations 0001–0014 parsed successfully.

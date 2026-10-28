@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: Phase 6 sync complete on main-derived `post-merge-sync`; Phase 5 is not started.
-- Last finished step: pushed `d90b7bd63dcf616054a62045e717a5693db8e926`; remote matched HEAD and zero unpushed commits at last check.
-- Carried forward only verified backend/verifier fixes and focused API wiring; main UI/assets remain intact. Tests 135/135; migrations 14/14; syntax 9/9; protected diff empty.
-- Human pending: complete `docs/BROWSER-CHECKLIST.md`, review/merge sync PR, then explicitly approve Phase 5.
-- NEXT: stop and wait for browser checklist/merge/approval. Do not start Phase 5 or push `fund-wiring`/`main`.
+- Current task: Phase 5 PLANNING ONLY on `phase5-backend`; no implementation started.
+- Last finished step: branch created from origin/main `a2a5eb2`; `npm ci` PASS (89), `npm test` PASS (135/135), migration check PASS (14/14); saved journal delta reapplied.
+- Scope source: `PaypalFinal.png` shows Week 5 themes, but NovaPay Build Blueprint PDF is missing after workspace search; detailed scope is not known.
+- Pending human action: reattach the Blueprint PDF or provide its exact path; later reply `PLAN OK` after reviewing plan.
+- NEXT: read Phase 5 PDF section, write plan only, WIP-commit docs, then wait. No Phase 5 code before `PLAN OK`.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2733,3 +2733,34 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 - 2026-10-28 Asia/Kolkata | ABOUT TO: update handoff docs with actual remote push result and zero-ahead confirmation | WHY: replace the pre-push pointer with the verified published state.
 - 2026-10-28 Asia/Kolkata | RESULT: CONTEXT and RESUME POINTER reflect pushed hash d90b7bd and human next steps; exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md | NEXT: checkpoint the post-push handoff update locally; do not start Phase 5.
 - 2026-10-28 Asia/Kolkata | ABOUT TO: commit the post-push RESUME POINTER and CONTEXT correction locally | WHY: checkpoint the verified remote state before updating the same authorized branch.
+- 2026-10-28 Asia/Kolkata | RESULT: updated main pulled and phase5-backend created from it | FILES: docs/WORKLOG.md (branch journal entry) | NEXT: reapply saved post-merge-sync journal delta, verify branch, then run requested install/tests.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect the saved post-merge-sync WORKLOG delta before reapplying | WHY: carry only the locally unpushed journal entries onto phase5-backend without overwriting main history.
+- 2026-10-28 Asia/Kolkata | RESULT: saved journal patch inspected; no environment values included | FILES: docs/WORKLOG.md | NEXT: apply only the saved journal patch if it does not duplicate main entries.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: reapply the saved branch-switch journal line to phase5-backend WORKLOG | WHY: carry the pre-switch action record without replacing the newer main journal.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: fetch origin, switch to main, pull, and create phase5-backend from updated main | WHY: start planning on the user-prescribed current-main base; saved WORKLOG is safe in /tmp.
+- 2026-10-28 Asia/Kolkata | RESULT: phase5-backend created from updated origin/main at a2a5eb2; saved journal entry re-applied | FILES: docs/WORKLOG.md | NEXT: install dependencies and run requested checks on phase5-backend.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: run npm ci on phase5-backend | WHY: install the dependencies from the current main lockfile before planning checks.
+- 2026-10-28 Asia/Kolkata | RESULT: npm ci exit 0 | FILES: node_modules (ignored), docs/WORKLOG.md | NEXT: run npm test and compare count with expected 135.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: run npm test on phase5-backend | WHY: verify current main includes the expected merged Phase 6 test suite.
+- 2026-10-28 Asia/Kolkata | RESULT: phase5-backend npm test exit 0; totals shown above | FILES: docs/WORKLOG.md | NEXT: append actual result to TEST-REPORT.md, then run migration check.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: record npm test result and run migration parser on phase5-backend | WHY: maintain append-only test history and verify migrations before reading scope documents.
+- 2026-10-28 Asia/Kolkata | RESULT: 135/135 test result appended | FILES: docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: run `npm run check:migrations`.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: run npm run check:migrations on phase5-backend | WHY: verify migration set remains 0001–0014.
+- 2026-10-28 Asia/Kolkata | RESULT: migration check exit 0; parser output shown above | FILES: docs/WORKLOG.md | NEXT: record exact migration result, then read the required handoff and scope materials.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: append migration parser result to TEST-REPORT.md | WHY: record the completed phase5-backend migration check.
+- 2026-10-28 Asia/Kolkata | RESULT: migration check recorded as PASS for 14/14 | FILES: docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: read PDF skill workflow and locate the Blueprint PDF/image.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: read PDF skill instructions and locate Blueprint PDF/PaypalFinal.png | WHY: follow required PDF inspection workflow and locate scope artifacts.
+- 2026-10-28 Asia/Kolkata | RESULT: PDF workflow and repository artifact search completed | FILES: docs/WORKLOG.md | NEXT: if artifacts are not in repo, search the known user attachment locations; then read continuity docs.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: read the correct PDF skill instructions and search user attachment storage | WHY: repository search found no named Blueprint/PDF image artifacts.
+- 2026-10-28 Asia/Kolkata | RESULT: PDF skill read; attachment search output above (empty means files unavailable at these paths) | FILES: docs/WORKLOG.md | NEXT: search workspace paths for exact document names and read continuity docs.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: read resume pointer/context/latest test and decision entries; locate Phase 5 source artifacts | WHY: confirm continuation state and determine whether required blueprint material is available.
+- 2026-10-28 Asia/Kolkata | RESULT: continuity docs and candidate attachment locations inspected | FILES: docs/WORKLOG.md | NEXT: inspect exact Blueprint/PDF and image locations; if missing, stop and ask for them.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: search the user workspace for the named Phase 5 Blueprint and PaypalFinal image | WHY: prior repo/attachment/Downloads/Desktop search found neither; verify before declaring scope unavailable.
+- 2026-10-28 Asia/Kolkata | RESULT: full user-workspace filename search completed; no matching source artifact shown | FILES: docs/WORKLOG.md | NEXT: confirm exact provided attachment metadata/availability; if absent, update handoff as blocked and ask user to attach both files.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect PaypalFinal.png with the image viewer | WHY: extract the available visual scope evidence while the Blueprint PDF is missing.
+- 2026-10-28 Asia/Kolkata | RESULT: PaypalFinal.png reviewed; its Week 5 card lists community/automation, fundraising and maintenance fund management, invoice automation, rate limiting/security, UX polish/testing; Blueprint PDF not found | FILES: docs/WORKLOG.md | NEXT: record the missing Blueprint as a planning blocker and request its path/re-upload.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect phase5-backend head/status and confirm only continuity docs are pending | WHY: prepare a local planning handoff checkpoint without touching main.
+- 2026-10-28 Asia/Kolkata | RESULT: branch/head/status inspected; env/secret path scan above | FILES: docs/WORKLOG.md | NEXT: rewrite CONTEXT/RESUME POINTER and append the planning decision, then WIP-commit locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: rewrite CONTEXT/RESUME POINTER and append the scope-source decision | WHY: make the planning blocker and verified baseline resumable before stopping.
+- 2026-10-28 Asia/Kolkata | RESULT: planning blocker recorded in CONTEXT/WORKLOG/DECISIONS; no implementation scope invented; exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md, docs/DECISIONS.md | NEXT: verify docs and create local WIP checkpoint, then ask for Blueprint PDF.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: validate and WIP-commit the planning-only handoff docs on phase5-backend | WHY: preserve test evidence and the missing-PDF blocker before asking the user.
