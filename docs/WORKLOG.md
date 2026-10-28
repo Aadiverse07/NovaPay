@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`.
+- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`; latest local checkpoint `7b6ab23`, not pushed.
 - DONE: org-scoped GET added; focused tests 6/6; full npm test 165/165; migrations 16/16; node --check 2 changed JS files; git diff --check PASS.
 - Live checks: B retrieval 200/1 citation not referencing org A; B RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage 400 denied; A positive retrieval 200/1 citation.
 - Delete: API 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1; post-delete direct Storage GET 400 JSON/88 bytes, CF BYPASS, no cache-control/age.
@@ -3400,3 +3400,5 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: stage API/contract docs, CONTEXT/DECISIONS/TEST-REPORT/WORKLOG, document route and route tests; WHY: commit approved GET fix and completed diagnostics without touching `.env.example`.
 2026-10-28 | RESULT: staged only 8 intended files; `.env.example` excluded; next local WIP commit.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 scoped document GET and live diagnosis`; WHY: checkpoint authorized route fix, passing tests and live findings; never push.
+2026-10-28 | RESULT: WIP commit `7b6ab23` created locally; `.env.example` remains unstaged; next point resume docs to latest commit.
+2026-10-28 | ABOUT TO: update CONTEXT/RESUME POINTER latest local commit to 7b6ab23 and checkpoint the pointer correction; WHY: ensure continuation points to exact saved state.
