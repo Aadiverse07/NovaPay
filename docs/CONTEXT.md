@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
-- Last baseline checkpoint: `cc05f1c`; current live-diagnostic journal edits pending local commit
+- Baseline checkpoint: `cc05f1c`; latest diagnostic checkpoint: `b97ac39` (local, not pushed)
 - Current task: diagnose document processing HTTP 503; no push
 
 ## DONE

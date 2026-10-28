@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: diagnose Phase 5 document processing HTTP 503; branch `phase5-backend`.
-- Last finished step: `npm ci` PASS (94 packages; 0 vulnerabilities; one install-script warning); `npm test` PASS 164/164; `npm run check:migrations` PASS 16/16. Local checkpoint `cc05f1c`.
+- Last finished step: `npm ci` PASS (94 packages; 0 vulnerabilities; one install-script warning); `npm test` PASS 164/164; `npm run check:migrations` PASS 16/16. Baseline checkpoint `cc05f1c`; latest diagnostic checkpoint `b97ac39`.
 - Live diagnostic: fixed Phase 3 owner A/org A; synthetic upload HTTP 201; processing HTTP 503 `OCR_NOT_CONFIGURED`; run-scoped DELETE HTTP 200; server log corroborates; server stopped.
 - Root cause: GEMINI_API_KEY is absent from process environment and loaded config (presence booleans only; value never read/printed). No code changes.
 - Next: human completes `.env`, then restart `npm start` and retry one synthetic sample. If processing succeeds, rerun cross-tenant, delete cascade and Storage-object RLS with fixed accounts; log each result.
@@ -3232,3 +3232,7 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: verify branch/status/staged filenames and `.env` tracking; WHY: prepare local WIP commit of the updated handoff only.
 2026-10-28 | RESULT: branch phase5-backend; only four continuity docs modified; `.env` not tracked and no files staged; next commit diagnostic checkpoint locally.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 resume: diagnose OCR configuration`; WHY: preserve verified missing-key cause and pending human action; never push.
+2026-10-28 | RESULT: diagnostic checkpoint commit `b97ac39` created on phase5-backend; no push; next align pointer's latest commit reference.
+2026-10-28 | ABOUT TO: update RESUME POINTER/CONTEXT to identify latest diagnostic checkpoint b97ac39 and commit the small handoff correction.
+2026-10-28 | RESULT: pointer and context now identify b97ac39 as latest local diagnostic checkpoint; next save correction locally.
+2026-10-28 | ABOUT TO: commit the resume pointer correction; WHY: ensure the committed handoff points to the latest checkpoint.
