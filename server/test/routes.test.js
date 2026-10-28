@@ -137,6 +137,17 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
   });
 });
 
+test('events route returns empty activity when the snapshot read fails', async () => {
+  const repos = createRepositories();
+  repos.events.snapshot = async () => { throw Object.assign(new Error('database read failed'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' }); };
+  const app = createApp({ config: baseConfig, repos, identity });
+  await withServer(app, async (base, _logs, request) => {
+    const response = await request(`${base}/api/events`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { events: [], calls: [] });
+  });
+});
+
 test('AI route accepts legacy context fields but supplies only verified membership context', async () => {
   const repos = createRepositories();
   let observed;
