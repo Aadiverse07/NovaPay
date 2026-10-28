@@ -1,10 +1,11 @@
 ## RESUME POINTER
-- Current task: Phase 6 sync complete on main-derived `post-merge-sync`; Phase 5 is not started.
-- Last finished step: pushed `d90b7bd63dcf616054a62045e717a5693db8e926`; remote matched HEAD and zero unpushed commits at last check.
-- Carried forward only verified backend/verifier fixes and focused API wiring; main UI/assets remain intact. Tests 135/135; migrations 14/14; syntax 9/9; protected diff empty.
-- Human pending: complete `docs/BROWSER-CHECKLIST.md`, review/merge sync PR, then explicitly approve Phase 5.
-- NEXT: stop and wait for browser checklist/merge/approval. Do not start Phase 5 or push `fund-wiring`/`main`.
-
+- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`; latest local checkpoint `7b6ab23`, not pushed.
+- DONE: org-scoped GET added; focused tests 6/6; full npm test 165/165; migrations 16/16; node --check 2 changed JS files; git diff --check PASS.
+- Live checks: B retrieval 200/1 citation not referencing org A; B RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage 400 denied; A positive retrieval 200/1 citation.
+- Delete: API 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1; post-delete direct Storage GET 400 JSON/88 bytes, CF BYPASS, no cache-control/age.
+- Diagnosis: current object deletion works; previous HTTP 200 was not reproduced and its cause is undetermined. Storage objects SQL count UNVERIFIED (no local SQL client/CLI/connection). Storage code checks DELETE response.ok. No fix 2 applied.
+- Next: review staged paths; keep pre-existing `.env.example` unstaged; WIP-commit locally; never push.
+- Pending: optional user-provided SQL path if exact `storage.objects` SQL count is still needed.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -2733,3 +2734,694 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 - 2026-10-28 Asia/Kolkata | ABOUT TO: update handoff docs with actual remote push result and zero-ahead confirmation | WHY: replace the pre-push pointer with the verified published state.
 - 2026-10-28 Asia/Kolkata | RESULT: CONTEXT and RESUME POINTER reflect pushed hash d90b7bd and human next steps; exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md | NEXT: checkpoint the post-push handoff update locally; do not start Phase 5.
 - 2026-10-28 Asia/Kolkata | ABOUT TO: commit the post-push RESUME POINTER and CONTEXT correction locally | WHY: checkpoint the verified remote state before updating the same authorized branch.
+- 2026-10-28 Asia/Kolkata | RESULT: updated main pulled and phase5-backend created from it | FILES: docs/WORKLOG.md (branch journal entry) | NEXT: reapply saved post-merge-sync journal delta, verify branch, then run requested install/tests.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect the saved post-merge-sync WORKLOG delta before reapplying | WHY: carry only the locally unpushed journal entries onto phase5-backend without overwriting main history.
+- 2026-10-28 Asia/Kolkata | RESULT: saved journal patch inspected; no environment values included | FILES: docs/WORKLOG.md | NEXT: apply only the saved journal patch if it does not duplicate main entries.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: reapply the saved branch-switch journal line to phase5-backend WORKLOG | WHY: carry the pre-switch action record without replacing the newer main journal.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: fetch origin, switch to main, pull, and create phase5-backend from updated main | WHY: start planning on the user-prescribed current-main base; saved WORKLOG is safe in /tmp.
+- 2026-10-28 Asia/Kolkata | RESULT: phase5-backend created from updated origin/main at a2a5eb2; saved journal entry re-applied | FILES: docs/WORKLOG.md | NEXT: install dependencies and run requested checks on phase5-backend.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: run npm ci on phase5-backend | WHY: install the dependencies from the current main lockfile before planning checks.
+- 2026-10-28 Asia/Kolkata | RESULT: npm ci exit 0 | FILES: node_modules (ignored), docs/WORKLOG.md | NEXT: run npm test and compare count with expected 135.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: run npm test on phase5-backend | WHY: verify current main includes the expected merged Phase 6 test suite.
+- 2026-10-28 Asia/Kolkata | RESULT: phase5-backend npm test exit 0; totals shown above | FILES: docs/WORKLOG.md | NEXT: append actual result to TEST-REPORT.md, then run migration check.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: record npm test result and run migration parser on phase5-backend | WHY: maintain append-only test history and verify migrations before reading scope documents.
+- 2026-10-28 Asia/Kolkata | RESULT: 135/135 test result appended | FILES: docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: run `npm run check:migrations`.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: run npm run check:migrations on phase5-backend | WHY: verify migration set remains 0001–0014.
+- 2026-10-28 Asia/Kolkata | RESULT: migration check exit 0; parser output shown above | FILES: docs/WORKLOG.md | NEXT: record exact migration result, then read the required handoff and scope materials.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: append migration parser result to TEST-REPORT.md | WHY: record the completed phase5-backend migration check.
+- 2026-10-28 Asia/Kolkata | RESULT: migration check recorded as PASS for 14/14 | FILES: docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: read PDF skill workflow and locate the Blueprint PDF/image.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: read PDF skill instructions and locate Blueprint PDF/PaypalFinal.png | WHY: follow required PDF inspection workflow and locate scope artifacts.
+- 2026-10-28 Asia/Kolkata | RESULT: PDF workflow and repository artifact search completed | FILES: docs/WORKLOG.md | NEXT: if artifacts are not in repo, search the known user attachment locations; then read continuity docs.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: read the correct PDF skill instructions and search user attachment storage | WHY: repository search found no named Blueprint/PDF image artifacts.
+- 2026-10-28 Asia/Kolkata | RESULT: PDF skill read; attachment search output above (empty means files unavailable at these paths) | FILES: docs/WORKLOG.md | NEXT: search workspace paths for exact document names and read continuity docs.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: read resume pointer/context/latest test and decision entries; locate Phase 5 source artifacts | WHY: confirm continuation state and determine whether required blueprint material is available.
+- 2026-10-28 Asia/Kolkata | RESULT: continuity docs and candidate attachment locations inspected | FILES: docs/WORKLOG.md | NEXT: inspect exact Blueprint/PDF and image locations; if missing, stop and ask for them.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: search the user workspace for the named Phase 5 Blueprint and PaypalFinal image | WHY: prior repo/attachment/Downloads/Desktop search found neither; verify before declaring scope unavailable.
+- 2026-10-28 Asia/Kolkata | RESULT: full user-workspace filename search completed; no matching source artifact shown | FILES: docs/WORKLOG.md | NEXT: confirm exact provided attachment metadata/availability; if absent, update handoff as blocked and ask user to attach both files.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect PaypalFinal.png with the image viewer | WHY: extract the available visual scope evidence while the Blueprint PDF is missing.
+- 2026-10-28 Asia/Kolkata | RESULT: PaypalFinal.png reviewed; its Week 5 card lists community/automation, fundraising and maintenance fund management, invoice automation, rate limiting/security, UX polish/testing; Blueprint PDF not found | FILES: docs/WORKLOG.md | NEXT: record the missing Blueprint as a planning blocker and request its path/re-upload.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect phase5-backend head/status and confirm only continuity docs are pending | WHY: prepare a local planning handoff checkpoint without touching main.
+- 2026-10-28 Asia/Kolkata | RESULT: branch/head/status inspected; env/secret path scan above | FILES: docs/WORKLOG.md | NEXT: rewrite CONTEXT/RESUME POINTER and append the planning decision, then WIP-commit locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: rewrite CONTEXT/RESUME POINTER and append the scope-source decision | WHY: make the planning blocker and verified baseline resumable before stopping.
+- 2026-10-28 Asia/Kolkata | RESULT: planning blocker recorded in CONTEXT/WORKLOG/DECISIONS; no implementation scope invented; exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md, docs/DECISIONS.md | NEXT: verify docs and create local WIP checkpoint, then ask for Blueprint PDF.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: validate and WIP-commit the planning-only handoff docs on phase5-backend | WHY: preserve test evidence and the missing-PDF blocker before asking the user.
+- 2026-10-28 Asia/Kolkata | RESULT: docs whitespace check exit 0; planning-only WIP commit exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md | NEXT: wait for the missing Blueprint PDF; do not write Phase 5 code.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect PDF metadata and extract text from the external Build Blueprint | WHY: locate and verify the exact Phase 5 planning scope; keep the source PDF outside the repository.
+- 2026-10-28 Asia/Kolkata | RESULT: Blueprint metadata/text extraction completed; Phase 5 search output above | FILES: docs/WORKLOG.md; external PDF unchanged | NEXT: identify the exact PDF page(s), render for visual confirmation, and compare with PaypalFinal.png.
+- 2026-10-28 Asia/Kolkata | RESULT: pdfinfo confirmed 31-page Blueprint; pdftotext unavailable, so section extraction did not run | FILES: docs/WORKLOG.md; no source PDF edits | NEXT: check installed Python PDF libraries and use a read-only extractor if present.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: check Python PDF extraction/rendering libraries | WHY: follow the PDF skill fallback after system Poppler text extractor was unavailable.
+- 2026-10-28 Asia/Kolkata | RESULT: installed PDF library/tool availability checked | FILES: docs/WORKLOG.md | NEXT: extract Phase 5 pages using an available Python library; if none exist, use system preview tools or request setup.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: extract Phase 5 text with pypdf and identify PDF page numbers | WHY: use the installed supported fallback and determine pages for visual review.
+- 2026-10-28 Asia/Kolkata | RESULT: Phase 5 text/page extraction completed | FILES: docs/WORKLOG.md; PDF unchanged | NEXT: render all relevant Phase 5 pages and compare visually with PaypalFinal.png.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: extract complete Phase 5 roadmap/prompt pages and render pages 15 and 28 | WHY: confirm the exact goal, tasks, and acceptance criteria visually before writing a plan.
+- 2026-10-28 Asia/Kolkata | RESULT: Phase 5 page text extracted and roadmap/prompt pages rendered in /tmp | FILES: docs/WORKLOG.md; source PDF unchanged | NEXT: inspect both renders and compare Phase 5 naming to the infographic.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: record pre-visual inspection of Blueprint Phase 5 pages | WHY: PDF skill calls for page rendering review when available.
+- 2026-10-28 Asia/Kolkata | RESULT: rendered PDF pages visually confirm Phase 5 is RAG/OCR; page 15 places it in Week 4, while page 28 contains detailed tasks/acceptance. PaypalFinal.png separately labels Week 5 as community/automation | FILES: docs/WORKLOG.md; external sources unchanged | NEXT: inspect current repository surfaces to map the plan to existing code without implementing it.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect existing document, AI, storage, migration, and UI files for planning-only mapping | WHY: distinguish implemented infrastructure from net-new Phase 5 work.
+- 2026-10-28 Asia/Kolkata | RESULT: current document/RAG implementation surface inspected | FILES: docs/WORKLOG.md | NEXT: map exact files/migration/acceptance plan and simulated boundaries from PDF only.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect route registration, AI OCR branch, document UI stub, and current schema/repository conventions | WHY: name concrete existing files in the plan and avoid proposing duplicate modules.
+- 2026-10-28 Asia/Kolkata | RESULT: concrete current file/function locations gathered for Phase 5 plan | FILES: docs/WORKLOG.md | NEXT: finalize plan task list, migration scope, acceptance statuses, and simulation boundaries.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect service/repository/AI integration points and migration conventions | WHY: ensure the plan names accurate extension points and guards against duplicate scaffolding.
+- 2026-10-28 Asia/Kolkata | RESULT: integration, repository, migration, and AI service extension points inspected | FILES: docs/WORKLOG.md | NEXT: compose a plan anchored to existing paths and PDF acceptance criteria.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: write Phase 5 planning document and update continuity/decision handoff | WHY: the numbered PDF scope is now available and detailed; keep this change planning-only.
+- 2026-10-28 Asia/Kolkata | RESULT: Phase 5 plan, scope-reconciliation decision, CONTEXT and RESUME POINTER written; exit 1; no application code edited | FILES: docs/PHASE5-PLAN.md, docs/CONTEXT.md, docs/DECISIONS.md, docs/WORKLOG.md | NEXT: review docs, whitespace-check, WIP-commit locally, and await PLAN OK.
+- 2026-10-28 Asia/Kolkata | RESULT CORRECTION: PHASE5-PLAN.md was created, but the following Python edit failed to parse because of apostrophes in a single-quoted decision string; CONTEXT/DECISIONS/RESUME POINTER were not updated | FILES: docs/PHASE5-PLAN.md, docs/WORKLOG.md | NEXT: rerun continuity-doc updates with triple-quoted strings.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: update DECISIONS, CONTEXT and RESUME POINTER with the already-written RAG/OCR plan | WHY: previous script failed before those files were changed.
+- 2026-10-28 Asia/Kolkata | RESULT: DECISIONS, CONTEXT and RESUME POINTER updated; exit 0 | FILES: docs/DECISIONS.md, docs/CONTEXT.md, docs/WORKLOG.md | NEXT: review plan/docs, whitespace-check, and WIP-commit locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: review planning doc diff, RESUME POINTER, and confirm no application files changed | WHY: ensure only planning/continuity documents are in the checkpoint.
+- 2026-10-28 Asia/Kolkata | RESULT: planning content and pointer reviewed; whitespace clean; changed paths are docs only | FILES: docs/PHASE5-PLAN.md, docs/CONTEXT.md, docs/DECISIONS.md, docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: stage docs, verify external PDF is absent, and WIP-commit locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: stage and WIP-commit the Phase 5 plan and continuity docs locally | WHY: checkpoint planning only; external Blueprint PDF and all application code must remain uncommitted/unchanged.
+- 2026-10-28 Asia/Kolkata | RESULT: local planning WIP commit exit 0; only plan/continuity docs staged; external PDF excluded | FILES: docs/PHASE5-PLAN.md, docs/CONTEXT.md, docs/DECISIONS.md, docs/WORKLOG.md | NEXT: reply with the plan summary and await ; do not implement.
+- 2026-10-28 Asia/Kolkata | RESULT CORRECTION: planning commit succeeded as 110b171; the post-commit log line triggered shell substitution on the backticked approval phrase, so its wording was incomplete | FILES: docs/WORKLOG.md | NEXT: append the exact outcome in plain text and verify the local branch/status.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: record the exact local WIP commit result and final planning-only state | WHY: leave an unambiguous handoff after the commit.
+- 2026-10-28 Asia/Kolkata | RESULT: local WIP commit 110b171 contains only Phase 5 plan/continuity docs; no app code, migration, PDF or push | FILES: docs/WORKLOG.md | NEXT: wait for user PLAN OK.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: verify phase5-backend and inspect status before Part 1 | WHY: confirm implementation is confined to the approved branch.
+- 2026-10-28 Asia/Kolkata | RESULT: branch/status/head inspected | FILES: docs/WORKLOG.md | NEXT: inspect Supabase storage/service and role/config conventions.
+- 2026-10-28 Asia/Calcutta | ABOUT TO: inspect auth role claims, Supabase storage/database service methods, config, and RLS style | WHY: build Part 1 using existing tenant authorization and service conventions.
+- 2026-10-28 Asia/Kolkata | RESULT: role, storage, config, database and RLS patterns inspected | FILES: docs/WORKLOG.md | NEXT: verify Gemini embedding API/model/dimension from current official documentation.
+2026-10-28  — About to inspect Part 1 resume pointer and repository files; reason: continue from durable handoff.
+2026-10-28  — RESULT: PASS; branch is phase5-backend at recorded planning checkpoint; only WORKLOG.md was modified before this resume; CONTEXT and pointer are stale and need Part 1 handoff rewrite. NEXT: verify Gemini embedding model/dimension from official docs before fixing migration schema.
+2026-10-28  — ABOUT TO: Verify current Gemini embedding model limits and dimensions in official Google documentation. WHY: migration 0015 must record a real fixed vector dimension before implementation.
+2026-10-28  — RESULT: PASS; official Google Gemini docs list stable gemini-embedding-001 and recommended dimensions 768/1536/3072; select 768 for storage/query efficiency. Source checked 2026-10-28: https://ai.google.dev/gemini-api/docs/embeddings . NEXT: inspect existing auth, body parsing, storage client, migration conventions, and PDF utilities.
+2026-10-28  — ABOUT TO: Inspect targeted server auth/config/parser/storage and migration conventions plus available PDF parsers. WHY: implement the upload route consistently and enforce actual page/file limits.
+2026-10-28  — RESULT: PASS; server uses auth middleware with membership role, audit helper and generic PostgREST operations; JSON parser precedes route registration, so raw upload route must be mounted before express.json. No PDF parser dependency is declared. NEXT: inspect audit helper, role/test fixtures, and migration parser requirements before choosing upload handling.
+2026-10-28  — ABOUT TO: Inspect audit helper, test fixture conventions, migration validation logic, role naming and PDF parser availability. WHY: avoid introducing incompatible storage paths, auth behavior, or unverifiable page counting.
+2026-10-28  — RESULT: PASS; accountant role is present; existing audit helper supports required event fields; no PDF parser installed; existing app global body validator requires raw uploads to be mounted before JSON parsing. NEXT: add a pinned PDF page-count dependency and implement an isolated raw-upload route with DB-backed hourly reservation and audit.
+2026-10-28  — ABOUT TO: Add the PDF parser needed to enforce the 10-page cap on actual PDFs. WHY: content validation without parsed page count would leave a user-approved upload limit unenforced.
+2026-10-28  — ABOUT TO: Collect dependency installation result. WHY: confirm whether the PDF parser is available before coding the upload validator.
+2026-10-28  — RESULT: PASS; exact pdf-lib 1.17.1 dependency installed; 95 packages audited, 0 vulnerabilities. No secrets printed. NEXT: write Part 1 migration and upload service/route, with PDF page counting and private org-scoped object paths.
+2026-10-28  — ABOUT TO: Add migration 0015 plus configurable upload validation, service-role Storage operations, and the accountant-gated upload API. WHY: implement approved Part 1 scope without applying the migration.
+2026-10-28  — RESULT: PARTIAL; Part 1 migration, Storage adapter and raw authenticated upload route added; still need atomic audit insertion, tests, parser/runtime checks, and docs. Potential issue found: migration hard caps must align with configurable ceiling. NEXT: refine DB upload reservation/audit and add route tests.
+2026-10-28  — ABOUT TO: Align environment-configurable limits with migration hard ceilings, make upload plus audit transactional in the reserve RPC, and add upload route tests. WHY: prevent successful uploads without audit records and prove role/type/page boundaries.
+2026-10-28  — RESULT: PASS; migration 0015, service Storage adapter, config limits, authenticated raw upload API, and initial upload tests added; audit now inserts in the same DB RPC transaction. NEXT: inspect diff and run the focused upload tests, then repair any failures.
+2026-10-28  — ABOUT TO: Run focused Part 1 upload tests and inspect the changed-file summary. WHY: catch endpoint/test defects before the required full validation suite.
+2026-10-28  — RESULT: PASS; focused upload suite 4/4 passed, covering PDF acceptance, viewer denial, MIME mismatch, page/byte limits, storage rollback and migration security clauses. `git diff --stat` omits new untracked files, so include them in next status review. NEXT: fix service mapping for actual DB rate-limit code and improve test observability; inspect migration parser next.
+2026-10-28  — ABOUT TO: Check error-code handling, package diff, and all tracked/untracked changes; then refine the actual PostgREST rate-limit mapping and test. WHY: the fake 429 test must reflect production database error behavior.
+2026-10-28  — RESULT: PASS; production `database.rpc` currently maps all PostgREST errors to 503; test fixture omitted unused Express import; untracked Part 1 route/test/migration confirmed. NEXT: map only the upload RPC rate-limit SQLSTATE to 429 and add a service adapter test for that exact behavior.
+2026-10-28  — ABOUT TO: Read UTC clock for timestamped Part 1 journal entries. WHY: ensure new WORKLOG entries carry the required time as well as date.
+2026-10-28 14:32 IST — RESULT: PASS; UTC clock checked (09:02); use timestamped entries for subsequent journal updates. NEXT: run required Part 1 validations and preserve separate results.
+2026-10-28 14:33 IST — ABOUT TO: Run `npm test` for all unit/integration tests, including migration parser. WHY: verify Part 1 changes before checkpoint.
+2026-10-28 14:34 IST — RESULT: FAIL; `npm test` parsed all 15 migrations and Part 1 tests passed, but many existing createApp tests failed at construction because they pass legacy test configs without DOCUMENT_MAX_FILE_MB, producing `express.raw` limit NaN. Fix by applying the default in documentRoutes for injected configs. NEXT: patch config fallback and rerun npm test.
+2026-10-28 14:34 IST — ABOUT TO: Make document route honor app-level defaults when unit tests or embedding callers inject a partial config. WHY: preserve compatibility with existing createApp fixtures while retaining environment-configured production limits.
+2026-10-28 14:34 IST — RESULT: PASS; document route now defaults partial injected configurations to approved 10 MB, 10-page and 20-upload caps. NEXT: rerun the full test suite.
+2026-10-28 14:35 IST — ABOUT TO: Rerun `npm test` after compatibility fix. WHY: verify the full application suite recovers and all new Part 1 tests remain green.
+2026-10-28 14:35 IST — ABOUT TO: Collect completion status and test totals from the running `npm test`. WHY: capture the final suite result before writing the append-only test entry.
+2026-10-28 14:36 IST — RESULT: PASS; `npm test` completed with 140/140 tests passing; migration parser parsed 0001–0015. NEXT: run standalone migration check, syntax checks on changed JS, and diff whitespace check separately.
+2026-10-28 14:36 IST — ABOUT TO: Run standalone `npm run check:migrations`. WHY: explicitly verify the full 15-file parser command required after Part 1, including unapplied 0015 syntax.
+2026-10-28 14:36 IST — RESULT: PASS; `npm run check:migrations` parsed 15/15 numbered migrations, including 0015. This is a syntax check only, not proof of application/runtime success. NEXT: run `node --check` for every changed JS file.
+2026-10-28 14:37 IST — ABOUT TO: Syntax-check changed JavaScript source and test files with `node --check`. WHY: complete the required Part 1 static validation.
+2026-10-28 14:37 IST — RESULT: PASS; `node --check` passed for all six changed JavaScript source/test files. NEXT: run `git diff --check` before documenting and committing.
+2026-10-28 14:37 IST — ABOUT TO: Run `git diff --check`. WHY: verify no whitespace or patch formatting errors before docs and checkpoint.
+2026-10-28 14:37 IST — RESULT: PASS; `git diff --check` reported no whitespace errors. NEXT: append truthful test results and Part 1 decisions; rewrite CONTEXT and WORKLOG RESUME POINTER.
+2026-10-28 14:38 IST — ABOUT TO: Read the tails of TEST-REPORT and DECISIONS to preserve existing append formats before adding Part 1 records. WHY: continuity files are append-only and must remain accurate.
+2026-10-28 14:38 IST — RESULT: PASS; tails inspected; report supports dated append-only rows and decisions support question/choice/reason/source format. NEXT: record focused, failed and passing suite results plus embedding/default choices; then replace stale CONTEXT and resume pointer.
+2026-10-28 14:39 IST — RESULT: PASS; test report now records all Part 1 runs including initial failure, 140/140 passing suite, standalone migration parser, JS syntax, diff check, and migration-dependent UNVERIFIED. Decisions record model/dimension, limits, role boundaries, provider-data cautions, and audit choice. NEXT: rewrite CONTEXT and RESUME POINTER with exact files and pending migration steps.
+2026-10-28 14:39 IST — ABOUT TO: Confirm branch, HEAD, modified/untracked paths, and absence of `.env` names before rewriting handoff. WHY: CONTEXT must identify the exact Part 1 source state and safe checkpoint scope.
+2026-10-28 14:39 IST — RESULT: PASS; branch phase5-backend, HEAD 110b171; expected Part 1 docs/source/migration/test changes are unstaged; `.env` exists locally but is ignored and untracked (`git status` contains no .env entry). NEXT: rewrite CONTEXT with Part 1 completion and migration application instructions, then refresh RESUME POINTER.
+2026-10-28 14:40 IST — ABOUT TO: Replace stale `docs/CONTEXT.md` with the required Part 1 handoff sections. WHY: record exact source state, limits, tests, unapplied migration and human steps before stopping.
+2026-10-28 14:40 IST — ABOUT TO: Write the complete current `docs/CONTEXT.md` handoff. WHY: replace the planning-only text with Part 1 completion and exact migration gating.
+2026-10-28 14:41 IST — RESULT: PASS; CONTEXT rewritten with all required sections, exact Part 1 files, verified test state and unapplied 0015 instructions (about 95 lines). NEXT: refresh the top RESUME POINTER in WORKLOG, then validate doc lengths and required headings.
+2026-10-28 14:41 IST — ABOUT TO: Replace stale WORKLOG RESUME POINTER with Phase 5 Part 1 checkpoint state. WHY: the old pointer still says planning-only and would misdirect a fresh agent.
+2026-10-28 14:42 IST — ABOUT TO: Add the service-only document-processing claim RPC to migration 0015 so the configured per-org concurrency cap has an atomic enforcement mechanism for Part 2. WHY: Part 1 must provide the schema/control primitive before OCR workers are added.
+2026-10-28 14:42 IST — RESULT: PASS; migration 0015 now contains an org-locked processing-claim RPC that atomically caps active jobs and is executable only by service_role; static assertions cover the function and grants. NEXT: rerun required validations because migration and test source changed.
+2026-10-28 14:43 IST — ABOUT TO: Rerun `npm test` after the concurrency RPC addition. WHY: final test count must cover the final Part 1 source state.
+2026-10-28 14:43 IST — ABOUT TO: Collect final exit and totals for the rerun of `npm test`. WHY: the test process yielded while the last few suites completed.
+2026-10-28 14:44 IST — RESULT: PASS; final `npm test` after concurrency RPC change: 140/140 passed; migrations 0001–0015 parsed in the suite. NEXT: rerun standalone migration parser, node syntax checks and diff check on final source.
+2026-10-28 | `npm test` (final Part 1 source including processing-claim RPC) | PASS | 140 passed, 0 failed; parser included migration 0015.
+2026-10-28 14:44 IST — ABOUT TO: Run standalone `npm run check:migrations` against final migration 0015. WHY: verify SQL and PL/pgSQL syntax after adding the processing-claim RPC.
+2026-10-28 14:44 IST — RESULT: PASS; standalone `npm run check:migrations` parsed all 15 migrations, including 0015. Runtime/apply status remains UNVERIFIED. NEXT: rerun `node --check` on final JS files.
+2026-10-28 | `npm run check:migrations` (final Part 1 migration) | PASS | 15/15 parsed; 0015 not applied.
+2026-10-28 14:45 IST — ABOUT TO: Rerun `node --check` on all changed JavaScript files. WHY: include the final new test assertion and ensure no source syntax regressions.
+2026-10-28 14:45 IST — RESULT: PASS; `node --check` passed on six final JS source/test files. NEXT: rerun `git diff --check`, then update final test report/doc state and prepare WIP commit.
+2026-10-28 | `node --check` (final changed JS files) | PASS | Six files parsed successfully.
+2026-10-28 14:45 IST — ABOUT TO: Run final `git diff --check`. WHY: confirm all modified and new Part 1 files are whitespace-clean before committing.
+2026-10-28 14:45 IST — RESULT: PASS; final `git diff --check` reported no whitespace errors. NEXT: refresh final CONTEXT and RESUME POINTER, then stage only intended files and make the local WIP commit.
+2026-10-28 | `git diff --check` (final Part 1 source/docs) | PASS | No whitespace errors.
+2026-10-28 14:46 IST — ABOUT TO: Finalize Part 1 handoff notes and RESUME POINTER before the local checkpoint. WHY: capture the completed concurrency primitive, current test outcomes and next human action.
+2026-10-28 14:46 IST — RESULT: PASS; RESUME POINTER now says Part 1 code/docs/checks are complete and human migration apply is next after WIP; CONTEXT describes the job-claim RPC and Part 2 handoff. NEXT: inspect changed-file list and confirm no `.env` staged/tracked before WIP commit.
+2026-10-28 14:47 IST — ABOUT TO: Verify final branch/status, tracked/staged `.env` absence, and all modified paths. WHY: enforce local-only commit scope and prevent committing credentials.
+2026-10-28 14:47 IST — ABOUT TO: Stage the verified Part 1 changes with `git add -A`. WHY: prepare the required local checkpoint; `.env` is absent from tracked and staged paths.
+2026-10-28 14:47 IST — RESULT: PASS; changes staged on phase5-backend. NEXT: inspect staged paths and confirm no `.env` or protected UI/design files were included.
+2026-10-28 14:48 IST — RESULT: PASS; staged paths are only the intended Part 1 files and docs; `.env` and protected frontend assets are absent. WORKLOG received this result after staging and is now modified unstaged. NEXT: stage that final journal line, recheck staged scope, then commit.
+2026-10-28 14:48 IST — ABOUT TO: Stage the final WORKLOG status line. WHY: include the post-stage result in the checkpoint journal.
+2026-10-28 14:48 IST — ABOUT TO: Recheck staged paths and staged `.env`/protected-file absence before commit. WHY: the previous staging operation added the final WORKLOG pointer entry; ensure commit scope remains safe.
+2026-10-28 14:49 IST — RESULT: PASS; staged list contains only intended Part 1 files/docs; no `.env` path is staged. WORKLOG has one new verification line, so stage it now before commit.
+2026-10-28 14:49 IST — ABOUT TO: Commit the completed Part 1 checkpoint locally as a WIP commit. WHY: required after the part’s passing checks and continuity-doc updates; never push.
+2026-10-28 14:50 IST — RESULT: PASS; local Part 1 WIP commit created on `phase5-backend`: `eca1196` (`WIP Phase 5 task 1: document upload foundation`); no push. NEXT: update CONTEXT and RESUME POINTER with this code checkpoint hash, record the commit result, and commit the handoff correction locally.
+2026-10-28 14:50 IST — ABOUT TO: Refresh CONTEXT header/task status and RESUME POINTER to reference completed Part 1 WIP commit `eca1196`. WHY: handoff must accurately show source committed and the exact next action.
+2026-10-28 14:50 IST — RESULT: FAIL; pointer/context refresh patch matched stale expected CONTEXT wording; no patch was applied. NEXT: inspect current exact header, IN PROGRESS, NEXT STEPS and pointer lines, then patch against actual text.
+2026-10-28 14:51 IST — ABOUT TO: Update handoff using the exact current text after the prior patch failed. WHY: point future work to committed Part 1 hash `eca1196`, not the stale planning state.
+2026-10-28 14:51 IST — RESULT: FAIL; exact CONTEXT patch did not apply (the file text changed from the displayed slice by the time this patch was evaluated); no user source files were modified by this failed patch. NEXT: read only exact matching lines again and update WORKLOG pointer independently, then replace entire CONTEXT to avoid stale-context edits.
+2026-10-28 14:52 IST — ABOUT TO: Update exact CONTEXT matches and WORKLOG pointer with the completed commit state. WHY: previous attempts used mismatched wording; the current exact lines were inspected.
+2026-10-28 14:52 IST — RESULT: PASS; CONTEXT and top RESUME POINTER now reference implementation commit `eca1196`; Part 1 complete and migration 0015 application is the only required human step before live migration checks. NEXT: refresh timestamp, inspect diff/status/length and run final docs whitespace check.
+2026-10-28 14:53 IST — ABOUT TO: Record the approved OCR provider-interface default and refresh CONTEXT update time. WHY: the user required all provider/default choices to be captured in DECISIONS before proceeding.
+2026-10-28 14:53 IST — RESULT: PASS; Context timestamp refreshed and DECISIONS records the Gemini vision OCR/provider-interface default, with exact model verification deferred to Part 2. NEXT: inspect final docs scope, test-record tails, git status and diff cleanliness before docs checkpoint.
+2026-10-28 14:54 IST — RESULT: PASS; CONTEXT is 75 lines (<150); test/decision tails include final 140/140 result and selected OCR/embedding defaults; only CONTEXT, DECISIONS and WORKLOG remain modified after implementation commit; final diff check clean.
+2026-10-28 | `git diff --check` (handoff docs after commit) | PASS | No whitespace errors.
+2026-10-28 14:54 IST — ABOUT TO: Stage the handoff pointer/context/decision update and final diff-check record. WHY: persist post-commit status and all current continuity docs in a small local WIP checkpoint.
+2026-10-28 14:55 IST — RESULT: PASS; handoff docs checkpoint committed locally as `75fa1c1` (`WIP Phase 5 task 1: finalize handoff`). NEXT: record that result, confirm final branch/worktree and stop for migration apply/CONTINUE.
+2026-10-28 14:55 IST — ABOUT TO: Check final branch, HEAD and remaining worktree changes without reading environment values. WHY: report exact local checkpoint and ensure no secret file was committed.
+2026-10-28 14:55 IST — RESULT: PASS; branch remains `phase5-backend`; HEAD is docs checkpoint `75fa1c1`; only WORKLOG has a final post-check result line unstaged; `git ls-files .env` and `.env` diff path are empty. No push. NEXT: stop and await human migration confirmation, then `CONTINUE`.
+2026-10-28 15:02 IST — ABOUT TO: Record the user-confirmed migration application and inspect branch/worktree state. WHY: update the continuation handoff without starting Part 2.
+2026-10-28 15:02 IST — RESULT: PASS; branch is phase5-backend; only the prior post-check WORKLOG line is modified; pointer and CONTEXT still say migration 0015 is pending. NEXT: record user confirmation, update migration live state and wait-for-CONTINUE pointer; do not claim runtime verification.
+2026-10-28 15:03 IST — ABOUT TO: Record the user-reported 0015 application in CONTEXT, TEST-REPORT and RESUME POINTER. WHY: migration is now reported applied, but no live schema/RLS/API test has run.
+2026-10-28 15:03 IST — RESULT: FAIL; migration-confirmation patch expected stale pointer text and applied no changes. NEXT: inspect exact current pointer and context lines, then patch only those exact text blocks.
+2026-10-28 15:04 IST — ABOUT TO: Replace the exact pending-migration statements shown in the current files and append the confirmation record. WHY: mark only the human-reported apply state, while leaving all live checks UNVERIFIED.
+2026-10-28 15:05 IST — RESULT: PASS; CONTEXT now shows user-confirmed 0015 application; TEST-REPORT records that this is not live test evidence; WORKLOG pointer now awaits `CONTINUE`. No live calls were made. NEXT: inspect status/no `.env`, then checkpoint the confirmation docs locally.
+2026-10-28 15:05 IST — RESULT: PASS; only CONTEXT, TEST-REPORT and WORKLOG changed; `.env` diff path empty; `git diff --check` clean.
+2026-10-28 15:05 IST — ABOUT TO: Create a local-only WIP documentation checkpoint for the applied-migration confirmation. WHY: persist the new resume state; no application changes and no push.
+2026-10-28 15:06 IST — RESULT: PASS; migration-apply confirmation docs committed locally as `6905f04`; no push. NEXT: wait for user `CONTINUE`; do not start Part 2 before it.
+2026-10-28 15:08 IST — ABOUT TO: Verify branch/status and read the current RESUME POINTER, CONTEXT Part 1/2 notes, and recent test/decision entries. WHY: resume Part 2 only from the recorded checkpoint after the user said `CONTINUE`.
+2026-10-28 15:08 IST — RESULT: PASS; branch is `phase5-backend`, prior confirmation doc commit is present, and only WORKLOG is locally modified; however CONTEXT still has stale pending-apply language despite WORKLOG/TEST-REPORT saying applied. NEXT: correct the handoff, then inspect live verification helpers and Part 1 database/storage adapters.
+2026-10-28 15:09 IST — ABOUT TO: Reconcile stale CONTEXT migration status with user confirmation and update Phase 5 task to Part 2. WHY: user has now authorized continuation and handoff must not say migration application is pending.
+2026-10-28 15:09 IST — RESULT: FAIL; CONTEXT patch failed because its header differed from the expected time; no patch applied. NEXT: read current exact CONTEXT lines again and use precise edits.
+2026-10-28 15:10 IST — RESULT: FAIL; CONTEXT patch found another case/text mismatch around the `Left` line; no changes applied. NEXT: inspect only the target lines and use smaller exact replacement blocks.
+2026-10-28 15:10 IST — ABOUT TO: Apply small exact edits to CONTEXT for the authorized Part 2 state. WHY: stale migration/phase statements need reconciliation before further implementation.
+2026-10-28 15:11 IST — RESULT: FAIL; CONTEXT update still mismatched at the numbered NEXT STEPS block; patch was atomic and no changes applied. NEXT: inspect lines 18–34 verbatim and replace those sections separately.
+2026-10-28 15:11 IST — ABOUT TO: Update only the exact phase/task, next-step, status and risk lines currently present in CONTEXT. WHY: stale instructions still say to wait for the already-received CONTINUE.
+2026-10-28 15:12 IST — RESULT: PASS; CONTEXT now reflects Part 2 authorized/in progress and 0015 user-confirmed applied; direct live checks remain UNVERIFIED. NEXT: inspect migration/runtime helpers, Gemini AI provider, and ai_usage reservations before implementation.
+2026-10-28 15:12 IST — ABOUT TO: Inspect existing live verification scripts, provider setup, AI budget methods, and document route/storage API shapes. WHY: reuse established safe interfaces and avoid printing key values.
+2026-10-28 15:12 IST — RESULT: PASS; inspected `createApp`, Gemini adapter, AI route, usage repository and upload route. OCR must use configured provider interface and AI daily limits; current config does not consume `GEMINI_API_KEY` explicitly. NEXT: verify current official Gemini vision model/API and rate-limit docs, then verify live 0015 objects if environment permits.
+2026-10-28 15:13 IST — ABOUT TO: Check Google’s official Gemini model and document-understanding/API docs for a current vision model and PDF request limits. WHY: choose a supported model and safe call shape for Part 2 OCR.
+2026-10-28 15:13 IST — RESULT: UNVERIFIED; an empty read-only shell command ran without output; no files changed. NEXT: perform the planned official Google documentation search.
+2026-10-28 15:14 IST — RESULT: PASS; official docs show Gemini supports PDF-native vision through generateContent, up to 50 MB/1000 pages; input inline is suitable for these 10 MB max files. Model catalog currently lists gemini-3.5-flash-lite as stable. NEXT: verify OCR model’s multimodal/free-tier availability and record exact source/date.
+2026-10-28 15:14 IST — ABOUT TO: Verify `gemini-3.5-flash-lite` image/PDF support and free-tier availability using official Google model/pricing pages. WHY: the OCR call needs a concrete supported vision model without assuming all stable models support free-tier multimodal input.
+2026-10-28 15:16 IST — RESULT: PASS; official Google docs confirm stable `gemini-3.5-flash-lite` accepts PDF/image and has a free tier; Google’s pricing page says free-tier content may be used to improve products. Sources checked 2026-10-28: https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite and https://ai.google.dev/gemini-api/docs/pricing . NEXT: record exact OCR model/data-use choice and inspect safe live-verifier environment variable names.
+2026-10-28 15:17 IST — ABOUT TO: Inspect the first safe sections of existing live verifiers for fixture IDs/env key names and their auth-token handling. WHY: assess whether a non-mutating real JWT-denial check for the new service-only RPC can be executed without exposing credentials.
+2026-10-28 15:17 IST — RESULT: PASS; live scripts reuse fixed named Phase 3 owner/accountant fixtures and keep JWTs in memory; service-role verifier helpers print statuses/details only. Existing code exposes the AI usage reserve/complete repo methods. NEXT: update stale CONTEXT/RESUME POINTER for Part 2, then run read-only migration checks using the existing fixed accountant.
+2026-10-28 15:18 IST — ABOUT TO: Refresh the current resume pointer and CONTEXT for Part 2 before live verification. WHY: user authorized Part 2, and old instructions still say wait.
+2026-10-28 15:18 IST — RESULT: FAIL; combined update failed on the CONTEXT timestamp match; no file changes applied. NEXT: refresh the WORKLOG pointer alone, then inspect the actual CONTEXT header before editing it.
+2026-10-28 15:18 IST — RESULT: PASS; CONTEXT already reflects Part 2 in progress and user-confirmed apply, likely from partial earlier edits; WORKLOG RESUME POINTER remains stale. NEXT: inspect remaining CONTEXT status/next-step lines and rewrite pointer only.
+2026-10-28 15:18 IST — RESULT: PASS; CONTEXT is now internally consistent for Part 2, though its timestamp and remaining live status need refresh later; RESUME POINTER remains stale. NEXT: update only the pointer, then proceed with safe live checks.
+2026-10-28 15:18 IST — ABOUT TO: Replace the stale top WORKLOG pointer with the current Part 2 task and live-check next action. WHY: new agent must resume without reading prior thread history.
+2026-10-28 15:19 IST — RESULT: PASS; top pointer now identifies Part 2, prior commits, model choice, pending live checks and implementation steps. NEXT: run non-mutating live schema/storage checks and ordinary-user RPC denial using fixed accountant auth.
+2026-10-28 15:20 IST — ABOUT TO: Perform read-only live checks for migration 0015: fixed accountant magic-link session, documents/chunks/search-hits visibility, vector column, private bucket, service-role processing RPC, and ordinary-user denial. WHY: user confirmed apply; validate deployed schema and least privilege before wiring OCR.
+2026-10-28 15:20 IST — ABOUT TO: Collect the read-only migration verification output. WHY: the live check is still running; only status codes and named checks should be captured.
+2026-10-28 15:21 IST — RESULT: PARTIAL; documents, `document_chunks.embedding`, search-hits table and private bucket returned HTTP 200; fixed accountant session worked; ordinary JWT call to service-only RPC returned 403. Service-role RPC returned 403 because probe used a non-member placeholder org, so its successful service execution is UNVERIFIED. NEXT: retry service RPC with the fixed accountant’s real existing org, still using a nonexistent document so no row is changed.
+2026-10-28 | Live 0015 probe (first run) | PARTIAL / UNVERIFIED | documents table 200, vector column 200, search_hits 200, private bucket 200, fixed accountant session 200, ordinary JWT RPC denied 403; service-role RPC used fake non-member org and got 403, so service-role invocation not verified.
+2026-10-28 15:22 IST — ABOUT TO: Retry live service-role RPC verification using the fixed accountant’s actual existing organization. WHY: distinguish function grant/existence from the earlier deliberate fake-org membership rejection; target document remains nonexistent, so no document state changes.
+2026-10-28 15:22 IST — ABOUT TO: Collect the retried service-role RPC verification result. WHY: the bounded read-only membership/RPC probe has yielded.
+2026-10-28 15:23 IST — RESULT: PASS; fixed accountant session and membership returned 200; service-role `claim_document_processing` returned 200 with `not_available` for a nonexistent document (no row mutation). Combined with ordinary JWT denial 403, 0015 grant boundary is live-verified. NEXT: inspect createAIService budget implementation details and document persistence APIs for OCR job processing.
+2026-10-28 | Live 0015 probe (fixed org retry) | PASS | Fixed accountant session 200; existing accountant membership 200; service-role claim RPC 200 and returned not_available for nonexistent document. Ordinary JWT denial 403 from prior probe.
+2026-10-28 15:24 IST — ABOUT TO: Read the exact existing AI usage reserve/complete repository implementation and config defaults. WHY: OCR calls must use the same atomic daily user/org budgets and completion statuses rather than a parallel counter.
+2026-10-28 15:24 IST — RESULT: PASS; AI repository already atomically reserves/completes `ai_usage` with routes `ocr` supported and daily user/org limits. Config currently lacks explicit GEMINI_API_KEY/OCR model settings; OCR should call repo usage methods. NEXT: fix stale Context header/pointer and record live checks + OCR model decision accurately.
+2026-10-28 15:25 IST — ABOUT TO: Verify the applied document bucket is private and has expected size/MIME restrictions by inspecting only safe metadata fields. WHY: prior probe checked endpoint status but did not assert the returned bucket properties.
+2026-10-28 15:25 IST — ABOUT TO: Collect private-bucket metadata check result. WHY: the bounded service-role metadata read is still in progress.
+2026-10-28 15:26 IST — RESULT: PASS; Supabase reports bucket HTTP 200, public=false, 10 MiB cap and exactly the expected allowed MIME types. NEXT: update test report/context live state and checkpoint the 0015 verification/model selection before implementation.
+2026-10-28 15:26 IST — ABOUT TO: Update CONTEXT with live 0015/Storage verification and chosen OCR model before starting implementation. WHY: checkpoint boundary after two live verification rounds; keep remaining unverified claims explicit.
+2026-10-28 15:26 IST — RESULT: PASS; CONTEXT records the live tables/vector, service-only RPC 403 boundary and private bucket metadata; Storage-object RLS remains UNVERIFIED. NEXT: refresh RESUME POINTER with OCR model and implementation start, then commit docs-only checkpoint.
+2026-10-28 15:27 IST — ABOUT TO: Refresh RESUME POINTER with completed live validation and precise Part 2 implementation plan. WHY: preserve continuation point before writing OCR code.
+2026-10-28 15:27 IST — RESULT: PASS; WORKLOG pointer records the completed 0015 live probes and next Part 2 coding tasks. NEXT: confirm only intended continuity files are dirty, then create a local WIP live-verification checkpoint.
+2026-10-28 15:27 IST — RESULT: PASS; only CONTEXT, DECISIONS, TEST-REPORT and WORKLOG are modified; no `.env` diff path; `git diff --check` clean.
+2026-10-28 15:28 IST — ABOUT TO: Stage the Part 2 live verification/model decision docs for a local-only WIP checkpoint. WHY: checkpoint after live verification before code implementation; no push.
+2026-10-28 15:28 IST — RESULT: PASS; local WIP commit `a39f433` records live 0015 verification and OCR model decision; no push. NEXT: implement Gemini document OCR provider, extraction validator/arithmetic checks, processing route, and dedicated tests.
+2026-10-28 15:29 IST — ABOUT TO: Add explicit Gemini OCR configuration, private Storage download helper, and a provider-interface OCR/field-arithmetic service. WHY: Part 2 needs server-only vision extraction with safe output validation before any database persistence.
+2026-10-28 15:30 IST — RESULT: PASS; added explicit Gemini OCR config, service-role Storage download, vision OCR provider with untrusted-data system instruction, strict Zod fields/date/currency validation and BigInt arithmetic checks. NEXT: wire database-backed processing route with duplicate detection, concurrency claim and ai_usage budgets; then add tests.
+2026-10-28 15:31 IST — ABOUT TO: Wire POST document processing with org-scoped lookup, duplicate flagging, concurrency claim, atomic AI usage reservation/completion and failure handling. WHY: prevent unmetered provider calls or cross-tenant document access.
+2026-10-28 15:31 IST — RESULT: PARTIAL; process endpoint now scopes by org, checks duplicates, claims two-job slot, reserves/completes `ai_usage`, downloads privately, validates model output, and persists processed/warned/failed status. Need tests and review failure paths (especially reservation errors releasing the claim). NEXT: add adapter/unit/route tests, then repair any defects before full suite.
+2026-10-28 15:32 IST — ABOUT TO: Make extraction validation errors explicit 422s and release the concurrency claim if AI usage reservation fails or returns no ID. WHY: avoid permanently occupying an org processing slot on a pre-provider failure.
+2026-10-28 15:32 IST — RESULT: PASS; invalid extraction receives safe 422/502 status; daily-budget RPC errors/denials and missing usage IDs now release the processing claim to `uploaded`. NEXT: add unit and route tests for validation, prompt injection defenses, usage/budget, concurrency, duplicates and API persistence.
+2026-10-28 15:33 IST — ABOUT TO: Add focused tests for OCR provider safety/usage parsing, strict extraction validation, arithmetic and document-processing API state transitions. WHY: prove no provider call occurs without limits and that OCR output is treated as untrusted data.
+2026-10-28 15:34 IST — RESULT: PARTIAL; added OCR unit/provider tests and a processing-test harness, but the harness needs explicit provider injection through createApp and processing assertions. NEXT: add that test seam and complete route tests; then run focused tests.
+2026-10-28 15:34 IST — ABOUT TO: Add injectable OCR provider wiring to createApp and complete process-route tests for success, cache, budgets, concurrency, duplicate rejection, viewer denial and invalid extraction. WHY: make provider behavior deterministic in tests without exposing or calling Gemini.
+2026-10-28 15:35 IST — RESULT: PASS; createApp now accepts a test-only documentOCRProvider seam; tests cover success/metering, cached repeats, budget release, concurrency denial, same-org duplicate audit/rejection, viewer denial, malformed output and arithmetic warning. NEXT: run focused OCR/document tests and repair failures.
+2026-10-28 15:36 IST — ABOUT TO: Run focused document OCR/upload/processing tests. WHY: catch route, validation and mocking defects before full suite.
+2026-10-28 15:36 IST — RESULT: FAIL; focused document suite 10/14 passed. Four processing tests exposed a test-double filter bug: it matched the `id=eq` substring inside `org_id=eq`, returning the current document as its own duplicate and causing expected 409s. No production behavior conclusion yet. NEXT: fix mock filter matching exact query parameters, then rerun focused tests.
+2026-10-28 15:37 IST — ABOUT TO: Fix exact parameter recognition in the document-processing test double. WHY: duplicate lookup must not confuse organization id filters with document id filters.
+2026-10-28 15:37 IST — RESULT: PASS; fake database now distinguishes `&id=eq.` from `org_id=eq.` and handles duplicate hash lookup first. NEXT: rerun focused OCR/upload/processing tests.
+2026-10-28 15:37 IST — ABOUT TO: Rerun focused OCR/upload/processing tests after the mock correction. WHY: confirm prior 409s were test-fixture-only and validate real handler branches.
+2026-10-28 15:37 IST — RESULT: PASS; focused document OCR/upload/processing suite 14/14, 0 failures; provider output validation, exact arithmetic warnings, metered OCR, duplicate rejection/audit and limits pass.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/documents-upload.test.js` (rerun) | PASS | 14 passed, 0 failed after exact query-parameter matching fix.
+2026-10-28 15:38 IST — ABOUT TO: Pin the configured OCR model to the verified free-tier model, clarify allowed documentType values in the prompt, and extend tests for reservation rollback/Storage downloads. WHY: ensure the chosen free-tier constraint cannot be bypassed by environment override and cover recovery edges.
+2026-10-28 15:38 IST — RESULT: FAIL; patch had a stale exact prompt line and applied no changes. NEXT: inspect the exact OCR prompt/config/test sections and patch each separately.
+2026-10-28 15:39 IST — ABOUT TO: Apply exact changes to OCR model allowlist/prompt and edge-case coverage. WHY: lock free-tier use and verify claims are released if the budget reservation RPC is unavailable.
+2026-10-28 15:39 IST — RESULT: PASS; OCR model is constrained to the verified free-tier `gemini-3.5-flash-lite`; schema prompt lists literal allowed types; tests added for reservation outage/missing usage IDs and privileged Storage download bytes.
+2026-10-28 15:39 IST — ABOUT TO: Run focused OCR/provider/processing/Storage tests after model pin and recovery-edge additions. WHY: verify Part 2 changes before full suite.
+2026-10-28 15:40 IST — RESULT: PASS; focused OCR/upload/processing/Supabase suite 20/20 passed, 0 failed.
+2026-10-28 | Focused document OCR, processing, upload and Supabase tests (model pin/recovery edges) | PASS | 20 passed, 0 failed.
+2026-10-28 15:41 IST — ABOUT TO: Inspect current Part 2 working-tree scope and confirm no `.env` path is modified or staged before the next WIP checkpoint. WHY: keep changes minimal and the local commit secret-free.
+2026-10-28 15:41 IST — RESULT: PASS; Part 2 changes are limited to app/config/document route/Storage adapter/new OCR service and tests plus TEST-REPORT/WORKLOG; no staged files or `.env` paths. NEXT: update CONTEXT/RESUME POINTER with exact in-progress files and focused test result, then locally WIP-commit.
+2026-10-28 15:41 IST — ABOUT TO: Update CONTEXT with exact Part 2 edits, focused test result and remaining final checks. WHY: keep the handoff useful if the session stops before full validation.
+2026-10-28 15:41 IST — RESULT: FAIL; CONTEXT patch failed on the source-file inventory because earlier updates had already changed it; no exact handoff edit was applied. NEXT: inspect the current header/in-progress/test-table lines and patch only those exact fields.
+2026-10-28 15:42 IST — ABOUT TO: Replace the inspected exact CONTEXT lines to record Part 2 source files and 20 passing focused tests. WHY: preserve the precise WIP state before local commit.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect Part 2 source/docs and git state | verify implementation and prior context patch before final checks.
+2026-10-28 Asia/Kolkata | RESULT: PASS; Part 2 source/tests are present and branch is phase5-backend; docs/CONTEXT.md still has stale Part 2 claims and test table. Pending implementation files are listed in status; no commit yet. NEXT: inspect OCR config/schema and process route for correctness before final checks.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect process route, latest report entries, and recent journal pointer | identify remaining correctness/documentation work.
+2026-10-28 Asia/Kolkata | RESULT: PASS; OCR model pinned to gemini-3.5-flash-lite; endpoint uses same-org SHA-256 duplicate detection, processing claim, ai_usage reserve/complete, private download, validated extraction, and safe status updates. CONTEXT.md still needs final Part 2 refresh. NEXT: inspect migration claim release semantics and focused test assertions for completion/error paths.
+2026-10-28 Asia/Kolkata | ABOUT TO record Part 2 implementation choices in DECISIONS.md | capture duplicate and arithmetic behavior before final verification.
+2026-10-28 Asia/Kolkata | RESULT: PASS; Part 2 decision appended to docs/DECISIONS.md without changing prior entries. NEXT: run required Part 2 full suite, migration parser, changed-JS syntax, and diff whitespace checks.
+2026-10-28 Asia/Kolkata | RESULT: PASS; `npm test` completed with 152 passed, 0 failed; migration parser also reported all 15 migrations syntactically valid. NEXT: run the explicit migration check, changed-JS syntax checks, and whitespace check.
+2026-10-28 Asia/Kolkata | ABOUT TO run final explicit migration, JavaScript syntax, and whitespace checks | satisfy Part 2 checkpoint criteria after full suite.
+2026-10-28 Asia/Kolkata | RESULT: PASS; explicit migration check parsed 15/15; node --check passed for 8 changed JavaScript files; git diff --check passed. NEXT: inspect final pending paths and ensure no .env/secrets are tracked or staged before updating handoff docs.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect branch, worktree, staged paths, and tracked env files | prepare a safe local checkpoint commit.
+2026-10-28 Asia/Kolkata | RESULT: PASS; branch is phase5-backend, only expected Part 2 code and continuity docs are modified/untracked, index has no staged paths, and git ls-files reports no .env entries. NEXT: refresh CONTEXT.md, append final run records, and update the WORKLOG RESUME POINTER before committing.
+2026-10-28 Asia/Kolkata | ABOUT TO refresh Part 2 handoff and append final verification records | leave a precise continuation point for Part 3.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT.md now marks Part 2 complete and Part 3 next; TEST-REPORT.md records the actual 152-test/migration/syntax/diff runs; DECISIONS.md and WORKLOG.md contain Part 2 decisions and updated resume pointer. NEXT: inspect the edited handoff, diff, and status before local commit.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect final documentation edits and source diff | catch stale or duplicated handoff rows before checkpointing.
+2026-10-28 Asia/Kolkata | RESULT: PASS; corrected stale Part 2 status, live migration verification, Part 3 next steps, and authorization gate in docs/CONTEXT.md. NEXT: inspect current header/time and final docs, run the post-edit whitespace check, then commit.
+2026-10-28 Asia/Kolkata | ABOUT TO validate final CONTEXT sections and documentation whitespace | ensure the handoff is internally consistent before commit.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT header now includes exact update time and all required handoff sections; current docs and source diff are whitespace-clean. NEXT: verify final paths contain no .env/secrets, then make the Part 2 local WIP commit.
+2026-10-28 Asia/Kolkata | ABOUT TO stage and locally commit the completed Part 2 implementation and continuity docs | checkpoint per user protocol; branch must remain phase5-backend, never push.
+2026-10-28 Asia/Kolkata | RESULT: PASS; local Part 2 WIP commit `65abfe7` created on phase5-backend; no .env path was staged or tracked. NEXT: mark the implementation commit in CONTEXT.md and the WORKLOG RESUME POINTER, then checkpoint that handoff update locally.
+2026-10-28 Asia/Kolkata | ABOUT TO update final commit/resume state and create a docs-only local checkpoint | avoid leaving the handoff claiming the WIP commit is pending.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT.md and top RESUME POINTER now record Part 2 completion at 65abfe7 and wait for CONTINUE before Part 3. NEXT: commit continuity update locally and verify final repository state.
+2026-10-28 Asia/Kolkata | RESULT: PASS; continuity update committed as `c7135a3`; Part 2 implementation remains `65abfe7`. NEXT: verify branch, clean worktree, and the final local commit list, then stop for CONTINUE.
+2026-10-28 Asia/Kolkata | ABOUT TO verify final branch/worktree and checkpoint commits | ensure all Part 2 edits are local and no unrelated files remain.
+2026-10-28 Asia/Kolkata | RESULT: PASS; branch remains phase5-backend; Part 2 implementation and handoff commits are local; only this WORKLOG verification entry is pending a final journal checkpoint. NEXT: commit the final journal line and stop awaiting user CONTINUE.
+
+2026-10-28 Asia/Kolkata | RECOVERY NOTE: a pointer rewrite accidentally replaced the append-only WORKLOG body after the top block. Restored the full committed history from HEAD; reconstructing Part 3 actions below. No WIP commit was made from the truncated journal.
+2026-10-28 Asia/Kolkata | Part 3 inspection: verified phase5-backend at b97b849, read AI routes/service/router and migration 0015; found existing ocr/retrieval classification and ai_usage route constraint.
+2026-10-28 Asia/Kolkata | Part 3 implementation: added documentRag.js chunking and Gemini 768-d embeddings; configured embedding model; added documentText to strict OCR schema; wired processing indexing and AI retrieval.
+2026-10-28 Asia/Kolkata | Part 3 database: added unapplied migration 0016 for embedding ai_usage route, org-scoped service-only hybrid search, and audited delete RPC with FK cascade. Migration parser later passed 16/16; live behavior not verified.
+2026-10-28 Asia/Kolkata | Part 3 lifecycle: added accountant-only confirm/reject/delete endpoints, audit calls and object restoration if DB deletion fails; tests cover viewer/org denial and delete rollback.
+2026-10-28 Asia/Kolkata | Part 3 tests: first focused run FAIL 38/41 (document intent wording, reject route JSON parser placement, empty OCR result); recorded in TEST-REPORT, fixed all three without weakening assertions.
+2026-10-28 Asia/Kolkata | Part 3 test reruns: focused OCR/RAG/AI suite PASS 41/41; migration parser PASS 16/16. Added model dimension, usage budget, tenant scope, citations, extraction/answer injection and lifecycle test coverage.
+2026-10-28 Asia/Kolkata | Part 3 refinements: disabled cache for document-aware routes, schema-qualified pgvector cosine operator for SECURITY DEFINER search_path, and asserted hidden OCR instructions remain untrusted text.
+2026-10-28 Asia/Kolkata | RESULT: PASS; recorded focused 41/41 and migration 16/16 results, documented the Part 3 decisions, and updated CONTEXT/RESUME POINTER. NEXT: inspect the checkpoint diff and verify the current Part 3 source state before committing.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect Part 3 checkpoint diff and git state | ensure only authorized backend/docs/tests/migration files changed before WIP commit.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect docs, paths, and whitespace for the Part 3 checkpoint | confirm resume metadata and keep secrets out of staging.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; `git diff --stat` revealed an unexpected WORKLOG deletion of roughly 2996 lines, so this checkpoint must not be committed. No secrets detected. NEXT: inspect current file headings and committed baseline, restore all append-only history, then reapply the current resume pointer surgically.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect WORKLOG line count/current top and committed baseline | diagnose accidental truncation before any further edit or commit.
+2026-10-28 Asia/Kolkata | RESULT: PASS; restored all 2989 committed WORKLOG lines from HEAD, replaced only the top resume section, and reconstructed current Part 3 progress; file now 3003 lines. NEXT: confirm WORKLOG diff is only pointer plus appended entries and re-run whitespace check before proceeding.
+2026-10-28 Asia/Kolkata | ABOUT TO verify append-only WORKLOG restoration and complete Part 3 diff | ensure no history loss remains and no commit contains truncation.
+2026-10-28 Asia/Kolkata | RESULT: PASS; WORKLOG history is restored (only 21 insertions/5 top-pointer deletions, `## Backfill` retained); source/docs worktree remains uncommitted and no `.env` paths are present. NEXT: run the full `npm test` suite and record exact outcome.
+2026-10-28 Asia/Kolkata | ABOUT TO run full npm test for Part 3 | validate all existing and new tests after RAG integration.
+2026-10-28 Asia/Kolkata | ABOUT TO poll the full npm test session | collect the final suite count without leaving the run untracked.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; full suite had 162 pass/1 fail because route test expected the old response shape after intentionally exposing `unavailable:true`. NEXT: update the contract assertion to include the new safe status field, then rerun full suite.
+2026-10-28 Asia/Kolkata | ABOUT TO update the existing AI route error assertion | make test reflect newly exposed API availability status without changing production behavior.
+2026-10-28 Asia/Kolkata | RESULT: PASS; existing route contract test now asserts the new `unavailable:true` field; no production code or security assertion was weakened. NEXT: rerun full npm test and log the exact count.
+2026-10-28 Asia/Kolkata | ABOUT TO rerun full npm test after route contract assertion update | verify no regressions across the complete suite.
+2026-10-28 Asia/Kolkata | ABOUT TO poll the rerun of npm test | capture final pass/fail count for the append-only report.
+2026-10-28 Asia/Kolkata | RESULT: PASS; full suite now passes 163/163 after aligning the existing route assertion with the API unavailable flag. NEXT: run explicit migration check, node --check on every changed JS file, and git diff --check.
+2026-10-28 Asia/Kolkata | ABOUT TO run final migration, changed-JS syntax, and diff whitespace checks | fulfill Part 3 acceptance checks before docs and checkpoint commit.
+2026-10-28 Asia/Kolkata | RESULT: PASS; final static checks passed: migrations 16/16, node syntax 14 files, git diff --check clean. Full suite PASS 163/163. NEXT: finalize Part 3 context/worklog/decisions and make local WIP checkpoint; live migration tests await human apply.
+2026-10-28 Asia/Kolkata | ABOUT TO update Part 3 final handoff docs | record exact changed files, check states, migration 0016 pending action, and stop point.
+2026-10-28 Asia/Kolkata | RESULT: PASS; final test results and migration apply steps are in TEST-REPORT/CONTEXT; RESUME POINTER is scoped to human migration apply; all historic WORKLOG sections remain. NEXT: review required sections/line count and pending paths, then create the local Part 3 WIP checkpoint.
+2026-10-28 Asia/Kolkata | ABOUT TO review final handoff and staging candidates | check context size, migration pending state, exact changed paths, branch, and no env secrets before commit.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; CONTEXT.md line 55 contains literal `\n` sequences because a replacement escaped the table separators; header still has a Part 2 hash. No commit created. NEXT: inspect exact context text, repair table newlines and update header/next steps without touching unrelated content.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect full compact CONTEXT text around malformed replacements | identify and repair literal escape artifacts before checkpoint.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; current CONTEXT.md still contains stale Part 2 task state because several exact-string replacements did not match, besides the literal newline bug. NEXT: replace the mismatched handoff fields using a targeted patch before any commit.
+2026-10-28 Asia/Kolkata | ABOUT TO repair CONTEXT.md by exact section edits | update Part 3 status, pending migration action, test state, and the actual branch/checkpoint metadata.
+2026-10-28 Asia/Kolkata | RESULT: PASS; targeted CONTEXT edits now mark Part 3 code complete, set 0016 pending, list checks/files/actions, and restore the TEST STATE table to separate rows. NEXT: confirm exact date/time, section consistency, and no escaped newline artifacts.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect final CONTEXT lines and repository diff | validate all required continuity sections before WIP checkpoint.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; commit wrapper had an unescaped backtick in its template string and did not execute. NEXT: retry with a command string that contains no template delimiter characters.
+2026-10-28 Asia/Kolkata | ABOUT TO retry Part 3 WIP checkpoint | previous wrapper failed before any command ran; verify branch and env paths, then commit locally.
+2026-10-28 Asia/Kolkata | RESULT: PASS; Part 3 implementation WIP commit 6dba84b created on phase5-backend; no env paths tracked/staged; no push. NEXT: refresh CONTEXT and top RESUME POINTER to the committed Part 3 checkpoint, then commit this handoff update locally.
+2026-10-28 Asia/Kolkata | ABOUT TO finalize Part 3 commit metadata in the handoff docs | make the resume pointer name the exact implementation checkpoint and the human migration action.
+2026-10-28 Asia/Kolkata | RESULT: PASS; Part 3 handoff metadata committed as 08f6aab; Part 3 implementation checkpoint is 6dba84b. No push. Next action is human apply of migration 0016; live role checks remain UNVERIFIED.
+2026-10-28 Asia/Kolkata | ABOUT TO record user confirmation and locate the fixed-accountant live verification method | migration 0016 is reported applied; prepare read-only permission checks without exposing secrets.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; documentation inspection wrapper had invalid JavaScript string quoting; no commands ran and no files changed. NEXT: inspect fixture identifiers/key presence with a valid command, then update the pointer.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect fixed live fixture identifiers and env-key presence | keep all values/tokens out of output.
+2026-10-28 Asia/Kolkata | RESULT: PARTIAL; fixed accountant is novapay-phase3-accountant@example.test; first fixture inspection succeeded, but env-key presence probe had a local eval syntax error so no key state was read. No credentials/token values printed. NEXT: inspect exact existing magic-link and fixed-org logic before a safe read-only 0016 probe.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect the existing fixed accountant login/org flow | reuse exact established fixtures and avoid creating users, organizations, or documents.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; live-probe wrapper used nested JavaScript template literals inside the exec template and did not run. No credentials or API calls occurred. NEXT: retry with a plain quoted Node heredoc and string concatenation.
+2026-10-28 Asia/Kolkata | ABOUT TO retry the read-only 0016 live permission probe | previous wrapper failed during parsing; keep token/key values in memory and print statuses only.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; live-result documentation wrapper contained nested Markdown backticks and did not execute; live RPC outcomes remain verified in memory and no docs were updated by that call. NEXT: reapply report/context updates with a delimiter-safe command.
+2026-10-28 Asia/Kolkata | ABOUT TO record live 0016 results and refresh handoff | previous command failed before execution; preserve the measured HTTP outcomes and keep Part 4 gated.
+2026-10-28 Asia/Kolkata | RESULT: PASS; live 0016 search/delete RPC checks passed with ordinary JWT 403 and service-role HTTP 200; nonexistent document probe made no changes; schema cache untouched. NEXT: refresh CONTEXT/RESUME POINTER with live evidence, then locally checkpoint and wait for CONTINUE before Part 4.
+2026-10-28 Asia/Kolkata | ABOUT TO update final Part 3 live verification handoff | mark migration 0016 applied/live-verified, remove pending SQL action, and wait for explicit Part 4 authorization.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT and RESUME POINTER now show migration 0016 applied/live verified; human apply action removed; Part 4 explicitly gated on user CONTINUE.
+2026-10-28 Asia/Kolkata | ABOUT TO verify live-result handoff and pending paths | ensure migration status/report match the successful read-only RPC probes and append-only history remains intact.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; live-result append succeeded, but CONTEXT exact replacements missed stale header/next-step/user-action lines, and one known-issues row still labels 0016 unverified. NEXT: correct those exact fields before checkpointing.
+2026-10-28 Asia/Kolkata | ABOUT TO correct remaining stale CONTEXT fields | ensure the user-reported applied state and measured 403/200 results are reflected consistently.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; exact CONTEXT patch did not match the current text, so no changes were applied. NEXT: read the current header and stale rows, then patch only their exact wording.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect exact remaining CONTEXT text | avoid broad replacements after earlier partial-match issues.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT now reflects applied migration 0016, successful service-role search/delete (200), ordinary accountant JWT denial (403), and Part 4 gate; TEST-REPORT has individual live results. NEXT: verify docs/status/no-env and commit this handoff locally.
+2026-10-28 Asia/Kolkata | ABOUT TO checkpoint live verification docs | check branch, whitespace, applied-state consistency, and env-path absence; never push.
+2026-10-28 Asia/Kolkata | RESULT: PASS; live verification handoff committed as 518a353 on phase5-backend; no push. Search/delete service-role success and ordinary-accountant 403 are recorded; schema cache remains untouched. NEXT: wait for user CONTINUE before Part 4.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect Part 4 UI/contracts/docs and branch state | user authorized Part 4; preserve teammate styles and avoid all protected files.
+2026-10-28 Asia/Kolkata | RESULT: PASS; branch is phase5-backend, prior Part 3 commits are 6dba84b/08f6aab/518a353; only the post-commit WORKLOG result is currently modified. Identified src/dashboard.js, src/api-client.js, existing src/fund-views.js, dashboard.html, and docs contracts. NEXT: inspect only Documents markup, script boot order, document API docs and environment template.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect existing Documents view and exact API contract gaps | preserve existing UI design and avoid protected styles/assets.
+2026-10-28 Asia/Kolkata | RESULT: PASS; dashboard has an existing static Documents panel with upload/review cards; its script load order ends after modules and has no documents controller. Root .env.example exists. NEXT: inspect API/auth client interfaces, invoice draft endpoint shape, relevant view markup and config keys before wiring.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect only the document UI/API integration points | decide safe draft creation flow and avoid restyling or protected files.
+2026-10-28  | RESULT: targeted integration inspection command output was truncated; no files changed; next: inspect API/auth/invoice interfaces in narrow ranges.
+2026-10-28  | ABOUT TO: read the API client, auth exports, invoice route and invoice repo method names; WHY: implement document view against existing contracts without disturbing merged UI.
+2026-10-28  | RESULT: API client injects JWT/org; invoice draft endpoint exists, role-gated; no files changed; next: inspect document route payloads and panel markup.
+2026-10-28  | ABOUT TO: inspect document route schemas, dashboard Documents section and JS bootstrap order; WHY: bind controls to actual API contracts and prevent send behavior.
+2026-10-28  | RESULT: confirmed static illustrative document cards and existing upload/process/confirm/reject plus invoice draft APIs; output was truncated while reading broad docs; no edits beyond journal; next: inspect exact route response and auth helpers.
+2026-10-28  | ABOUT TO: read compact route and auth ranges plus invoice builder requirements; WHY: build UI calls that match validated server schema and enforce confirmation creates draft only.
+2026-10-28  | RESULT: upload uses raw bytes and X-File-Name; process returns extraction; confirm only stamps metadata; invoice POST requires number/customer/email/currency/lines; no code edits yet; next: verify list API and document extraction schema.
+2026-10-28  | ABOUT TO: inspect document GET routes, extraction fields, and existing role/list state conventions; WHY: implement accurate live list and safe review-to-draft flow.
+2026-10-28  | RESULT: backend has no GET /api/documents list route; OCR schema fields identified; no code edits; next: inspect auth role API and route wiring/tests before add list support.
+2026-10-28  | ABOUT TO: locate authenticated membership endpoint and documents route registration/test harness; WHY: gate write controls by server-resolved role and test the new read endpoint.
+2026-10-28  | RESULT: auth middleware provides req.orgRole; documents router registered in app; no GET list route; document upload/process tests available; next: add read route and client UI, preserving accountant-only write actions.
+2026-10-28  | ABOUT TO: inspect existing document test fixture and status fields, then edit the minimal route/UI files; WHY: live list requires a tenant-scoped endpoint and repeatable coverage.
+2026-10-28  | RESULT: added GET /api/documents tenant-scoped list endpoint and viewer-readable test; touched server/src/routes/documents.js and server/test/documents-upload.test.js; next: make API client accept raw Blob uploads and replace static Documents markup.
+2026-10-28  | ABOUT TO: update raw-body client handling and Documents panel markup; WHY: send the selected file as binary bytes and render empty/live states instead of illustrative records.
+2026-10-28  | RESULT: API client accepts raw Blob; Documents panel now has live list, upload/process, editable confidence review, duplicate/arithmetic warnings, confirm/reject and draft-only language; added src/documents.js and included it in dashboard.html; next: update API/contract/runbook/config docs.
+2026-10-28  | ABOUT TO: inspect only relevant API docs sections and config key names, then document document endpoints and sample-doc policy; WHY: keep operator and frontend contracts aligned with new list endpoint and UI behavior.
+2026-10-28  | RESULT: confirmed document API docs need additive endpoint entries; .env.example lacks document OCR/limits keys; inspected runbook data caution; next: append endpoint contracts, sample-only guidance, default config and decisions.
+2026-10-28  | ABOUT TO: update API.md, FRONTEND-CONTRACT.md, RUNBOOK.md, .env.example and DECISIONS.md; WHY: document the newly wired view, role constraints, draft-only confirmation and sample-data boundary.
+2026-10-28  | RESULT: API docs, frontend contract, sample-only runbook guidance, document env limits and two decisions appended; next: run npm test.
+2026-10-28  | ABOUT TO: run npm test; WHY: verify API list route/test and prior backend behavior after Part 4 changes.
+2026-10-28  | RESULT: npm test PASS, 164 passed / 0 failed; embedded migration syntax check also reported 16/16 SQL files valid; next: run explicit npm run check:migrations.
+2026-10-28  | ABOUT TO: append the npm test result to TEST-REPORT.md; WHY: preserve the real run result before the next check.
+2026-10-28  | RESULT: TEST-REPORT.md records npm test PASS, 164/164; next: explicit migration check.
+2026-10-28  | ABOUT TO: run `npm run check:migrations`; WHY: record the standalone required migration verification.
+2026-10-28  | RESULT: standalone migration check PASS, all 16 migrations syntax-valid; next: log result then node --check changed JS.
+2026-10-28  | ABOUT TO: append migration check result to TEST-REPORT.md; WHY: keep each real validation run in append-only history.
+2026-10-28  | RESULT: TEST-REPORT.md records 16/16 migration check PASS; next: syntax-check changed JavaScript.
+2026-10-28  | ABOUT TO: run node --check on src/api-client.js, src/documents.js, server/src/routes/documents.js and server/test/documents-upload.test.js; WHY: catch syntax errors in all changed JS.
+2026-10-28  | RESULT: node --check PASS for all 4 changed JS files; next: record syntax check then run whitespace and protected-file diff checks.
+2026-10-28  | ABOUT TO: append node syntax result to TEST-REPORT.md; WHY: log each verification result with actual file count.
+2026-10-28  | RESULT: syntax run logged in TEST-REPORT.md; next: run git diff --check and protected-file diff against main.
+2026-10-28  | ABOUT TO: run `git diff --check` and `git diff --stat main` with protected pathspecs; WHY: check whitespace and confirm protected design files are untouched.
+2026-10-28  | RESULT: git diff --check PASS; protected path diff against main empty (no output); next: verify exact process response shape and write human browser checklist.
+2026-10-28  | ABOUT TO: read the document processing response assembly and inspect current journal pointer; WHY: confirm frontend extraction mapping and update handoff state accurately.
+2026-10-28  | RESULT: inspected OCR result shape: extraction contains fields and validation; confirmed document can remain processed, so prevent duplicate draft action and allow refresh during busy operations; next: apply these UI corrections and rerun tests.
+2026-10-28  | ABOUT TO: patch Documents controller confirmed-state handling and refresh flow; WHY: avoid repeat invoice draft creation and ensure upload completion refreshes live list.
+2026-10-28  | RESULT: UI refresh no longer blocked by upload busy state; confirmation includes draft ID and confirmed documents show final state; server and test updated; next: document confirm payload and browser checklist.
+2026-10-28  | ABOUT TO: update API confirm contract and create docs/BROWSER-CHECKLIST.md; WHY: capture exact browser-only QA steps and make draft-only confirmation traceable.
+2026-10-28  | RESULT: API docs now describe invoiceDraftId confirmation and browser checklist has 10 steps; no browser checks run; next: capture actual branch/HEAD and rewrite Part 4 handoff.
+2026-10-28  | ABOUT TO: inspect branch, HEAD and worktree summary; WHY: put accurate repository state in CONTEXT and RESUME POINTER before final verification.
+2026-10-28  | RESULT: branch phase5-backend, HEAD 518a353; worktree contains Part 4 source/docs edits only and no .env entry; next: rewrite CONTEXT and top resume pointer.
+2026-10-28  | ABOUT TO: rewrite docs/CONTEXT.md under 150 lines and replace only WORKLOG RESUME POINTER block; WHY: make Part 4 state resumable before final checks.
+2026-10-28  | RESULT: RESUME POINTER now points to Part 4 final checks; CONTEXT.md rewritten with all required continuity sections and current unverified risks; next: rerun npm test.
+2026-10-28  | ABOUT TO: run final npm test after confirmation-state/test edits; WHY: ensure latest code still passes before checkpoint commit.
+2026-10-28  | ABOUT TO: collect completion of final npm test; WHY: test process is still running and final pass count is not available yet.
+2026-10-28  | RESULT: final npm test FAIL, 163 passed/1 failed; document confirmation fixture did not forward request body, so invoiceDraftId assertion was undefined; next: inspect helper and fix fixture, never relax assertion.
+2026-10-28  | ABOUT TO: append the exact failing run to TEST-REPORT.md; WHY: record failure before editing the test harness.
+2026-10-28  | RESULT: failed run recorded; next: inspect request helper in document-processing.test.js.
+2026-10-28  | ABOUT TO: inspect the small fixture helper and confirmation test lines; WHY: identify how to pass JSON without changing route behavior.
+2026-10-28  | RESULT: corrected failure diagnosis: app mounts documentRoutes before its global express.json parser; fixture sends the body, but confirm route did not parse it; next: add route-local JSON parser and append correction to TEST-REPORT.
+2026-10-28  | ABOUT TO: add express.json middleware to confirm route; WHY: ensure invoiceDraftId body is parsed while preserving the persistence assertion.
+2026-10-28  | RESULT: route-local JSON parser added to confirm endpoint; no test weakened; next: rerun npm test.
+2026-10-28  | ABOUT TO: rerun `npm test`; WHY: verify the parser fix and full Part 4 changes.
+2026-10-28  | ABOUT TO: collect the rerun completion status; WHY: npm test is still executing and its final counts are not yet available.
+2026-10-28  | RESULT: npm test PASS, 164 passed/0 failed after route-local JSON parser fix; next: append passing run then run standalone migration validation.
+2026-10-28  | ABOUT TO: append final npm test result to TEST-REPORT.md; WHY: preserve the successful verification after the fix.
+2026-10-28  | RESULT: final npm test pass logged; next: explicit migration check.
+2026-10-28  | ABOUT TO: run `npm run check:migrations`; WHY: standalone required final migration syntax check.
+2026-10-28  | RESULT: standalone check:migrations PASS, all 16 files valid; next: record result and syntax-check changed JS.
+2026-10-28  | ABOUT TO: append migration result in TEST-REPORT.md; WHY: maintain append-only verification record.
+2026-10-28  | RESULT: migration check logged; next: node --check all changed JS.
+2026-10-28  | ABOUT TO: run node --check on changed JS files; WHY: verify final implementation and test syntax.
+2026-10-28  | RESULT: node --check PASS for 5 changed JS files; next: log and run whitespace/protected path checks.
+2026-10-28  | ABOUT TO: append JavaScript syntax result to TEST-REPORT.md; WHY: document final syntax validation.
+2026-10-28  | RESULT: syntax check logged; next: run diff whitespace and protected-file diff checks.
+2026-10-28  | ABOUT TO: run `git diff --check` and protected path diff against main; WHY: confirm clean patches and no protected design file edits.
+2026-10-28  | RESULT: git diff --check PASS and protected path diff against main empty (no output); next: append results and inspect final diff/status.
+2026-10-28  | ABOUT TO: append whitespace/protected-file results to TEST-REPORT.md; WHY: preserve all required final check outcomes.
+2026-10-28  | RESULT: final non-browser checks recorded; next: inspect aggregate diff and status before checkpoint commit.
+2026-10-28  | ABOUT TO: inspect git diff stat, key Documents UI/route diff, and status; WHY: ensure only intended files are included and no secrets are staged.
+2026-10-28  | RESULT: final diff review found no protected edits; old sample button is inert and filename status was not updated; next: remove inert sample control and show selected filename.
+2026-10-28  | ABOUT TO: adjust only upload card copy/control and file-selection status text; WHY: avoid suggesting a fake sample action and show accurate upload state.
+2026-10-28  | RESULT: removed inert sample button, updated 10-page guidance, and display selected filename; next: rerun full suite and syntax checks after final UI edit.
+2026-10-28  | ABOUT TO: run final `npm test`; WHY: validate all final Part 4 changes.
+2026-10-28  | ABOUT TO: collect final npm test completion; WHY: process continues and final counts are not yet emitted.
+2026-10-28  | RESULT: final npm test PASS, 164/164; next: append pass and run final migration check.
+2026-10-28  | ABOUT TO: append the latest npm test result to TEST-REPORT.md; WHY: log the actual final-code run rather than rely on the earlier pass.
+2026-10-28  | RESULT: final suite pass logged; next: standalone migration validation.
+2026-10-28  | ABOUT TO: rerun `npm run check:migrations`; WHY: final required standalone migration syntax check after all source changes.
+2026-10-28  | RESULT: final standalone migration check PASS, 16/16 valid; next: record and rerun JS syntax and final diff checks.
+2026-10-28  | ABOUT TO: append migration pass to TEST-REPORT.md; WHY: record latest standalone result.
+2026-10-28  | RESULT: migration pass logged; next: syntax-check changed JS.
+2026-10-28  | ABOUT TO: run node --check on all 5 changed JavaScript files; WHY: verify latest client, route and tests.
+2026-10-28  | RESULT: node --check PASS on 5 changed JS files; next: final git diff --check and protected file diff.
+2026-10-28  | ABOUT TO: run git diff --check and protected path diff against main; WHY: enforce final no-whitespace/protected-file check.
+2026-10-28  | RESULT: final diff check PASS and protected-file diff empty; next: record final check results and refresh CONTEXT/RESUME POINTER before commit.
+2026-10-28  | ABOUT TO: append final node/diff results to TEST-REPORT.md and rewrite Part 4 handoff sections; WHY: leave an accurate checkpoint before commit.
+2026-10-28  | RESULT: TEST-REPORT.md and CONTEXT.md contain final verified statuses; RESUME POINTER shows commit pending and browser actions; next: check branch/status/secrets without printing .env.
+2026-10-28  | ABOUT TO: check branch, status, tracked .env names and staged diff; WHY: confirm local-only checkpoint is safe before commit.
+2026-10-28  | RESULT: phase5-backend confirmed; `.env` is not tracked; no staged files before staging; diff check passes and protected diff is empty; next: stage intended working tree and inspect names.
+2026-10-28  | ABOUT TO: run `git add -A` then inspect staged filenames only; WHY: prepare required local checkpoint while ensuring no secret file is included.
+2026-10-28  | RESULT: staged filenames are the 15 intended Part 4 files; no `.env` or secret paths staged; next: commit local WIP checkpoint.
+2026-10-28  | ABOUT TO: commit `WIP Phase 5 task 4: wire Documents view`; WHY: save the verified Part 4 task locally on phase5-backend; never push.
+2026-10-28  | RESULT: local WIP commit created successfully: 5a63d8e; 15 intended files committed on phase5-backend; no push; next: refresh resume pointer to report committed checkpoint and browser-only pending work.
+2026-10-28  | ABOUT TO: update RESUME POINTER and CONTEXT commit state; WHY: make the post-commit handoff exact for a fresh agent.
+2026-10-28  | RESULT: RESUME POINTER and CONTEXT now identify commit 5a63d8e and no remaining code work; browser checklist is pending; next: stop and hand off without pushing.
+2026-10-28  | ABOUT TO: commit the post-checkpoint CONTEXT/WORKLOG pointer update locally; WHY: preserve the exact handoff state without leaving docs edits outside version control.
+2026-10-28 | ABOUT TO: inspect branch, worktree status and RESUME POINTER; WHY: establish the live verification checkpoint before any network or database operation.
+2026-10-28 | RESULT: branch is `phase5-backend`; only WORKLOG.md is modified by this verification entry; RESUME POINTER shows prior Part 4 complete and three live checks unverified; next inspect fixed-user live verification utilities.
+2026-10-28 | ABOUT TO: list existing live document verifier scripts and fixed identity references; WHY: reuse the named test users/orgs and avoid creating identities or real documents.
+2026-10-28 | RESULT: no dedicated live document verifier exists; Phase 6 scripts include fixed identity names but may provision missing users, so not safe to invoke uninspected; next inspect auth flow and document RPC APIs only.
+2026-10-28 | ABOUT TO: inspect migration functions/policies, document route shapes, and fixed-user authentication helper without reading `.env`; WHY: determine safe live checks using existing identities and available backend endpoints.
+2026-10-28 | RESULT: Storage RLS migration scopes read to member role and upload/delete to owner/admin/accountant; existing magic-link helper can authenticate but Phase 6 transparency script may create donor/resident users; avoid that script; next inspect Phase 3 fixed org identities and server health.
+2026-10-28 | ABOUT TO: read only Phase 3 fixture names/auth helper and query local `/api/status`; WHY: select existing fixed owner identities and confirm backend availability before any writes.
+2026-10-28 | RESULT: fixed Phase 3 owner fixtures identify org A/B accounts; `/api/status` is unreachable because port 3000 has no listener; no live data changed; next start existing server.
+2026-10-28 | ABOUT TO: start the existing app using `npm start`; WHY: live verification requires the authenticated API; do not inspect or print local environment values.
+2026-10-28 | RESULT: `npm start` is listening on port 3000 with Supabase and Gemini enabled; no secrets printed; next verify endpoint health and whether fixed users/orgs already exist (read-only).
+2026-10-28 | ABOUT TO: query `/api/status`, Supabase fixed-user existence and the two fixed Phase 3 organizations without creating anything; WHY: gate all live writes on pre-existing fixtures.
+2026-10-28 | ABOUT TO: collect completion of read-only fixture preflight; WHY: network requests are still running and result must be captured before choosing next step.
+2026-10-28 | RESULT: health HTTP 200 authenticated/Supabase configured; both fixed owner users and both fixed Phase 3 orgs already exist; no users/orgs created; next inspect retrieval/search-hit behavior before live upload.
+2026-10-28 | ABOUT TO: inspect AI document retrieval trigger and search-hit writes plus migration table columns; WHY: ensure live verification can produce and then verify this run's search-hit cleanup accurately.
+2026-10-28 | RESULT: indexing creates document_chunks; document search inserts document_search_hits only when results exist; direct search is server-side via AI evidence path; next inspect minimal AI routing and upload field processing requirements.
+2026-10-28 | ABOUT TO: inspect AI evidence selection logic and OCR/provider prerequisites; WHY: choose a sample query that exercises retrieval without exposing document text or spending unnecessary calls.
+2026-10-28 | RESULT: OCR/retrieval routes invoke tenant-scoped `documentSearch.search`; search hits are persisted only for returned document chunks; next choose safe direct questions and validate API reply behavior.
+2026-10-28 | ABOUT TO: inspect insufficient-evidence handling; WHY: avoid unnecessary model calls while ensuring org B's API question is actually exercised.
+2026-10-28 | RESULT: AI route returns explicit insufficientEvidence for no org-scoped chunks; OCR queries invoke document search and can create scoped search-hit rows; next inspect deletion audit event/action and columns before integrated live run.
+2026-10-28 | ABOUT TO: read delete_document audit insert and audit_log schema only; WHY: query the exact live audit row without broad or sensitive data reads.
+2026-10-28 | RESULT: delete RPC writes `document.deleted` audit row with entity `document` and entity_id=UUID text; audit columns org_id/actor_id/action/entity/entity_id/metadata/request_id confirmed; next inspect AI route response mapping before live checks.
+2026-10-28 | ABOUT TO: inspect `/api/ai/chat` response schema and document evidence mapping; WHY: assert no-evidence behavior without logging AI text.
+2026-10-28 | RESULT: fixed-account/org preflight PASS; local server healthy; only synthetic run-scoped PDF will be created; next run cross-tenant, Storage RLS and delete-cascade checks sequentially.
+2026-10-28 | ABOUT TO: run a live script using only existing Phase 3 owner A/B and org A/B; WHY: upload/index one synthetic PDF, test API isolation and Storage RLS, then delete and verify only that run's rows.
+2026-10-28 | ABOUT TO: collect live isolation run result; WHY: upload/OCR/index and fixed-user API probes are still executing; no output includes secrets or document contents.
+2026-10-28 | RESULT: live run stopped at sample processing: upload succeeded but OCR/index returned HTTP 503; cross-tenant check UNVERIFIED; cleanup request is running for only this run's uploaded document; no code changed.
+2026-10-28 | ABOUT TO: collect run-scoped cleanup completion; WHY: ensure sample object/document created before blocker is removed, without retrying OCR or altering code.
+2026-10-28 | RESULT: run-scoped DELETE returned HTTP 200; cascade assertions were intentionally not run after the OCR/index blocker; next stop the server started for this verification.
+2026-10-28 | ABOUT TO: stop the npm start process started in this turn; WHY: leave no unnecessary live server running after the blocked test.
+2026-10-28 | RESULT: app stopped (npm start session exited 130 on Ctrl-C); log contains only request status, not 503 details; next record three live outcomes and update handoff.
+2026-10-28 | ABOUT TO: append exact live outcomes to TEST-REPORT.md and rewrite RESUME POINTER/CONTEXT for the 503 blocker; WHY: ensure the next agent can resume without rerunning or mislabeling checks.
+2026-10-28 | RESULT: TEST-REPORT has one explicit line each for cross-tenant, delete cascade and Storage RLS, all UNVERIFIED; CONTEXT/RESUME now stop at the HTTP 503 blocker; next verify status and no `.env` before WIP commit.
+2026-10-28 | ABOUT TO: inspect branch, status, staged paths and tracked `.env` presence; WHY: ensure only continuity docs are committed and no secret files are included.
+2026-10-28 | RESULT: on `phase5-backend`; only three continuity docs modified, no staged files, `.env` not tracked; next create local WIP checkpoint, never push.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 live document verification`; WHY: preserve the blocked live-check results and current resume pointer locally.
+2026-10-28 | ABOUT TO: update HANDOFF RESUME POINTER, CONTEXT, TEST-REPORT and DECISIONS; WHY: preserve user's latest 503 status and precise next actions before stopping.
+2026-10-28 | RESULT: RESUME POINTER/CONTEXT rewritten with commit 844e6a4, Part 1–4 state and current 503 blocker; TEST-REPORT and DECISIONS append-only entries added; next verify status/no staged `.env` and create local WIP checkpoint.
+2026-10-28 | ABOUT TO: inspect current branch, worktree and staged filenames only; WHY: ensure the requested local checkpoint contains no `.env` or secrets.
+2026-10-28 | RESULT: branch `phase5-backend`; only CONTEXT/DECISIONS/TEST-REPORT/WORKLOG modified; `.env` not tracked and no files staged; next commit the handoff locally.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 handoff after 503`; WHY: checkpoint the requested resume pointer and live-test statuses; never push.
+2026-10-28 | ABOUT TO: verify current branch and worktree; WHY: confirm continuation is on phase5-backend before reading handoff or running commands.
+2026-10-28 | RESULT: branch is `phase5-backend`; only WORKLOG.md is modified by the required pre-action entry; next read current handoff and newest logs.
+2026-10-28 | ABOUT TO: read RESUME POINTER, CONTEXT.md and newest TEST-REPORT.md/DECISIONS.md entries; WHY: follow the current continuation state before running checks.
+2026-10-28 | RESULT: read handoff pointer, CONTEXT, and newest test/decision entries; branch/status confirmed earlier; current next step is install/test/migration checks before diagnosing 503.
+2026-10-28 | ABOUT TO: run `npm ci`; WHY: restore lockfile-exact dependencies before the requested tests.
+2026-10-28 | ABOUT TO: collect npm ci completion; WHY: install is still running and result is not known yet.
+2026-10-28 | RESULT: `npm ci` PASS, installed 94 packages/95 audited, 0 vulnerabilities; an install-script approval warning was reported for @launchql/protobufjs; next checkpoint journal before test suite.
+2026-10-28 | ABOUT TO: verify branch/status and `.env` tracking, then commit only WORKLOG.md; WHY: checkpoint after the install step without including secrets.
+2026-10-28 | RESULT: branch still `phase5-backend`; `.env` is not tracked; only WORKLOG.md modified; next create local install checkpoint.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 resume: npm ci checkpoint`; WHY: keep install result available if test execution is interrupted; never push.
+2026-10-28 | RESULT: local checkpoint `dadc459` created; no push; next run requested full test suite.
+2026-10-28 | ABOUT TO: run `npm test`; WHY: confirm repo baseline after clean dependency installation before live debugging.
+2026-10-28 | ABOUT TO: collect npm test completion; WHY: test process is still running and final counts are not yet known.
+2026-10-28 | RESULT: `npm test` PASS, 164 passed/0 failed; count matches Part 4 handoff; next log result and run standalone migration check.
+2026-10-28 | ABOUT TO: append the actual npm test result to TEST-REPORT.md and run `npm run check:migrations`; WHY: the suite passed and standalone parser count must be checked independently.
+2026-10-28 | RESULT: standalone migration check PASS, 16/16; count matches handoff; next checkpoint test results before restarting server.
+2026-10-28 | ABOUT TO: append migration result and commit continuity logs locally; WHY: checkpoint two completed checks before live diagnosis.
+2026-10-28 | RESULT: branch phase5-backend; `.env` untracked check confirms not tracked; only continuity docs modified; next save local check checkpoint.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 resume: baseline checks`; WHY: preserve npm test/migration results before live server diagnosis; never push.
+2026-10-28 | RESULT: baseline check checkpoint `cc05f1c` committed locally; no push; next check port 3000 health before starting server.
+2026-10-28 | ABOUT TO: query only `/api/status` metadata on localhost:3000; WHY: avoid starting a duplicate server and verify current config mode without printing key values.
+2026-10-28 | RESULT: localhost:3000 refused connection; no server is running; no live data touched; next start npm start.
+2026-10-28 | ABOUT TO: start server with `npm start`; WHY: required to reproduce document processing HTTP 503 using the user's updated configuration; no `.env` values will be printed.
+2026-10-28 | RESULT: npm start is listening on 3000; app reports PayPal sandbox and Gemini LLM enabled, but this does not prove document OCR key/model; no values printed; next verify health.
+2026-10-28 | ABOUT TO: call `/api/status` and print only mode/config booleans; WHY: confirm the restarted server is healthy before a sample upload.
+2026-10-28 | RESULT: restarted `/api/status` HTTP 200, authenticated/Supabase configured; next one sample upload/process to capture safe failure code.
+2026-10-28 | ABOUT TO: authenticate existing Phase 3 owner A, upload one generated synthetic PDF to fixed org A, process once, and delete only that run's document; WHY: reproduce and diagnose the document 503 without creating users/orgs or using real documents.
+2026-10-28 | ABOUT TO: collect one-sample upload/process diagnostic; WHY: live API request is still running and error code/result has not arrived.
+2026-10-28 | RESULT: fixed owner A preflight and synthetic upload PASS; process returned HTTP 503 with safe code `OCR_NOT_CONFIGURED`; run-scoped cleanup is still executing; next collect cleanup completion.
+2026-10-28 | ABOUT TO: collect cleanup completion for the single diagnostic sample; WHY: remove only this run's document before investigating the config path.
+2026-10-28 | RESULT: diagnostic sample cleanup PASS, DELETE HTTP 200; processing code confirms OCR configuration blocker `OCR_NOT_CONFIGURED`; next inspect config/provider wiring and test only key presence, never key contents.
+2026-10-28 | ABOUT TO: inspect OCR_NOT_CONFIGURED source and print only boolean GEMINI key/config presence; WHY: distinguish unloaded/missing server config from provider/model/runtime failures without exposing `.env` values.
+2026-10-28 | RESULT: server OCR route requires `config.GEMINI_API_KEY`; current process/config presence booleans are both false, model defaults are valid; root cause at this restart is missing/unloaded GEMINI_API_KEY, not schema cache; next read server request log for matching status.
+2026-10-28 | ABOUT TO: inspect npm start session output only for HTTP status entries; WHY: corroborate the API 503 from the app log without printing environment values.
+2026-10-28 | RESULT: server log corroborates status: upload 201, process 503, cleanup DELETE 200; logs omit provider details; next stop server because OCR key is absent from current config.
+2026-10-28 | ABOUT TO: stop the server started for diagnosis; WHY: a restart cannot process documents until GEMINI_API_KEY is configured; avoid repeated failed uploads.
+2026-10-28 | RESULT: server stopped; root cause for this run is `OCR_NOT_CONFIGURED` because GEMINI_API_KEY is absent from current environment/config; next update test/context/decision logs and checkpoint locally.
+2026-10-28 | ABOUT TO: append diagnostic result and refresh RESUME POINTER/CONTEXT/DECISIONS; WHY: next agent must know exact blocker and avoid failed retries.
+2026-10-28 | RESULT: test report records HTTP 503 code, config boolean diagnosis, cleanup and all remaining UNVERIFIED checks; context/resume updated; next verify status/no .env staged and commit.
+2026-10-28 | ABOUT TO: verify branch/status/staged filenames and `.env` tracking; WHY: prepare local WIP commit of the updated handoff only.
+2026-10-28 | RESULT: branch phase5-backend; only four continuity docs modified; `.env` not tracked and no files staged; next commit diagnostic checkpoint locally.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 resume: diagnose OCR configuration`; WHY: preserve verified missing-key cause and pending human action; never push.
+2026-10-28 | RESULT: diagnostic checkpoint commit `b97ac39` created on phase5-backend; no push; next align pointer's latest commit reference.
+2026-10-28 | ABOUT TO: update RESUME POINTER/CONTEXT to identify latest diagnostic checkpoint b97ac39 and commit the small handoff correction.
+2026-10-28 | RESULT: pointer and context now identify b97ac39 as latest local diagnostic checkpoint; next save correction locally.
+2026-10-28 | ABOUT TO: commit the resume pointer correction; WHY: ensure the committed handoff points to the latest checkpoint.
+2026-10-28 | ABOUT TO: verify branch and inspect OCR/embedding environment-variable names plus loaded-config presence booleans; WHY: stop before live work if a required key is absent.
+2026-10-28 | RESULT: branch is phase5-backend; source shows OCR and Gemini embeddings both read GEMINI_API_KEY; no code changed; next inspect configured names/default presence without printing values.
+2026-10-28 | ABOUT TO: load server config and emit only presence booleans for OCR/embedding key, model and timeout names; WHY: determine whether live run is safe to start.
+2026-10-28 | RESULT: required GEMINI_API_KEY is present in loaded config; OCR/embedding model and timeout entries are present (defaults included); values not printed; next start server.
+2026-10-28 | ABOUT TO: start server with `npm start`; WHY: required live API checks can proceed now that shared Gemini provider key is loaded.
+2026-10-28 | RESULT: server started on port 3000; startup reports Gemini provider enabled; next verify `/api/status` then run checks.
+2026-10-28 | ABOUT TO: query server health metadata; WHY: establish live service readiness before fixed-user sample operations.
+2026-10-28 | RESULT: live API health PASS, HTTP 200 authenticated/Supabase configured; next run checks with one synthetic sample and fixed identities.
+2026-10-28 | ABOUT TO: run cross-tenant, Storage RLS and deletion cascade checks sequentially using existing Phase 3 owner A/B and org A/B; WHY: verify isolation and cleanup end-to-end after OCR config became present; stop at first failure and clean only this run's document.
+2026-10-28 | ABOUT TO: collect the three-check live run output; WHY: synthetic upload/OCR/retrieval/storage probes are still running; only safe status/code summaries are emitted.
+2026-10-28 | RESULT: live sequence has not emitted a result yet; process still running; next wait for the bounded sample operation.
+2026-10-28 | ABOUT TO: poll the live verification process; WHY: await OCR/index response or timeout without issuing another request.
+2026-10-28 | RESULT: no result after second 5-second wait; no new API call issued; next wait once more for provider timeout/result.
+2026-10-28 | ABOUT TO: wait for same live request to finish; WHY: document OCR timeout is configured to bound provider processing.
+2026-10-28 | RESULT: cross-tenant check FAIL; one of Org B AI/list/fetch assertions failed; diagnostic script emitted no sensitive response details; run-scoped cleanup DELETE HTTP 200; remaining checks stopped as instructed.
+2026-10-28 | ABOUT TO: stop server started for this live run; WHY: verification failed and must stop without further probes or fixes.
+2026-10-28 | RESULT: server stopped; output confirms API status 200 and cleanup DELETE 200; no further requests made; next record each check status and update handoff.
+2026-10-28 | ABOUT TO: append live outcomes and rewrite RESUME POINTER/CONTEXT; WHY: checkpoint the failed cross-tenant result and stop condition for the next agent.
+2026-10-28 | RESULT: TEST-REPORT has one line per live check; cross-tenant FAIL, cascade/RLS UNVERIFIED; RESUME POINTER and CONTEXT stop pending authorization; next verify status and commit local journal.
+2026-10-28 | ABOUT TO: inspect branch/status/staged names and tracked `.env`; WHY: confirm only continuity docs are committed and no secret file is staged.
+2026-10-28 | RESULT: phase5-backend confirmed; only continuity docs modified; `.env` not tracked; no files staged; next create local live-check WIP checkpoint.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 live check: cross-tenant failed`; WHY: preserve live outcomes and stop pointer locally; never push.
+2026-10-28 | ABOUT TO: verify branch/worktree and inspect live route surface for document search; WHY: isolate the reported cross-tenant failure without changing code or exposing credentials.
+2026-10-28 | RESULT: source confirms no dedicated document-search HTTP route; hybrid search is invoked by `/api/ai/chat` via `documentSearch.search`; existing `/api/documents` routes cover list/get by identifier; no code changes; next inspect API config/runtime, then start if needed.
+2026-10-28 | ABOUT TO: load only runtime presence booleans and check local API health; WHY: verify configured providers/service before generating the single synthetic sample.
+2026-10-28 | RESULT: GEMINI key presence true and Supabase configured; local API not running (ECONNREFUSED); no data changed; next start server.
+2026-10-28 | ABOUT TO: start npm server; WHY: live cross-tenant checks require the authenticated backend API.
+2026-10-28 | RESULT: server started; config key present; next run separated probes with membership assertion and own JWT/org B for every B request.
+2026-10-28 | ABOUT TO: execute one live synthetic sample sequence; WHY: isolate direct search path, AI hybrid path, list/get, Storage RLS, and AI question individually; stop at any failed assertion and clean only this run's document.
+2026-10-28 | RESULT: diagnostic script did not start; Node syntax error from local variable/function name collision (`api`); no network requests or rows changed; next rerun corrected read/write harness.
+2026-10-28 | ABOUT TO: rerun same separated diagnostic after renaming API base variable; WHY: prior failure was harness syntax before any live check, not a product assertion.
+2026-10-28 | ABOUT TO: collect separated cross-tenant probe output; WHY: live synthetic processing and individual API calls remain in progress; output is counts/status only.
+2026-10-28 | RESULT: setup membership check PASS: A belongs to org A only; B belongs to org B only and has no org A membership. B probes configured with own JWT/X-Org-Id org B; service role not used for B API/Storage requests. Synthetic upload 201 PASS; processing still running.
+2026-10-28 | ABOUT TO: await OCR/index and subsequent isolated probes; WHY: one sample upload is already made; do not create another.
+2026-10-28 | RESULT: sample processing stopped with HTTP 429 `AI_DAILY_LIMIT`; no Org B sub-check ran; run-scoped cleanup DELETE 200; fixed membership/JWT setup was verified; next stop server and record unverified probes.
+2026-10-28 | ABOUT TO: stop server started for this diagnostic; WHY: AI daily budget blocked OCR/index before cross-tenant checks, so no more live calls should be made.
+2026-10-28 | RESULT: server stopped; log confirms upload 201, process 429 and cleanup 200; next append per-subcheck statuses and resume pointer.
+2026-10-28 | ABOUT TO: append four subcheck outcomes and update RESUME POINTER/CONTEXT; WHY: record that isolation probes were blocked before execution, not infer a leak or pass.
+2026-10-28 | RESULT: TEST-REPORT records a1-a2, b, c, d as UNVERIFIED due HTTP 429 before checks; setup evidence and current route fact documented; next verify status/no .env and locally WIP-commit.
+2026-10-28 | ABOUT TO: inspect branch/status/tracked `.env` and staged names; WHY: prepare safe local continuity checkpoint only.
+2026-10-28 | RESULT: phase5-backend confirmed; only continuity docs modified; `.env` not tracked; no staged files; next commit diagnostic results locally.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant diagnosis blocked`; WHY: preserve membership/JWT evidence and the daily-budget blocker; never push.
+2026-10-28 | ABOUT TO: verify branch/status and check server port health; WHY: start the requested cross-tenant rerun only on phase5-backend and avoid duplicate server processes.
+2026-10-28 | RESULT: branch phase5-backend; `/api/status` already HTTP 200 authenticated; `.env.example` is pre-existing modified content and will not be touched; next identify the server process and loaded budget presence without printing values.
+2026-10-28 | ABOUT TO: inspect listening server process and loaded budget numeric values only; WHY: confirm the restarted process uses the raised limits before creating the sample.
+2026-10-28 | RESULT: server PID 72140 is listening; fresh config loader reports limits 5/user and 20/org, not raised; no document created; next verify PID command and restart to load current .env.
+2026-10-28 | ABOUT TO: inspect PID command (no environment) and stop only the NovaPay server on port 3000; WHY: user requested server restart so updated limit config is loaded.
+2026-10-28 | RESULT: PID 72140 is `node server/index.js`; next stop this identified NovaPay server and restart via npm start.
+2026-10-28 | ABOUT TO: terminate only PID 72140; WHY: restart the exact app process to load updated environment configuration.
+2026-10-28 | RESULT: identified app process stopped; next start npm start to load current environment.
+2026-10-28 | ABOUT TO: start NovaPay using npm start; WHY: required fresh process for current AI limits.
+2026-10-28 | RESULT: fresh server started; startup reports Gemini enabled; next confirm health and fresh limits by numbers only.
+2026-10-28 | ABOUT TO: query `/api/status` and loaded config booleans/numeric limits; WHY: validate runtime readiness and whether user-raised budgets loaded before sample upload.
+2026-10-28 | RESULT: fresh server `/api/status` HTTP 200; Gemini key present; loaded limits are user 5/org 20, so raised values are not reflected; next attempt exactly one fixed-user synthetic upload/process and stop on 429.
+2026-10-28 | ABOUT TO: authenticate fixed owners A/B, verify memberships, upload one small synthetic PDF as A, process once, then run separated B checks and positive control only if indexing succeeds; WHY: satisfy requested diagnosis while isolating each API route/status/count.
+2026-10-28 | ABOUT TO: collect sample upload/process output; WHY: live operation is running and must not be duplicated.
+2026-10-28 | RESULT: processing returned HTTP 429 AI_DAILY_LIMIT despite config being loaded; numeric remaining budgets reported user 0/org 0; run-scoped cleanup 200; Org B checks not reached; next stop server.
+2026-10-28 | ABOUT TO: stop server started for this attempt; WHY: user specified stop if processing returns 429.
+2026-10-28 | RESULT: server stopped on 429 as directed; logs confirm health, upload and cleanup; next verify how usage limits are measured before reporting the numeric remaining budget.
+2026-10-28 | ABOUT TO: inspect reserve_ai_usage semantics in applied migration; WHY: ensure reported remaining-budget numbers use request count/token unit correctly, without another live call.
+2026-10-28 | RESULT: migration shows daily limits count non-cache ai_usage rows, not tokens; prior budget arithmetic was incorrect and is discarded; next read counts only to calculate numeric remaining budget after 429.
+2026-10-28 | ABOUT TO: issue read-only exact-count queries for today's fixed A user/org ai_usage; WHY: report remaining request budget in the correct unit, with no content or secret output; no more checks or writes.
+2026-10-28 | RESULT: exact usage counts show remaining request budgets user 0, org 15; loaded limits 5/20, user limit remains default; no further probes/writes; next stop server and record status.
+2026-10-28 | ABOUT TO: stop the server started for this attempt; WHY: HTTP 429 requires stopping the cross-tenant sequence.
+2026-10-28 | RESULT: stored server session no longer exists when sending Ctrl-C; next check API health/port to confirm whether the process already exited.
+2026-10-28 | ABOUT TO: query localhost API status and listener metadata only; WHY: verify server stopped after the failed live attempt.
+2026-10-28 | RESULT: `/api/status` now ECONNREFUSED and no listener; server is stopped; next append attempt results and update resume pointer.
+2026-10-28 | ABOUT TO: log the repeat run's per-step outcomes and correct prior remaining-budget arithmetic; WHY: preserve accurate 429 diagnosis without claiming any unrun probe.
+2026-10-28 | RESULT: report now has one line per requested subcheck, all unrun checks UNVERIFIED; context/pointer reflect 429 and corrected numeric budgets; next inspect status/no .env and checkpoint docs only.
+2026-10-28 | ABOUT TO: check branch/status/tracked `.env` and staged names; WHY: commit only continuity docs, preserving unrelated `.env.example` modification.
+2026-10-28 | RESULT: phase5-backend confirmed; `.env` not tracked; `.env.example` untouched and remains pre-existing modified; only docs/CONTEXT, TEST-REPORT, WORKLOG will be staged; next local WIP commit.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant rerun blocked by budget`; WHY: checkpoint exact results and resume pointer without including `.env.example`; never push.
+2026-10-28 | ABOUT TO: verify branch/status and identify any listener on port 3000; WHY: prepare a fresh server start and ensure this run uses the requested loaded AI limits.
+2026-10-28 | RESULT: branch phase5-backend; no port-3000 listener; `.env.example` remains unrelated modified content; no process required killing; next start server fresh.
+2026-10-28 | ABOUT TO: start NovaPay with `npm start`; WHY: load current `.env` into a clean process before checking requested limit values.
+2026-10-28 | RESULT: fresh server started successfully on port 3000; startup confirms Gemini adapter enabled; next load numeric AI limits and health metadata.
+2026-10-28 | ABOUT TO: load config and `/api/status`, printing only the two numeric limits and health status; WHY: enforce the user's stop condition before creating sample data.
+2026-10-28 | RESULT: fresh loaded limits match required 100/300; health HTTP 200 authenticated; next verify fixed memberships/JWTs and perform one sample sequence.
+2026-10-28 | ABOUT TO: execute live cross-tenant sequence with existing fixed users/orgs and one generated synthetic PDF; WHY: process/index, run separate B JWT/orgB checks, positive control, cascade, and run-only cleanup.
+2026-10-28 | ABOUT TO: collect live sample-processing and probe output; WHY: current sequential run is active; no duplicate requests.
+2026-10-28 | RESULT: fixed membership setup PASS; B has no org A membership; B probes use own JWT/org B; sample upload PASS HTTP 201; processing/index active.
+2026-10-28 | ABOUT TO: wait for sample processing completion before the Org B checks; WHY: all retrieval assertions require a confirmed indexed chunk.
+2026-10-28 | RESULT: sample processing/index PASS (200, 1 chunk); (a1) AI hybrid PASS 200/0 citations; (a2) search RPC PASS 403/0 rows; (b1) list PASS 200/0 org A rows; (b2) get returned FAIL 405 (expected 403/404); (c) Storage RLS PASS, B HTTP 400/0 rows, A HTTP 200; next complete positive control and cascade as requested.
+2026-10-28 | ABOUT TO: run (d) Org A same-question positive control, then delete only this sample and check cascade/object/audit; WHY: complete required checks after recording b2 failure, without fixing it.
+2026-10-28 | RESULT: (d) PASS HTTP 200/1 citation; cascade FAIL despite DELETE 200: sample chunks/search hits were checked, object still HTTP 200, audit query rows 0; next query exact run metadata and inspect route/storage adapter semantics before cleanup.
+2026-10-28 | ABOUT TO: inspect DELETE route, Storage remove implementation and live rows for exact sample ID/path; WHY: distinguish route absence/cache/policy behavior and safely clean only this run's residual object.
+2026-10-28 | RESULT: live sequence completed; b2 and delete cascade failures need precise diagnosis; no code changed; next inspect current server logs/request IDs and run-scoped metadata only.
+2026-10-28 | ABOUT TO: read recent server log lines and route response shapes; WHY: identify the exact failing route/policy without exposing document content or secrets.
+2026-10-28 | RESULT: app logs show GET `/api/documents/:id` returns 405 (no GET-by-id route); delete returned 200; next query exact run-scoped database/storage counts to establish cascade failure details.
+2026-10-28 | ABOUT TO: query only document ID c6e640f6-912d-4dd7-8c8f-dbc99886eaea under fixed org A for document/chunk/hit/audit/storage metadata counts; WHY: pinpoint cascade components and avoid touching unrelated records.
+2026-10-28 | RESULT: exact run queries show document/chunks/search hits rows 0; audit REST returned 403 and Storage SQL metadata endpoint 404, so previous 0 audit/object counts were not valid evidence; next inspect service auth/list API and use direct Storage list for this path.
+2026-10-28 | ABOUT TO: inspect Supabase service header setup and Storage list endpoint usage; WHY: obtain authoritative run-scoped object/audit presence without broader data reads.
+2026-10-28 | RESULT: service role is explicitly granted INSERT-only on audit_log, so 403 on audit SELECT is expected; owner-read policy is available. Next use owner JWT for exact audit query and Storage object list API for the run's prefix.
+2026-10-28 | ABOUT TO: perform read-only run-prefix Storage list and owner A audit query; WHY: establish actual cleanup status without trying any code or unrelated-data mutation.
+2026-10-28 | ABOUT TO: collect read-only owner audit and Storage prefix results; WHY: request is in flight and must not be duplicated.
+2026-10-28 | RESULT: owner-A audit query found 1 run delete row; Storage object list prefix returned 0 rows; DB document/chunk/search-hit counts were 0. Prior owner object GET after delete returned 200, contradictory and treated as unresolved failure; next inspect 405 fallback source and stop server.
+2026-10-28 | ABOUT TO: inspect unmatched API route handling to identify exact source of GET-by-ID HTTP 405; WHY: propose the smallest fix without applying it.
+2026-10-28 | RESULT: exact 405 source is app.js unmatched API fallback at lines 88-91; no document GET-by-ID route exists; propose a tenant-scoped GET-by-ID returning 404, not applied. Cascade inconsistency remains: Storage metadata list 0 rows but owner GET after deletion 200.
+2026-10-28 | ABOUT TO: stop server after all requested probes and run-scoped deletion; WHY: live checks are complete and failures are documented; no further writes.
+2026-10-28 | RESULT: server stopped; all live probes complete; sample document was deleted; next append per-check results and update handoff before local commit.
+2026-10-28 | ABOUT TO: append numeric-only live outcomes and update CONTEXT/RESUME POINTER; WHY: preserve failures and proposed fixes without applying code changes.
+2026-10-28 | RESULT: TEST-REPORT records each check separately; CONTEXT/RESUME updated with failures and unimplemented smallest fix proposal; next check branch/status/no `.env`, then WIP commit docs only.
+2026-10-28 | ABOUT TO: inspect branch/status/tracked `.env` and staged paths; WHY: commit only logs/context, not pre-existing `.env.example` changes.
+2026-10-28 | RESULT: branch phase5-backend; `.env` not tracked; `.env.example` left unstaged and untouched; only three continuity docs staged next; WIP commit.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant results`; WHY: checkpoint live results/proposed fixes locally only; never push.
+2026-10-28 | ABOUT TO: verify branch/worktree and inspect document route/test fixtures; WHY: begin authorized GET-by-ID fix without disturbing unrelated `.env.example` changes.
+2026-10-28 | RESULT: branch phase5-backend; `.env.example` pre-existing modified and will remain untouched; existing list route in documents.js, upload tests provide viewer setup; next read targeted fixture/routes/docs lines.
+2026-10-28 | ABOUT TO: inspect narrow route, test fixture and API doc sections; WHY: reuse contract conventions and implement tests without exposing real data.
+2026-10-28 | RESULT: added authenticated org-scoped GET `/api/documents/:documentId`, standard structured 404 for no tenant row; no storage path returned; next add route tests for same org, foreign org, unknown id, unauthenticated.
+2026-10-28 | ABOUT TO: extend documents-upload test fixtures and add four GET-by-ID assertions; WHY: prove status/error/tenant boundaries requested by user.
+2026-10-28 | RESULT: added four GET-by-ID assertions: same-org 200, foreign-org 404 standard envelope, unknown id 404, unauthenticated 401; next update API and frontend contract.
+2026-10-28 | ABOUT TO: document GET-by-ID response and tenant behavior in API.md and FRONTEND-CONTRACT.md; WHY: align contract with new route and expected 404 behavior.
+2026-10-28 | RESULT: API.md and FRONTEND-CONTRACT.md document scoped GET, 404 concealment, 401 and omitted storage path; next run focused GET tests before diagnosis.
+2026-10-28 | ABOUT TO: run focused `node --test server/test/documents-upload.test.js`; WHY: verify new route/test behavior before live diagnosis.
+2026-10-28 | RESULT: focused route tests PASS 6/6, including same-org 200, other-org 404, unknown 404, unauthenticated 401; next inspect supported SQL connectivity and exact delete/upload cache metadata paths for #2.
+2026-10-28 | ABOUT TO: inspect env variable NAMES/presence for a database SQL connection, available clients, and Storage implementation headers; WHY: determine if the requested `storage.objects` SQL count can be run without printing secrets.
+2026-10-28 | RESULT: no DATABASE_URL/PG connection credentials and no pg client; server Storage remove checks HTTP success before RPC; upload has no explicit cache-control override; next check whether Supabase CLI/link is available for requested read-only SQL count.
+2026-10-28 | ABOUT TO: inspect Supabase CLI and local link metadata presence only; WHY: determine whether count-only SQL against storage.objects can be run without exposing credentials.
+2026-10-28 | RESULT: Supabase CLI/link token and local SQL connection unavailable; will not claim SQL verification; Storage metadata list API is available. No source changes for diagnosis. Next start fresh server and capture object response metadata.
+2026-10-28 | ABOUT TO: identify/kill any stale node listener on port 3000, then start fresh; WHY: use current runtime limits and configuration for full live rerun.
+2026-10-28 | RESULT: stale server handling complete; npm start fresh on port 3000; next confirm status/config limits before sample.
+2026-10-28 | ABOUT TO: call `/api/status` and load limit numbers only; WHY: ensure fresh process is ready before live test writes.
+2026-10-28 | RESULT: fresh server health 200; limits 100/300; key present; next run fixed-user sample, tenant tests, deletion and cache metadata, plus storage-list counts.
+2026-10-28 | ABOUT TO: execute live checks with existing owner A/B and one synthetic PDF; WHY: verify the GET fix and isolate post-delete object behavior; no unrelated rows/users will be touched.
+2026-10-28 | ABOUT TO: collect full live run output; WHY: request is processing and must not be duplicated.
+2026-10-28 | RESULT: fixed membership check PASS; sample upload PASS 201; OCR/index and probes still running.
+2026-10-28 | ABOUT TO: await the same live run; WHY: do not duplicate synthetic upload or provider calls.
+2026-10-28 | RESULT: B checks pass including new B GET 404; A positive-control AI returned 200/0 citations (FAIL); continuing only to required delete/cache diagnostic; no content logged.
+2026-10-28 | ABOUT TO: collect delete/cascade/cache metadata output from same run; WHY: complete required step 2 diagnosis and clean this sample.
+2026-10-28 | RESULT: exact post-delete rerun found no storage object via list (0 rows), direct owner GET after deletion HTTP 400 JSON/88 bytes, CF-Cache-Status BYPASS, no cache-control/age; audit 1; no SQL connection for storage.objects count. Prior 200 lacks saved headers/body length and is not reproducible. Next inspect positive-control route classification to diagnose its 0 citations without changing code.
+2026-10-28 | ABOUT TO: inspect intent classifier and retrieval citation mapping; WHY: identify why Org A positive control returned zero citations and propose (not apply) a smallest correction if test setup caused it.
+2026-10-28 | RESULT: fresh post-delete GET is 400/BYPASS, not 200; no signed URL or cache evidence; old 200 lacked saved metadata. Next inspect the question's local route classification to diagnose positive-control zero citations without another API request.
+2026-10-28 | ABOUT TO: locally classify the tested synthetic-invoice question using router only; WHY: distinguish a test wording/route mismatch from an AI retrieval failure; no network/API calls.
+2026-10-28 | RESULT: tested wording classifies as `sql`/`invoice_status`, so previous AI isolation and positive-control probes did not exercise document hybrid search; this is a test-setup defect, not evidence of retrieval leakage. Next choose and verify OCR/retrieval wording locally.
+2026-10-28 | ABOUT TO: classify candidate questions locally (no API calls) and choose one that routes to document OCR/retrieval; WHY: ensure the corrected end-to-end repeat actually exercises document search on both tenants.
+2026-10-28 | RESULT: selected corrected question routes to `retrieval`; prior sample deleted and clean; no code fix; next repeat end-to-end with one fresh synthetic sample.
+2026-10-28 | ABOUT TO: run corrected retrieval checks using fixed identities, new one-run sample, B JWT/orgB for all B requests, A same-question positive control, then delete and capture response/cache metadata.
+2026-10-28 | ABOUT TO: collect corrected end-to-end run; WHY: processing and provider requests are in flight; do not duplicate them.
+2026-10-28 | RESULT: corrected question route verified as retrieval; memberships PASS; sample upload 201; next await same processing/probes.
+2026-10-28 | ABOUT TO: wait for current OCR/index operation; WHY: one sample is already uploaded and no duplicate should be created.
+2026-10-28 | RESULT: B retrieval request HTTP 200/1 citation; cited ID did not match org A document, but harness flagged marker echoed from B's own message as leakage; this is a false-positive test criterion, not confirmed leak. RPC 403, list 200/0, GET 404 pass; next finish positive control and cascade.
+2026-10-28 | ABOUT TO: collect remaining live output; WHY: positive control, deletion and post-delete metadata are still running.
+2026-10-28 | RESULT: corrected live rerun complete; B retrieval's sole citation was not the org A document; A positive control cited one result; cascade verified via Storage list/API and owner audit; SQL count unavailable; next record outcomes/root cause and run required final checks.
+2026-10-28 | ABOUT TO: append separate live check results and a diagnostic decision to TEST-REPORT/DECISIONS; WHY: distinguish observed pass/fail/unverified facts and correct the earlier marker-echo false positive.
+2026-10-28 | RESULT: check outcomes logged separately; prior 200 cause left undetermined (not labeled cache); positive-control SQL misroute documented; next stop server and run final tests.
+2026-10-28 | ABOUT TO: stop server started for live tests; WHY: live probes and cleanup are complete before offline validation.
+2026-10-28 | RESULT: server stopped; request log confirms final run delete HTTP 200; all sample rows cleaned; next run full npm test.
+2026-10-28 | ABOUT TO: run `npm test`; WHY: required full regression check after GET route addition.
+2026-10-28 | ABOUT TO: collect npm test final count; WHY: suite still running and completion count not available.
+2026-10-28 | RESULT: `npm test` PASS, 165 passed/0 failed; next record and run standalone migration check.
+2026-10-28 | ABOUT TO: append test pass then run `npm run check:migrations`; WHY: log real result and independently verify all migration syntax.
+2026-10-28 | RESULT: standalone migration check PASS, 16/16; next record and node-check changed JavaScript.
+2026-10-28 | ABOUT TO: append migration PASS and run `node --check` for route and test JS; WHY: complete required syntax verification.
+2026-10-28 | RESULT: node --check PASS for both changed JS files; next run git diff --check.
+2026-10-28 | ABOUT TO: run `git diff --check`; WHY: required final patch whitespace validation.
+2026-10-28 | RESULT: git diff --check PASS; next record, refresh continuity pointer, and inspect final diffs/status before commit.
+2026-10-28 | ABOUT TO: append final syntax/whitespace results and rewrite CONTEXT/RESUME POINTER with route fix and live diagnosis; WHY: leave a complete continuation checkpoint before WIP commit.
+2026-10-28 | RESULT: CONTEXT and RESUME POINTER updated with exact test/live states and SQL limitation; next inspect final diff/status and protected path diff.
+2026-10-28 | ABOUT TO: inspect diff stat, changed files, `.env` status, and protected-file diff; WHY: ensure only requested route/test/docs/log edits are included before local commit.
+2026-10-28 | RESULT: diff contains expected route/test/docs/log changes; protected-file diff empty; `.env` not tracked; unrelated `.env.example` remains modified and excluded; next stage only intended files.
+2026-10-28 | ABOUT TO: stage API/contract docs, CONTEXT/DECISIONS/TEST-REPORT/WORKLOG, document route and route tests; WHY: commit approved GET fix and completed diagnostics without touching `.env.example`.
+2026-10-28 | RESULT: staged only 8 intended files; `.env.example` excluded; next local WIP commit.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 scoped document GET and live diagnosis`; WHY: checkpoint authorized route fix, passing tests and live findings; never push.
+2026-10-28 | RESULT: WIP commit `7b6ab23` created locally; `.env.example` remains unstaged; next point resume docs to latest commit.
+2026-10-28 | ABOUT TO: update CONTEXT/RESUME POINTER latest local commit to 7b6ab23 and checkpoint the pointer correction; WHY: ensure continuation points to exact saved state.
+2026-10-28 | RESULT: pointer checkpoint `ee000d5` created; next final verify HEAD/status and whitespace; no push.
+2026-10-28 | ABOUT TO: run final branch/status/log and `git diff --check`; WHY: confirm local commits saved and only pre-existing `.env.example` remains modified.
+2026-10-28 | RESULT: branch phase5-backend; diff check PASS; HEAD ee000d5; only `.env.example` plus this final journal entry modified; `.env.example` remains unstaged; next commit journal only.
+2026-10-28 | ABOUT TO: commit final worklog verification result only; WHY: keep the append-only journal synchronized while preserving unrelated `.env.example`; never push.
+2026-10-28 | ABOUT TO: verify branch and inspect `.env.example` diff through a value-safe scanner; WHY: detect any real-looking secret before showing or editing the example file.
+2026-10-28 | RESULT: PASS; branch phase5-backend; no secret-like values detected; GEMINI_API_KEY entry/comment absent; sanitized diff showed only AI limit placeholders changed. NEXT: inspect .env.example names/comments safely and append the required server-only key entry.
+2026-10-28 | ABOUT TO: replace the commented GEMINI_API_KEY marker with an empty server-only example entry; WHY: meet the requested safe configuration documentation.
+2026-10-28 | RESULT: PASS; .env.example now has GEMINI_API_KEY= with a server-only comment; no credential value added. NEXT: verify sanitized diff and stage/commit only the example change.
+2026-10-28 | RESULT: FAIL for the validation script only (Python parenthesis typo); the intended .env.example edit completed. NEXT: rerun the value-safe diff validator, then stage/commit.
+2026-10-28 | ABOUT TO: inspect git status and changed paths; WHY: ensure no .env or secret file is staged before the requested commit.
+2026-10-28 | RESULT: status inspected; next action is stage only .env.example and commit with the requested message.
+2026-10-28 | RESULT: PASS; committed .env.example and journal as a36d97f. NEXT: confirm no .env staged/tracked and run npm test.
+2026-10-28 | ABOUT TO: check status/tracked .env and run npm test; WHY: required pre-push verification.
+2026-10-28 | RESULT: npm test PASS, 165/165; .env not staged, tracked status flagged, and local values scanned without printing. NEXT: if no secret-like values, run remaining checks and record results; do not add .env.
+2026-10-28 | ABOUT TO: record test and push blocker in handoff docs; WHY: preserve actual verification and prevent unsafe publication of a tracked local .env.
+2026-10-28 | RESULT: recorded npm test PASS (165/165) and blocked push due to tracked .env with credential-like populated values; no .env values printed and no push attempted. NEXT: human must remove .env from tracking/history and rotate credentials before any push; then rerun checks.
+2026-10-28 | ABOUT TO: verify branch and inspect .env tracking/history metadata only; WHY: establish whether outgoing history contains the local environment file.
+2026-10-28 | RESULT: PASS; current branch phase5-backend; git ls-files .env and both requested .env history queries returned no entries. NEXT: refresh origin refs and inspect status plus ignore rules.
+2026-10-28 | ABOUT TO: fetch origin and inspect status/ignore patterns; WHY: verify origin/main history and ensure .env remains excluded while .env.example is included.
+2026-10-28 | RESULT: PASS; origin/main has no .env history entries; .gitignore currently ignores only .env; working tree contains prior docs edits. NEXT: ensure .env.* is ignored while .env.example is allowed, then commit ignore rule.
+2026-10-28 | ABOUT TO: update ignore rules and issue a no-op cached removal if applicable; WHY: prevent future .env variants from entering Git without excluding .env.example.
+2026-10-28 | RESULT: PASS; .env was already untracked and ignored; added .env.* ignore rule with !.env.example exception. NEXT: commit the ignore-rule hardening as requested.
+2026-10-28 | ABOUT TO: commit .gitignore and WORKLOG.md as Stop tracking .env; WHY: record and preserve the safe ignore rules.

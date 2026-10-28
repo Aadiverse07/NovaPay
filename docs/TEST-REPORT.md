@@ -1129,3 +1129,109 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `npm run check:migrations` after sync/docs | PASS | Migrations 0001–0014 parsed successfully.
 2026-10-28 | Conflict-marker grep (first final scan) | FAIL | Matched the literal marker tokens inside the CONTEXT.md test command description; no unmerged Git paths. Removed that literal description and reran.
 2026-10-28 | Conflict-marker grep (final) | PASS | No marker strings found in JS/CSS/HTML/Markdown outside node_modules.
+2026-10-28 | `npm test` on phase5-backend | PASS | 135 passed, 0 failed.
+2026-10-28 | `npm run check:migrations` on phase5-backend | PASS | Migrations 0001–0014 parsed successfully.
+2026-10-28 | `node --test server/test/documents-upload.test.js` | PASS | 4 passed, 0 failed (initial focused Part 1 coverage).
+2026-10-28 | `npm test` (first Part 1 run) | FAIL | Migration parser passed 15/15 and new tests passed, but existing app tests failed because injected partial configs omitted DOCUMENT_MAX_FILE_MB; fixed with route defaults.
+2026-10-28 | `npm test` (after route defaults) | PASS | 140 passed, 0 failed; migration parser parsed 15/15.
+2026-10-28 | `npm run check:migrations` | PASS | 15/15 numbered migrations parsed; 0015 remains unapplied.
+2026-10-28 | `node --check` (changed JS files) | PASS | 6 files parsed.
+2026-10-28 | `git diff --check` | PASS | no whitespace errors.
+2026-10-28 | Migration runtime/Storage policy test on Supabase | UNVERIFIED | 0015 was not applied per instruction.
+2026-10-28 | `npm test` (final Part 1 source including processing-claim RPC) | PASS | 140 passed, 0 failed; parser included migration 0015.
+2026-10-28 | `npm run check:migrations` (final Part 1 migration) | PASS | 15/15 parsed; 0015 not applied.
+2026-10-28 | `node --check` (final changed JS files) | PASS | Six files parsed successfully.
+2026-10-28 | `git diff --check` (final Part 1 source/docs) | PASS | No whitespace errors.
+2026-10-28 | `git diff --check` (handoff docs after commit) | PASS | No whitespace errors.
+2026-10-28 | User confirmation: Supabase migration 0015 applied | UNVERIFIED | User said `applied`; no direct database query, Storage policy check, ordinary-user RPC denial, or live upload test run yet.
+2026-10-28 | Live 0015 probe (first run) | PARTIAL / UNVERIFIED | documents table 200, vector column 200, search_hits 200, private bucket 200, fixed accountant session 200, ordinary JWT RPC denied 403; service-role RPC used fake non-member org and got 403, so service-role invocation not verified.
+2026-10-28 | Live 0015 probe (fixed org retry) | PASS | Fixed accountant session 200; existing accountant membership 200; service-role claim RPC 200 and returned not_available for nonexistent document. Ordinary JWT denial 403 from prior probe.
+2026-10-28 | Live Storage bucket metadata | PASS | GET bucket metadata returned HTTP 200; public=false, 10 MiB limit, PDF/PNG/JPEG allowlist.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/documents-upload.test.js` (first Part 2 focused run) | FAIL | 10 passed, 4 failed; test mock treated `org_id=eq` as `id=eq`, falsely making each document its own duplicate. Fix test double and rerun.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/documents-upload.test.js` (rerun) | PASS | 14 passed, 0 failed after exact query-parameter matching fix.
+2026-10-28 | Focused document OCR, processing, upload and Supabase tests (model pin/recovery edges) | PASS | 20 passed, 0 failed.
+2026-10-28 | `npm test` (Phase 5 Part 2 final) | PASS | 152 passed, 0 failed; migration parser also accepted all 15 numbered migrations.
+2026-10-28 | `npm run check:migrations` (Part 2 final) | PASS | 15/15 migrations parsed.
+2026-10-28 | `node --check` (Part 2 changed JS) | PASS | 8 changed JavaScript files parsed successfully.
+2026-10-28 | `git diff --check` (Part 2 final) | PASS | No whitespace errors.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/document-rag.test.js server/test/document-rag-migration.test.js server/test/ai-router.test.js server/test/ai.test.js` | FAIL | 38 passed, 3 failed: document intent missed an explain phrasing, reject JSON body was not parsed because document routes precede global JSON middleware, and empty OCR retrieval fell through to unavailable LLM. Fix each behavior, do not weaken tests.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/document-rag.test.js server/test/document-rag-migration.test.js server/test/ai-router.test.js server/test/ai.test.js` (Part 3 first focused run) | FAIL | 38 passed, 3 failed; all three regressions fixed (document intent phrasing, reject body parser, empty OCR evidence). See immediately following rerun.
+2026-10-28 | Focused Part 3 OCR/RAG/AI tests after fixes | PASS | 41 passed, 0 failed; includes lifecycle, 768-vector, tenant scoping, citation, injection, migration grant assertions.
+2026-10-28 | Focused Part 3 OCR/RAG/AI suite after refinements | PASS | 41 passed, 0 failed.
+2026-10-28 | npm run check:migrations after adding 0016 | PASS | 16/16 numbered migrations parsed by PostgreSQL 17 parser.
+2026-10-28 | Live migration 0016 search/delete RPC role boundary | UNVERIFIED | Migration not applied; no authenticated JWT or service-role calls attempted.
+2026-10-28 | Focused Part 3 suite after cache/operator/injection refinements | PASS | 41 passed, 0 failed.
+2026-10-28 | `npm run check:migrations` after cache/operator/injection refinements | PASS | 16/16 migrations parsed.
+2026-10-28 | `npm test` (Part 3 first full suite) | FAIL | 162 passed, 1 failed; migration parser accepted 16/16. Existing `/api/ai/chat` error-response assertion must include the newly exposed `unavailable:true` API flag; behavior itself is safe and expected.
+2026-10-28 | `npm test` (Part 3 rerun) | PASS | 163 passed, 0 failed; parser accepted migrations 0001–0016.
+2026-10-28 | npm run check:migrations (Part 3 final) | PASS | 16/16 numbered migrations parsed by PostgreSQL 17 parser; 0016 remains unapplied.
+2026-10-28 | node --check (Part 3 changed JavaScript) | PASS | 14 changed JS files parsed successfully.
+2026-10-28 | git diff --check (Part 3 final) | PASS | No whitespace errors.
+2026-10-28 | Migration 0016 live verification | PASS | Fixed accountant magic-link session and membership HTTP 200; service-role search_document_chunks HTTP 200 with 0 rows; service-role delete_document(nonexistent random UUID) HTTP 200/null (no row deleted); ordinary accountant JWT search_document_chunks HTTP 403; ordinary accountant JWT delete_document HTTP 403.
+2026-10-28 | Migration 0016 applied-state confirmation | PASS | User confirmed applied; RPC calls above prove search/delete functions are live; schema cache was not reloaded.
+2026-10-28 | `npm test` | PASS | 164 passed, 0 failed; package script also ran migration syntax checks (16/16). Documents list role-scope test included.
+2026-10-28 | `npm run check:migrations` | PASS | PostgreSQL 17 syntax validation succeeded for 16/16 migration files.
+2026-10-28 | `node --check src/api-client.js && node --check src/documents.js && node --check server/src/routes/documents.js && node --check server/test/documents-upload.test.js` | PASS | All 4 changed JS files parsed successfully.
+2026-10-28 | `npm test` | FAIL | 163 passed, 1 failed; `server/test/document-processing.test.js` confirmation test helper dropped JSON request body, so persisted invoiceDraftId assertion received undefined. Test is being corrected; no check weakened.
+2026-10-28 | Correction to prior FAIL diagnosis: fixture did send JSON; the document router is mounted before the global JSON parser, so confirm needed route-local parsing. The original assertion remains intact.
+2026-10-28 | `npm test` | PASS | 164 passed, 0 failed after confirm route-local JSON parsing; all 16 migrations also parsed through the package precheck.
+2026-10-28 | `npm run check:migrations` | PASS | PostgreSQL 17 syntax validation succeeded for 16/16 files.
+2026-10-28 | `node --check` on src/api-client.js, src/documents.js, server/src/routes/documents.js, server/test/document-processing.test.js, server/test/documents-upload.test.js | PASS | All 5 changed JS files parsed.
+2026-10-28 | `git diff --check` | PASS | No whitespace errors.
+2026-10-28 | `git diff --stat main -- <protected pathspecs>` | PASS | Empty; no protected design files changed.
+2026-10-28 | Browser Documents checklist | UNVERIFIED | Requires human browser session; checklist written to docs/BROWSER-CHECKLIST.md.
+2026-10-28 | `npm test` | PASS | Final Part 4 implementation: 164 passed, 0 failed; 16 migration syntax checks also ran in package script.
+2026-10-28 | `npm run check:migrations` | PASS | Final standalone check: all 16 SQL files passed PostgreSQL 17 syntax validation.
+2026-10-28 | `node --check` on 5 changed JS files | PASS | Final syntax run succeeded for src/api-client.js, src/documents.js, server/src/routes/documents.js, server/test/document-processing.test.js, server/test/documents-upload.test.js.
+2026-10-28 | `git diff --check` | PASS | Final patch contains no whitespace errors.
+2026-10-28 | `git diff --stat main -- <protected pathspecs>` | PASS | Empty; protected design files are unchanged.
+2026-10-28 | Live cross-tenant retrieval/fetch | UNVERIFIED | Fixed owner A uploaded the synthetic sample (HTTP 201), but `/api/documents/:id/process` returned HTTP 503 before indexing; org B search/list/fetch probes were not run. Run-scoped DELETE returned HTTP 200 during cleanup; no cascade assertions were run.
+2026-10-28 | Live delete cascade | UNVERIFIED | Cleanup DELETE for this run's synthetic document returned HTTP 200; chunks, search hits, Storage object and `document.deleted` audit row were not queried because processing had stopped the verification.
+2026-10-28 | Live Storage-object RLS | UNVERIFIED | No cross-org JWT Storage read was attempted; blocked before successful sample indexing. No RLS result inferred from policy text.
+2026-10-28 | Live server health | PASS | `GET /api/status` returned HTTP 200 with authenticated mode and Supabase configured; no credential values printed.
+2026-10-28 | Live document verification handoff | UNVERIFIED | Last run: sample upload 201, processing 503 before indexing, cleanup DELETE 200; no org B or Storage RLS probes. User reports PostgREST schema reload succeeded; root cause remains unknown pending Gemini configuration/restart.
+2026-10-28 | `npm test` | PASS | Fresh `npm ci` then 164 passed, 0 failed; matches the Part 4 baseline.
+2026-10-28 | `npm run check:migrations` | PASS | Fresh standalone run: PostgreSQL 17 syntax validation succeeded for 16/16 migrations; matches handoff.
+2026-10-28 | Live document processing diagnostic | FAIL | Fixed owner A/org A synthetic upload HTTP 201; process HTTP 503 `OCR_NOT_CONFIGURED`; presence-only check found GEMINI_API_KEY absent from process and loaded config; server log matched status; run-scoped DELETE HTTP 200; no secret values printed.
+2026-10-28 | `npm ci` | PASS | 94 packages installed, 95 audited, 0 vulnerabilities; npm reported @launchql/protobufjs postinstall script not approved/executed.
+2026-10-28 | Live cross-tenant retrieval/fetch | FAIL | One synthetic sample was uploaded/processed and indexed for fixed owner A/org A; Org B aggregate AI/list/direct-fetch isolation assertion failed (the diagnostic run did not retain which sub-assertion); only this run's document was deleted via HTTP 200. Stopped without further probes or fixes.
+2026-10-28 | Live delete cascade | UNVERIFIED | Stopped after cross-tenant failure; cleanup DELETE HTTP 200, but chunks, search hits, Storage object and audit row were not individually verified.
+2026-10-28 | Live Storage-object RLS | UNVERIFIED | Stopped after cross-tenant failure; different-org JWT object read was not run.
+2026-10-28 | (a1) dedicated document search endpoint candidate | UNVERIFIED | No dedicated search HTTP route exists in current route source; request not run because sample processing returned HTTP 429 `AI_DAILY_LIMIT` before probes.
+2026-10-28 | (a2) hybrid-search path via `/api/ai/chat` | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | (b) Org B document list/get | UNVERIFIED | Neither request run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | (c) Org B Storage object read | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | (d) Org B document-specific AI question | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | Fixed-user test setup | PASS | Membership query confirmed owner A belongs to org A; owner B belongs to org B and has no org A membership. B requests were configured to use B JWT and X-Org-Id org B; service-role credentials not used for B API/Storage calls.
+2026-10-28 | Sample preparation | FAIL | One synthetic upload succeeded HTTP 201; processing returned HTTP 429 `AI_DAILY_LIMIT`; run-scoped cleanup returned HTTP 200. No Org B content or document data printed.
+2026-10-28 | Cross-tenant rerun setup | PASS | Fixed owner A is member of org A only; fixed owner B is member of org B only and has no org A membership; all intended B requests carried B's own JWT and X-Org-Id org B; no service-role credential used for B API/Storage calls.
+2026-10-28 | Sample upload/process | FAIL | Synthetic upload HTTP 201; process HTTP 429 `AI_DAILY_LIMIT`; cleanup HTTP 200. Loaded limits were user 5/org 20. Correct request-count query: remaining user budget 0, org budget 15.
+2026-10-28 | (a) Org B hybrid AI search and search RPC | UNVERIFIED | Not run because process returned HTTP 429 first; no direct RPC attempt. A dedicated document search HTTP route does not exist in current source.
+2026-10-28 | (b) Org B list/get org A document | UNVERIFIED | Not run because process returned HTTP 429 first.
+2026-10-28 | (c) Org B Storage object read | UNVERIFIED | Not run because process returned HTTP 429 first.
+2026-10-28 | (d) Org A positive-control AI answer | UNVERIFIED | Not run because process returned HTTP 429 first.
+2026-10-28 | Remaining-budget correction | CORRECTION | Limits count non-cache `ai_usage` rows, not tokens. Exact counts after 429 were user 5/5 (remaining 0), org 5/20 (remaining 15); an earlier zero/zero estimate based on tokens was invalid.
+2026-10-28 | Loaded runtime limits | PASS | `AI_DAILY_USER_LIMIT=100`, `AI_DAILY_ORG_LIMIT=300`; `/api/status` HTTP 200; Gemini config present (no value printed).
+2026-10-28 | Fixed-user membership/JWT setup | PASS | A membership only in org A; B membership only in org B, none in org A. All B requests used B JWT and X-Org-Id org B; service role not used for B checks.
+2026-10-28 | Synthetic upload/process/index | PASS | Upload HTTP 201; process HTTP 200; indexed document chunk rows=1.
+2026-10-28 | (a1) Org B hybrid search `/api/ai/chat` | PASS | HTTP 200; citation rows=0; insufficient-evidence true; no sample marker/document ID in response.
+2026-10-28 | (a2) Org B search RPC permission | PASS | `search_document_chunks` called with B JWT/org B; HTTP 403; rows=0.
+2026-10-28 | (b1) Org B document list | PASS | HTTP 200; total rows=0; org A document rows=0.
+2026-10-28 | (b2) Org B document GET by ID | FAIL | HTTP 405; returned document rows=0. No GET-by-ID route; unmatched API fallback in server/src/app.js returns 405.
+2026-10-28 | (c) Org B Storage object RLS | PASS | B JWT read denied HTTP 400, rows=0; owner A read before deletion HTTP 200.
+2026-10-28 | (d) Org A positive-control AI question | PASS | Same question HTTP 200; citation rows=1.
+2026-10-28 | Delete cascade | FAIL | DELETE HTTP 200; document/chunk/search-hit rows after=0; Storage list prefix rows=0; owner audit query rows=1; direct owner object GET after delete still HTTP 200, inconsistent with Storage list result.
+2026-10-28 | GET-by-ID route tests | PASS | Focused `node --test server/test/documents-upload.test.js`: 6/6; same-org 200, foreign-org 404, missing 404, unauthenticated 401.
+2026-10-28 | Live cross-tenant retrieval | PASS | Fixed B JWT/org B: `/api/ai/chat` route `retrieval`, HTTP 200, 1 citation not referencing org A document; search RPC HTTP 403/0 rows. Sample marker appeared because it was present in B's own question, not as an org A citation.
+2026-10-28 | Live document list/get isolation | PASS | B list HTTP 200, 0 org A rows; B GET-by-ID HTTP 404, 0 rows.
+2026-10-28 | Live Storage-object RLS | PASS | B JWT direct private Storage GET denied HTTP 400/0 bytes; owner A pre-delete GET HTTP 200.
+2026-10-28 | Live positive control | PASS | Same retrieval question under A JWT/org A returned HTTP 200 with 1 citation.
+2026-10-28 | Live delete cascade | PASS | Delete API HTTP 200; document/chunk/search-hit rows after=0; Storage list API HTTP 200/count=0; owner audit query HTTP 200/count=1; owner direct Storage GET after delete HTTP 400.
+2026-10-28 | `storage.objects` SQL count | UNVERIFIED | No local SQL client/connection or Supabase CLI/access token available. Service-role Storage list API returned 0 rows for this run's prefix.
+2026-10-28 | Post-delete object response diagnosis | PASS (current rerun) | Direct authenticated Storage URL (not signed), after delete HTTP 400, `application/json; charset=utf-8`, byte length 88; `cache-control`/`age` absent and `CF-Cache-Status: BYPASS`. Prior HTTP 200 was not reproduced; its response metadata was not captured, so its specific cause remains undetermined.
+2026-10-28 | Storage delete implementation inspection | PASS | `server/src/services/supabase.js` sends Storage API DELETE and throws unless `response.ok`; document route invokes DB delete RPC only after storage removal succeeds.
+2026-10-28 | `npm test` | PASS | 165 passed, 0 failed after org-scoped GET-by-ID route and tests.
+2026-10-28 | `npm run check:migrations` | PASS | PostgreSQL 17 syntax check succeeded for all 16 migration files.
+2026-10-28 | `node --check server/src/routes/documents.js` and `node --check server/test/documents-upload.test.js` | PASS | Both changed JavaScript files parse.
+2026-10-28 | `git diff --check` | PASS | No whitespace errors.
+2026-10-28 | Prior post-delete HTTP 200 root cause | UNRESOLVED | It was not reproduced. Fresh direct authenticated Storage GET returned 400 JSON/88 bytes with CF cache BYPASS; no cache-control/age; Storage list count 0. Prior response metadata was not retained.

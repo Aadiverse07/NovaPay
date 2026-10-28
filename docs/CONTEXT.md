@@ -1,80 +1,74 @@
-# NovaPay Post-Merge Sync Handoff
+# NovaPay Continuity Context
 
 ## HEADER
-- Updated: 2026-10-28 Asia/Calcutta.
-- Branch: `post-merge-sync`, created from `origin/main` at `af42d6b`; sync code commit `febb024` and handoff commit `d90b7bd` were pushed; remote matched HEAD at last check.
-- Current phase/task: PREP BEFORE PHASE 5, sync task 6/7. Phase 5 has not started.
-- Last completed published checkpoint: `d90b7bd` on `origin/post-merge-sync`; zero unpushed commits at last check.
+- Date/time: 2026-10-28 (Asia/Kolkata)
+- Branch: `phase5-backend`
+- Latest local code/log checkpoint: `7b6ab23`; no push
+- Current task: GET-by-ID fix applied; deletion response diagnosed; live checks and final tests complete
 
 ## DONE
-- PRs #3 and #4 (fund-wiring) and teammate PR #5 are merged to main; main also includes the later UI sync commit `9b5fe89` and merge `af42d6b`.
-- `origin/main` health checked in a detached temp worktree: `npm ci` PASS (89 packages), `npm test` PASS 131/131, migrations 0001–0014 PASS.
-- Phase 6 backend pieces confirmed on main: `server/index.js`, `server/src/routes/funds.js`, `supabase/migrations/0001`–`0014`, `scripts/verify-phase6-maintenance-live.js`, `src/`, `docs/`.
-- PR #5 first-parent diff: 12 icon assets plus dashboard/preview and UI source/CSS modules (33 files, 1,866 insertions, 46 deletions). It did not change root `server.js`.
-- Selective sync carries: repeat-safe maintenance verifier and tests; `/api/events` empty fallback and test; API `cache: no-store` and test; assistant response route/reason/citations and message-only request wiring.
+- Added authenticated, org-scoped `GET /api/documents/:documentId`; returns standard 404 `DOCUMENT_NOT_FOUND` for missing/foreign IDs and excludes Storage path.
+- Added test coverage for same-org 200, foreign-org 404, unknown 404, unauthenticated 401. Focused test PASS 6/6; full suite PASS 165/165.
+- Migrations syntax PASS 16/16; `node --check` PASS for two changed JS files; `git diff --check` PASS.
+- Live run used existing fixed owner A/B and org A/B, one synthetic PDF. Membership setup confirmed B has no org A membership; B requests used own JWT/org B.
+- Live cross-tenant: B retrieval request 200, one citation not matching org A document; B search RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage read 400 denied; owner A positive control 200/1 citation.
+- Delete cascade: DELETE 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1. Post-delete direct object GET was 400 JSON/88 bytes; `CF-Cache-Status: BYPASS`, no cache-control/age.
+- No code fix for Storage behavior. Prior owner GET 200 was not reproduced; its precise cause is unresolved. Direct `storage.objects` SQL count was unavailable (no SQL client/CLI/connection); Storage list API used instead.
 
 ## IN PROGRESS
-- Exact task: no code work remains; current branch is published and awaiting browser checks/PR merge/Phase 5 approval.
-- Edited files: `scripts/phase6-maintenance-run.mjs`, `scripts/verify-phase6-maintenance-live.js`, `server/src/routes/status.js`, `server/test/api-client.test.js`, `server/test/phase6-maintenance-run.test.js`, `server/test/routes.test.js`, `src/api-client.js`, `src/dashboard.js`, `src/novapay-live.js`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
-- Main HTML, styling, protected design files, and `assets/` remain from main; no conflict markers/unmerged paths were found.
+- No implementation work remains. Review diff, commit locally on `phase5-backend`; never push.
+- Preserve `.env.example` pre-existing modification without staging it.
 
 ## NEXT STEPS
-1. Human completes `docs/BROWSER-CHECKLIST.md` and reviews/merges the sync PR.
-2. Recheck the base after merge.
-3. Await explicit Phase 5 approval. Do not start Phase 5 yet.
+1. Review status and changed paths; ensure only intended files are staged and `.env` is absent.
+2. Commit GET route/tests/docs and diagnostic logs locally.
+3. If desired, ask for a direct SQL connection to verify `storage.objects` count or further investigation of the unreproduced earlier 200.
 
 ## USER ACTIONS PENDING
-- Fill PASS/FAIL for browser-only steps in `docs/BROWSER-CHECKLIST.md` (sign-in/dashboard, events Network/console, AI badge/hover, Fundraising/Maintenance/Transparency, theme, mobile drawer, notifications).
-- Review/merge the new sync PR after push.
-- Explicitly approve Phase 5 with “APPROVED: start Phase 5”.
+- None required to use the new GET route.
+- Optional: provide an approved SQL access path if exact `storage.objects` SQL count is required.
 
 ## LIVE STATE
-- User-confirmed migrations 0001–0014 applied; 0003 status: applied. No migrations changed in this sync.
-- User previously reported tunnel and webhook fixed; current tunnel/webhook state not rechecked in this task.
-- No live API/browser tests run in this sync. Last captured live T3 verifier PASS was 2026-10-27; see TEST-REPORT/WORKLOG.
-- Config key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`.
+- Server stopped. Loaded limits at run start were user 100/org 300; status HTTP 200.
+- Fixed identities reused, no users/orgs created. Run-specific synthetic sample was deleted.
+- Migrations 0001–0016 applied; no migrations modified.
+- Key names only: `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`, `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## TEST STATE
-| Check | Status | Date | Command |
-|---|---|---|---|
-| Main install | PASS, 89 packages, 0 vulnerabilities | 2026-10-28 | `npm ci` in detached `origin/main` worktree |
-| Main unit suite | PASS 131/131 | 2026-10-28 | `npm test` in detached `origin/main` worktree |
-| Main migrations | PASS 14/14 | 2026-10-28 | `npm run check:migrations` in detached `origin/main` worktree |
-| Synced unit suite | PASS 135/135 | 2026-10-28 | `npm test` |
-| Synced migrations | PASS 14/14 | 2026-10-28 | `npm run check:migrations` |
-| Changed JS/MJS syntax | PASS, 9 files | 2026-10-28 | explicit loop of `node --check` |
-| `git diff --check` | PASS | 2026-10-28 | `git diff --check` |
-| Conflict-marker scan | PASS, no unresolved markers | 2026-10-28 | grep scan across source/docs, excluding node_modules |
-| Protected paths | PASS, empty diff | 2026-10-28 | `git diff --stat origin/main -- <protected paths>` |
-| Browser/manual checks | UNVERIFIED | 2026-10-28 | `docs/BROWSER-CHECKLIST.md` |
+| Check | Status | Evidence |
+|---|---|---|
+| GET-by-ID route tests | PASS | 6/6 focused tests; same/foreign/missing/unauthenticated assertions. |
+| Full suite | PASS 165/165 | `npm test`. |
+| Migration syntax | PASS 16/16 | `npm run check:migrations`. |
+| Changed JS syntax | PASS | `node --check` on route and test. |
+| Diff whitespace | PASS | `git diff --check`. |
+| Cross-tenant retrieval | PASS | B retrieval response had no org A document citation; RPC 403. |
+| B list/get isolation | PASS | list 200/0 org A rows; get 404. |
+| B Storage RLS | PASS | B read denied HTTP 400. |
+| A positive control | PASS | retrieval route 200/1 citation. |
+| Delete cascade | PASS via API/list | DB rows 0, Storage list 0, audit 1; direct SQL count UNVERIFIED. |
+| Earlier post-delete 200 cause | UNRESOLVED | Not reproduced; current GET 400 with cache BYPASS and no cache headers. |
 
 ## KNOWN ISSUES AND RISKS
-- Main's root `server.js` is a legacy standalone server added in 9b5fe89 after PR #5; package startup uses `server/index.js`, which remains present. Do not use root server as backend replacement.
-- `git cherry` marks many old commits as unmatched because PR #4 was squash-merged; use the file-level diff and recorded selected changes, not cherry-pick all history.
-- Browser verification remains pending. First historical live verifier invocation remains UNVERIFIED; later captured invocations passed.
-- Invoice sending and maintenance payouts are SIMULATED; this is not for real money.
+- The exact `storage.objects` SQL count was not run due lack of SQL access tooling.
+- Previous HTTP 200 after delete lacks headers/byte length and cannot be attributed to caching or signed URL.
+- One initial positive-control query routed to structured SQL; corrected retrieval wording was used for passing positive control. One B harness flag was a false positive from marker echo in its own question; citation ID did not match org A document.
+- `.env.example` contains an unrelated pre-existing modified file; leave untouched.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll back all. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT receives 403.
-- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
-- `audit_log` is insert-only with ON DELETE RESTRICT; delete journal_entries first, then audit_log, organizations, auth.users using `scripts/cleanup-phase2-test-data.sql`; reuse fixed users/orgs.
-- PayPal Sandbox buyer must be a US Personal account; seller USD only; use Visa at checkout; webhook URL ends `/api/webhook` and `PAYPAL_WEBHOOK_ID` matches.
-- Raw body is needed for PayPal signature verification.
-- Never print `.env` values; use key names only.
+- Supabase SQL Editor is transactional; never edit applied migrations; add numbered migrations.
+- SECURITY DEFINER/posting RPCs revoke public/anon/authenticated and grant only service_role; prove ordinary JWT denial.
+- PostgREST embeds need explicit FK names with multiple relationships.
+- audit_log is insert-only/ON DELETE RESTRICT; cleanup journal entries, audit_log, organizations, auth.users; reuse fixed users/orgs.
+- PayPal sandbox buyer US Personal; seller USD; Visa; webhook ends `/api/webhook`; raw body required for signature verification.
+- Never print `.env` values or JWTs.
 
-## DO NOT
-- Never push `fund-wiring` or `main`; never force-push; only push `post-merge-sync` under current authorization.
-- Do not start Phase 5 until explicit approval.
-- Do not edit protected files (`tokens.css`, `base.css`, `fonts.css`, `tailwind.novapay.preset.*`, `theme.js`, hero/fx/brand reveal/logo files, or `assets/`).
-- Do not edit applied migrations, weaken tests, or commit `.env`.
+## DO NOT LIST
+- Never push; do not touch main/backend/protected design files; no force; do not weaken tests/edit applied migrations/commit `.env`.
 
 ## RESUME COMMANDS
-```sh
-git branch --show-current
-git status --short --branch
-npm test
-npm run check:migrations
-git diff --check
-git log origin/main..post-merge-sync --oneline
-```
+- `git branch --show-current`
+- `git status --short`
+- `git log --oneline -5`
+- `npm test`
+- `npm run check:migrations`

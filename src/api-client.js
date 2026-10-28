@@ -37,7 +37,8 @@
     headers.set("Accept", "application/json");
     headers.set("Authorization", "Bearer " + authSession.access_token);
     var body = options.body;
-    if (body !== undefined && body !== null && typeof body !== "string" && !(body instanceof FormData)) {
+    var rawBody = typeof Blob !== "undefined" && body instanceof Blob;
+    if (body !== undefined && body !== null && typeof body !== "string" && !(body instanceof FormData) && !rawBody) {
       headers.set("Content-Type", "application/json");
       body = JSON.stringify(body);
     }

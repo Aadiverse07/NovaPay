@@ -357,3 +357,13 @@ Render every `gaps` item, including `{ "gap": "no quotation or invoice" }`, `{ "
 ### `GET /api/funds/transparency/audit.csv`
 
 Allowed roles: `owner`, `admin`; optional inclusive UTC date filters `from=YYYY-MM-DD` and `to=YYYY-MM-DD`. Response is `text/csv`, attachment `fund-audit.csv`, headers `id,createdAt,action,entity,entityId,actorRef,requestId`. `actorRef` is pseudonymous; metadata and raw actor IDs are omitted. CSV quoting and formula prefixes are neutralized. Other roles receive 403; invalid/reversed dates receive 400 `VALIDATION_ERROR`.
+
+## Documents view (Phase 5)
+
+`GET /api/documents` loads the live organization list and resolved role. It returns no storage paths; show an explicit empty state when there are no rows and an unavailable state on errors. Do not substitute example records in authenticated mode. Viewers may read the list but cannot upload, process, confirm, reject or delete; the server enforces owner/admin/accountant for writes.
+
+Upload raw selected `File` bytes to `POST /api/documents` with its MIME type and `X-File-Name`, then call `POST /api/documents/:id/process`. Show uploaded/processing/processed/rejected/failed states. Review `extraction.fields`, each `confidence` value, `validation.warnings`, and `duplicate_of`; show arithmetic and duplicate warnings before confirmation. Confirmation creates an invoice draft only, using `POST /api/invoices`, followed by `POST /api/documents/:id/confirm`; never call invoice send or send-approval from this flow. Collect supplier email if absent from OCR. If the draft request succeeds and confirmation fails, do not repeat draft creation automatically. Reject via `POST /api/documents/:id/reject`.
+
+On successful invoice draft creation, include its returned UUID as `invoiceDraftId` in the document confirm request. The confirmation metadata is returned by the list route and the UI should show a completed state, preventing repeat draft creation from that document.
+
+`GET /api/documents/:id` is authenticated and resolves the ID only inside the organization selected by `X-Org-Id`. A document from another org and an unknown document both return the standard structured 404 `DOCUMENT_NOT_FOUND`; clients must not distinguish them. Unauthenticated requests return 401. The response omits the private Storage path.

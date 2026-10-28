@@ -34,11 +34,60 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       };
     },
   };
+  const storage = {
+    async upload(bucket, objectPath, bytes, contentType) {
+      const encodedPath = objectPath.split('/').map(encodeURIComponent).join('/');
+      let response;
+      try {
+        response = await fetchImpl(`${apiUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodedPath}`, {
+          method: 'POST', headers: { ...serviceHeaders, 'Content-Type': contentType, 'x-upsert': 'false' }, body: bytes,
+          signal: AbortSignal.timeout(20000),
+        });
+      } catch {
+        throw Object.assign(new Error('Document storage is unavailable.'), { statusCode: 503, code: 'STORAGE_UNAVAILABLE' });
+      }
+      if (!response.ok) throw Object.assign(new Error('Document storage rejected the upload.'), { statusCode: response.status >= 500 ? 503 : 400, code: 'STORAGE_UPLOAD_FAILED' });
+      return true;
+    },
+    async remove(bucket, objectPaths) {
+      let response;
+      try {
+        response = await fetchImpl(`${apiUrl}/storage/v1/object/${encodeURIComponent(bucket)}`, {
+          method: 'DELETE', headers: { ...serviceHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: objectPaths }),
+          signal: AbortSignal.timeout(10000),
+        });
+      } catch {
+        throw Object.assign(new Error('Document storage cleanup is unavailable.'), { statusCode: 503, code: 'STORAGE_UNAVAILABLE' });
+      }
+      if (!response.ok) throw Object.assign(new Error('Document storage cleanup failed.'), { statusCode: 503, code: 'STORAGE_DELETE_FAILED' });
+      return true;
+    },
+    async download(bucket, objectPath) {
+      const encodedPath = objectPath.split('/').map(encodeURIComponent).join('/');
+      let response;
+      try {
+        response = await fetchImpl(`${apiUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodedPath}`, {
+          method: 'GET', headers: serviceHeaders, signal: AbortSignal.timeout(20000),
+        });
+      } catch {
+        throw Object.assign(new Error('Document storage is unavailable.'), { statusCode: 503, code: 'STORAGE_UNAVAILABLE' });
+      }
+      if (!response.ok) throw Object.assign(new Error('Document storage could not read the file.'), { statusCode: response.status === 404 ? 404 : 503, code: response.status === 404 ? 'DOCUMENT_FILE_NOT_FOUND' : 'STORAGE_DOWNLOAD_FAILED' });
+      return Buffer.from(await response.arrayBuffer());
+    },
+  };
   const database = {
     async rpc(name, args) {
       if (!/^[a-z][a-z0-9_]*$/.test(name)) throw new Error('Invalid database operation.');
       const result = await request(`/rest/v1/rpc/${name}`, { method: 'POST', body: args });
-      if (result.error) throw Object.assign(new Error('Financial database operation failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      if (result.error) {
+        const uploadLimit = name === 'reserve_document_upload' && result.data?.code === 'P0001';
+        throw Object.assign(new Error(uploadLimit ? 'Document upload rate limit reached.' : 'Financial database operation failed.'), {
+          statusCode: uploadLimit ? 429 : 503,
+          code: uploadLimit ? 'DOCUMENT_UPLOAD_RATE_LIMITED' : 'DATABASE_UNAVAILABLE',
+          databaseCode: result.data?.code || null,
+        });
+      }
       return result.data;
     },
     async select(table, query) {
@@ -68,6 +117,7 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
   };
   return {
     database,
+    storage,
     audit: createAuditHelper(client),
     async verifyToken(token) {
       const { response, data, error } = await request('/auth/v1/user', { token, publicKey: true });
