@@ -1147,3 +1147,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | Live 0015 probe (first run) | PARTIAL / UNVERIFIED | documents table 200, vector column 200, search_hits 200, private bucket 200, fixed accountant session 200, ordinary JWT RPC denied 403; service-role RPC used fake non-member org and got 403, so service-role invocation not verified.
 2026-10-28 | Live 0015 probe (fixed org retry) | PASS | Fixed accountant session 200; existing accountant membership 200; service-role claim RPC 200 and returned not_available for nonexistent document. Ordinary JWT denial 403 from prior probe.
 2026-10-28 | Live Storage bucket metadata | PASS | GET bucket metadata returned HTTP 200; public=false, 10 MiB limit, PDF/PNG/JPEG allowlist.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/documents-upload.test.js` (first Part 2 focused run) | FAIL | 10 passed, 4 failed; test mock treated `org_id=eq` as `id=eq`, falsely making each document its own duplicate. Fix test double and rerun.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/documents-upload.test.js` (rerun) | PASS | 14 passed, 0 failed after exact query-parameter matching fix.
+2026-10-28 | Focused document OCR, processing, upload and Supabase tests (model pin/recovery edges) | PASS | 20 passed, 0 failed.
+2026-10-28 | `npm test` (Phase 5 Part 2 final) | PASS | 152 passed, 0 failed; migration parser also accepted all 15 numbered migrations.
+2026-10-28 | `npm run check:migrations` (Part 2 final) | PASS | 15/15 migrations parsed.
+2026-10-28 | `node --check` (Part 2 changed JS) | PASS | 8 changed JavaScript files parsed successfully.
+2026-10-28 | `git diff --check` (Part 2 final) | PASS | No whitespace errors.
