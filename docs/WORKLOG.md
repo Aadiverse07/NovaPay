@@ -1,11 +1,10 @@
 ## RESUME POINTER
-- Current task: HANDOFF after Phase 5 Parts 1–4, branch `phase5-backend` based on main after PR #6.
-- Last local commit: `844e6a4`; no Phase 5 branch changes pushed; no PR yet.
-- DONE: upload/limits, OCR/validation, duplicate detection, embeddings/hybrid search, OCR router branch, Documents view wiring. Migrations 0015/0016 applied and live-verified. `npm test` 164/164; migrations 16/16; protected-file diff empty.
-- ACCEPTANCE: duplicate flag PASS; wrong-total flag PASS; injection PASS; cross-tenant retrieval, delete cascade and Storage-object RLS UNVERIFIED because last live processing returned HTTP 503 before indexing.
-- 503 status: root cause undiagnosed. User successfully reloaded PostgREST schema; user is adding GEMINI_API_KEY. Suspects: schema cache (reloaded), missing/invalid Gemini key, embedding model/dimension mismatch, provider rate limit.
-- Pending human: finish `.env`, restart `npm start`, run `docs/BROWSER-CHECKLIST.md` with sample docs only, then authorize push of `phase5-backend` and PR into main.
-- Next: (1) restart and diagnose 503 with one sample upload/log; small config/code fix only with test; (2) rerun three live checks with fixed users, one TEST-REPORT line each; (3) after authorization push phase5-backend and open PR; (4) Phase 7 hardening only if time remains.
+- Current task: diagnose Phase 5 document processing HTTP 503; branch `phase5-backend`.
+- Last finished step: `npm ci` PASS (94 packages; 0 vulnerabilities; one install-script warning); `npm test` PASS 164/164; `npm run check:migrations` PASS 16/16. Local checkpoint `cc05f1c`.
+- Live diagnostic: fixed Phase 3 owner A/org A; synthetic upload HTTP 201; processing HTTP 503 `OCR_NOT_CONFIGURED`; run-scoped DELETE HTTP 200; server log corroborates; server stopped.
+- Root cause: GEMINI_API_KEY is absent from process environment and loaded config (presence booleans only; value never read/printed). No code changes.
+- Next: human completes `.env`, then restart `npm start` and retry one synthetic sample. If processing succeeds, rerun cross-tenant, delete cascade and Storage-object RLS with fixed accounts; log each result.
+- Pending human action: add GEMINI_API_KEY to `.env` and ask to resume; browser checklist remains pending. Never push without explicit authorization.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3210,3 +3209,26 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: append migration result and commit continuity logs locally; WHY: checkpoint two completed checks before live diagnosis.
 2026-10-28 | RESULT: branch phase5-backend; `.env` untracked check confirms not tracked; only continuity docs modified; next save local check checkpoint.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 resume: baseline checks`; WHY: preserve npm test/migration results before live server diagnosis; never push.
+2026-10-28 | RESULT: baseline check checkpoint `cc05f1c` committed locally; no push; next check port 3000 health before starting server.
+2026-10-28 | ABOUT TO: query only `/api/status` metadata on localhost:3000; WHY: avoid starting a duplicate server and verify current config mode without printing key values.
+2026-10-28 | RESULT: localhost:3000 refused connection; no server is running; no live data touched; next start npm start.
+2026-10-28 | ABOUT TO: start server with `npm start`; WHY: required to reproduce document processing HTTP 503 using the user's updated configuration; no `.env` values will be printed.
+2026-10-28 | RESULT: npm start is listening on 3000; app reports PayPal sandbox and Gemini LLM enabled, but this does not prove document OCR key/model; no values printed; next verify health.
+2026-10-28 | ABOUT TO: call `/api/status` and print only mode/config booleans; WHY: confirm the restarted server is healthy before a sample upload.
+2026-10-28 | RESULT: restarted `/api/status` HTTP 200, authenticated/Supabase configured; next one sample upload/process to capture safe failure code.
+2026-10-28 | ABOUT TO: authenticate existing Phase 3 owner A, upload one generated synthetic PDF to fixed org A, process once, and delete only that run's document; WHY: reproduce and diagnose the document 503 without creating users/orgs or using real documents.
+2026-10-28 | ABOUT TO: collect one-sample upload/process diagnostic; WHY: live API request is still running and error code/result has not arrived.
+2026-10-28 | RESULT: fixed owner A preflight and synthetic upload PASS; process returned HTTP 503 with safe code `OCR_NOT_CONFIGURED`; run-scoped cleanup is still executing; next collect cleanup completion.
+2026-10-28 | ABOUT TO: collect cleanup completion for the single diagnostic sample; WHY: remove only this run's document before investigating the config path.
+2026-10-28 | RESULT: diagnostic sample cleanup PASS, DELETE HTTP 200; processing code confirms OCR configuration blocker `OCR_NOT_CONFIGURED`; next inspect config/provider wiring and test only key presence, never key contents.
+2026-10-28 | ABOUT TO: inspect OCR_NOT_CONFIGURED source and print only boolean GEMINI key/config presence; WHY: distinguish unloaded/missing server config from provider/model/runtime failures without exposing `.env` values.
+2026-10-28 | RESULT: server OCR route requires `config.GEMINI_API_KEY`; current process/config presence booleans are both false, model defaults are valid; root cause at this restart is missing/unloaded GEMINI_API_KEY, not schema cache; next read server request log for matching status.
+2026-10-28 | ABOUT TO: inspect npm start session output only for HTTP status entries; WHY: corroborate the API 503 from the app log without printing environment values.
+2026-10-28 | RESULT: server log corroborates status: upload 201, process 503, cleanup DELETE 200; logs omit provider details; next stop server because OCR key is absent from current config.
+2026-10-28 | ABOUT TO: stop the server started for diagnosis; WHY: a restart cannot process documents until GEMINI_API_KEY is configured; avoid repeated failed uploads.
+2026-10-28 | RESULT: server stopped; root cause for this run is `OCR_NOT_CONFIGURED` because GEMINI_API_KEY is absent from current environment/config; next update test/context/decision logs and checkpoint locally.
+2026-10-28 | ABOUT TO: append diagnostic result and refresh RESUME POINTER/CONTEXT/DECISIONS; WHY: next agent must know exact blocker and avoid failed retries.
+2026-10-28 | RESULT: test report records HTTP 503 code, config boolean diagnosis, cleanup and all remaining UNVERIFIED checks; context/resume updated; next verify status/no .env staged and commit.
+2026-10-28 | ABOUT TO: verify branch/status/staged filenames and `.env` tracking; WHY: prepare local WIP commit of the updated handoff only.
+2026-10-28 | RESULT: branch phase5-backend; only four continuity docs modified; `.env` not tracked and no files staged; next commit diagnostic checkpoint locally.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 resume: diagnose OCR configuration`; WHY: preserve verified missing-key cause and pending human action; never push.
