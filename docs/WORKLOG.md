@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 4 Documents view wiring and documentation, committed locally on `phase5-backend`.
-- Last finished step: WIP commit `5a63d8e`; final checks PASS: npm test 164/164, migrations 16/16, node --check 5 JS files, git diff --check; protected-file diff vs main empty.
-- Exact work in progress: none in code. Browser-only validation remains for human; no push.
-- Edited files in commit: `.env.example`, `dashboard.html`, `docs/API.md`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `server/src/routes/documents.js`, `server/test/document-processing.test.js`, `server/test/documents-upload.test.js`, `src/api-client.js`, `src/documents.js`.
-- Next: human completes `docs/BROWSER-CHECKLIST.md` using synthetic samples, then gives next direction.
-- Pending human action: manually verify Documents view; Storage-object RLS, cross-tenant retrieval denial and live cascade deletion remain unverified.
+- Current task: verify Phase 5 document isolation/deletion live, branch `phase5-backend`.
+- Last finished step: fixed Phase 3 owner accounts/orgs preflight passed; one synthetic PDF upload returned 201; process returned HTTP 503 before indexing; run-scoped DELETE returned 200; server stopped.
+- Exact work in progress: no code changes. Three live checks are UNVERIFIED because processing failed before search/Storage probes. Results appended to TEST-REPORT.md.
+- Last code/doc commit: `54b53b6`; verification log edits are pending local WIP commit; never push.
+- Next: wait for user direction on the processing 503; then diagnose only when authorized and rerun checks with fixed accounts/sample data.
+- Pending human action: decide whether to authorize diagnosis/fix of document processing 503; no RLS or cascade assertion was performed.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3150,3 +3150,38 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28  | ABOUT TO: update RESUME POINTER and CONTEXT commit state; WHY: make the post-commit handoff exact for a fresh agent.
 2026-10-28  | RESULT: RESUME POINTER and CONTEXT now identify commit 5a63d8e and no remaining code work; browser checklist is pending; next: stop and hand off without pushing.
 2026-10-28  | ABOUT TO: commit the post-checkpoint CONTEXT/WORKLOG pointer update locally; WHY: preserve the exact handoff state without leaving docs edits outside version control.
+2026-10-28 | ABOUT TO: inspect branch, worktree status and RESUME POINTER; WHY: establish the live verification checkpoint before any network or database operation.
+2026-10-28 | RESULT: branch is `phase5-backend`; only WORKLOG.md is modified by this verification entry; RESUME POINTER shows prior Part 4 complete and three live checks unverified; next inspect fixed-user live verification utilities.
+2026-10-28 | ABOUT TO: list existing live document verifier scripts and fixed identity references; WHY: reuse the named test users/orgs and avoid creating identities or real documents.
+2026-10-28 | RESULT: no dedicated live document verifier exists; Phase 6 scripts include fixed identity names but may provision missing users, so not safe to invoke uninspected; next inspect auth flow and document RPC APIs only.
+2026-10-28 | ABOUT TO: inspect migration functions/policies, document route shapes, and fixed-user authentication helper without reading `.env`; WHY: determine safe live checks using existing identities and available backend endpoints.
+2026-10-28 | RESULT: Storage RLS migration scopes read to member role and upload/delete to owner/admin/accountant; existing magic-link helper can authenticate but Phase 6 transparency script may create donor/resident users; avoid that script; next inspect Phase 3 fixed org identities and server health.
+2026-10-28 | ABOUT TO: read only Phase 3 fixture names/auth helper and query local `/api/status`; WHY: select existing fixed owner identities and confirm backend availability before any writes.
+2026-10-28 | RESULT: fixed Phase 3 owner fixtures identify org A/B accounts; `/api/status` is unreachable because port 3000 has no listener; no live data changed; next start existing server.
+2026-10-28 | ABOUT TO: start the existing app using `npm start`; WHY: live verification requires the authenticated API; do not inspect or print local environment values.
+2026-10-28 | RESULT: `npm start` is listening on port 3000 with Supabase and Gemini enabled; no secrets printed; next verify endpoint health and whether fixed users/orgs already exist (read-only).
+2026-10-28 | ABOUT TO: query `/api/status`, Supabase fixed-user existence and the two fixed Phase 3 organizations without creating anything; WHY: gate all live writes on pre-existing fixtures.
+2026-10-28 | ABOUT TO: collect completion of read-only fixture preflight; WHY: network requests are still running and result must be captured before choosing next step.
+2026-10-28 | RESULT: health HTTP 200 authenticated/Supabase configured; both fixed owner users and both fixed Phase 3 orgs already exist; no users/orgs created; next inspect retrieval/search-hit behavior before live upload.
+2026-10-28 | ABOUT TO: inspect AI document retrieval trigger and search-hit writes plus migration table columns; WHY: ensure live verification can produce and then verify this run's search-hit cleanup accurately.
+2026-10-28 | RESULT: indexing creates document_chunks; document search inserts document_search_hits only when results exist; direct search is server-side via AI evidence path; next inspect minimal AI routing and upload field processing requirements.
+2026-10-28 | ABOUT TO: inspect AI evidence selection logic and OCR/provider prerequisites; WHY: choose a sample query that exercises retrieval without exposing document text or spending unnecessary calls.
+2026-10-28 | RESULT: OCR/retrieval routes invoke tenant-scoped `documentSearch.search`; search hits are persisted only for returned document chunks; next choose safe direct questions and validate API reply behavior.
+2026-10-28 | ABOUT TO: inspect insufficient-evidence handling; WHY: avoid unnecessary model calls while ensuring org B's API question is actually exercised.
+2026-10-28 | RESULT: AI route returns explicit insufficientEvidence for no org-scoped chunks; OCR queries invoke document search and can create scoped search-hit rows; next inspect deletion audit event/action and columns before integrated live run.
+2026-10-28 | ABOUT TO: read delete_document audit insert and audit_log schema only; WHY: query the exact live audit row without broad or sensitive data reads.
+2026-10-28 | RESULT: delete RPC writes `document.deleted` audit row with entity `document` and entity_id=UUID text; audit columns org_id/actor_id/action/entity/entity_id/metadata/request_id confirmed; next inspect AI route response mapping before live checks.
+2026-10-28 | ABOUT TO: inspect `/api/ai/chat` response schema and document evidence mapping; WHY: assert no-evidence behavior without logging AI text.
+2026-10-28 | RESULT: fixed-account/org preflight PASS; local server healthy; only synthetic run-scoped PDF will be created; next run cross-tenant, Storage RLS and delete-cascade checks sequentially.
+2026-10-28 | ABOUT TO: run a live script using only existing Phase 3 owner A/B and org A/B; WHY: upload/index one synthetic PDF, test API isolation and Storage RLS, then delete and verify only that run's rows.
+2026-10-28 | ABOUT TO: collect live isolation run result; WHY: upload/OCR/index and fixed-user API probes are still executing; no output includes secrets or document contents.
+2026-10-28 | RESULT: live run stopped at sample processing: upload succeeded but OCR/index returned HTTP 503; cross-tenant check UNVERIFIED; cleanup request is running for only this run's uploaded document; no code changed.
+2026-10-28 | ABOUT TO: collect run-scoped cleanup completion; WHY: ensure sample object/document created before blocker is removed, without retrying OCR or altering code.
+2026-10-28 | RESULT: run-scoped DELETE returned HTTP 200; cascade assertions were intentionally not run after the OCR/index blocker; next stop the server started for this verification.
+2026-10-28 | ABOUT TO: stop the npm start process started in this turn; WHY: leave no unnecessary live server running after the blocked test.
+2026-10-28 | RESULT: app stopped (npm start session exited 130 on Ctrl-C); log contains only request status, not 503 details; next record three live outcomes and update handoff.
+2026-10-28 | ABOUT TO: append exact live outcomes to TEST-REPORT.md and rewrite RESUME POINTER/CONTEXT for the 503 blocker; WHY: ensure the next agent can resume without rerunning or mislabeling checks.
+2026-10-28 | RESULT: TEST-REPORT has one explicit line each for cross-tenant, delete cascade and Storage RLS, all UNVERIFIED; CONTEXT/RESUME now stop at the HTTP 503 blocker; next verify status and no `.env` before WIP commit.
+2026-10-28 | ABOUT TO: inspect branch, status, staged paths and tracked `.env` presence; WHY: ensure only continuity docs are committed and no secret files are included.
+2026-10-28 | RESULT: on `phase5-backend`; only three continuity docs modified, no staged files, `.env` not tracked; next create local WIP checkpoint, never push.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 live document verification`; WHY: preserve the blocked live-check results and current resume pointer locally.
