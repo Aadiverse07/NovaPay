@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="src/fonts.css">
 <link rel="stylesheet" href="src/tokens.css">
 <link rel="stylesheet" href="src/base.css">
-<link rel="stylesheet" href="src/dashboard.css">
+<link rel="stylesheet" href="src/dashboard.css?v=3">
 <link rel="stylesheet" href="src/novapay-live.css">
 <link rel="stylesheet" href="src/click-spark.css">
 <link rel="stylesheet" href="src/specular-buttons.css">
@@ -190,7 +190,7 @@
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/ai-assistant.png" alt="" width="64" height="64"><h2 data-text-type data-text-type-options='{"typingSpeed":75,"deletingSpeed":50,"typeEffect":"fade","mistakes":0.2,"cursorStyle":"bar","cursorGlide":true,"showCursor":true,"loop":false,"startOnVisible":true,"hideCursorOnComplete":true}'>Understand the activity you can see</h2><p>Ask about available transaction records and review the evidence behind each answer. NovaPay does not import your full PayPal history.</p></div>
         <div class="ai-command-grid">
           <article class="ai-workspace dash-card ai-command-card">
-            <div class="ai-panel-head"><div><span class="ai-spark"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="20" height="20" style="width:20px;height:20px;display:block;object-fit:contain"></span><div><b>NovaPay AI</b><small>Answers use only activity shown in this workspace</small></div></div><span class="status warn" id="ai-service-status">Checking AI service…</span></div>
+            <div class="ai-panel-head"><div><span class="ai-spark"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="20" height="20" style="width:20px;height:20px;display:block;object-fit:contain"></span><div><b>NovaPay AI</b><small>Answers use only activity shown in this workspace</small></div></div><span class="ai-head-right"><span class="status warn" id="ai-service-status">Checking AI service…</span><button type="button" class="ai-fs-btn" id="ai-fullscreen" aria-pressed="false" aria-label="Enter full screen" title="Full screen"><svg class="ai-fs-expand" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="ai-fs-collapse" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></span></div>
             <div class="ai-data-status" id="ai-data-status" role="status">Checking available transaction data…</div>
             <div class="ai-conversation" id="ai-conversation" role="log" aria-label="Assistant conversation" aria-live="polite" aria-relevant="additions text">
               <div class="ai-bubble ai-bubble--assistant"><span class="ai-avatar"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="22" height="22" style="width:22px;height:22px;display:block;object-fit:contain"></span><div><b>NovaPay</b><p data-text-type data-text-type-options='{"typingSpeed":28,"deletingSpeed":50,"typeEffect":"fade","mistakes":0.2,"cursorStyle":"bar","cursorGlide":true,"showCursor":true,"loop":false,"startOnVisible":true,"hideCursorOnComplete":true}'>Hi. I can summarize the activity available here, explain a transaction, and point to the records behind an answer. Missing fields stay marked unavailable.</p></div></div>
@@ -350,7 +350,9 @@
 <script src="src/motion.js"></script>
 <script src="src/text-type.js"></script>
 <script src="src/strands.js"></script>
+<script src="src/ai-thoughts.js?v=3"></script>
 <script src="src/dashboard.js"></script>
+<script src="src/ai-fullscreen.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
 <script src="src/transaction-effects.js"></script>
