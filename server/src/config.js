@@ -15,6 +15,8 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().trim().optional().default(''),
   DOCUMENT_OCR_MODEL: z.enum(['gemini-3.5-flash-lite']).default('gemini-3.5-flash-lite'),
   DOCUMENT_OCR_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(25000),
+  DOCUMENT_EMBEDDING_MODEL: z.enum(['gemini-embedding-001']).default('gemini-embedding-001'),
+  DOCUMENT_EMBEDDING_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(25000),
   AI_DAILY_USER_LIMIT: z.coerce.number().int().min(1).max(1000).default(5),
   AI_DAILY_ORG_LIMIT: z.coerce.number().int().min(1).max(10000).default(20),
   AI_MAX_INPUT_CHARS: z.coerce.number().int().min(100).max(1000).default(1000),

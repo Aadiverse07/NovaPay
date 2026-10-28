@@ -88,6 +88,12 @@ test('structured queries precede explanation, documents precede general fallback
   assert.equal(classifyAIIntent('What is the best way to organize receipts?').route, 'llm');
 });
 
+test('document questions route to OCR retrieval and evidence-based explanations remain retrieval', () => {
+  assert.deepEqual(classifyAIIntent('Read the attached invoice'), { route: 'ocr', reason: 'document_extraction_request', intent: 'document' });
+  assert.equal(classifyAIIntent('What does the uploaded receipt say?').route, 'ocr');
+  assert.equal(classifyAIIntent('Explain what the document says about the payment').route, 'ocr');
+});
+
 test('router dispatch attaches deterministic metadata and never trusts an input route field', async () => {
   const calls = [];
   const route = createAIRouter({ sql: async (input) => { calls.push(input); return { answer: 'ledger result' }; } });

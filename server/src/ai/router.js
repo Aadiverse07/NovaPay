@@ -41,7 +41,7 @@ const hasStructuredIntent = (text) => {
 };
 
 const hasDocumentIntent = (text) => /\b(?:this|the|attached|uploaded|my)?\s*(?:document|pdf|receipt|statement|invoice(?: file| document)?|image|photo|scan)\b/i.test(text)
-  && /\b(?:read|extract|scan|parse|summari[sz]e|review|what does|from|uploaded|attached)\b/i.test(text);
+  && /\b(?:read|extract|scan|parse|summari[sz]e|review|explain|tell me|what does|from|uploaded|attached)\b/i.test(text);
 
 const hasExplanationIntent = (text) => /\b(?:why|because|explica|explicar|explique|explain|what caused|how did|how come|analy[sz]e|compare|tell me about|what does .* mean|describe)\b|por qué/i.test(text);
 
