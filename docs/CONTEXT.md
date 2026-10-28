@@ -2,38 +2,36 @@
 
 ## HEADER
 - Updated: 2026-10-28 Asia/Calcutta.
-- Branch: `phase5-backend`, created from updated `origin/main`; current HEAD `a2a5eb26a0a6319fbb3595d2804124dcf1acf498`.
-- Phase/task: Phase 5 PLANNING ONLY, task 3/5; blocked pending the Build Blueprint PDF. No Phase 5 code started.
+- Branch: `phase5-backend`, created from updated `origin/main`; planning checkpoint base commit `20048b2`.
+- Phase/task: Phase 5 PLANNING ONLY, task 4/5. Plan written; awaiting `PLAN OK`. No Phase 5 code started.
 
 ## DONE
-- Saved the prior uncommitted post-merge-sync WORKLOG and its delta to `/tmp/novapay-post-merge-sync-WORKLOG.md` and `.patch`; re-applied the branch-switch entry on phase5-backend.
-- Updated local main from origin/main and created `phase5-backend` from it; no code/commit/push on main.
 - `npm ci` PASS: 89 packages, 0 vulnerabilities.
 - `npm test` PASS: 135/135.
-- `npm run check:migrations` PASS: 0001–0014 parse.
-- Read WORKLOG pointer, CONTEXT, newest TEST-REPORT and DECISIONS entries.
-- Inspected `/Users/aditya/Paypal_hackathon/PaypalFinal.png`; Week 5 visibly lists community/automation, fundraising and maintenance fund management, invoice automation, rate limiting/security, UX polish/testing.
+- `npm run check:migrations` PASS: migrations 0001–0014 parse.
+- Read the Blueprint's numbered Phase 5 roadmap (PDF p.15) and detailed prompt (PDF p.28); inspected `PaypalFinal.png` and recorded its Week 5 vs numbered Phase 5 distinction.
+- Wrote `docs/PHASE5-PLAN.md`; next local WIP checkpoint is pending.
 
 ## IN PROGRESS
-- Exact task: planning only; the referenced NovaPay Build Blueprint PDF was not found in repo, Codex attachments, Downloads, Desktop, or the user workspace search.
-- Files edited this task: `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`.
-- Do not infer detailed tasks, files, migrations, acceptance criteria, or simulation boundaries from the image alone.
+- Exact task: planning only; wait for user review and `PLAN OK` before implementation.
+- Plan scope: private document upload, OCR with confidence and arithmetic checks, duplicate flags, tenant-isolated hybrid retrieval, grounded AI answers, and Documents review UI.
+- Planned new migration: `supabase/migrations/0015_documents_rag.sql`, gated on provider/model/vector-dimension and upload-limit decisions. Migrations 0001–0014 remain untouched.
+- Files edited for planning only: `docs/PHASE5-PLAN.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/WORKLOG.md`. No application code edited.
 
 ## NEXT STEPS
-1. Ask the user to reattach the NovaPay Build Blueprint PDF or provide its exact accessible path.
-2. Read its Phase 5 section alongside `PaypalFinal.png`.
-3. Write the requested planning-only scope: tasks, files, migrations, later acceptance statuses, and simulated boundaries.
-4. Commit the plan docs locally and reply `AWAITING PLAN OK`.
-5. Do not write Phase 5 code until the user replies `PLAN OK`.
+1. Locally WIP-commit the planning docs.
+2. Reply with the plan and `AWAITING PLAN OK`; then stop.
+3. Do not write Phase 5 code, author the migration, or run live checks until the user replies `PLAN OK`.
 
 ## USER ACTIONS PENDING
-- Provide the missing NovaPay Build Blueprint PDF (reattach it or provide an accessible exact path).
-- After receiving the plan, explicitly reply `PLAN OK` before any Phase 5 implementation.
+- Review `docs/PHASE5-PLAN.md` and reply `PLAN OK` to authorize implementation.
+- Before implementation, record OCR provider, embedding provider/model/vector dimension, maximum pages, and per-org concurrency defaults in DECISIONS.md.
+- If a migration is later prepared, present exact SQL Editor steps and wait for the user to say `applied` before live verification.
 
 ## LIVE STATE
-- Prior user-confirmed migrations 0001–0014 applied; 0003 applied. No migration was changed or applied in this task.
-- Tunnel/webhook status was not rechecked this task; user last reported them fixed.
-- Tests this task were local only; no real Supabase, PayPal, webhook, or browser checks were run.
+- Prior user-confirmed migrations 0001–0014 applied; 0003 applied. No live migration action in this task.
+- Tunnel/webhook were last reported fixed by the user; not rechecked in this planning task.
+- Tests this task were local only. No real Supabase, PayPal, webhook, or browser checks run.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`.
 
 ## TEST STATE
@@ -42,13 +40,13 @@
 | Dependency install | PASS, 89 packages, 0 vulnerabilities | 2026-10-28 | `npm ci` |
 | Unit suite | PASS 135/135 | 2026-10-28 | `npm test` |
 | Migration parser | PASS, 14 files | 2026-10-28 | `npm run check:migrations` |
-| Blueprint Phase 5 scope | UNVERIFIED | 2026-10-28 | PDF not located; user input needed |
-| PaypalFinal.png | inspected | 2026-10-28 | visual review |
+| Phase 5 implementation checks | UNVERIFIED | 2026-10-28 | Planning only; not run |
+| Browser checks | UNVERIFIED | 2026-10-28 | Human run required |
 
 ## KNOWN ISSUES AND RISKS
-- Phase 5 scope is not sufficiently specified without the Blueprint; the image provides only a high-level roadmap card.
-- Invoice sending and maintenance payouts remain SIMULATED in the existing product; Phase 5 scope may change only if the Blueprint explicitly says so.
-- Browser checklist from prior work remains pending.
+- OCR/embedding provider, model/vector dimension, max pages, and per-org concurrency defaults are not selected; record them before migration authoring.
+- Blueprint Phase 5 is RAG/OCR (Week 4); infographic Week 5 says community/automation. The numbered PDF phase is the plan scope; see DECISIONS.md.
+- Invoice sending and maintenance payouts remain SIMULATED. OCR is not proof of invoice authenticity; antivirus remains a hook unless implemented and tested.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs inside one transaction; errors roll everything back. Never edit an applied migration; add a new numbered file.
@@ -60,9 +58,9 @@
 - Never print `.env` values; use key names only.
 
 ## DO NOT
-- Never push; never force-push; do not touch main beyond the requested fetch/pull.
-- Do not write Phase 5 code until explicit `PLAN OK`.
-- Do not edit applied migrations or protected design files; do not weaken tests or commit `.env`.
+- Never push; never touch main; do not implement Phase 5 before `PLAN OK`.
+- Do not edit applied migrations; do not weaken tests; do not commit `.env` or the external PDF.
+- Respect the protected design files/assets list; do not redesign the Documents view.
 
 ## RESUME COMMANDS
 ```sh
@@ -70,4 +68,5 @@ git branch --show-current
 git status --short --branch
 npm test
 npm run check:migrations
+git diff --check
 ```

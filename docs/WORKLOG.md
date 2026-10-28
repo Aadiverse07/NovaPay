@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: Phase 5 PLANNING ONLY on `phase5-backend`; no implementation started.
-- Last finished step: branch created from origin/main `a2a5eb2`; `npm ci` PASS (89), `npm test` PASS (135/135), migration check PASS (14/14); saved journal delta reapplied.
-- Scope source: `PaypalFinal.png` shows Week 5 themes, but NovaPay Build Blueprint PDF is missing after workspace search; detailed scope is not known.
-- Pending human action: reattach the Blueprint PDF or provide its exact path; later reply `PLAN OK` after reviewing plan.
-- NEXT: read Phase 5 PDF section, write plan only, WIP-commit docs, then wait. No Phase 5 code before `PLAN OK`.
+- Current task: Phase 5 PLANNING ONLY on `phase5-backend`; implementation is not authorized yet.
+- Last finished step: read Blueprint Phase 5 (RAG/OCR, PDF pp.15 and 28), inspected `PaypalFinal.png`, mapped existing UI/backend files, and wrote `docs/PHASE5-PLAN.md`.
+- Checks: `npm ci` PASS (89 packages); `npm test` PASS (135/135); `npm run check:migrations` PASS (14/14).
+- Scope note: use the numbered PDF Phase 5 prompt; image Week 5 describes community/automation and is recorded as a distinct timeline label. No application code or migration changed.
+- NEXT: WIP-commit planning docs and reply `AWAITING PLAN OK`; wait. Do not write Phase 5 code until user says `PLAN OK`.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2764,3 +2764,29 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 - 2026-10-28 Asia/Kolkata | ABOUT TO: rewrite CONTEXT/RESUME POINTER and append the scope-source decision | WHY: make the planning blocker and verified baseline resumable before stopping.
 - 2026-10-28 Asia/Kolkata | RESULT: planning blocker recorded in CONTEXT/WORKLOG/DECISIONS; no implementation scope invented; exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md, docs/DECISIONS.md | NEXT: verify docs and create local WIP checkpoint, then ask for Blueprint PDF.
 - 2026-10-28 Asia/Kolkata | ABOUT TO: validate and WIP-commit the planning-only handoff docs on phase5-backend | WHY: preserve test evidence and the missing-PDF blocker before asking the user.
+- 2026-10-28 Asia/Kolkata | RESULT: docs whitespace check exit 0; planning-only WIP commit exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md | NEXT: wait for the missing Blueprint PDF; do not write Phase 5 code.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect PDF metadata and extract text from the external Build Blueprint | WHY: locate and verify the exact Phase 5 planning scope; keep the source PDF outside the repository.
+- 2026-10-28 Asia/Kolkata | RESULT: Blueprint metadata/text extraction completed; Phase 5 search output above | FILES: docs/WORKLOG.md; external PDF unchanged | NEXT: identify the exact PDF page(s), render for visual confirmation, and compare with PaypalFinal.png.
+- 2026-10-28 Asia/Kolkata | RESULT: pdfinfo confirmed 31-page Blueprint; pdftotext unavailable, so section extraction did not run | FILES: docs/WORKLOG.md; no source PDF edits | NEXT: check installed Python PDF libraries and use a read-only extractor if present.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: check Python PDF extraction/rendering libraries | WHY: follow the PDF skill fallback after system Poppler text extractor was unavailable.
+- 2026-10-28 Asia/Kolkata | RESULT: installed PDF library/tool availability checked | FILES: docs/WORKLOG.md | NEXT: extract Phase 5 pages using an available Python library; if none exist, use system preview tools or request setup.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: extract Phase 5 text with pypdf and identify PDF page numbers | WHY: use the installed supported fallback and determine pages for visual review.
+- 2026-10-28 Asia/Kolkata | RESULT: Phase 5 text/page extraction completed | FILES: docs/WORKLOG.md; PDF unchanged | NEXT: render all relevant Phase 5 pages and compare visually with PaypalFinal.png.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: extract complete Phase 5 roadmap/prompt pages and render pages 15 and 28 | WHY: confirm the exact goal, tasks, and acceptance criteria visually before writing a plan.
+- 2026-10-28 Asia/Kolkata | RESULT: Phase 5 page text extracted and roadmap/prompt pages rendered in /tmp | FILES: docs/WORKLOG.md; source PDF unchanged | NEXT: inspect both renders and compare Phase 5 naming to the infographic.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: record pre-visual inspection of Blueprint Phase 5 pages | WHY: PDF skill calls for page rendering review when available.
+- 2026-10-28 Asia/Kolkata | RESULT: rendered PDF pages visually confirm Phase 5 is RAG/OCR; page 15 places it in Week 4, while page 28 contains detailed tasks/acceptance. PaypalFinal.png separately labels Week 5 as community/automation | FILES: docs/WORKLOG.md; external sources unchanged | NEXT: inspect current repository surfaces to map the plan to existing code without implementing it.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect existing document, AI, storage, migration, and UI files for planning-only mapping | WHY: distinguish implemented infrastructure from net-new Phase 5 work.
+- 2026-10-28 Asia/Kolkata | RESULT: current document/RAG implementation surface inspected | FILES: docs/WORKLOG.md | NEXT: map exact files/migration/acceptance plan and simulated boundaries from PDF only.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect route registration, AI OCR branch, document UI stub, and current schema/repository conventions | WHY: name concrete existing files in the plan and avoid proposing duplicate modules.
+- 2026-10-28 Asia/Kolkata | RESULT: concrete current file/function locations gathered for Phase 5 plan | FILES: docs/WORKLOG.md | NEXT: finalize plan task list, migration scope, acceptance statuses, and simulation boundaries.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: inspect service/repository/AI integration points and migration conventions | WHY: ensure the plan names accurate extension points and guards against duplicate scaffolding.
+- 2026-10-28 Asia/Kolkata | RESULT: integration, repository, migration, and AI service extension points inspected | FILES: docs/WORKLOG.md | NEXT: compose a plan anchored to existing paths and PDF acceptance criteria.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: write Phase 5 planning document and update continuity/decision handoff | WHY: the numbered PDF scope is now available and detailed; keep this change planning-only.
+- 2026-10-28 Asia/Kolkata | RESULT: Phase 5 plan, scope-reconciliation decision, CONTEXT and RESUME POINTER written; exit 1; no application code edited | FILES: docs/PHASE5-PLAN.md, docs/CONTEXT.md, docs/DECISIONS.md, docs/WORKLOG.md | NEXT: review docs, whitespace-check, WIP-commit locally, and await PLAN OK.
+- 2026-10-28 Asia/Kolkata | RESULT CORRECTION: PHASE5-PLAN.md was created, but the following Python edit failed to parse because of apostrophes in a single-quoted decision string; CONTEXT/DECISIONS/RESUME POINTER were not updated | FILES: docs/PHASE5-PLAN.md, docs/WORKLOG.md | NEXT: rerun continuity-doc updates with triple-quoted strings.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: update DECISIONS, CONTEXT and RESUME POINTER with the already-written RAG/OCR plan | WHY: previous script failed before those files were changed.
+- 2026-10-28 Asia/Kolkata | RESULT: DECISIONS, CONTEXT and RESUME POINTER updated; exit 0 | FILES: docs/DECISIONS.md, docs/CONTEXT.md, docs/WORKLOG.md | NEXT: review plan/docs, whitespace-check, and WIP-commit locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: review planning doc diff, RESUME POINTER, and confirm no application files changed | WHY: ensure only planning/continuity documents are in the checkpoint.
+- 2026-10-28 Asia/Kolkata | RESULT: planning content and pointer reviewed; whitespace clean; changed paths are docs only | FILES: docs/PHASE5-PLAN.md, docs/CONTEXT.md, docs/DECISIONS.md, docs/TEST-REPORT.md, docs/WORKLOG.md | NEXT: stage docs, verify external PDF is absent, and WIP-commit locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: stage and WIP-commit the Phase 5 plan and continuity docs locally | WHY: checkpoint planning only; external Blueprint PDF and all application code must remain uncommitted/unchanged.
