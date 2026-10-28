@@ -1090,3 +1090,42 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - 2026-10-26 — `node --check src/fund-views.js`: PASS; exit 0.
 - 2026-10-26 — `git diff --check`: PASS; no whitespace errors.
 - 2026-10-26 — `git diff --stat main -- <protected files>`: PASS; empty diff.
+- 2026-10-27 — `node --test server/test/routes.test.js` (sandbox attempt): FAIL at setup; six HTTP-listener tests received `listen EPERM`, two non-listener tests passed. No assertion failure; rerun under full access passed as part of the full suite.
+- 2026-10-27 — `npm test`: PASS; 132 passed, 0 failed. Includes regression test `events route returns empty activity when the snapshot read fails`.
+- 2026-10-27 — `node --check src/novapay-live.js && node --check src/dashboard.js && node --check server/src/routes/status.js`: PASS; all edited JavaScript parses.
+- 2026-10-27 — `git diff --check`: PASS; no whitespace errors.
+- 2026-10-27 — Browser verification of `/api/events` 503 empty state and AI badge route/reason: UNVERIFIED; dashboard reload and console inspection remain pending.
+- 2026-10-27 — Authenticated dashboard reload: `/api/events` returned HTTP 304 on repeated requests; the fetch client treats 304 as non-ok, causing its empty-state fallback. Browser console was not accessible through current computer-use permissions.
+- 2026-10-27 — `node --test server/test/api-client.test.js`: PASS; no-store cache option and X-Org-Id verified.
+- 2026-10-27 — `npm test`: PASS; 133 passed, 0 failed, including events snapshot-failure and API no-store regressions.
+- 2026-10-27 — Post-cache-fix authenticated dashboard reload: `/src/api-client.js` served HTTP 200 and subsequent `/api/events` request returned HTTP 200 in server logs; repeat-poll 304 no longer observed in this reload. Browser console inspection remains UNVERIFIED due unavailable computer-use permission.
+- 2026-10-27 — `npm ci`: PASS; 89 packages added/audited, 0 vulnerabilities (one package install-script approval warning; install completed).
+- 2026-10-27 — `npm test`: PASS; 133 passed, 0 failed.
+- 2026-10-27 — `npm run check:migrations`: PASS; all 14 migrations parsed as PostgreSQL 17 SQL/PLpgSQL.
+- 2026-10-27 — README 3-minute visual demo run-through: UNVERIFIED; browser inventory says local browser use is disabled in Work settings. No PayPal order or other financial action was attempted.
+- 2026-10-27 — ORIENT `npm test`: PASS; 133 passed, 0 failed.
+- 2026-10-27 — ORIENT `npm run check:migrations`: PASS; all 14 migrations parsed successfully.
+- 2026-10-27 — Verifier path inspection: `scripts/verify-phase6.js` is absent; the matching fixed-request lifecycle code is in `scripts/verify-phase6-maintenance-live.js`. This was source inspection, not a verifier execution.
+- 2026-10-27 — `node --test server/test/phase6-maintenance-run.test.js`: PASS; 2 passed, 0 failed. Confirms each run gets distinct request/quote names and cleanup uses only supplied run IDs in FK order.
+- 2026-10-27 — `npm test` after repeatable verifier implementation: PASS; 135 passed, 0 failed.
+- 2026-10-27 — First live `node scripts/verify-phase6-maintenance-live.js` invocation: UNVERIFIED overall because command exit summary was not captured after the tool yielded; per-step journal records lifecycle PASS and cleanup PASS for 2 run requests, with immutable audit history retained. No PayPal order/capture endpoint was called.
+- 2026-10-27 — Second live `node scripts/verify-phase6-maintenance-live.js`: PASS; HTTP 200, under-threshold and exact-threshold requests reached `payment_approved`, 21 API steps, 0 users/orgs created, 2 run request rows cleaned, audit history preserved. No PayPal order/capture endpoint called.
+- 2026-10-27 — `npm run check:migrations` (PREP ORIENT): PASS; all 14 migration files parsed.
+- 2026-10-27 — Remote merge-base inspection: `git fetch origin` then `git branch -r --merged origin/main`; fund-wiring not merged. Recommended base is fund-wiring.
+- 2026-10-27 — Third live `node scripts/verify-phase6-maintenance-live.js`: PASS; exit 0, HTTP 200, 21 API steps, low/threshold requests reached `payment_approved`, 2 run requests cleaned, 0 users/orgs created, audit history preserved. This and the prior captured invocation are two consecutive PASS runs.
+- 2026-10-27 — Post-verifier `npm test`: PASS; 135 passed, 0 failed (captured in the WORKLOG command output during handoff commit logging).
+
+2026-10-28 | `npm test` | PASS | 135 passed, 0 failed. Shell wrapper initially returned 1 after test completion because zsh reserves variable `status`; test process exit was successful.
+2026-10-28 | `npm run check:migrations` | PASS | 14/14 migration files parsed successfully.
+2026-10-28 | `npm test` | PASS | 135 passed, 0 failed, includes events fallback, API no-store, and maintenance verifier regression tests.
+2026-10-28 | `npm run check:migrations` | PASS | Migrations 0001–0014 parsed successfully on post-merge-sync.
+2026-10-28 | `node --check` changed JS/MJS (first attempt) | FAIL | zsh passed the space-separated path list as one filename; no source file was checked. Rerun separately.
+2026-10-28 | `node --check` changed JS/MJS (explicit iteration) | FAIL | src/dashboard.js route badge aria-label expression had invalid syntax; fixed before rerun.
+2026-10-28 | `npm ci` on detached origin/main | PASS | 89 packages installed; 0 vulnerabilities.
+2026-10-28 | `npm test` on detached origin/main | PASS | 131 passed, 0 failed.
+2026-10-28 | `npm run check:migrations` on detached origin/main | PASS | Migrations 0001–0014 parsed successfully.
+2026-10-28 | `node --check` changed JS/MJS (rerun) | PASS | All 9 changed JS/MJS files parsed successfully.
+2026-10-28 | `npm test` after syntax repair and docs update | PASS | 135 passed, 0 failed.
+2026-10-28 | `npm run check:migrations` after sync/docs | PASS | Migrations 0001–0014 parsed successfully.
+2026-10-28 | Conflict-marker grep (first final scan) | FAIL | Matched the literal marker tokens inside the CONTEXT.md test command description; no unmerged Git paths. Removed that literal description and reran.
+2026-10-28 | Conflict-marker grep (final) | PASS | No marker strings found in JS/CSS/HTML/Markdown outside node_modules.

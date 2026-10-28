@@ -1,70 +1,81 @@
-# NovaPay Fund Wiring Handoff
+# NovaPay Post-Merge Sync Handoff
 
 ## HEADER
-- Updated: 2026-10-26 Asia/Kolkata.
-- Branch: fund-wiring; based on main at 874e2e5; local commits only, never push.
-- Phase/task: T1–T4 complete; final task commit 14fcc93 and journal checkpoint e9727c0 on fund-wiring.
+- Updated: 2026-10-28 Asia/Calcutta.
+- Branch: `post-merge-sync`, created from `origin/main` at `af42d6b`; local sync commit and authorized push pending.
+- Current phase/task: PREP BEFORE PHASE 5, sync task 6/7. Phase 5 has not started.
+- Last completed source baseline: `af42d6b` (origin/main).
 
 ## DONE
-- STEP 0: `npm ci`; `npm test` PASS 131/131; migrations 0001–0014 parse; server restarted and `/api/status` HTTP 200.
-- T1: Fundraising, Maintenance, Transparency views in `src/fund-views.js`; loaded from `dashboard.html`; API data, loading/empty/error states, sample label, role-gated writes.
-- T2 fixed-user API: captures completed; ledger balanced; approvals, campaign and transparency reads; AI code answer 12 and LLM route with 3 citations. Maintenance row closed with accepted evidence and SIMULATED payment. No PayPal order created.
-- T3: appended real/simulated notes, run steps and 3-minute demo to `README.md`; existing UI sections unchanged.
-- T4: `npm test` PASS 131/131; migrations PASS 14 files; `node --check src/fund-views.js` PASS; `git diff --check` PASS; protected-file diff against main empty.
+- PRs #3 and #4 (fund-wiring) and teammate PR #5 are merged to main; main also includes the later UI sync commit `9b5fe89` and merge `af42d6b`.
+- `origin/main` health checked in a detached temp worktree: `npm ci` PASS (89 packages), `npm test` PASS 131/131, migrations 0001–0014 PASS.
+- Phase 6 backend pieces confirmed on main: `server/index.js`, `server/src/routes/funds.js`, `supabase/migrations/0001`–`0014`, `scripts/verify-phase6-maintenance-live.js`, `src/`, `docs/`.
+- PR #5 first-parent diff: 12 icon assets plus dashboard/preview and UI source/CSS modules (33 files, 1,866 insertions, 46 deletions). It did not change root `server.js`.
+- Selective sync carries: repeat-safe maintenance verifier and tests; `/api/events` empty fallback and test; API `cache: no-store` and test; assistant response route/reason/citations and message-only request wiring.
 
 ## IN PROGRESS
-- Exact task: T4 complete; final local task commit `14fcc93` (`Fund views wiring, demo run, README`), followed by journal checkpoint `e9727c0`.
-- Edited files: `README.md`, `dashboard.html`, `src/fund-views.js`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
-- T2 maintenance lifecycle verifier had a FAIL because the fixed request was already `closed`, while that verifier expected `payment_approved`; existing records were preserved.
+- Exact task: finish validation and handoff of Phase 6 follow-up changes on `post-merge-sync`, then push only this branch.
+- Edited files: `scripts/phase6-maintenance-run.mjs`, `scripts/verify-phase6-maintenance-live.js`, `server/src/routes/status.js`, `server/test/api-client.test.js`, `server/test/phase6-maintenance-run.test.js`, `server/test/routes.test.js`, `src/api-client.js`, `src/dashboard.js`, `src/novapay-live.js`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
+- Main HTML, styling, protected design files, and `assets/` remain from main; no conflict markers/unmerged paths were found.
 
 ## NEXT STEPS
-1. User performs the pending browser checks below.
-2. Continue with the next user-selected task; never push this branch.
+1. Re-run the final requested checks after documentation updates: `npm test`, `npm run check:migrations`, `node --check` on changed JS/MJS, `git diff --check`, conflict-marker grep, protected-path diff.
+2. Commit locally on `post-merge-sync` with an appropriate sync message.
+3. Push only with `git push -u origin post-merge-sync`; never push `fund-wiring` or `main`.
+4. Complete `docs/BROWSER-CHECKLIST.md` manually and await explicit Phase 5 approval. Do not start Phase 5 yet.
 
 ## USER ACTIONS PENDING
-- Browser verification: sign in as fixed owner, open Fundraising/Maintenance/Transparency, inspect console and failed requests, switch light/dark, test mobile drawer, verify notifications and AI chat. No exact PDF was present in repo/attachments; the README demo follows the user's described API sequence.
+- Fill PASS/FAIL for browser-only steps in `docs/BROWSER-CHECKLIST.md` (sign-in/dashboard, events Network/console, AI badge/hover, Fundraising/Maintenance/Transparency, theme, mobile drawer, notifications).
+- Review/merge the new sync PR after push.
+- Explicitly approve Phase 5 with “APPROVED: start Phase 5”.
 
 ## LIVE STATE
-- Prior user-confirmed applied migrations 0001–0014; no migration changed.
-- Server session 40038 served port 3000; `/api/status` HTTP 200. Do not print environment values.
-- No PayPal order created. Fixed capture records complete; maintenance request is closed, evidence accepted, payout simulated.
+- User-confirmed migrations 0001–0014 applied; 0003 status: applied. No migrations changed in this sync.
+- User previously reported tunnel and webhook fixed; current tunnel/webhook state not rechecked in this task.
+- No live API/browser tests run in this sync. Last captured live T3 verifier PASS was 2026-10-27; see TEST-REPORT/WORKLOG.
+- Config key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `GEMINI_API_KEY`.
 
 ## TEST STATE
 | Check | Status | Date | Command |
 |---|---|---|---|
-| npm ci | PASS | 2026-10-26 | `npm ci` |
-| Unit suite final | PASS 131/131 | 2026-10-26 | `npm test` |
-| Migration check final | PASS 14 files | 2026-10-26 | `npm run check:migrations` |
-| JavaScript syntax | PASS | 2026-10-26 | `node --check src/fund-views.js` |
-| Whitespace | PASS | 2026-10-26 | `git diff --check` |
-| Protected files | PASS empty diff | 2026-10-26 | `git diff --stat main -- <protected paths>` |
-| Authenticated API/demo | PASS, see TEST-REPORT | 2026-10-26 | fixed-user API calls |
-| Maintenance verifier expected state | FAIL | 2026-10-26 | existing row closed, verifier expected payment_approved |
-| Browser views/theme/mobile/notifications/chat | UNVERIFIED | 2026-10-26 | manual browser checks pending |
-| Exact attached-PDF script | UNVERIFIED | 2026-10-26 | PDF unavailable in repo/attachments |
+| Main install | PASS, 89 packages, 0 vulnerabilities | 2026-10-28 | `npm ci` in detached `origin/main` worktree |
+| Main unit suite | PASS 131/131 | 2026-10-28 | `npm test` in detached `origin/main` worktree |
+| Main migrations | PASS 14/14 | 2026-10-28 | `npm run check:migrations` in detached `origin/main` worktree |
+| Synced unit suite | PASS 135/135 | 2026-10-28 | `npm test` |
+| Synced migrations | PASS 14/14 | 2026-10-28 | `npm run check:migrations` |
+| Changed JS/MJS syntax | PASS, 9 files | 2026-10-28 | explicit loop of `node --check` |
+| `git diff --check` | PASS | 2026-10-28 | `git diff --check` |
+| Conflict-marker scan | PASS, no unresolved markers | 2026-10-28 | grep scan across source/docs, excluding node_modules |
+| Protected paths | PASS, empty diff | 2026-10-28 | `git diff --stat origin/main -- <protected paths>` |
+| Browser/manual checks | UNVERIFIED | 2026-10-28 | `docs/BROWSER-CHECKLIST.md` |
 
 ## KNOWN ISSUES AND RISKS
-- Browser auth helper has no organization-role accessor; writes require trusted `app_metadata` role, otherwise hidden. API enforces permissions.
-- No persisted pre-payment maintenance GET list; requests/contractors/quotes are current-tab state. Some receipt/evidence details are not returned by API and are not fabricated.
-- Maintenance payouts and invoice sending are SIMULATED. Not for real money.
-- Do not reset the fixed closed maintenance request to satisfy the stale verifier expectation.
+- Main's root `server.js` is a legacy standalone server added in 9b5fe89 after PR #5; package startup uses `server/index.js`, which remains present. Do not use root server as backend replacement.
+- `git cherry` marks many old commits as unmatched because PR #4 was squash-merged; use the file-level diff and recorded selected changes, not cherry-pick all history.
+- Browser verification remains pending. First historical live verifier invocation remains UNVERIFIED; later captured invocations passed.
+- Invoice sending and maintenance payouts are SIMULATED; this is not for real money.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor is transactional; errors roll everything back. Never edit an applied migration; add a new numbered file.
-- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated and grant only to service_role; verify ordinary JWT 403.
-- PostgREST embeds need explicit FK names with multiple relationships.
-- audit_log is insert-only/ON DELETE RESTRICT; cleanup journal_entries, audit_log, organizations, auth.users via `scripts/cleanup-phase2-test-data.sql`; reuse fixed identities.
-- PayPal Sandbox buyer is US Personal; seller USD only; webhook ends `/api/webhook` and `PAYPAL_WEBHOOK_ID` matches.
-- Raw body is required for PayPal signature verification.
-- Never print `.env` values; record key names only.
+- Supabase SQL Editor runs inside one transaction; errors roll back all. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT receives 403.
+- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
+- `audit_log` is insert-only with ON DELETE RESTRICT; delete journal_entries first, then audit_log, organizations, auth.users using `scripts/cleanup-phase2-test-data.sql`; reuse fixed users/orgs.
+- PayPal Sandbox buyer must be a US Personal account; seller USD only; use Visa at checkout; webhook URL ends `/api/webhook` and `PAYPAL_WEBHOOK_ID` matches.
+- Raw body is needed for PayPal signature verification.
+- Never print `.env` values; use key names only.
 
 ## DO NOT
-- Never push; commit only on `fund-wiring`. Do not touch protected design files or assets.
-- Do not create a PayPal order without approval; never commit `.env`.
+- Never push `fund-wiring` or `main`; never force-push; only push `post-merge-sync` under current authorization.
+- Do not start Phase 5 until explicit approval.
+- Do not edit protected files (`tokens.css`, `base.css`, `fonts.css`, `tailwind.novapay.preset.*`, `theme.js`, hero/fx/brand reveal/logo files, or `assets/`).
+- Do not edit applied migrations, weaken tests, or commit `.env`.
 
 ## RESUME COMMANDS
-- `git branch --show-current`
-- `git status --short --branch`
-- `npm test`
-- `npm run check:migrations`
-- `git diff --check`
+```sh
+git branch --show-current
+git status --short --branch
+npm test
+npm run check:migrations
+git diff --check
+git log origin/main..post-merge-sync --oneline
+```
