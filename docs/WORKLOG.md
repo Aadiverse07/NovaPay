@@ -1,10 +1,9 @@
 ## RESUME POINTER
-- Current task: sync Phase 6 follow-up changes onto main-derived `post-merge-sync`; Phase 5 is not started.
-- Last finished step: tested sync checkpoint `febb024` created locally; `npm test` 135/135, migrations 14/14, JS syntax 9/9, whitespace clean, marker grep clear, protected diff empty.
-- Next: push ONLY this branch using `git push -u origin post-merge-sync`, confirm zero unpushed commits, then stop.
-- Base recommendation: `post-merge-sync` until its PR merges; modern backend entry is `server/index.js`.
-- Human pending: complete `docs/BROWSER-CHECKLIST.md` and explicitly approve Phase 5.
-- No Phase 5 work or branch creation has occurred.
+- Current task: Phase 6 sync complete on main-derived `post-merge-sync`; Phase 5 is not started.
+- Last finished step: pushed `d90b7bd63dcf616054a62045e717a5693db8e926`; remote matched HEAD and zero unpushed commits at last check.
+- Carried forward only verified backend/verifier fixes and focused API wiring; main UI/assets remain intact. Tests 135/135; migrations 14/14; syntax 9/9; protected diff empty.
+- Human pending: complete `docs/BROWSER-CHECKLIST.md`, review/merge sync PR, then explicitly approve Phase 5.
+- NEXT: stop and wait for browser checklist/merge/approval. Do not start Phase 5 or push `fund-wiring`/`main`.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2724,3 +2723,13 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 - 2026-10-28 Asia/Kolkata | ABOUT TO: validate final handoff docs and push candidate before local checkpoint | WHY: confirm whitespace, marker, protected-file, secret-path, and unmerged-path conditions after pointer edits.
 - 2026-10-28 Asia/Kolkata | RESULT: final doc whitespace exit 0; marker scan exit 0; protected diff/unmerged/tracked-env values above | FILES: docs/WORKLOG.md | NEXT: if all safe, commit locally, then push only post-merge-sync.
 - 2026-10-28 Asia/Kolkata | ABOUT TO: create local handoff checkpoint containing updated context and pointer | WHY: persist the current branch/base recommendation and approval gate before push.
+- 2026-10-28 Asia/Kolkata | RESULT: final handoff docs commit exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md, docs/DECISIONS.md, docs/BROWSER-CHECKLIST.md | NEXT: verify branch and pending commits, then push only post-merge-sync.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: verify target branch, pending commits, and absence of .env/secrets before authorized push | WHY: ensure only the approved new branch will be sent.
+- 2026-10-28 Asia/Kolkata | RESULT: push preflight completed; branch and pending commits listed above; no env/secret paths found | FILES: docs/WORKLOG.md | NEXT: run the single authorized command `git push -u origin post-merge-sync`.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: push the single authorized new branch post-merge-sync | WHY: publish the tested sync branch for PR review; no other branch is authorized.
+- 2026-10-28 Asia/Kolkata | RESULT: authorized post-merge-sync push exit 0 | FILES: remote branch post-merge-sync | NEXT: confirm remote head and zero unpushed commits, then stop without starting Phase 5.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: confirm remote post-merge-sync head and branch commit delta after push | WHY: report exact pushed hash and verify the branch is synchronized.
+- 2026-10-28 Asia/Kolkata | RESULT: remote head/commit delta inspected; worktree status includes required post-push WORKLOG entry | FILES: docs/WORKLOG.md | NEXT: update CONTEXT and RESUME POINTER to the published branch state; checkpoint locally.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: update handoff docs with actual remote push result and zero-ahead confirmation | WHY: replace the pre-push pointer with the verified published state.
+- 2026-10-28 Asia/Kolkata | RESULT: CONTEXT and RESUME POINTER reflect pushed hash d90b7bd and human next steps; exit 0 | FILES: docs/CONTEXT.md, docs/WORKLOG.md | NEXT: checkpoint the post-push handoff update locally; do not start Phase 5.
+- 2026-10-28 Asia/Kolkata | ABOUT TO: commit the post-push RESUME POINTER and CONTEXT correction locally | WHY: checkpoint the verified remote state before updating the same authorized branch.
