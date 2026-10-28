@@ -19,6 +19,17 @@
 
   function enter(view) {
     view.classList.remove("mp-in"); void view.offsetWidth; view.classList.add("mp-in");
+    if (view.id === "view-approvals") {
+      if (window.NovaLive && typeof window.NovaLive.renderQueue === "function") window.NovaLive.renderQueue();
+      view.querySelectorAll(".approval-card").forEach(function (card, index) {
+        if (reduce.matches || typeof card.animate !== "function") return;
+        var animation = card.animate([
+          { opacity: 0, transform: "translateX(" + (index % 2 ? 44 : -44) + "px)" },
+          { opacity: 1, transform: "translateX(0)" }
+        ], { duration: 520, delay: Math.min(index, 5) * 110, easing: "cubic-bezier(.2,.75,.3,1)", fill: "both" });
+        animation.onfinish = function () { animation.cancel(); };
+      });
+    }
     view.querySelectorAll(".spark-line").forEach(function (p) { p.setAttribute("pathLength", "1"); });
     view.querySelectorAll(".module-kpis strong, .report-summary-grid strong, .campaign-numbers b, .report-bars b, .kpi-card > strong").forEach(function (el, i) {
       setTimeout(function () { countUp(el, 1100); }, 120 + i * 90);

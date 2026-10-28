@@ -100,17 +100,19 @@
   $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();askFromComposer()}});
   (function setupAssistantTools(){
     var fileInput=$("ai-file-input"),upload=$("ai-upload"),attachment=$("ai-attachment"),attachmentName=$("ai-attachment-name"),removeFile=$("ai-attachment-remove"),mic=$("ai-mic"),visualizer=$("ai-voice-visualizer"),voiceLabel=$("ai-voice-label"),stopMic=$("ai-mic-stop"),bars=visualizer&&visualizer.querySelector(".ai-voice-bars"),recognition=null,stream=null,audioContext=null,raf=0;
-    
+
     function clearFile(){aiAttachmentText="";if(fileInput)fileInput.value="";if(attachment)attachment.hidden=true}
     if(upload&&fileInput){upload.addEventListener("click",function(){fileInput.click()});fileInput.addEventListener("change",function(){var file=fileInput.files&&fileInput.files[0];if(!file)return;if(file.size>1024*1024){clearFile();$("ai-live-status").textContent="Choose a text file smaller than 1 MB.";return}var reader=new FileReader();reader.onload=function(){aiAttachmentText=String(reader.result||"");attachmentName.textContent=file.name;attachment.hidden=false;$("ai-live-status").textContent="Attached “"+file.name+"”. Its text will be included with your next question."};reader.onerror=function(){clearFile();$("ai-live-status").textContent="Could not read that file. Please try another text file."};reader.readAsText(file)})}
     if(removeFile)removeFile.addEventListener("click",clearFile);
-    var row=mic&&mic.closest(".ai-chat-row"),wave=$("ai-dict-wave"),canvas=wave&&wave.querySelector("canvas"),timeEl=$("ai-dict-time"),okBtn=$("ai-dict-confirm"),noBtn=$("ai-dict-cancel"),
-        active=false,pending=false,buffer="",interim="",startedAt=0,timerId=0,hist=[],peak=0,lastPush=0;
+    var row=mic&&mic.closest(".ai-chat-row"),wave=$("ai-dict-wave"),timeEl=$("ai-dict-time"),okBtn=$("ai-dict-confirm"),noBtn=$("ai-dict-cancel"),
+        active=false,pending=false,buffer="",interim="",startedAt=0,timerId=0,peak=0,lastPush=0,
+        strands=window.NovaStrands&&window.NovaStrands.create(wave,{listening:true,energy:.12,lightMode:document.documentElement.dataset.theme==="light"});
     function cleanup(){
       active=false;pending=false;cancelAnimationFrame(raf);raf=0;clearInterval(timerId);timerId=0;
       if(recognition){var r=recognition;recognition=null;r.onend=null;r.onerror=null;r.onresult=null;try{r.abort()}catch(e){}}
       if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
       if(audioContext){try{audioContext.close()}catch(e){}audioContext=null}
+      if(strands){strands.setLevel(0);strands.setListening(false)}
       if(row)row.classList.remove("is-dictating");
       if(mic){mic.classList.remove("is-listening");mic.setAttribute("aria-label","Start voice input")}
     }
@@ -122,28 +124,16 @@
       else $("ai-live-status").textContent="No speech was detected. Try again.";
       input.focus()
     }
-    function stopListening(){if(active||pending)cancelDictation()}
-    function drawWave(){
-      if(!canvas)return;var dpr=Math.min(window.devicePixelRatio||1,2),W=wave.clientWidth||240,H=32;
-      if(canvas.width!==Math.round(W*dpr)||canvas.height!==Math.round(H*dpr)){canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr)}
-      var g=canvas.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
-      var cs=getComputedStyle(row),ink=cs.getPropertyValue("--text").trim()||"#12263f",dim=cs.getPropertyValue("--text-muted").trim()||"#52667d",
-          step=5,bw=3,n=Math.floor(W/step),off=W-n*step;
-      for(var k=0;k<n;k++){
-        var idx=hist.length-n+k,v=idx>=0?hist[idx]:-1,x=off+k*step;
-        if(v<0.05){g.globalAlpha=.55;g.fillStyle=dim;g.beginPath();g.arc(x+bw/2,H/2,bw/2,0,Math.PI*2);g.fill()}
-        else{var h=Math.max(bw,v*(H-2)),y=(H-h)/2,r=bw/2;g.globalAlpha=.9;g.fillStyle=ink;g.beginPath();g.moveTo(x,y+r);g.arc(x+r,y+r,r,Math.PI,0,false);g.lineTo(x+bw,y+h-r);g.arc(x+r,y+h-r,r,0,Math.PI,false);g.closePath();g.fill()}
-      }
-      g.globalAlpha=1
-    }
+    function stopListening(){if(active||pending)confirmDictation()}
     function monitor(analyser){
-      var td=new Uint8Array(analyser.fftSize);hist=[];peak=0;lastPush=performance.now();
+      var td=new Uint8Array(analyser.fftSize);peak=0;lastPush=performance.now();if(strands)strands.setListening(true);
       function frame(now){
         analyser.getByteTimeDomainData(td);var sum=0;
         for(var q=0;q<td.length;q++){var d=(td[q]-128)/128;sum+=d*d}
-        var lvl=Math.min(1,Math.sqrt(sum/td.length)*4.5);if(lvl>peak)peak=lvl;
-        if(now-lastPush>=60){hist.push(peak);if(hist.length>400)hist.shift();peak=0;lastPush=now}
-        drawWave();raf=requestAnimationFrame(frame)
+        var lvl=Math.min(1,Math.sqrt(sum/td.length)*5);peak=Math.max(lvl,peak*.82);
+        if(strands)strands.setLevel(peak);
+        if(now-lastPush>=60){peak*=.25;lastPush=now}
+        raf=requestAnimationFrame(frame)
       }
       raf=requestAnimationFrame(frame)
     }
@@ -166,7 +156,7 @@
         try{recognition.start()}catch(err){}
       }).catch(function(){cancelDictation();status.textContent="Microphone access was denied or is unavailable."})
     }
-    if(mic)mic.addEventListener("click",function(){if(active||pending)cancelDictation();else startListening()});
+    if(mic)mic.addEventListener("click",function(){if(active||pending)confirmDictation();else startListening()});
     if(okBtn)okBtn.addEventListener("click",confirmDictation);if(noBtn)noBtn.addEventListener("click",cancelDictation);
     document.addEventListener("keydown",function(e){if(!active)return;if(e.key==="Escape"){e.preventDefault();cancelDictation()}else if(e.key==="Enter"&&!e.isComposing){e.preventDefault();e.stopPropagation();confirmDictation()}},true);
     window.addEventListener("pagehide",stopListening);
