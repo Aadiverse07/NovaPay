@@ -174,8 +174,9 @@ test('accountant confirmation and rejection are org-scoped, state-checked, and a
   confirm.doc.status = 'processed';
   assert.equal((await confirm.request('POST', '/confirm', 'viewer-token')).status, 403);
   assert.equal((await confirm.request('POST', '/confirm', 'accountant-token', {}, 'a0000000-0000-4000-8000-000000000099')).status, 403);
-  assert.equal((await confirm.request('POST', '/confirm')).status, 200);
+  assert.equal((await confirm.request('POST', '/confirm', 'accountant-token', { invoiceDraftId: 'a0000000-0000-4000-8000-000000000303' })).status, 200);
   assert.equal(confirm.doc.extraction.confirmation.confirmedBy, actorId);
+  assert.equal(confirm.doc.extraction.confirmation.invoiceDraftId, 'a0000000-0000-4000-8000-000000000303');
   assert.equal(confirm.audit.at(-1).action, 'document.confirmed');
 
   const reject = await setup(t);

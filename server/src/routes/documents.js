@@ -39,6 +39,19 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
   const maxPages = config.DOCUMENT_MAX_PAGES || 10;
   const maxBytes = maxFileMb * 1024 * 1024;
 
+  router.get('/documents', async (req, res, next) => {
+    try {
+      const db = identity?.database;
+      if (!db?.select) throw publicError(503, 'DOCUMENT_LIST_UNAVAILABLE', 'Document list is unavailable.');
+      const query = new URLSearchParams({
+        select: 'id,filename,mime_type,byte_size,page_count,status,duplicate_of,extraction,created_at,updated_at',
+        org_id: `eq.${req.orgId}`, order: 'created_at.desc', limit: '100',
+      }).toString();
+      const rows = await db.select('documents', query);
+      return res.json({ documents: Array.isArray(rows) ? rows : [], role: req.orgRole });
+    } catch (error) { return next(error); }
+  });
+
   router.post('/documents/:documentId/process', rbac(['owner', 'admin', 'accountant']), async (req, res, next) => {
     let usageId = null;
     let usageFinalized = false;
@@ -129,7 +142,7 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
     }
   });
 
-  router.post('/documents/:documentId/confirm', rbac(['owner', 'admin', 'accountant']), async (req, res, next) => {
+  router.post('/documents/:documentId/confirm', express.json({ limit: '64kb' }), rbac(['owner', 'admin', 'accountant']), async (req, res, next) => {
     try {
       const documentId = zodUuid(req.params.documentId);
       if (!documentId) throw publicError(400, 'DOCUMENT_ID_INVALID', 'A valid document ID is required.');
@@ -140,7 +153,8 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
       const document = Array.isArray(rows) ? rows[0] : null;
       if (!document) throw publicError(404, 'DOCUMENT_NOT_FOUND', 'Document not found.');
       if (document.status !== 'processed') throw publicError(409, 'DOCUMENT_NOT_READY', 'Only processed documents can be confirmed.');
-      const extraction = { ...(document.extraction && typeof document.extraction === 'object' ? document.extraction : {}), confirmation: { confirmedAt: new Date().toISOString(), confirmedBy: req.user.id } };
+      const invoiceDraftId = zodUuid(req.body?.invoiceDraftId) ? req.body.invoiceDraftId : null;
+      const extraction = { ...(document.extraction && typeof document.extraction === 'object' ? document.extraction : {}), confirmation: { confirmedAt: new Date().toISOString(), confirmedBy: req.user.id, ...(invoiceDraftId ? { invoiceDraftId } : {}) } };
       const updated = await db.patch('documents', new URLSearchParams({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processed' }).toString(), { extraction, updated_at: new Date().toISOString() });
       if (!Array.isArray(updated) || !updated.length) throw publicError(409, 'DOCUMENT_NOT_READY', 'Document changed before it could be confirmed.');
       await auditApiAction(identity, req, { action: 'document.confirmed', entity: 'document', entityId: documentId });

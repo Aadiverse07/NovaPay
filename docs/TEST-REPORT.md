@@ -1169,3 +1169,19 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | git diff --check (Part 3 final) | PASS | No whitespace errors.
 2026-10-28 | Migration 0016 live verification | PASS | Fixed accountant magic-link session and membership HTTP 200; service-role search_document_chunks HTTP 200 with 0 rows; service-role delete_document(nonexistent random UUID) HTTP 200/null (no row deleted); ordinary accountant JWT search_document_chunks HTTP 403; ordinary accountant JWT delete_document HTTP 403.
 2026-10-28 | Migration 0016 applied-state confirmation | PASS | User confirmed applied; RPC calls above prove search/delete functions are live; schema cache was not reloaded.
+2026-10-28 | `npm test` | PASS | 164 passed, 0 failed; package script also ran migration syntax checks (16/16). Documents list role-scope test included.
+2026-10-28 | `npm run check:migrations` | PASS | PostgreSQL 17 syntax validation succeeded for 16/16 migration files.
+2026-10-28 | `node --check src/api-client.js && node --check src/documents.js && node --check server/src/routes/documents.js && node --check server/test/documents-upload.test.js` | PASS | All 4 changed JS files parsed successfully.
+2026-10-28 | `npm test` | FAIL | 163 passed, 1 failed; `server/test/document-processing.test.js` confirmation test helper dropped JSON request body, so persisted invoiceDraftId assertion received undefined. Test is being corrected; no check weakened.
+2026-10-28 | Correction to prior FAIL diagnosis: fixture did send JSON; the document router is mounted before the global JSON parser, so confirm needed route-local parsing. The original assertion remains intact.
+2026-10-28 | `npm test` | PASS | 164 passed, 0 failed after confirm route-local JSON parsing; all 16 migrations also parsed through the package precheck.
+2026-10-28 | `npm run check:migrations` | PASS | PostgreSQL 17 syntax validation succeeded for 16/16 files.
+2026-10-28 | `node --check` on src/api-client.js, src/documents.js, server/src/routes/documents.js, server/test/document-processing.test.js, server/test/documents-upload.test.js | PASS | All 5 changed JS files parsed.
+2026-10-28 | `git diff --check` | PASS | No whitespace errors.
+2026-10-28 | `git diff --stat main -- <protected pathspecs>` | PASS | Empty; no protected design files changed.
+2026-10-28 | Browser Documents checklist | UNVERIFIED | Requires human browser session; checklist written to docs/BROWSER-CHECKLIST.md.
+2026-10-28 | `npm test` | PASS | Final Part 4 implementation: 164 passed, 0 failed; 16 migration syntax checks also ran in package script.
+2026-10-28 | `npm run check:migrations` | PASS | Final standalone check: all 16 SQL files passed PostgreSQL 17 syntax validation.
+2026-10-28 | `node --check` on 5 changed JS files | PASS | Final syntax run succeeded for src/api-client.js, src/documents.js, server/src/routes/documents.js, server/test/document-processing.test.js, server/test/documents-upload.test.js.
+2026-10-28 | `git diff --check` | PASS | Final patch contains no whitespace errors.
+2026-10-28 | `git diff --stat main -- <protected pathspecs>` | PASS | Empty; protected design files are unchanged.
