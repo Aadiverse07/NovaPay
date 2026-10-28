@@ -1,10 +1,11 @@
 ## RESUME POINTER
-- Current task: diagnose cross-tenant and deletion outcomes; branch `phase5-backend`.
-- Last complete live run: loaded AI limits 100/300; health 200; fixed memberships valid (B no org A); one synthetic sample uploaded/processed/indexed (1 chunk).
-- Results: B hybrid AI 200/0 citations PASS; B search RPC 403/0 rows PASS; B list 200/0 org A rows PASS; B get by ID 405 FAIL; B Storage read 400/0 PASS; A positive control 200/1 citation PASS.
-- Delete: API 200; document/chunks/search hits gone; Storage list prefix 0 rows; owner audit row 1; direct owner object GET after deletion HTTP 200 -> cascade FAIL/inconsistent.
-- Root cause/proposed smallest fix: GET 405 is `server/src/app.js` unmatched API fallback (lines 88-91) because no GET-by-ID route; add tenant-scoped GET route returning 404. No fix applied. Cascade object inconsistency unresolved; no fix applied.
-- Run-scoped sample deleted; server stopped; results logged in TEST-REPORT.md. Next: await user direction before any fixes or probes.
+- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`.
+- DONE: org-scoped GET added; focused tests 6/6; full npm test 165/165; migrations 16/16; node --check 2 changed JS files; git diff --check PASS.
+- Live checks: B retrieval 200/1 citation not referencing org A; B RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage 400 denied; A positive retrieval 200/1 citation.
+- Delete: API 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1; post-delete direct Storage GET 400 JSON/88 bytes, CF BYPASS, no cache-control/age.
+- Diagnosis: current object deletion works; previous HTTP 200 was not reproduced and its cause is undetermined. Storage objects SQL count UNVERIFIED (no local SQL client/CLI/connection). Storage code checks DELETE response.ok. No fix 2 applied.
+- Next: review staged paths; keep pre-existing `.env.example` unstaged; WIP-commit locally; never push.
+- Pending: optional user-provided SQL path if exact `storage.objects` SQL count is still needed.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3341,3 +3342,61 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: inspect branch/status/tracked `.env` and staged paths; WHY: commit only logs/context, not pre-existing `.env.example` changes.
 2026-10-28 | RESULT: branch phase5-backend; `.env` not tracked; `.env.example` left unstaged and untouched; only three continuity docs staged next; WIP commit.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant results`; WHY: checkpoint live results/proposed fixes locally only; never push.
+2026-10-28 | ABOUT TO: verify branch/worktree and inspect document route/test fixtures; WHY: begin authorized GET-by-ID fix without disturbing unrelated `.env.example` changes.
+2026-10-28 | RESULT: branch phase5-backend; `.env.example` pre-existing modified and will remain untouched; existing list route in documents.js, upload tests provide viewer setup; next read targeted fixture/routes/docs lines.
+2026-10-28 | ABOUT TO: inspect narrow route, test fixture and API doc sections; WHY: reuse contract conventions and implement tests without exposing real data.
+2026-10-28 | RESULT: added authenticated org-scoped GET `/api/documents/:documentId`, standard structured 404 for no tenant row; no storage path returned; next add route tests for same org, foreign org, unknown id, unauthenticated.
+2026-10-28 | ABOUT TO: extend documents-upload test fixtures and add four GET-by-ID assertions; WHY: prove status/error/tenant boundaries requested by user.
+2026-10-28 | RESULT: added four GET-by-ID assertions: same-org 200, foreign-org 404 standard envelope, unknown id 404, unauthenticated 401; next update API and frontend contract.
+2026-10-28 | ABOUT TO: document GET-by-ID response and tenant behavior in API.md and FRONTEND-CONTRACT.md; WHY: align contract with new route and expected 404 behavior.
+2026-10-28 | RESULT: API.md and FRONTEND-CONTRACT.md document scoped GET, 404 concealment, 401 and omitted storage path; next run focused GET tests before diagnosis.
+2026-10-28 | ABOUT TO: run focused `node --test server/test/documents-upload.test.js`; WHY: verify new route/test behavior before live diagnosis.
+2026-10-28 | RESULT: focused route tests PASS 6/6, including same-org 200, other-org 404, unknown 404, unauthenticated 401; next inspect supported SQL connectivity and exact delete/upload cache metadata paths for #2.
+2026-10-28 | ABOUT TO: inspect env variable NAMES/presence for a database SQL connection, available clients, and Storage implementation headers; WHY: determine if the requested `storage.objects` SQL count can be run without printing secrets.
+2026-10-28 | RESULT: no DATABASE_URL/PG connection credentials and no pg client; server Storage remove checks HTTP success before RPC; upload has no explicit cache-control override; next check whether Supabase CLI/link is available for requested read-only SQL count.
+2026-10-28 | ABOUT TO: inspect Supabase CLI and local link metadata presence only; WHY: determine whether count-only SQL against storage.objects can be run without exposing credentials.
+2026-10-28 | RESULT: Supabase CLI/link token and local SQL connection unavailable; will not claim SQL verification; Storage metadata list API is available. No source changes for diagnosis. Next start fresh server and capture object response metadata.
+2026-10-28 | ABOUT TO: identify/kill any stale node listener on port 3000, then start fresh; WHY: use current runtime limits and configuration for full live rerun.
+2026-10-28 | RESULT: stale server handling complete; npm start fresh on port 3000; next confirm status/config limits before sample.
+2026-10-28 | ABOUT TO: call `/api/status` and load limit numbers only; WHY: ensure fresh process is ready before live test writes.
+2026-10-28 | RESULT: fresh server health 200; limits 100/300; key present; next run fixed-user sample, tenant tests, deletion and cache metadata, plus storage-list counts.
+2026-10-28 | ABOUT TO: execute live checks with existing owner A/B and one synthetic PDF; WHY: verify the GET fix and isolate post-delete object behavior; no unrelated rows/users will be touched.
+2026-10-28 | ABOUT TO: collect full live run output; WHY: request is processing and must not be duplicated.
+2026-10-28 | RESULT: fixed membership check PASS; sample upload PASS 201; OCR/index and probes still running.
+2026-10-28 | ABOUT TO: await the same live run; WHY: do not duplicate synthetic upload or provider calls.
+2026-10-28 | RESULT: B checks pass including new B GET 404; A positive-control AI returned 200/0 citations (FAIL); continuing only to required delete/cache diagnostic; no content logged.
+2026-10-28 | ABOUT TO: collect delete/cascade/cache metadata output from same run; WHY: complete required step 2 diagnosis and clean this sample.
+2026-10-28 | RESULT: exact post-delete rerun found no storage object via list (0 rows), direct owner GET after deletion HTTP 400 JSON/88 bytes, CF-Cache-Status BYPASS, no cache-control/age; audit 1; no SQL connection for storage.objects count. Prior 200 lacks saved headers/body length and is not reproducible. Next inspect positive-control route classification to diagnose its 0 citations without changing code.
+2026-10-28 | ABOUT TO: inspect intent classifier and retrieval citation mapping; WHY: identify why Org A positive control returned zero citations and propose (not apply) a smallest correction if test setup caused it.
+2026-10-28 | RESULT: fresh post-delete GET is 400/BYPASS, not 200; no signed URL or cache evidence; old 200 lacked saved metadata. Next inspect the question's local route classification to diagnose positive-control zero citations without another API request.
+2026-10-28 | ABOUT TO: locally classify the tested synthetic-invoice question using router only; WHY: distinguish a test wording/route mismatch from an AI retrieval failure; no network/API calls.
+2026-10-28 | RESULT: tested wording classifies as `sql`/`invoice_status`, so previous AI isolation and positive-control probes did not exercise document hybrid search; this is a test-setup defect, not evidence of retrieval leakage. Next choose and verify OCR/retrieval wording locally.
+2026-10-28 | ABOUT TO: classify candidate questions locally (no API calls) and choose one that routes to document OCR/retrieval; WHY: ensure the corrected end-to-end repeat actually exercises document search on both tenants.
+2026-10-28 | RESULT: selected corrected question routes to `retrieval`; prior sample deleted and clean; no code fix; next repeat end-to-end with one fresh synthetic sample.
+2026-10-28 | ABOUT TO: run corrected retrieval checks using fixed identities, new one-run sample, B JWT/orgB for all B requests, A same-question positive control, then delete and capture response/cache metadata.
+2026-10-28 | ABOUT TO: collect corrected end-to-end run; WHY: processing and provider requests are in flight; do not duplicate them.
+2026-10-28 | RESULT: corrected question route verified as retrieval; memberships PASS; sample upload 201; next await same processing/probes.
+2026-10-28 | ABOUT TO: wait for current OCR/index operation; WHY: one sample is already uploaded and no duplicate should be created.
+2026-10-28 | RESULT: B retrieval request HTTP 200/1 citation; cited ID did not match org A document, but harness flagged marker echoed from B's own message as leakage; this is a false-positive test criterion, not confirmed leak. RPC 403, list 200/0, GET 404 pass; next finish positive control and cascade.
+2026-10-28 | ABOUT TO: collect remaining live output; WHY: positive control, deletion and post-delete metadata are still running.
+2026-10-28 | RESULT: corrected live rerun complete; B retrieval's sole citation was not the org A document; A positive control cited one result; cascade verified via Storage list/API and owner audit; SQL count unavailable; next record outcomes/root cause and run required final checks.
+2026-10-28 | ABOUT TO: append separate live check results and a diagnostic decision to TEST-REPORT/DECISIONS; WHY: distinguish observed pass/fail/unverified facts and correct the earlier marker-echo false positive.
+2026-10-28 | RESULT: check outcomes logged separately; prior 200 cause left undetermined (not labeled cache); positive-control SQL misroute documented; next stop server and run final tests.
+2026-10-28 | ABOUT TO: stop server started for live tests; WHY: live probes and cleanup are complete before offline validation.
+2026-10-28 | RESULT: server stopped; request log confirms final run delete HTTP 200; all sample rows cleaned; next run full npm test.
+2026-10-28 | ABOUT TO: run `npm test`; WHY: required full regression check after GET route addition.
+2026-10-28 | ABOUT TO: collect npm test final count; WHY: suite still running and completion count not available.
+2026-10-28 | RESULT: `npm test` PASS, 165 passed/0 failed; next record and run standalone migration check.
+2026-10-28 | ABOUT TO: append test pass then run `npm run check:migrations`; WHY: log real result and independently verify all migration syntax.
+2026-10-28 | RESULT: standalone migration check PASS, 16/16; next record and node-check changed JavaScript.
+2026-10-28 | ABOUT TO: append migration PASS and run `node --check` for route and test JS; WHY: complete required syntax verification.
+2026-10-28 | RESULT: node --check PASS for both changed JS files; next run git diff --check.
+2026-10-28 | ABOUT TO: run `git diff --check`; WHY: required final patch whitespace validation.
+2026-10-28 | RESULT: git diff --check PASS; next record, refresh continuity pointer, and inspect final diffs/status before commit.
+2026-10-28 | ABOUT TO: append final syntax/whitespace results and rewrite CONTEXT/RESUME POINTER with route fix and live diagnosis; WHY: leave a complete continuation checkpoint before WIP commit.
+2026-10-28 | RESULT: CONTEXT and RESUME POINTER updated with exact test/live states and SQL limitation; next inspect final diff/status and protected path diff.
+2026-10-28 | ABOUT TO: inspect diff stat, changed files, `.env` status, and protected-file diff; WHY: ensure only requested route/test/docs/log edits are included before local commit.
+2026-10-28 | RESULT: diff contains expected route/test/docs/log changes; protected-file diff empty; `.env` not tracked; unrelated `.env.example` remains modified and excluded; next stage only intended files.
+2026-10-28 | ABOUT TO: stage API/contract docs, CONTEXT/DECISIONS/TEST-REPORT/WORKLOG, document route and route tests; WHY: commit approved GET fix and completed diagnostics without touching `.env.example`.
+2026-10-28 | RESULT: staged only 8 intended files; `.env.example` excluded; next local WIP commit.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 scoped document GET and live diagnosis`; WHY: checkpoint authorized route fix, passing tests and live findings; never push.

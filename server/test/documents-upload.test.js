@@ -5,6 +5,8 @@ import { createApp } from '../src/app.js';
 import { createRepositories } from '../src/repos/memory.js';
 
 const orgId = 'a0000000-0000-4000-8000-000000000001';
+const otherOrgId = 'a0000000-0000-4000-8000-000000000002';
+const documentId = 'a0000000-0000-4000-8000-000000000101';
 const config = {
   PORT: 3000, STATIC_DIR: process.cwd(), hasSupabase: true, hasPayPal: false, hasAI: false,
   SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'public-test-key', SUPABASE_SERVICE_ROLE_KEY: 'server-test-key',
@@ -22,11 +24,21 @@ async function setup(t, rpcImpl = async (_name, args) => ({ id: args.p_document,
   const auditCalls = [];
   const listedDocuments = [{ id: 'doc-one', filename: 'sample.pdf', status: 'uploaded' }];
   const identity = {
-    async verifyToken(token) { return token ? { id: token === 'viewer-token' ? 'viewer' : 'accountant' } : null; },
-    async membership(userId, selectedOrg) { return selectedOrg === orgId ? { role: userId === 'viewer' ? 'viewer' : 'accountant' } : null; },
+    async verifyToken(token) { return token ? { id: token === 'viewer-token' ? 'viewer' : token === 'other-org-token' ? 'other-org-owner' : 'accountant' } : null; },
+    async membership(userId, selectedOrg) {
+      if (userId === 'other-org-owner' && selectedOrg === otherOrgId) return { role: 'owner' };
+      return selectedOrg === orgId ? { role: userId === 'viewer' ? 'viewer' : 'accountant' } : null;
+    },
     database: {
       async rpc(...args) { return rpcImpl(...args); },
-      async select(table, query) { assert.equal(table, 'documents'); assert.match(query, new RegExp(`org_id=eq.${orgId}`)); return listedDocuments; },
+      async select(table, query) {
+        assert.equal(table, 'documents');
+        const params = new URLSearchParams(query);
+        if (params.get('id') === `eq.${documentId}` && params.get('org_id') === `eq.${orgId}`) return [{ id: documentId, filename: 'same-org.pdf', status: 'processed' }];
+        if (params.has('id')) return [];
+        assert.equal(params.get('org_id'), `eq.${orgId}`);
+        return listedDocuments;
+      },
     },
     storage: {
       async upload(...args) { storageCalls.push(['upload', ...args]); },
@@ -52,6 +64,26 @@ test('document list is org-scoped and readable by viewer without exposing storag
   const body = await response.json();
   assert.equal(body.role, 'viewer');
   assert.deepEqual(body.documents, [{ id: 'doc-one', filename: 'sample.pdf', status: 'uploaded' }]);
+});
+
+test('document GET-by-ID is tenant-scoped and returns standard 404s for foreign or missing rows', async (t) => {
+  const state = await setup(t);
+  const path = `/api/documents/${documentId}`;
+  const sameOrg = await fetch(`${state.base}${path}`, { headers: { authorization: 'Bearer accountant-token', 'x-org-id': orgId } });
+  assert.equal(sameOrg.status, 200);
+  assert.deepEqual(await sameOrg.json(), { document: { id: documentId, filename: 'same-org.pdf', status: 'processed' } });
+
+  const otherOrg = await fetch(`${state.base}${path}`, { headers: { authorization: 'Bearer other-org-token', 'x-org-id': otherOrgId } });
+  assert.equal(otherOrg.status, 404);
+  assert.deepEqual(await otherOrg.json(), { error: { code: 'DOCUMENT_NOT_FOUND', message: 'Document not found.' } });
+
+  const unknownId = 'a0000000-0000-4000-8000-000000000199';
+  const missing = await fetch(`${state.base}/api/documents/${unknownId}`, { headers: { authorization: 'Bearer accountant-token', 'x-org-id': orgId } });
+  assert.equal(missing.status, 404);
+  assert.deepEqual(await missing.json(), { error: { code: 'DOCUMENT_NOT_FOUND', message: 'Document not found.' } });
+
+  const unauthenticated = await fetch(`${state.base}${path}`, { headers: { 'x-org-id': orgId } });
+  assert.equal(unauthenticated.status, 401);
 });
 
 test('document upload accepts a valid PDF for accountant and records a private org-scoped object', async (t) => {

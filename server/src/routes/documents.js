@@ -52,6 +52,23 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
     } catch (error) { return next(error); }
   });
 
+  router.get('/documents/:documentId', async (req, res, next) => {
+    try {
+      const documentId = zodUuid(req.params.documentId);
+      if (!documentId) throw publicError(400, 'DOCUMENT_ID_INVALID', 'A valid document ID is required.');
+      const db = identity?.database;
+      if (!db?.select) throw publicError(503, 'DOCUMENT_LIST_UNAVAILABLE', 'Document lookup is unavailable.');
+      const query = new URLSearchParams({
+        select: 'id,filename,mime_type,byte_size,page_count,status,duplicate_of,extraction,created_at,updated_at',
+        id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, limit: '1',
+      }).toString();
+      const rows = await db.select('documents', query);
+      const document = Array.isArray(rows) ? rows[0] : null;
+      if (!document) throw publicError(404, 'DOCUMENT_NOT_FOUND', 'Document not found.');
+      return res.json({ document });
+    } catch (error) { return next(error); }
+  });
+
   router.post('/documents/:documentId/process', rbac(['owner', 'admin', 'accountant']), async (req, res, next) => {
     let usageId = null;
     let usageFinalized = false;

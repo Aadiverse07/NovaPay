@@ -1221,3 +1221,17 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | (c) Org B Storage object RLS | PASS | B JWT read denied HTTP 400, rows=0; owner A read before deletion HTTP 200.
 2026-10-28 | (d) Org A positive-control AI question | PASS | Same question HTTP 200; citation rows=1.
 2026-10-28 | Delete cascade | FAIL | DELETE HTTP 200; document/chunk/search-hit rows after=0; Storage list prefix rows=0; owner audit query rows=1; direct owner object GET after delete still HTTP 200, inconsistent with Storage list result.
+2026-10-28 | GET-by-ID route tests | PASS | Focused `node --test server/test/documents-upload.test.js`: 6/6; same-org 200, foreign-org 404, missing 404, unauthenticated 401.
+2026-10-28 | Live cross-tenant retrieval | PASS | Fixed B JWT/org B: `/api/ai/chat` route `retrieval`, HTTP 200, 1 citation not referencing org A document; search RPC HTTP 403/0 rows. Sample marker appeared because it was present in B's own question, not as an org A citation.
+2026-10-28 | Live document list/get isolation | PASS | B list HTTP 200, 0 org A rows; B GET-by-ID HTTP 404, 0 rows.
+2026-10-28 | Live Storage-object RLS | PASS | B JWT direct private Storage GET denied HTTP 400/0 bytes; owner A pre-delete GET HTTP 200.
+2026-10-28 | Live positive control | PASS | Same retrieval question under A JWT/org A returned HTTP 200 with 1 citation.
+2026-10-28 | Live delete cascade | PASS | Delete API HTTP 200; document/chunk/search-hit rows after=0; Storage list API HTTP 200/count=0; owner audit query HTTP 200/count=1; owner direct Storage GET after delete HTTP 400.
+2026-10-28 | `storage.objects` SQL count | UNVERIFIED | No local SQL client/connection or Supabase CLI/access token available. Service-role Storage list API returned 0 rows for this run's prefix.
+2026-10-28 | Post-delete object response diagnosis | PASS (current rerun) | Direct authenticated Storage URL (not signed), after delete HTTP 400, `application/json; charset=utf-8`, byte length 88; `cache-control`/`age` absent and `CF-Cache-Status: BYPASS`. Prior HTTP 200 was not reproduced; its response metadata was not captured, so its specific cause remains undetermined.
+2026-10-28 | Storage delete implementation inspection | PASS | `server/src/services/supabase.js` sends Storage API DELETE and throws unless `response.ok`; document route invokes DB delete RPC only after storage removal succeeds.
+2026-10-28 | `npm test` | PASS | 165 passed, 0 failed after org-scoped GET-by-ID route and tests.
+2026-10-28 | `npm run check:migrations` | PASS | PostgreSQL 17 syntax check succeeded for all 16 migration files.
+2026-10-28 | `node --check server/src/routes/documents.js` and `node --check server/test/documents-upload.test.js` | PASS | Both changed JavaScript files parse.
+2026-10-28 | `git diff --check` | PASS | No whitespace errors.
+2026-10-28 | Prior post-delete HTTP 200 root cause | UNRESOLVED | It was not reproduced. Fresh direct authenticated Storage GET returned 400 JSON/88 bytes with CF cache BYPASS; no cache-control/age; Storage list count 0. Prior response metadata was not retained.
