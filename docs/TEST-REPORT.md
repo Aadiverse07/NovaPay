@@ -1144,3 +1144,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `git diff --check` (final Part 1 source/docs) | PASS | No whitespace errors.
 2026-10-28 | `git diff --check` (handoff docs after commit) | PASS | No whitespace errors.
 2026-10-28 | User confirmation: Supabase migration 0015 applied | UNVERIFIED | User said `applied`; no direct database query, Storage policy check, ordinary-user RPC denial, or live upload test run yet.
+2026-10-28 | Live 0015 probe (first run) | PARTIAL / UNVERIFIED | documents table 200, vector column 200, search_hits 200, private bucket 200, fixed accountant session 200, ordinary JWT RPC denied 403; service-role RPC used fake non-member org and got 403, so service-role invocation not verified.
+2026-10-28 | Live 0015 probe (fixed org retry) | PASS | Fixed accountant session 200; existing accountant membership 200; service-role claim RPC 200 and returned not_available for nonexistent document. Ordinary JWT denial 403 from prior probe.
+2026-10-28 | Live Storage bucket metadata | PASS | GET bucket metadata returned HTTP 200; public=false, 10 MiB limit, PDF/PNG/JPEG allowlist.
