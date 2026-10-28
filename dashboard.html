@@ -274,8 +274,9 @@
       </div>
       <div class="view" id="view-documents" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/documents.png" alt="" width="64" height="64"><h2>Documents</h2><p>Upload invoices and receipts, review extracted fields, and check for possible duplicates before creating a draft.</p></div>
-        <article class="dash-card module-card upload-card"><div class="upload-icon">↑</div><h3>Upload an invoice or receipt</h3><p>PDF, PNG or JPG · up to 10 MB. OCR results need human review.</p><label class="btn btn--primary" for="document-upload">Choose a file</label><input id="document-upload" type="file" accept="application/pdf,image/png,image/jpeg" hidden><span id="document-upload-name" class="module-status" role="status">No file selected</span><button class="btn btn--ghost" id="document-demo-upload" type="button">Use sample document</button></article>
-        <div class="module-kpis module-kpis--two"><article class="dash-card"><div class="card-heading"><div><h3>Needs review</h3><span class="status warn">1 document</span></div></div><div class="document-review"><span class="document-thumb">PDF</span><div><b>Willow Market · invoice-104.pdf</b><small>Uploaded 20 Oct 2026 · Possible duplicate</small></div><button class="table-action" data-ui-action="document-review">Review extraction →</button></div></article><article class="dash-card"><h3>Extraction review</h3><p>Supplier <b>Willow Market</b></p><p>Invoice total <b>₹32,500</b> <span class="status info">Check amount</span></p><p>Invoice date <b>02 Oct 2026</b></p><p>Duplicate check <span class="status warn">Similar invoice found</span></p><div class="module-inline"><button class="btn btn--primary" data-ui-action="document-draft">Create invoice draft</button><button class="btn btn--ghost" data-ui-action="document-review">Edit fields</button></div></article></div>
+        <article class="dash-card module-card upload-card"><div class="upload-icon">↑</div><h3>Upload an invoice or receipt</h3><p>PDF, PNG or JPG · up to 10 MB and 10 pages. OCR results need human review.</p><label class="btn btn--primary" for="document-upload">Choose a file</label><input id="document-upload" type="file" accept="application/pdf,image/png,image/jpeg" hidden><span id="document-upload-name" class="module-status" role="status">No file selected</span></article>
+        <p id="documents-live-status" class="module-status" role="status" aria-live="polite">Loading organization documents…</p>
+        <div class="module-kpis module-kpis--two"><article class="dash-card"><div class="card-heading"><div><h3>Organization documents</h3><span id="documents-count" class="status info">Loading</span></div><button id="documents-refresh" class="btn btn--ghost" type="button">Refresh</button></div><div id="documents-list" aria-live="polite"></div></article><article class="dash-card"><h3>Field review</h3><div id="document-review-panel"><p>Select a processed document to review extracted fields and confidence.</p></div></article></div>
       </div>
       <div class="view" id="view-community-funds" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/fundraising.png" alt="" width="64" height="64"><h2>Campaigns &amp; public record</h2><p>Manage campaign goals and review how community contributions connect to approved spending. All amounts shown are illustrative.</p></div>
@@ -353,6 +354,7 @@
 <script src="src/dashboard.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
+<script src="src/documents.js"></script>
 <script src="src/transaction-effects.js"></script>
 <script src="src/transaction-premium.js"></script>
 <script src="src/modules-premium.js"></script>

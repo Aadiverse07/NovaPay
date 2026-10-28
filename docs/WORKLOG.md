@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 3 complete on phase5-backend; migration 0016 user-applied and live permission checks passed.
-- Last finished step: fixed accountant session/membership HTTP 200; service-role search HTTP 200 (0 rows); service-role delete(nonexistent random UUID) HTTP 200/null; ordinary accountant JWT gets 403 on both RPCs. Schema cache not reloaded.
-- DONE: Gemini 768-d embeddings, OCR-text indexing, per-call ai_usage budgets, org-scoped hybrid retrieval/citations, accountant confirm/reject/delete with audit/cascade, extraction/answer injection tests; migration 0016 applied and live RPC boundaries checked.
-- NEXT: stop and wait for user CONTINUE before Part 4. Do not start UI wiring until then.
-- Pending human action: none for Part 3. Part 4 browser/UI checks will be listed in its handoff.
-
+- Current task: Phase 5 Part 4 Documents view and documentation on `phase5-backend`.
+- Last finished step: implementation and docs complete; final npm test PASS 164/164; migration syntax PASS 16/16; node --check PASS 5 JS files; git diff --check PASS; protected-file diff vs main empty.
+- Exact work in progress: verify no `.env`/secrets staged or tracked; make local WIP checkpoint commit. No push.
+- Edited files: `.env.example`, `dashboard.html`, `docs/API.md`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `server/src/routes/documents.js`, `server/test/document-processing.test.js`, `server/test/documents-upload.test.js`, `src/api-client.js`, `src/documents.js`.
+- Next: local commit, then human completes `docs/BROWSER-CHECKLIST.md` with synthetic documents.
+- Pending human action: browser-only Documents validation; Storage RLS and cross-tenant/deletion probes remain unverified.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3047,3 +3047,102 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 Asia/Kolkata | ABOUT TO inspect exact remaining CONTEXT text | avoid broad replacements after earlier partial-match issues.
 2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT now reflects applied migration 0016, successful service-role search/delete (200), ordinary accountant JWT denial (403), and Part 4 gate; TEST-REPORT has individual live results. NEXT: verify docs/status/no-env and commit this handoff locally.
 2026-10-28 Asia/Kolkata | ABOUT TO checkpoint live verification docs | check branch, whitespace, applied-state consistency, and env-path absence; never push.
+2026-10-28 Asia/Kolkata | RESULT: PASS; live verification handoff committed as 518a353 on phase5-backend; no push. Search/delete service-role success and ordinary-accountant 403 are recorded; schema cache remains untouched. NEXT: wait for user CONTINUE before Part 4.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect Part 4 UI/contracts/docs and branch state | user authorized Part 4; preserve teammate styles and avoid all protected files.
+2026-10-28 Asia/Kolkata | RESULT: PASS; branch is phase5-backend, prior Part 3 commits are 6dba84b/08f6aab/518a353; only the post-commit WORKLOG result is currently modified. Identified src/dashboard.js, src/api-client.js, existing src/fund-views.js, dashboard.html, and docs contracts. NEXT: inspect only Documents markup, script boot order, document API docs and environment template.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect existing Documents view and exact API contract gaps | preserve existing UI design and avoid protected styles/assets.
+2026-10-28 Asia/Kolkata | RESULT: PASS; dashboard has an existing static Documents panel with upload/review cards; its script load order ends after modules and has no documents controller. Root .env.example exists. NEXT: inspect API/auth client interfaces, invoice draft endpoint shape, relevant view markup and config keys before wiring.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect only the document UI/API integration points | decide safe draft creation flow and avoid restyling or protected files.
+2026-10-28  | RESULT: targeted integration inspection command output was truncated; no files changed; next: inspect API/auth/invoice interfaces in narrow ranges.
+2026-10-28  | ABOUT TO: read the API client, auth exports, invoice route and invoice repo method names; WHY: implement document view against existing contracts without disturbing merged UI.
+2026-10-28  | RESULT: API client injects JWT/org; invoice draft endpoint exists, role-gated; no files changed; next: inspect document route payloads and panel markup.
+2026-10-28  | ABOUT TO: inspect document route schemas, dashboard Documents section and JS bootstrap order; WHY: bind controls to actual API contracts and prevent send behavior.
+2026-10-28  | RESULT: confirmed static illustrative document cards and existing upload/process/confirm/reject plus invoice draft APIs; output was truncated while reading broad docs; no edits beyond journal; next: inspect exact route response and auth helpers.
+2026-10-28  | ABOUT TO: read compact route and auth ranges plus invoice builder requirements; WHY: build UI calls that match validated server schema and enforce confirmation creates draft only.
+2026-10-28  | RESULT: upload uses raw bytes and X-File-Name; process returns extraction; confirm only stamps metadata; invoice POST requires number/customer/email/currency/lines; no code edits yet; next: verify list API and document extraction schema.
+2026-10-28  | ABOUT TO: inspect document GET routes, extraction fields, and existing role/list state conventions; WHY: implement accurate live list and safe review-to-draft flow.
+2026-10-28  | RESULT: backend has no GET /api/documents list route; OCR schema fields identified; no code edits; next: inspect auth role API and route wiring/tests before add list support.
+2026-10-28  | ABOUT TO: locate authenticated membership endpoint and documents route registration/test harness; WHY: gate write controls by server-resolved role and test the new read endpoint.
+2026-10-28  | RESULT: auth middleware provides req.orgRole; documents router registered in app; no GET list route; document upload/process tests available; next: add read route and client UI, preserving accountant-only write actions.
+2026-10-28  | ABOUT TO: inspect existing document test fixture and status fields, then edit the minimal route/UI files; WHY: live list requires a tenant-scoped endpoint and repeatable coverage.
+2026-10-28  | RESULT: added GET /api/documents tenant-scoped list endpoint and viewer-readable test; touched server/src/routes/documents.js and server/test/documents-upload.test.js; next: make API client accept raw Blob uploads and replace static Documents markup.
+2026-10-28  | ABOUT TO: update raw-body client handling and Documents panel markup; WHY: send the selected file as binary bytes and render empty/live states instead of illustrative records.
+2026-10-28  | RESULT: API client accepts raw Blob; Documents panel now has live list, upload/process, editable confidence review, duplicate/arithmetic warnings, confirm/reject and draft-only language; added src/documents.js and included it in dashboard.html; next: update API/contract/runbook/config docs.
+2026-10-28  | ABOUT TO: inspect only relevant API docs sections and config key names, then document document endpoints and sample-doc policy; WHY: keep operator and frontend contracts aligned with new list endpoint and UI behavior.
+2026-10-28  | RESULT: confirmed document API docs need additive endpoint entries; .env.example lacks document OCR/limits keys; inspected runbook data caution; next: append endpoint contracts, sample-only guidance, default config and decisions.
+2026-10-28  | ABOUT TO: update API.md, FRONTEND-CONTRACT.md, RUNBOOK.md, .env.example and DECISIONS.md; WHY: document the newly wired view, role constraints, draft-only confirmation and sample-data boundary.
+2026-10-28  | RESULT: API docs, frontend contract, sample-only runbook guidance, document env limits and two decisions appended; next: run npm test.
+2026-10-28  | ABOUT TO: run npm test; WHY: verify API list route/test and prior backend behavior after Part 4 changes.
+2026-10-28  | RESULT: npm test PASS, 164 passed / 0 failed; embedded migration syntax check also reported 16/16 SQL files valid; next: run explicit npm run check:migrations.
+2026-10-28  | ABOUT TO: append the npm test result to TEST-REPORT.md; WHY: preserve the real run result before the next check.
+2026-10-28  | RESULT: TEST-REPORT.md records npm test PASS, 164/164; next: explicit migration check.
+2026-10-28  | ABOUT TO: run `npm run check:migrations`; WHY: record the standalone required migration verification.
+2026-10-28  | RESULT: standalone migration check PASS, all 16 migrations syntax-valid; next: log result then node --check changed JS.
+2026-10-28  | ABOUT TO: append migration check result to TEST-REPORT.md; WHY: keep each real validation run in append-only history.
+2026-10-28  | RESULT: TEST-REPORT.md records 16/16 migration check PASS; next: syntax-check changed JavaScript.
+2026-10-28  | ABOUT TO: run node --check on src/api-client.js, src/documents.js, server/src/routes/documents.js and server/test/documents-upload.test.js; WHY: catch syntax errors in all changed JS.
+2026-10-28  | RESULT: node --check PASS for all 4 changed JS files; next: record syntax check then run whitespace and protected-file diff checks.
+2026-10-28  | ABOUT TO: append node syntax result to TEST-REPORT.md; WHY: log each verification result with actual file count.
+2026-10-28  | RESULT: syntax run logged in TEST-REPORT.md; next: run git diff --check and protected-file diff against main.
+2026-10-28  | ABOUT TO: run `git diff --check` and `git diff --stat main` with protected pathspecs; WHY: check whitespace and confirm protected design files are untouched.
+2026-10-28  | RESULT: git diff --check PASS; protected path diff against main empty (no output); next: verify exact process response shape and write human browser checklist.
+2026-10-28  | ABOUT TO: read the document processing response assembly and inspect current journal pointer; WHY: confirm frontend extraction mapping and update handoff state accurately.
+2026-10-28  | RESULT: inspected OCR result shape: extraction contains fields and validation; confirmed document can remain processed, so prevent duplicate draft action and allow refresh during busy operations; next: apply these UI corrections and rerun tests.
+2026-10-28  | ABOUT TO: patch Documents controller confirmed-state handling and refresh flow; WHY: avoid repeat invoice draft creation and ensure upload completion refreshes live list.
+2026-10-28  | RESULT: UI refresh no longer blocked by upload busy state; confirmation includes draft ID and confirmed documents show final state; server and test updated; next: document confirm payload and browser checklist.
+2026-10-28  | ABOUT TO: update API confirm contract and create docs/BROWSER-CHECKLIST.md; WHY: capture exact browser-only QA steps and make draft-only confirmation traceable.
+2026-10-28  | RESULT: API docs now describe invoiceDraftId confirmation and browser checklist has 10 steps; no browser checks run; next: capture actual branch/HEAD and rewrite Part 4 handoff.
+2026-10-28  | ABOUT TO: inspect branch, HEAD and worktree summary; WHY: put accurate repository state in CONTEXT and RESUME POINTER before final verification.
+2026-10-28  | RESULT: branch phase5-backend, HEAD 518a353; worktree contains Part 4 source/docs edits only and no .env entry; next: rewrite CONTEXT and top resume pointer.
+2026-10-28  | ABOUT TO: rewrite docs/CONTEXT.md under 150 lines and replace only WORKLOG RESUME POINTER block; WHY: make Part 4 state resumable before final checks.
+2026-10-28  | RESULT: RESUME POINTER now points to Part 4 final checks; CONTEXT.md rewritten with all required continuity sections and current unverified risks; next: rerun npm test.
+2026-10-28  | ABOUT TO: run final npm test after confirmation-state/test edits; WHY: ensure latest code still passes before checkpoint commit.
+2026-10-28  | ABOUT TO: collect completion of final npm test; WHY: test process is still running and final pass count is not available yet.
+2026-10-28  | RESULT: final npm test FAIL, 163 passed/1 failed; document confirmation fixture did not forward request body, so invoiceDraftId assertion was undefined; next: inspect helper and fix fixture, never relax assertion.
+2026-10-28  | ABOUT TO: append the exact failing run to TEST-REPORT.md; WHY: record failure before editing the test harness.
+2026-10-28  | RESULT: failed run recorded; next: inspect request helper in document-processing.test.js.
+2026-10-28  | ABOUT TO: inspect the small fixture helper and confirmation test lines; WHY: identify how to pass JSON without changing route behavior.
+2026-10-28  | RESULT: corrected failure diagnosis: app mounts documentRoutes before its global express.json parser; fixture sends the body, but confirm route did not parse it; next: add route-local JSON parser and append correction to TEST-REPORT.
+2026-10-28  | ABOUT TO: add express.json middleware to confirm route; WHY: ensure invoiceDraftId body is parsed while preserving the persistence assertion.
+2026-10-28  | RESULT: route-local JSON parser added to confirm endpoint; no test weakened; next: rerun npm test.
+2026-10-28  | ABOUT TO: rerun `npm test`; WHY: verify the parser fix and full Part 4 changes.
+2026-10-28  | ABOUT TO: collect the rerun completion status; WHY: npm test is still executing and its final counts are not yet available.
+2026-10-28  | RESULT: npm test PASS, 164 passed/0 failed after route-local JSON parser fix; next: append passing run then run standalone migration validation.
+2026-10-28  | ABOUT TO: append final npm test result to TEST-REPORT.md; WHY: preserve the successful verification after the fix.
+2026-10-28  | RESULT: final npm test pass logged; next: explicit migration check.
+2026-10-28  | ABOUT TO: run `npm run check:migrations`; WHY: standalone required final migration syntax check.
+2026-10-28  | RESULT: standalone check:migrations PASS, all 16 files valid; next: record result and syntax-check changed JS.
+2026-10-28  | ABOUT TO: append migration result in TEST-REPORT.md; WHY: maintain append-only verification record.
+2026-10-28  | RESULT: migration check logged; next: node --check all changed JS.
+2026-10-28  | ABOUT TO: run node --check on changed JS files; WHY: verify final implementation and test syntax.
+2026-10-28  | RESULT: node --check PASS for 5 changed JS files; next: log and run whitespace/protected path checks.
+2026-10-28  | ABOUT TO: append JavaScript syntax result to TEST-REPORT.md; WHY: document final syntax validation.
+2026-10-28  | RESULT: syntax check logged; next: run diff whitespace and protected-file diff checks.
+2026-10-28  | ABOUT TO: run `git diff --check` and protected path diff against main; WHY: confirm clean patches and no protected design file edits.
+2026-10-28  | RESULT: git diff --check PASS and protected path diff against main empty (no output); next: append results and inspect final diff/status.
+2026-10-28  | ABOUT TO: append whitespace/protected-file results to TEST-REPORT.md; WHY: preserve all required final check outcomes.
+2026-10-28  | RESULT: final non-browser checks recorded; next: inspect aggregate diff and status before checkpoint commit.
+2026-10-28  | ABOUT TO: inspect git diff stat, key Documents UI/route diff, and status; WHY: ensure only intended files are included and no secrets are staged.
+2026-10-28  | RESULT: final diff review found no protected edits; old sample button is inert and filename status was not updated; next: remove inert sample control and show selected filename.
+2026-10-28  | ABOUT TO: adjust only upload card copy/control and file-selection status text; WHY: avoid suggesting a fake sample action and show accurate upload state.
+2026-10-28  | RESULT: removed inert sample button, updated 10-page guidance, and display selected filename; next: rerun full suite and syntax checks after final UI edit.
+2026-10-28  | ABOUT TO: run final `npm test`; WHY: validate all final Part 4 changes.
+2026-10-28  | ABOUT TO: collect final npm test completion; WHY: process continues and final counts are not yet emitted.
+2026-10-28  | RESULT: final npm test PASS, 164/164; next: append pass and run final migration check.
+2026-10-28  | ABOUT TO: append the latest npm test result to TEST-REPORT.md; WHY: log the actual final-code run rather than rely on the earlier pass.
+2026-10-28  | RESULT: final suite pass logged; next: standalone migration validation.
+2026-10-28  | ABOUT TO: rerun `npm run check:migrations`; WHY: final required standalone migration syntax check after all source changes.
+2026-10-28  | RESULT: final standalone migration check PASS, 16/16 valid; next: record and rerun JS syntax and final diff checks.
+2026-10-28  | ABOUT TO: append migration pass to TEST-REPORT.md; WHY: record latest standalone result.
+2026-10-28  | RESULT: migration pass logged; next: syntax-check changed JS.
+2026-10-28  | ABOUT TO: run node --check on all 5 changed JavaScript files; WHY: verify latest client, route and tests.
+2026-10-28  | RESULT: node --check PASS on 5 changed JS files; next: final git diff --check and protected file diff.
+2026-10-28  | ABOUT TO: run git diff --check and protected path diff against main; WHY: enforce final no-whitespace/protected-file check.
+2026-10-28  | RESULT: final diff check PASS and protected-file diff empty; next: record final check results and refresh CONTEXT/RESUME POINTER before commit.
+2026-10-28  | ABOUT TO: append final node/diff results to TEST-REPORT.md and rewrite Part 4 handoff sections; WHY: leave an accurate checkpoint before commit.
+2026-10-28  | RESULT: TEST-REPORT.md and CONTEXT.md contain final verified statuses; RESUME POINTER shows commit pending and browser actions; next: check branch/status/secrets without printing .env.
+2026-10-28  | ABOUT TO: check branch, status, tracked .env names and staged diff; WHY: confirm local-only checkpoint is safe before commit.
+2026-10-28  | RESULT: phase5-backend confirmed; `.env` is not tracked; no staged files before staging; diff check passes and protected diff is empty; next: stage intended working tree and inspect names.
+2026-10-28  | ABOUT TO: run `git add -A` then inspect staged filenames only; WHY: prepare required local checkpoint while ensuring no secret file is included.
+2026-10-28  | RESULT: staged filenames are the 15 intended Part 4 files; no `.env` or secret paths staged; next: commit local WIP checkpoint.
+2026-10-28  | ABOUT TO: commit `WIP Phase 5 task 4: wire Documents view`; WHY: save the verified Part 4 task locally on phase5-backend; never push.

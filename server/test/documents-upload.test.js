@@ -20,10 +20,14 @@ async function pdfWithPages(count) {
 async function setup(t, rpcImpl = async (_name, args) => ({ id: args.p_document, status: 'uploaded' })) {
   const storageCalls = [];
   const auditCalls = [];
+  const listedDocuments = [{ id: 'doc-one', filename: 'sample.pdf', status: 'uploaded' }];
   const identity = {
     async verifyToken(token) { return token ? { id: token === 'viewer-token' ? 'viewer' : 'accountant' } : null; },
     async membership(userId, selectedOrg) { return selectedOrg === orgId ? { role: userId === 'viewer' ? 'viewer' : 'accountant' } : null; },
-    database: { async rpc(...args) { return rpcImpl(...args); } },
+    database: {
+      async rpc(...args) { return rpcImpl(...args); },
+      async select(table, query) { assert.equal(table, 'documents'); assert.match(query, new RegExp(`org_id=eq.${orgId}`)); return listedDocuments; },
+    },
     storage: {
       async upload(...args) { storageCalls.push(['upload', ...args]); },
       async remove(...args) { storageCalls.push(['remove', ...args]); },
@@ -38,8 +42,17 @@ async function setup(t, rpcImpl = async (_name, args) => ({ id: args.p_document,
   const send = (token, bytes, mime = 'application/pdf') => fetch(`${base}/api/documents`, {
     method: 'POST', headers: { authorization: `Bearer ${token}`, 'x-org-id': orgId, 'content-type': mime, 'x-file-name': '../../private invoice.pdf' }, body: bytes,
   });
-  return { send, storageCalls, auditCalls };
+  return { send, storageCalls, auditCalls, base };
 }
+
+test('document list is org-scoped and readable by viewer without exposing storage paths', async (t) => {
+  const state = await setup(t);
+  const response = await fetch(`${state.base}/api/documents`, { headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgId } });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.role, 'viewer');
+  assert.deepEqual(body.documents, [{ id: 'doc-one', filename: 'sample.pdf', status: 'uploaded' }]);
+});
 
 test('document upload accepts a valid PDF for accountant and records a private org-scoped object', async (t) => {
   const state = await setup(t);
