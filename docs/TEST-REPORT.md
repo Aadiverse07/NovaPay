@@ -1190,3 +1190,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | Live Storage-object RLS | UNVERIFIED | No cross-org JWT Storage read was attempted; blocked before successful sample indexing. No RLS result inferred from policy text.
 2026-10-28 | Live server health | PASS | `GET /api/status` returned HTTP 200 with authenticated mode and Supabase configured; no credential values printed.
 2026-10-28 | Live document verification handoff | UNVERIFIED | Last run: sample upload 201, processing 503 before indexing, cleanup DELETE 200; no org B or Storage RLS probes. User reports PostgREST schema reload succeeded; root cause remains unknown pending Gemini configuration/restart.
+2026-10-28 | `npm test` | PASS | Fresh `npm ci` then 164 passed, 0 failed; matches the Part 4 baseline.
+2026-10-28 | `npm run check:migrations` | PASS | Fresh standalone run: PostgreSQL 17 syntax validation succeeded for 16/16 migrations; matches handoff.
