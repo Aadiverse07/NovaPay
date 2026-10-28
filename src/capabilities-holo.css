@@ -37,6 +37,8 @@
   transition: opacity 180ms ease;
 }
 
+:root[data-theme="light"] #feature-summary::before { display: none; }
+
 #features .feature-grid .feature-card:hover,
 #feature-summary:hover { --holo-lift: -9px; --holo-strength: .9; }
 
