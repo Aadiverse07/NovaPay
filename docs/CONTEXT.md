@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
-- Last commit: `518a353` (Part 3 checkpoint; Part 4 local commit pending)
+- Last Part 4 implementation commit: `5a63d8e` (local WIP; no push)
 - Current phase/task: Phase 5, Part 4 — Documents view wiring and docs
 
 ## DONE
@@ -12,14 +12,12 @@
 - Part 4 docs and manual checklist updated. Files touched: `.env.example`, `dashboard.html`, `docs/API.md`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `server/src/routes/documents.js`, `server/test/document-processing.test.js`, `server/test/documents-upload.test.js`, `src/api-client.js`, `src/documents.js`.
 
 ## IN PROGRESS
-- Exact task: commit verified Part 4 changes locally; no implementation work remains.
+- Exact task: Part 4 implementation and documentation committed locally; no implementation work remains.
 - Edited implementation: document list/confirm routes in `server/src/routes/documents.js`; API tests in `server/test/documents-upload.test.js` and `server/test/document-processing.test.js`; Blob support in `src/api-client.js`; view controller in `src/documents.js`; panel/script in `dashboard.html`.
-- Remaining: verify no `.env` or secrets are staged/tracked, commit on `phase5-backend`, then hand browser checklist to human.
+- Remaining: hand browser checklist to human; worktree has only the post-commit handoff update if this document changes after the WIP checkpoint.
 
 ## NEXT STEPS
-1. Confirm `git branch --show-current` is `phase5-backend`; inspect `git status --short` and ensure `.env`/secrets are absent.
-2. Commit locally with a Part 4 WIP message; never push.
-3. Human completes `docs/BROWSER-CHECKLIST.md` using fixed named owner/viewer test accounts and synthetic documents only.
+1. Human completes `docs/BROWSER-CHECKLIST.md` using fixed named owner/viewer test accounts and synthetic documents only.
 
 ## USER ACTIONS PENDING
 - Browser-only validation: complete `docs/BROWSER-CHECKLIST.md` manually.
