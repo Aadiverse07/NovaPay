@@ -1185,3 +1185,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `node --check` on 5 changed JS files | PASS | Final syntax run succeeded for src/api-client.js, src/documents.js, server/src/routes/documents.js, server/test/document-processing.test.js, server/test/documents-upload.test.js.
 2026-10-28 | `git diff --check` | PASS | Final patch contains no whitespace errors.
 2026-10-28 | `git diff --stat main -- <protected pathspecs>` | PASS | Empty; protected design files are unchanged.
+2026-10-28 | Live cross-tenant retrieval/fetch | UNVERIFIED | Fixed owner A uploaded the synthetic sample (HTTP 201), but `/api/documents/:id/process` returned HTTP 503 before indexing; org B search/list/fetch probes were not run. Run-scoped DELETE returned HTTP 200 during cleanup; no cascade assertions were run.
+2026-10-28 | Live delete cascade | UNVERIFIED | Cleanup DELETE for this run's synthetic document returned HTTP 200; chunks, search hits, Storage object and `document.deleted` audit row were not queried because processing had stopped the verification.
+2026-10-28 | Live Storage-object RLS | UNVERIFIED | No cross-org JWT Storage read was attempted; blocked before successful sample indexing. No RLS result inferred from policy text.
+2026-10-28 | Live server health | PASS | `GET /api/status` returned HTTP 200 with authenticated mode and Supabase configured; no credential values printed.

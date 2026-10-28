@@ -3,63 +3,59 @@
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
-- Last Part 4 implementation commit: `5a63d8e` (local WIP; no push)
-- Current phase/task: Phase 5, Part 4 — Documents view wiring and docs
+- Last code/doc commit before live verification: `54b53b6`
+- Current phase/task: Phase 5, live verification of document tenant isolation, delete cascade and Storage RLS
 
 ## DONE
-- Phase 5 Parts 1–3 completed; migrations 0015 and 0016 user-applied; prior live RPC boundary checks are recorded in TEST-REPORT.md.
-- Part 4 implementation: tenant-scoped `GET /api/documents`; raw File/Blob upload; live list, empty and error states; OCR field/confidence review; duplicate/arithmetic warnings; reject; confirmation metadata linked to the invoice draft ID. No send endpoint is called.
-- Part 4 docs and manual checklist updated. Files touched: `.env.example`, `dashboard.html`, `docs/API.md`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `server/src/routes/documents.js`, `server/test/document-processing.test.js`, `server/test/documents-upload.test.js`, `src/api-client.js`, `src/documents.js`.
+- Part 4 Documents UI/API and documentation committed locally in `5a63d8e` and `54b53b6`.
+- Read-only preflight: server health HTTP 200; fixed Phase 3 owner A/B users and their named organizations exist. No users or organizations created.
+- Live test created one synthetic sample PDF in fixed org A; upload returned HTTP 201. Processing returned HTTP 503 before indexing. Cleanup DELETE for only that document returned HTTP 200. Server stopped.
+- No implementation code changed in this live verification. Files changed now: `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`.
 
 ## IN PROGRESS
-- Exact task: Part 4 implementation and documentation committed locally; no implementation work remains.
-- Edited implementation: document list/confirm routes in `server/src/routes/documents.js`; API tests in `server/test/documents-upload.test.js` and `server/test/document-processing.test.js`; Blob support in `src/api-client.js`; view controller in `src/documents.js`; panel/script in `dashboard.html`.
-- Remaining: hand browser checklist to human; worktree has only the post-commit handoff update if this document changes after the WIP checkpoint.
+- Exact task: live verification blocked at OCR/index processing HTTP 503. No org B search/fetch, Storage-object RLS, or delete-cascade assertions were run.
+- Next work requires user direction before diagnosing/fixing the 503. Do not label any blocked check PASS.
 
 ## NEXT STEPS
-1. Human completes `docs/BROWSER-CHECKLIST.md` using fixed named owner/viewer test accounts and synthetic documents only.
+1. Await user direction on whether to diagnose/fix the HTTP 503 processing failure.
+2. If authorized, inspect logs and document OCR/index provider failure without changing checks or using new users/orgs.
+3. Rerun using fixed Phase 3 owner A/B and org A/B only, with synthetic sample files.
+4. Complete cross-tenant, Storage RLS, and delete cascade checks; append actual results to TEST-REPORT.md.
 
 ## USER ACTIONS PENDING
-- Browser-only validation: complete `docs/BROWSER-CHECKLIST.md` manually.
-- No migration application is pending for Part 4.
+- User decision: authorize diagnosis/fix of document processing HTTP 503 before resuming the live checks.
 
 ## LIVE STATE
-- Supabase migrations 0001–0016: user-confirmed applied. Latest live Part 3 RPC checks are recorded in TEST-REPORT.md; no Part 4 live run was performed.
-- Tunnel/webhook: last reported fixed by user; not checked during Part 4.
-- Latest Part 4 offline checks: `npm test` PASS 164/164; `npm run check:migrations` PASS 16/16; changed JS syntax PASS (5 files); `git diff --check` PASS; protected-file diff vs main empty.
-- Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `DOCUMENT_OCR_MODEL`, `DOCUMENT_MAX_FILE_MB`, `DOCUMENT_MAX_PAGES`, `DOCUMENT_MAX_CONCURRENT_JOBS_PER_ORG`, `DOCUMENT_MAX_UPLOADS_PER_ORG_PER_HOUR`.
+- Migrations 0001–0016: user-confirmed applied; no new migration applied in this task.
+- Tunnel/webhook: last reported fixed by user; not checked.
+- Server started for verification and stopped afterward.
+- Fixed test users/orgs: preflight confirmed existing owner A/B accounts and orgs; no provisioning occurred.
+- Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`.
 
 ## TEST STATE
-| Check | Status | Date | Command / evidence |
-|---|---|---|---|
-| Cross-tenant retrieval denial | UNVERIFIED | 2026-10-28 | Org scope asserted; no foreign-tenant result probe. |
-| Duplicate upload flag | PASS | 2026-10-28 | `npm test`; duplicate hash becomes DUPLICATE_DOCUMENT. |
-| Wrong-total arithmetic flag | PASS | 2026-10-28 | `npm test`; extraction mismatch produces warning. |
-| Hidden-instruction injection | PASS | 2026-10-28 | `npm test`; OCR and answer prompt-boundary tests. |
-| Delete removes chunks/search hits | UNVERIFIED | 2026-10-28 | Static cascade/RPC checks; no live rows deleted. |
-| Storage-object RLS | UNVERIFIED | 2026-10-28 | No direct object-policy probe. |
-| Part 4 unit/integration suite | PASS, 164/164 | 2026-10-28 | `npm test`; one failed run diagnosed and fixed with route-local JSON parsing, then rerun passed. |
-| Migration syntax | PASS, 16/16 | 2026-10-28 | `npm run check:migrations`. |
-| Changed JS syntax | PASS, 5 files | 2026-10-28 | `node --check` on changed JS. |
-| Whitespace/protected paths | PASS | 2026-10-28 | `git diff --check`; protected diff vs main empty. |
-| Browser Documents flow | UNVERIFIED | 2026-10-28 | Human checklist not run. |
+| Check | Status | Evidence |
+|---|---|---|
+| API health | PASS | `GET /api/status` HTTP 200; authenticated mode and Supabase configured. |
+| Cross-tenant retrieval/document fetch | UNVERIFIED | Upload 201; process 503 before indexing; org B probes not run. |
+| Delete cascade | UNVERIFIED | Cleanup DELETE 200; cascade contents/audit not inspected. |
+| Storage-object RLS | UNVERIFIED | No other-org JWT object read attempted. |
 
 ## KNOWN ISSUES AND RISKS
-- Invoice draft creation and document confirmation are separate requests. If draft creation succeeds and confirmation fails, UI warns not to create another draft blindly.
-- Browser behavior, real Storage-object RLS, cross-tenant retrieval denial, and actual cascade deletion remain unverified.
-- Free-tier OCR/embedding provider terms may permit use of submitted data; use synthetic sample documents only.
+- Document process returned HTTP 503; exact response code/body was not retained. No retry or fix attempted.
+- The cleanup DELETE returned 200 but cascade outcome was not independently verified.
+- Cross-tenant isolation, Storage-object RLS and audit row remain unverified.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER/posting RPC must revoke public, anon, authenticated and grant only service_role; prove ordinary JWT denial (403).
-- PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only with ON DELETE RESTRICT; cleanup order: journal_entries (lines cascade), audit_log, organizations, auth.users via manual cleanup script. Reuse fixed named users/orgs.
-- PayPal sandbox buyer must be US Personal; seller USD only; use Visa; webhook URL ends `/api/webhook`; webhook ID must match.
-- Raw body is needed for PayPal signature verification.
-- Never print `.env` values; use key names only.
+- Supabase SQL Editor is transactional; never edit an applied migration; add a new numbered file.
+- SECURITY DEFINER/posting RPCs must revoke public/anon/authenticated and grant only service_role; prove ordinary JWT denial (403).
+- PostgREST embeds need explicit FK names when multiple relationships exist.
+- audit_log is insert-only/ON DELETE RESTRICT; cleanup journal entries, audit_log, orgs, then auth users; reuse fixed users/orgs.
+- PayPal sandbox buyer is US Personal, seller USD, Visa checkout, webhook URL ends `/api/webhook`, ID must match.
+- PayPal signature verification needs raw body.
+- Never print `.env` values; key names only.
 
 ## DO NOT LIST
-- Do not push, switch to or commit on `main`/`backend`, touch protected design files, use `--force`, run `npm audit fix --force`, weaken tests, edit applied migrations, or commit `.env`.
+- Never push; do not change `main`/`backend`; do not edit protected design files or applied migrations; no force; no weakened tests; never commit `.env`.
 
 ## RESUME COMMANDS
 - `git branch --show-current`
