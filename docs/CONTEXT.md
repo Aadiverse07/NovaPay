@@ -2,7 +2,7 @@
 
 ## HEADER
 - Updated: 2026-10-28 15:00 Asia/Kolkata.
-- Branch: `phase5-backend`; latest prior checkpoint `a39f433`; Part 2 changes are pending local WIP commit; no push.
+- Branch: `phase5-backend`; latest Part 2 implementation commit `65abfe7`; no push.
 - Current phase/task: Phase 5, Part 2 complete (task 2/4); Part 3 is next and awaits user `CONTINUE`. Migration 0015 is user-confirmed applied.
 
 ## DONE
@@ -16,14 +16,13 @@
 - `npm test`: PASS, 140/140. `npm run check:migrations`: PASS, 15/15 syntax parsed. `node --check`: PASS (6 JS files). `git diff --check`: PASS.
 
 ## IN PROGRESS
-- Exact task: Part 3 embeddings, hybrid document search, retrieval/cited answers, router OCR branch, org isolation, answer-stage injection and delete tests. No Part 3 code started.
+- Exact task: Part 3 embeddings, hybrid document search, retrieval/cited answers, router OCR branch, org isolation, answer-stage injection and delete tests. No Part 3 code started; awaiting user `CONTINUE`.
 - Part 1 files: `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `package.json`, `package-lock.json`, `server/src/app.js`, `server/src/config.js`, `server/src/routes/documents.js`, `server/src/services/supabase.js`, `server/test/documents-upload.test.js`, `server/test/supabase.test.js`, `supabase/migrations/0015_documents_rag.sql`.
 - Part 2 files changed: `server/src/app.js`, `server/src/config.js`, `server/src/routes/documents.js`, `server/src/services/supabase.js`, `server/src/services/documentOcr.js`, `server/test/supabase.test.js`, `server/test/document-ocr.test.js`, `server/test/document-processing.test.js`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
 - Part 2 verification: full suite PASS 152/152; migrations PASS 15/15; `node --check` PASS for 8 changed JS files; `git diff --check` PASS. Live schema/function/bucket checks PASS; Storage-object RLS behavior UNVERIFIED.
 
 ## NEXT STEPS
-1. Review the Part 2 diff and create a local WIP commit on `phase5-backend`; do not push.
-2. Stop and wait for the user to reply `CONTINUE`.
+1. Stop and wait for the user to reply `CONTINUE`; do not start Part 3 until then.
 3. After `CONTINUE`, implement Part 3 embeddings, hybrid retrieval, answer-stage injection protection and deletion; keep indexing limited to documents/OCR text.
 
 ## USER ACTIONS PENDING

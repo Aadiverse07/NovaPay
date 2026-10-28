@@ -1,8 +1,8 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 2 complete on `phase5-backend`; WIP checkpoint commit pending in this turn. User must send `CONTINUE` before Part 3.
+- Current task: Phase 5 Part 2 complete on `phase5-backend`; implementation checkpoint `65abfe7`. Part 3 awaits user `CONTINUE`.
 - Last finished step: `npm test` PASS 152/152; migration check PASS 15/15; node syntax PASS for 8 changed JS files; diff check PASS. Live 0015 schema/function/bucket checks passed; Storage-object RLS remains UNVERIFIED.
-- DONE: Part 1 migration 0015 user-applied; Part 2 OCR, validation, arithmetic warnings, same-org duplicate rejection/audit, ai_usage budgets and safe processing route implemented.
-- NEXT: review final diff and continuity docs, verify no secret paths, create local WIP commit on `phase5-backend`, then stop for user `CONTINUE`.
+- DONE: Part 1 migration 0015 user-applied; Part 2 OCR, validation, arithmetic warnings, same-org duplicate rejection/audit, ai_usage budgets and safe processing route implemented and locally committed.
+- NEXT: wait for user `CONTINUE`. Then implement Part 3 embeddings, hybrid retrieval, answer-stage injection protection, isolation and delete handling; do not touch Parts 4 or unrelated indexing.
 - Pending human action: none for Part 2; migration 0015 already confirmed applied. Browser/document UI checks belong to Part 4.
 
 ## Backfill
@@ -2981,3 +2981,6 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 Asia/Kolkata | ABOUT TO validate final CONTEXT sections and documentation whitespace | ensure the handoff is internally consistent before commit.
 2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT header now includes exact update time and all required handoff sections; current docs and source diff are whitespace-clean. NEXT: verify final paths contain no .env/secrets, then make the Part 2 local WIP commit.
 2026-10-28 Asia/Kolkata | ABOUT TO stage and locally commit the completed Part 2 implementation and continuity docs | checkpoint per user protocol; branch must remain phase5-backend, never push.
+2026-10-28 Asia/Kolkata | RESULT: PASS; local Part 2 WIP commit `65abfe7` created on phase5-backend; no .env path was staged or tracked. NEXT: mark the implementation commit in CONTEXT.md and the WORKLOG RESUME POINTER, then checkpoint that handoff update locally.
+2026-10-28 Asia/Kolkata | ABOUT TO update final commit/resume state and create a docs-only local checkpoint | avoid leaving the handoff claiming the WIP commit is pending.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT.md and top RESUME POINTER now record Part 2 completion at 65abfe7 and wait for CONTINUE before Part 3. NEXT: commit continuity update locally and verify final repository state.
