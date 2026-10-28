@@ -57,7 +57,7 @@
 
     var response;
     try {
-      response = await fetch(path, { method: method, headers: headers, body: body, credentials: "same-origin", cache: "no-store" });
+      response = await fetch(path, { method: method, headers: headers, body: body, credentials: "same-origin" });
     } catch (_) {
       var unavailable = new Error("NovaPay API is unreachable. Check your connection and try again.");
       unavailable.code = "API_UNAVAILABLE";

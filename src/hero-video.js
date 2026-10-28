@@ -1,5 +1,4 @@
-/* NovaPay hero payment video: plays once when the hero is on screen, then holds the final "Payment Successful" frame
-   (the right hand stays resting beside the phone — it is part of the video itself).
+/* NovaPay hero payment video: loops continuously (hands -> phone -> tap -> "Payment Successful" -> repeat), never stops.
    - Two cuts of the same animation: light theme = natural skin tones, dark theme = blue hands (assets/novapay-payment-dark.*).
      The cut follows <html data-theme>; clicking the theme toggle swaps the cut and replays the animation from the start.
    - Replays if the hero scrolls out of view and back after it has finished.
@@ -17,9 +16,11 @@
   };
   var root = document.documentElement;
   var started = false, ended = false, visible = false, current = "light";
+  v.loop = true;                                    // continuous loop, no stopping
 
   function themeNow() { return root.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
   function play() { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  function reveal() { v.classList.add("is-visible"); }
   function showLast() { try { v.currentTime = Math.max(0, (v.duration || 10) - 0.04); } catch (e) {} }
   function addSource(src, type) {
     var s = document.createElement("source");
@@ -31,7 +32,9 @@
     for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
     if (!noAlpha) addSource(FILES[t].webm, "video/webm; codecs=vp9");
     addSource(FILES[t].mp4, "video/mp4");
+    v.loop = true;
     v.load();
+    v.classList.remove("is-visible");
   }
 
   // initial cut (the markup already points at the light files, so only reload when something else is needed)
@@ -57,13 +60,18 @@
   new MutationObserver(onTheme).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 
   if (reduce) {
-    if (v.readyState >= 1) showLast(); else v.addEventListener("loadedmetadata", showLast, { once: true });
+    function showReducedFrame() { showLast(); reveal(); }
+    if (v.readyState >= 1) showReducedFrame(); else v.addEventListener("loadedmetadata", showReducedFrame, { once: true });
     return;
   }
-  v.addEventListener("ended", function () { ended = true; });
+  v.addEventListener("playing", reveal);
+  // safety net: if a browser ever ends/pauses the video, restart it immediately
+  v.addEventListener("ended", function () { try { v.currentTime = 0; } catch (e) {} play(); });
+  v.addEventListener("pause", function () { if (started && !v.ended && document.visibilityState === "visible") play(); });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && started) play(); });
   function onVisible() {
     if (!started) { started = true; setTimeout(play, 350); }
-    else if (ended) { ended = false; v.currentTime = 0; play(); }
+    else { play(); }
   }
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(function (es) {
