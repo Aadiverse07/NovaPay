@@ -3,51 +3,57 @@
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
-- Current code checkpoint: `f4f53b8`; this diagnostic log commit pending
-- Current task: live cross-tenant check completed; two failures recorded; no fix applied
+- Current code checkpoint: `f4f53b8`; this fix/checkpoint commit pending
+- Current task: GET-by-ID fix applied; deletion response diagnosed; live checks and final tests complete
 
 ## DONE
-- Fresh server start: loaded AI limits user 100/org 300; `/api/status` HTTP 200.
-- Fixed users: A belongs to org A only; B belongs to org B only and has no org A membership. B requests used B JWT plus org B X-Org-Id, never service role.
-- One synthetic sample uploaded 201, processed 200, indexed 1 chunk.
-- B AI hybrid 200/0 citations PASS; B search RPC 403/0 rows PASS; B list 200/0 org A rows PASS; B Storage read 400 denied PASS; A positive control 200/1 citation PASS.
-- Run-scoped deletion returned 200; document/chunks/search hits absent; Storage prefix listing 0; owner audit query 1 row.
+- Added authenticated, org-scoped `GET /api/documents/:documentId`; returns standard 404 `DOCUMENT_NOT_FOUND` for missing/foreign IDs and excludes Storage path.
+- Added test coverage for same-org 200, foreign-org 404, unknown 404, unauthenticated 401. Focused test PASS 6/6; full suite PASS 165/165.
+- Migrations syntax PASS 16/16; `node --check` PASS for two changed JS files; `git diff --check` PASS.
+- Live run used existing fixed owner A/B and org A/B, one synthetic PDF. Membership setup confirmed B has no org A membership; B requests used own JWT/org B.
+- Live cross-tenant: B retrieval request 200, one citation not matching org A document; B search RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage read 400 denied; owner A positive control 200/1 citation.
+- Delete cascade: DELETE 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1. Post-delete direct object GET was 400 JSON/88 bytes; `CF-Cache-Status: BYPASS`, no cache-control/age.
+- No code fix for Storage behavior. Prior owner GET 200 was not reproduced; its precise cause is unresolved. Direct `storage.objects` SQL count was unavailable (no SQL client/CLI/connection); Storage list API used instead.
 
 ## IN PROGRESS
-- B GET-by-ID returned 405 (FAIL): no GET route; app unmatched API fallback in `server/src/app.js` returns 405.
-- Delete cascade marked FAIL/inconsistent because owner direct Storage GET after deletion returned 200 while Storage list prefix reported 0 rows. No fix applied.
-- Server stopped; synthetic record was deleted; no run rows intentionally left.
+- No implementation work remains. Review diff, commit locally on `phase5-backend`; never push.
+- Preserve `.env.example` pre-existing modification without staging it.
 
 ## NEXT STEPS
-1. Await user approval before fixes or additional live probes.
-2. Proposed smallest GET fix: add tenant-scoped `GET /api/documents/:documentId` returning 404 for foreign/nonexistent IDs; do not apply until `APPLY FIX`.
-3. Investigate object GET/list inconsistency only with user direction; no code change made.
+1. Review status and changed paths; ensure only intended files are staged and `.env` is absent.
+2. Commit GET route/tests/docs and diagnostic logs locally.
+3. If desired, ask for a direct SQL connection to verify `storage.objects` count or further investigation of the unreproduced earlier 200.
 
 ## USER ACTIONS PENDING
-- Reply `APPLY FIX` to authorize the scoped GET-by-ID change, if desired.
-- Direct further diagnosis of post-delete Storage GET/list inconsistency, if desired.
+- None required to use the new GET route.
+- Optional: provide an approved SQL access path if exact `storage.objects` SQL count is required.
 
 ## LIVE STATE
-- Migrations 0001–0016 applied; no migration changes.
-- Server stopped. Limits loaded 100/300 in last fresh process.
-- Fixed users/orgs reused; no new users/orgs.
-- `.env.example` has an unrelated pre-existing modification; leave untouched.
-- Key names only: `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`, `GEMINI_API_KEY`.
+- Server stopped. Loaded limits at run start were user 100/org 300; status HTTP 200.
+- Fixed identities reused, no users/orgs created. Run-specific synthetic sample was deleted.
+- Migrations 0001–0016 applied; no migrations modified.
+- Key names only: `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`, `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| B hybrid AI isolation | PASS | 200, 0 citations. |
-| B search RPC grant | PASS | 403, 0 rows. |
-| B list isolation | PASS | 200, 0 org A rows. |
-| B get by ID | FAIL | 405 due missing route/unmatched fallback. |
-| B Storage RLS | PASS | B read 400 denied, 0 rows. |
-| A positive control | PASS | 200, 1 citation. |
-| Delete cascade | FAIL/inconsistent | DB rows 0, Storage list 0, audit 1, but direct object GET after delete 200. |
+| GET-by-ID route tests | PASS | 6/6 focused tests; same/foreign/missing/unauthenticated assertions. |
+| Full suite | PASS 165/165 | `npm test`. |
+| Migration syntax | PASS 16/16 | `npm run check:migrations`. |
+| Changed JS syntax | PASS | `node --check` on route and test. |
+| Diff whitespace | PASS | `git diff --check`. |
+| Cross-tenant retrieval | PASS | B retrieval response had no org A document citation; RPC 403. |
+| B list/get isolation | PASS | list 200/0 org A rows; get 404. |
+| B Storage RLS | PASS | B read denied HTTP 400. |
+| A positive control | PASS | retrieval route 200/1 citation. |
+| Delete cascade | PASS via API/list | DB rows 0, Storage list 0, audit 1; direct SQL count UNVERIFIED. |
+| Earlier post-delete 200 cause | UNRESOLVED | Not reproduced; current GET 400 with cache BYPASS and no cache headers. |
 
 ## KNOWN ISSUES AND RISKS
-- No GET-by-ID route; unmatched GET receives 405 instead of expected 404.
-- Storage metadata list and object GET disagree after deletion; cause unresolved.
+- The exact `storage.objects` SQL count was not run due lack of SQL access tooling.
+- Previous HTTP 200 after delete lacks headers/byte length and cannot be attributed to caching or signed URL.
+- One initial positive-control query routed to structured SQL; corrected retrieval wording was used for passing positive control. One B harness flag was a false positive from marker echo in its own question; citation ID did not match org A document.
+- `.env.example` contains an unrelated pre-existing modified file; leave untouched.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor is transactional; never edit applied migrations; add numbered migrations.
