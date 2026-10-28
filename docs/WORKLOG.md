@@ -1,10 +1,11 @@
 ## RESUME POINTER
-- Current task: diagnose Phase 5 document processing HTTP 503; branch `phase5-backend`.
-- Last finished step: `npm ci` PASS (94 packages; 0 vulnerabilities; one install-script warning); `npm test` PASS 164/164; `npm run check:migrations` PASS 16/16. Baseline checkpoint `cc05f1c`; latest diagnostic checkpoint `b97ac39`.
-- Live diagnostic: fixed Phase 3 owner A/org A; synthetic upload HTTP 201; processing HTTP 503 `OCR_NOT_CONFIGURED`; run-scoped DELETE HTTP 200; server log corroborates; server stopped.
-- Root cause: GEMINI_API_KEY is absent from process environment and loaded config (presence booleans only; value never read/printed). No code changes.
-- Next: human completes `.env`, then restart `npm start` and retry one synthetic sample. If processing succeeds, rerun cross-tenant, delete cascade and Storage-object RLS with fixed accounts; log each result.
-- Pending human action: add GEMINI_API_KEY to `.env` and ask to resume; browser checklist remains pending. Never push without explicit authorization.
+- Current task: live document isolation verification; branch `phase5-backend`.
+- Last feature checkpoint: `ac25bfb`; live-check journal edits pending WIP commit; never push.
+- Config preflight: OCR and embeddings both read `GEMINI_API_KEY` (present); OCR model/timeout and embedding model/timeout names present in loaded config. Values not printed.
+- Server started; `/api/status` HTTP 200. One synthetic PDF with fixed Phase 3 owner A/org A was uploaded and processed/indexed. Org B aggregate AI/list/direct-fetch isolation assertion FAILED; exact subassertion not retained. Run-scoped document cleanup DELETE returned HTTP 200. Server stopped.
+- ACCEPTANCE: cross-tenant FAIL; delete cascade UNVERIFIED; Storage-object RLS UNVERIFIED (stopped after failure).
+- Next: await user authorization before investigating the cross-tenant failure. Do not rerun probes or change code without authorization.
+- Pending human action: authorize diagnosis of which Org B assertion failed; after a fix/approval, rerun with fixed users/orgs and sample files only.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3236,3 +3237,25 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: update RESUME POINTER/CONTEXT to identify latest diagnostic checkpoint b97ac39 and commit the small handoff correction.
 2026-10-28 | RESULT: pointer and context now identify b97ac39 as latest local diagnostic checkpoint; next save correction locally.
 2026-10-28 | ABOUT TO: commit the resume pointer correction; WHY: ensure the committed handoff points to the latest checkpoint.
+2026-10-28 | ABOUT TO: verify branch and inspect OCR/embedding environment-variable names plus loaded-config presence booleans; WHY: stop before live work if a required key is absent.
+2026-10-28 | RESULT: branch is phase5-backend; source shows OCR and Gemini embeddings both read GEMINI_API_KEY; no code changed; next inspect configured names/default presence without printing values.
+2026-10-28 | ABOUT TO: load server config and emit only presence booleans for OCR/embedding key, model and timeout names; WHY: determine whether live run is safe to start.
+2026-10-28 | RESULT: required GEMINI_API_KEY is present in loaded config; OCR/embedding model and timeout entries are present (defaults included); values not printed; next start server.
+2026-10-28 | ABOUT TO: start server with `npm start`; WHY: required live API checks can proceed now that shared Gemini provider key is loaded.
+2026-10-28 | RESULT: server started on port 3000; startup reports Gemini provider enabled; next verify `/api/status` then run checks.
+2026-10-28 | ABOUT TO: query server health metadata; WHY: establish live service readiness before fixed-user sample operations.
+2026-10-28 | RESULT: live API health PASS, HTTP 200 authenticated/Supabase configured; next run checks with one synthetic sample and fixed identities.
+2026-10-28 | ABOUT TO: run cross-tenant, Storage RLS and deletion cascade checks sequentially using existing Phase 3 owner A/B and org A/B; WHY: verify isolation and cleanup end-to-end after OCR config became present; stop at first failure and clean only this run's document.
+2026-10-28 | ABOUT TO: collect the three-check live run output; WHY: synthetic upload/OCR/retrieval/storage probes are still running; only safe status/code summaries are emitted.
+2026-10-28 | RESULT: live sequence has not emitted a result yet; process still running; next wait for the bounded sample operation.
+2026-10-28 | ABOUT TO: poll the live verification process; WHY: await OCR/index response or timeout without issuing another request.
+2026-10-28 | RESULT: no result after second 5-second wait; no new API call issued; next wait once more for provider timeout/result.
+2026-10-28 | ABOUT TO: wait for same live request to finish; WHY: document OCR timeout is configured to bound provider processing.
+2026-10-28 | RESULT: cross-tenant check FAIL; one of Org B AI/list/fetch assertions failed; diagnostic script emitted no sensitive response details; run-scoped cleanup DELETE HTTP 200; remaining checks stopped as instructed.
+2026-10-28 | ABOUT TO: stop server started for this live run; WHY: verification failed and must stop without further probes or fixes.
+2026-10-28 | RESULT: server stopped; output confirms API status 200 and cleanup DELETE 200; no further requests made; next record each check status and update handoff.
+2026-10-28 | ABOUT TO: append live outcomes and rewrite RESUME POINTER/CONTEXT; WHY: checkpoint the failed cross-tenant result and stop condition for the next agent.
+2026-10-28 | RESULT: TEST-REPORT has one line per live check; cross-tenant FAIL, cascade/RLS UNVERIFIED; RESUME POINTER and CONTEXT stop pending authorization; next verify status and commit local journal.
+2026-10-28 | ABOUT TO: inspect branch/status/staged names and tracked `.env`; WHY: confirm only continuity docs are committed and no secret file is staged.
+2026-10-28 | RESULT: phase5-backend confirmed; only continuity docs modified; `.env` not tracked; no files staged; next create local live-check WIP checkpoint.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 live check: cross-tenant failed`; WHY: preserve live outcomes and stop pointer locally; never push.
