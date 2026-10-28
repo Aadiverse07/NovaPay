@@ -34,10 +34,7 @@
 
   function getAccounts() { try { return JSON.parse(localStorage.getItem("novapay-demo-accounts") || "{}"); } catch (e) { return {}; } }
   function saveAccounts(a) { try { localStorage.setItem("novapay-demo-accounts", JSON.stringify(a)); } catch (e) {} }
-  function isAuthed() {
-    if (window.NovaPayAuth && window.NovaPayAuth.mode === "supabase") return window.NovaPayAuth.isAuthenticated();
-    try { return window.NovaPayAuth && window.NovaPayAuth.mode === "demo" && localStorage.getItem("novapay-demo-auth") === "true"; } catch (e) { return false; }
-  }
+  function isAuthed() { try { return localStorage.getItem("novapay-demo-auth") === "true"; } catch (e) { return false; } }
   function setSession(user) {
     try {
       localStorage.setItem("novapay-demo-user", JSON.stringify(user));
@@ -89,22 +86,15 @@
     goDashboard();
   }
   function googleDemo() {
-    var ready = window.NovaPayAuth ? window.NovaPayAuth.ready : Promise.resolve("demo");
-    ready.then(function () {
-      if (window.NovaPayAuth && window.NovaPayAuth.mode === "supabase") {
-        window.NovaPayAuth.signInWithGoogle().catch(function (error) { showToast(error.message || "Google sign-in is unavailable."); });
-      } else if (window.NovaPayAuth && window.NovaPayAuth.mode === "demo") {
-        setSession({ name: "Google User", email: "google-user@novapay.app" });
-        showToast("Google sign-in is simulated in demo mode.");
-        setTimeout(goDashboard, 450);
-      } else showToast("Authentication is unavailable. Please try again later.");
-    });
+    setSession({ name: "Google User", email: "google-user@novapay.app" });
+    showToast("Google sign-in is simulated.");
+    setTimeout(goDashboard, 450);
   }
 
   document.querySelectorAll("[data-open]").forEach(function (el) {
     el.addEventListener("click", function () { openModal(el.getAttribute("data-open")); });
   });
-  $("login").addEventListener("click", function (e) { if (isAuthed()) return openViaLaptop(e); openModal("login"); });
+  $("login").addEventListener("click", function () { if (isAuthed()) return; openModal("login"); });   // when signed in, the button is "Dashboard" and uses the laptop transition
   [["get-started"], ["hero-start"], ["pricing-start"]].forEach(function (a) {
     var el = $(a[0]);
     if (el) el.addEventListener("click", function () { openModal("signup"); });
@@ -125,62 +115,26 @@
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus({ preventScroll: true }); }
     }
   });
-  $("login-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var ready = window.NovaPayAuth ? window.NovaPayAuth.ready : Promise.resolve("demo");
-    ready.then(function () {
-      if (window.NovaPayAuth && window.NovaPayAuth.mode === "supabase") {
-        window.NovaPayAuth.signIn(loginEmail.value.trim(), loginPass.value).then(function () {
-          showToast("Signed in. Opening your workspace…");
-          goDashboard();
-        }, function (error) { showToast(error.message || "Sign-in failed. Check your details and try again."); loginPass.focus(); });
-      } else if (window.NovaPayAuth && window.NovaPayAuth.mode === "unavailable") showToast("Authentication is unavailable. Please try again later.");
-      else validateDemoLogin();
-    });
-  });
+  $("login-form").addEventListener("submit", function (e) { e.preventDefault(); validateDemoLogin(); });
   $("signup-form").addEventListener("submit", function (e) {
     e.preventDefault();
-    var ready = window.NovaPayAuth ? window.NovaPayAuth.ready : Promise.resolve("demo");
-    ready.then(function () {
-      var addr = signEmail.value.trim().toLowerCase();
-      var name = signName.value.trim() || "NovaPay User";
-      var password = signPass.value;
-      if (window.NovaPayAuth && window.NovaPayAuth.mode === "supabase") {
-        window.NovaPayAuth.signUp(name, addr, password).then(function (result) {
-          if (result.session) {
-            showToast("Account created and workspace ready. Opening your dashboard…");
-            goDashboard();
-          } else {
-            showToast("Account created. Check your email to confirm, then sign in to finish workspace setup.");
-            setMode("login");
-          }
-        }, function (error) { showToast(error.message || "Sign-up failed. Please try again."); });
-        return;
-      }
-      if (window.NovaPayAuth && window.NovaPayAuth.mode === "unavailable") { showToast("Authentication is unavailable. Please try again later."); return; }
-      if (addr === DEMO_EMAIL || getAccounts()[addr]) { showToast("That email already has an account. Please log in."); return; }
-      if (password.length < 4) { showToast("Use a password with at least 4 characters."); return; }
-      var all = getAccounts(); all[addr] = { name: name, password: password }; saveAccounts(all);
-      setSession({ name: name, email: addr });
-      showToast("Account created in demo mode. Opening your dashboard…");
-      setTimeout(goDashboard, 450);
-    });
+    var addr = signEmail.value.trim().toLowerCase();
+    var name = signName.value.trim() || "NovaPay User";
+    var password = signPass.value;
+    if (addr === DEMO_EMAIL || getAccounts()[addr]) { showToast("That email already has an account. Please log in."); return; }
+    if (password.length < 4) { showToast("Use a password with at least 4 characters."); return; }
+    var all = getAccounts(); all[addr] = { name: name, password: password }; saveAccounts(all);
+    setSession({ name: name, email: addr });
+    showToast("Account created. Opening your dashboard…");
+    setTimeout(goDashboard, 450);
   });
   $("forgot-password").addEventListener("click", function () {
     var addr = loginEmail.value.trim().toLowerCase();
     if (!addr || !loginEmail.checkValidity()) { showToast("Enter your email above, then choose Forgot Password."); loginEmail.focus(); return; }
-    var ready = window.NovaPayAuth ? window.NovaPayAuth.ready : Promise.resolve("demo");
-    ready.then(function () {
-      if (window.NovaPayAuth && window.NovaPayAuth.mode === "supabase") {
-        window.NovaPayAuth.resetPassword(addr).then(function () { showToast("If an account exists for that email, a password reset link has been sent."); }, function (error) { showToast(error.message || "Password recovery is unavailable."); });
-        return;
-      }
-      if (window.NovaPayAuth && window.NovaPayAuth.mode === "unavailable") { showToast("Password recovery is unavailable. Please try again later."); return; }
-      var accts = getAccounts();
-      if (accts[addr]) { accts[addr].password = DEMO_PASSWORD; saveAccounts(accts); }
-      showToast("Demo mode only: no email was sent. Use the sample login or create a local demo account.");
-      loginPass.focus();
-    });
+    var accts = getAccounts();
+    if (accts[addr]) { accts[addr].password = DEMO_PASSWORD; saveAccounts(accts); }
+    showToast("No email sent. Password reset to novapay123 — you can log in now.");
+    loginPass.focus();
   });
   $("google-demo").addEventListener("click", googleDemo);
   $("google-demo-2").addEventListener("click", googleDemo);
@@ -193,7 +147,7 @@
   function setMenu(open) { menu.hidden = !open; mtoggle.setAttribute("aria-expanded", String(open)); mtoggle.setAttribute("aria-label", open ? "Close menu" : "Open menu"); }
   mtoggle.addEventListener("click", function () { setMenu(menu.hidden); });
   menu.addEventListener("click", function (e) { if (e.target.tagName === "A" && e.target.id !== "mm-login") setMenu(false); });
-  $("mm-login").addEventListener("click", function (e) { e.preventDefault(); setMenu(false); if (isAuthed()) return openViaLaptop(e); openModal("login"); });
+  $("mm-login").addEventListener("click", function (e) { e.preventDefault(); setMenu(false); openModal("login"); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
   document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target) && !mtoggle.contains(e.target)) setMenu(false); });
 
@@ -205,17 +159,13 @@
   }
   window.addEventListener("scroll", spy, { passive: true }); spy();
 
-  function syncAuthLinks() {
-    var signedIn = isAuthed();
-    $("login").textContent = signedIn ? "Dashboard" : "Login";
-    $("mm-login").textContent = signedIn ? "Dashboard" : "Login";
-    $("mm-login").setAttribute("href", signedIn ? "dashboard.html" : "#");
+  if (isAuthed()) {
+    $("login").textContent = "Dashboard";
+    $("mm-login").textContent = "Dashboard";
+    $("mm-login").setAttribute("href", "dashboard.html");
+    $("login").addEventListener("click", openViaLaptop);
+    $("mm-login").addEventListener("click", openViaLaptop);
   }
-  if (window.NovaPayAuth) {
-    window.NovaPayAuth.ready.then(syncAuthLinks);
-    document.addEventListener("novapay:auth", syncAuthLinks);
-  }
-  syncAuthLinks();
 
   var stage = $("hero-stage");
   document.querySelectorAll("[data-demo-action]").forEach(function (b) {
