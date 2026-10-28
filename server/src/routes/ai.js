@@ -25,6 +25,8 @@ export function aiRoutes({ config, askAI }) {
         cached: Boolean(result.cached),
         ...(result.stale ? { stale: true } : {}),
         ...(result.insufficientEvidence ? { insufficient_evidence: true } : {}),
+        ...(result.limited ? { limited: true } : {}),
+        ...(result.unavailable ? { unavailable: true } : {}),
       });
     } catch (error) { return next(error); }
   });

@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 2 complete on `phase5-backend`; implementation checkpoint `65abfe7`. Part 3 awaits user `CONTINUE`.
-- Last finished step: `npm test` PASS 152/152; migration check PASS 15/15; node syntax PASS for 8 changed JS files; diff check PASS. Live 0015 schema/function/bucket checks passed; Storage-object RLS remains UNVERIFIED.
-- DONE: Part 1 migration 0015 user-applied; Part 2 OCR, validation, arithmetic warnings, same-org duplicate rejection/audit, ai_usage budgets and safe processing route implemented and locally committed.
-- NEXT: wait for user `CONTINUE`. Then implement Part 3 embeddings, hybrid retrieval, answer-stage injection protection, isolation and delete handling; do not touch Parts 4 or unrelated indexing.
-- Pending human action: none for Part 2; migration 0015 already confirmed applied. Browser/document UI checks belong to Part 4.
+- Current task: Phase 5 Part 3 code complete on phase5-backend; final checks pass. Migration 0016 awaits human apply before live grant checks.
+- Last finished step: npm test PASS 163/163; npm run check:migrations PASS 16/16; node --check PASS on 14 changed JS files; git diff --check PASS.
+- DONE: embeddings (Gemini gemini-embedding-001, 768 dims), OCR text indexing, per-call ai_usage budget accounting, org-scoped hybrid retrieval/cited answers, accountant confirm/reject/delete with audit/cascade, extraction/answer injection tests.
+- NEXT: finish local WIP commit; then wait for human to apply supabase/migrations/0016_document_search_and_delete.sql and say applied. Verify ordinary JWT 403 and safe service-role calls. Do not start Part 4 until user says CONTINUE.
+- Pending human action: Supabase SQL Editor → New query → paste the entire 0016 file → Run once → wait for success → reply applied. Do not reload schema cache yet.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2987,3 +2987,41 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 Asia/Kolkata | RESULT: PASS; continuity update committed as `c7135a3`; Part 2 implementation remains `65abfe7`. NEXT: verify branch, clean worktree, and the final local commit list, then stop for CONTINUE.
 2026-10-28 Asia/Kolkata | ABOUT TO verify final branch/worktree and checkpoint commits | ensure all Part 2 edits are local and no unrelated files remain.
 2026-10-28 Asia/Kolkata | RESULT: PASS; branch remains phase5-backend; Part 2 implementation and handoff commits are local; only this WORKLOG verification entry is pending a final journal checkpoint. NEXT: commit the final journal line and stop awaiting user CONTINUE.
+
+2026-10-28 Asia/Kolkata | RECOVERY NOTE: a pointer rewrite accidentally replaced the append-only WORKLOG body after the top block. Restored the full committed history from HEAD; reconstructing Part 3 actions below. No WIP commit was made from the truncated journal.
+2026-10-28 Asia/Kolkata | Part 3 inspection: verified phase5-backend at b97b849, read AI routes/service/router and migration 0015; found existing ocr/retrieval classification and ai_usage route constraint.
+2026-10-28 Asia/Kolkata | Part 3 implementation: added documentRag.js chunking and Gemini 768-d embeddings; configured embedding model; added documentText to strict OCR schema; wired processing indexing and AI retrieval.
+2026-10-28 Asia/Kolkata | Part 3 database: added unapplied migration 0016 for embedding ai_usage route, org-scoped service-only hybrid search, and audited delete RPC with FK cascade. Migration parser later passed 16/16; live behavior not verified.
+2026-10-28 Asia/Kolkata | Part 3 lifecycle: added accountant-only confirm/reject/delete endpoints, audit calls and object restoration if DB deletion fails; tests cover viewer/org denial and delete rollback.
+2026-10-28 Asia/Kolkata | Part 3 tests: first focused run FAIL 38/41 (document intent wording, reject route JSON parser placement, empty OCR result); recorded in TEST-REPORT, fixed all three without weakening assertions.
+2026-10-28 Asia/Kolkata | Part 3 test reruns: focused OCR/RAG/AI suite PASS 41/41; migration parser PASS 16/16. Added model dimension, usage budget, tenant scope, citations, extraction/answer injection and lifecycle test coverage.
+2026-10-28 Asia/Kolkata | Part 3 refinements: disabled cache for document-aware routes, schema-qualified pgvector cosine operator for SECURITY DEFINER search_path, and asserted hidden OCR instructions remain untrusted text.
+2026-10-28 Asia/Kolkata | RESULT: PASS; recorded focused 41/41 and migration 16/16 results, documented the Part 3 decisions, and updated CONTEXT/RESUME POINTER. NEXT: inspect the checkpoint diff and verify the current Part 3 source state before committing.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect Part 3 checkpoint diff and git state | ensure only authorized backend/docs/tests/migration files changed before WIP commit.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect docs, paths, and whitespace for the Part 3 checkpoint | confirm resume metadata and keep secrets out of staging.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; `git diff --stat` revealed an unexpected WORKLOG deletion of roughly 2996 lines, so this checkpoint must not be committed. No secrets detected. NEXT: inspect current file headings and committed baseline, restore all append-only history, then reapply the current resume pointer surgically.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect WORKLOG line count/current top and committed baseline | diagnose accidental truncation before any further edit or commit.
+2026-10-28 Asia/Kolkata | RESULT: PASS; restored all 2989 committed WORKLOG lines from HEAD, replaced only the top resume section, and reconstructed current Part 3 progress; file now 3003 lines. NEXT: confirm WORKLOG diff is only pointer plus appended entries and re-run whitespace check before proceeding.
+2026-10-28 Asia/Kolkata | ABOUT TO verify append-only WORKLOG restoration and complete Part 3 diff | ensure no history loss remains and no commit contains truncation.
+2026-10-28 Asia/Kolkata | RESULT: PASS; WORKLOG history is restored (only 21 insertions/5 top-pointer deletions, `## Backfill` retained); source/docs worktree remains uncommitted and no `.env` paths are present. NEXT: run the full `npm test` suite and record exact outcome.
+2026-10-28 Asia/Kolkata | ABOUT TO run full npm test for Part 3 | validate all existing and new tests after RAG integration.
+2026-10-28 Asia/Kolkata | ABOUT TO poll the full npm test session | collect the final suite count without leaving the run untracked.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; full suite had 162 pass/1 fail because route test expected the old response shape after intentionally exposing `unavailable:true`. NEXT: update the contract assertion to include the new safe status field, then rerun full suite.
+2026-10-28 Asia/Kolkata | ABOUT TO update the existing AI route error assertion | make test reflect newly exposed API availability status without changing production behavior.
+2026-10-28 Asia/Kolkata | RESULT: PASS; existing route contract test now asserts the new `unavailable:true` field; no production code or security assertion was weakened. NEXT: rerun full npm test and log the exact count.
+2026-10-28 Asia/Kolkata | ABOUT TO rerun full npm test after route contract assertion update | verify no regressions across the complete suite.
+2026-10-28 Asia/Kolkata | ABOUT TO poll the rerun of npm test | capture final pass/fail count for the append-only report.
+2026-10-28 Asia/Kolkata | RESULT: PASS; full suite now passes 163/163 after aligning the existing route assertion with the API unavailable flag. NEXT: run explicit migration check, node --check on every changed JS file, and git diff --check.
+2026-10-28 Asia/Kolkata | ABOUT TO run final migration, changed-JS syntax, and diff whitespace checks | fulfill Part 3 acceptance checks before docs and checkpoint commit.
+2026-10-28 Asia/Kolkata | RESULT: PASS; final static checks passed: migrations 16/16, node syntax 14 files, git diff --check clean. Full suite PASS 163/163. NEXT: finalize Part 3 context/worklog/decisions and make local WIP checkpoint; live migration tests await human apply.
+2026-10-28 Asia/Kolkata | ABOUT TO update Part 3 final handoff docs | record exact changed files, check states, migration 0016 pending action, and stop point.
+2026-10-28 Asia/Kolkata | RESULT: PASS; final test results and migration apply steps are in TEST-REPORT/CONTEXT; RESUME POINTER is scoped to human migration apply; all historic WORKLOG sections remain. NEXT: review required sections/line count and pending paths, then create the local Part 3 WIP checkpoint.
+2026-10-28 Asia/Kolkata | ABOUT TO review final handoff and staging candidates | check context size, migration pending state, exact changed paths, branch, and no env secrets before commit.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; CONTEXT.md line 55 contains literal `\n` sequences because a replacement escaped the table separators; header still has a Part 2 hash. No commit created. NEXT: inspect exact context text, repair table newlines and update header/next steps without touching unrelated content.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect full compact CONTEXT text around malformed replacements | identify and repair literal escape artifacts before checkpoint.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; current CONTEXT.md still contains stale Part 2 task state because several exact-string replacements did not match, besides the literal newline bug. NEXT: replace the mismatched handoff fields using a targeted patch before any commit.
+2026-10-28 Asia/Kolkata | ABOUT TO repair CONTEXT.md by exact section edits | update Part 3 status, pending migration action, test state, and the actual branch/checkpoint metadata.
+2026-10-28 Asia/Kolkata | RESULT: PASS; targeted CONTEXT edits now mark Part 3 code complete, set 0016 pending, list checks/files/actions, and restore the TEST STATE table to separate rows. NEXT: confirm exact date/time, section consistency, and no escaped newline artifacts.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect final CONTEXT lines and repository diff | validate all required continuity sections before WIP checkpoint.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; commit wrapper had an unescaped backtick in its template string and did not execute. NEXT: retry with a command string that contains no template delimiter characters.
+2026-10-28 Asia/Kolkata | ABOUT TO retry Part 3 WIP checkpoint | previous wrapper failed before any command ran; verify branch and env paths, then commit locally.

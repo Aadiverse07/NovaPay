@@ -1154,3 +1154,16 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `npm run check:migrations` (Part 2 final) | PASS | 15/15 migrations parsed.
 2026-10-28 | `node --check` (Part 2 changed JS) | PASS | 8 changed JavaScript files parsed successfully.
 2026-10-28 | `git diff --check` (Part 2 final) | PASS | No whitespace errors.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/document-rag.test.js server/test/document-rag-migration.test.js server/test/ai-router.test.js server/test/ai.test.js` | FAIL | 38 passed, 3 failed: document intent missed an explain phrasing, reject JSON body was not parsed because document routes precede global JSON middleware, and empty OCR retrieval fell through to unavailable LLM. Fix each behavior, do not weaken tests.
+2026-10-28 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/document-rag.test.js server/test/document-rag-migration.test.js server/test/ai-router.test.js server/test/ai.test.js` (Part 3 first focused run) | FAIL | 38 passed, 3 failed; all three regressions fixed (document intent phrasing, reject body parser, empty OCR evidence). See immediately following rerun.
+2026-10-28 | Focused Part 3 OCR/RAG/AI tests after fixes | PASS | 41 passed, 0 failed; includes lifecycle, 768-vector, tenant scoping, citation, injection, migration grant assertions.
+2026-10-28 | Focused Part 3 OCR/RAG/AI suite after refinements | PASS | 41 passed, 0 failed.
+2026-10-28 | npm run check:migrations after adding 0016 | PASS | 16/16 numbered migrations parsed by PostgreSQL 17 parser.
+2026-10-28 | Live migration 0016 search/delete RPC role boundary | UNVERIFIED | Migration not applied; no authenticated JWT or service-role calls attempted.
+2026-10-28 | Focused Part 3 suite after cache/operator/injection refinements | PASS | 41 passed, 0 failed.
+2026-10-28 | `npm run check:migrations` after cache/operator/injection refinements | PASS | 16/16 migrations parsed.
+2026-10-28 | `npm test` (Part 3 first full suite) | FAIL | 162 passed, 1 failed; migration parser accepted 16/16. Existing `/api/ai/chat` error-response assertion must include the newly exposed `unavailable:true` API flag; behavior itself is safe and expected.
+2026-10-28 | `npm test` (Part 3 rerun) | PASS | 163 passed, 0 failed; parser accepted migrations 0001–0016.
+2026-10-28 | npm run check:migrations (Part 3 final) | PASS | 16/16 numbered migrations parsed by PostgreSQL 17 parser; 0016 remains unapplied.
+2026-10-28 | node --check (Part 3 changed JavaScript) | PASS | 14 changed JS files parsed successfully.
+2026-10-28 | git diff --check (Part 3 final) | PASS | No whitespace errors.

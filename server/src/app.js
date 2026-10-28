@@ -29,16 +29,18 @@ import { notificationRoutes } from './routes/notifications.js';
 import { createAnomalyService, startAnomalyWorker } from './services/anomalies.js';
 import { fundRoutes } from './routes/funds.js';
 import { documentRoutes } from './routes/documents.js';
+import { createDocumentRag } from './services/documentRag.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
 
-export function createApp({ config = defaultConfig, repos, paypal, askAI, identity = createSupabaseServices(config), documentOCRProvider } = {}) {
+export function createApp({ config = defaultConfig, repos, paypal, askAI, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider } = {}) {
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
   const fx = createFxService({ rates: repos.fxRates });
-  askAI ||= createAIService({ config, events: repos.events, repos, fx });
+  const documentRag = createDocumentRag({ config, database: identity?.database, embeddingProvider: documentEmbeddingProvider, events: repos.events });
+  askAI ||= createAIService({ config, events: repos.events, repos, fx, documentSearch: documentRag });
   const runAnomalyScan = createAnomalyService({ repos, config });
 
   app.disable('x-powered-by');
@@ -61,7 +63,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 240, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many requests for this account. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) }));
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => `onboarding:${req.user.id}`, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_RATE_LIMITED', message: 'Too many onboarding attempts for this account. Try again later.' } } }));
   app.use('/api', webhookRoutes({ paypal, repos }));
-  app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, events: repos.events }));
+  app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, rag: documentRag, events: repos.events }));
   app.use(express.json({ limit: '64kb' }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
