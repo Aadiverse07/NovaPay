@@ -2,9 +2,9 @@
 
 ## HEADER
 - Updated: 2026-10-28 Asia/Calcutta.
-- Branch: `post-merge-sync`, created from `origin/main` at `af42d6b`; tested sync commit `febb024` is local, push pending.
+- Branch: `post-merge-sync`, created from `origin/main` at `af42d6b`; sync code commit `febb024` and handoff commit `d90b7bd` were pushed; remote matched HEAD at last check.
 - Current phase/task: PREP BEFORE PHASE 5, sync task 6/7. Phase 5 has not started.
-- Last completed code/document checkpoint: `febb024` (local on post-merge-sync).
+- Last completed published checkpoint: `d90b7bd` on `origin/post-merge-sync`; zero unpushed commits at last check.
 
 ## DONE
 - PRs #3 and #4 (fund-wiring) and teammate PR #5 are merged to main; main also includes the later UI sync commit `9b5fe89` and merge `af42d6b`.
@@ -14,14 +14,14 @@
 - Selective sync carries: repeat-safe maintenance verifier and tests; `/api/events` empty fallback and test; API `cache: no-store` and test; assistant response route/reason/citations and message-only request wiring.
 
 ## IN PROGRESS
-- Exact task: push the tested Phase 6 follow-up checkpoint on `post-merge-sync`; no Phase 5 work has started.
+- Exact task: no code work remains; current branch is published and awaiting browser checks/PR merge/Phase 5 approval.
 - Edited files: `scripts/phase6-maintenance-run.mjs`, `scripts/verify-phase6-maintenance-live.js`, `server/src/routes/status.js`, `server/test/api-client.test.js`, `server/test/phase6-maintenance-run.test.js`, `server/test/routes.test.js`, `src/api-client.js`, `src/dashboard.js`, `src/novapay-live.js`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
 - Main HTML, styling, protected design files, and `assets/` remain from main; no conflict markers/unmerged paths were found.
 
 ## NEXT STEPS
-1. Push only with `git push -u origin post-merge-sync`; never push `fund-wiring` or `main`.
-2. Confirm zero unpushed commits.
-3. Complete `docs/BROWSER-CHECKLIST.md` manually; then await explicit Phase 5 approval. Do not start Phase 5 yet.
+1. Human completes `docs/BROWSER-CHECKLIST.md` and reviews/merges the sync PR.
+2. Recheck the base after merge.
+3. Await explicit Phase 5 approval. Do not start Phase 5 yet.
 
 ## USER ACTIONS PENDING
 - Fill PASS/FAIL for browser-only steps in `docs/BROWSER-CHECKLIST.md` (sign-in/dashboard, events Network/console, AI badge/hover, Fundraising/Maintenance/Transparency, theme, mobile drawer, notifications).
