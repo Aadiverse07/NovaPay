@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 4 Documents view and documentation on `phase5-backend`.
-- Last finished step: implementation and docs complete; final npm test PASS 164/164; migration syntax PASS 16/16; node --check PASS 5 JS files; git diff --check PASS; protected-file diff vs main empty.
-- Exact work in progress: verify no `.env`/secrets staged or tracked; make local WIP checkpoint commit. No push.
-- Edited files: `.env.example`, `dashboard.html`, `docs/API.md`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `server/src/routes/documents.js`, `server/test/document-processing.test.js`, `server/test/documents-upload.test.js`, `src/api-client.js`, `src/documents.js`.
-- Next: local commit, then human completes `docs/BROWSER-CHECKLIST.md` with synthetic documents.
-- Pending human action: browser-only Documents validation; Storage RLS and cross-tenant/deletion probes remain unverified.
+- Current task: Phase 5 Part 4 Documents view wiring and documentation, committed locally on `phase5-backend`.
+- Last finished step: WIP commit `5a63d8e`; final checks PASS: npm test 164/164, migrations 16/16, node --check 5 JS files, git diff --check; protected-file diff vs main empty.
+- Exact work in progress: none in code. Browser-only validation remains for human; no push.
+- Edited files in commit: `.env.example`, `dashboard.html`, `docs/API.md`, `docs/BROWSER-CHECKLIST.md`, `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/FRONTEND-CONTRACT.md`, `docs/RUNBOOK.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `server/src/routes/documents.js`, `server/test/document-processing.test.js`, `server/test/documents-upload.test.js`, `src/api-client.js`, `src/documents.js`.
+- Next: human completes `docs/BROWSER-CHECKLIST.md` using synthetic samples, then gives next direction.
+- Pending human action: manually verify Documents view; Storage-object RLS, cross-tenant retrieval denial and live cascade deletion remain unverified.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3146,3 +3146,7 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28  | ABOUT TO: run `git add -A` then inspect staged filenames only; WHY: prepare required local checkpoint while ensuring no secret file is included.
 2026-10-28  | RESULT: staged filenames are the 15 intended Part 4 files; no `.env` or secret paths staged; next: commit local WIP checkpoint.
 2026-10-28  | ABOUT TO: commit `WIP Phase 5 task 4: wire Documents view`; WHY: save the verified Part 4 task locally on phase5-backend; never push.
+2026-10-28  | RESULT: local WIP commit created successfully: 5a63d8e; 15 intended files committed on phase5-backend; no push; next: refresh resume pointer to report committed checkpoint and browser-only pending work.
+2026-10-28  | ABOUT TO: update RESUME POINTER and CONTEXT commit state; WHY: make the post-commit handoff exact for a fresh agent.
+2026-10-28  | RESULT: RESUME POINTER and CONTEXT now identify commit 5a63d8e and no remaining code work; browser checklist is pending; next: stop and hand off without pushing.
+2026-10-28  | ABOUT TO: commit the post-checkpoint CONTEXT/WORKLOG pointer update locally; WHY: preserve the exact handoff state without leaving docs edits outside version control.
