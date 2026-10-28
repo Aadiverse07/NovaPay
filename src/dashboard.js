@@ -1,48 +1,20 @@
 (function(){
   "use strict";
   var $=function(id){return document.getElementById(id);};
-  var auth=window.NovaPayAuth;
-  if(!auth){location.replace("preview.html#login");return;}
-  auth.ready.then(function(){return initialize(auth);}).catch(function(){location.replace("preview.html#login");});
-
-  async function initialize(auth){
   var toast=$("dashboard-toast"), toastTimer;
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},3000);}
-  document.addEventListener("novapay:api-error",function(event){var detail=event.detail||{};if(detail.status===403)showToast(detail.message||"You do not have permission to do that.");else if(detail.status===401)showToast(detail.message||"Your session expired. Please sign in again.");});
-  var user;
-  if(auth.mode==="supabase"){
-    var session=await auth.currentSession();
-    if(!session){location.replace("preview.html#login");return;}
-    var metadata=session.user.user_metadata||{};
-    user={name:metadata.full_name||metadata.name||(session.user.email||"").split("@")[0]||"NovaPay User",email:session.user.email||""};
-    if(!auth.currentOrgId(session.user.id)){
-      try{await auth.ensureWorkspace(session,user.name);}catch(error){showToast(error.message||"Workspace setup needs attention.");}
-    }
-  }else if(auth.mode==="demo"&&auth.isAuthenticated()){
-    try{user=JSON.parse(localStorage.getItem("novapay-demo-user")||"{}");}catch(e){user={};}
-    user.name=user.name||"NovaPay Demo User";user.email=user.email||"";
-  }else{location.replace("preview.html#login");return;}
-  $("user-name").textContent=user.name||"NovaPay User";
-  $("user-email").textContent=user.email||"Demo account";
-  $("user-avatar").textContent=(user.name||"F").trim().charAt(0).toUpperCase();
-
-  var dataMode=$("data-mode-indicator"),isDemo=auth.mode==="demo";
-  if(dataMode){dataMode.textContent=isDemo?"Sample data · Demo workspace":"Organization mode · API-backed";dataMode.className="status "+(isDemo?"warn":"info");}
-  function emptyState(message){var box=document.createElement("div"),title=document.createElement("h3"),copy=document.createElement("p");box.className="empty-state";title.textContent="No live data yet";copy.textContent=message;box.appendChild(title);box.appendChild(copy);return box;}
-  function replaceStaticView(viewId,message){var view=$(viewId);if(!view)return;var intro=view.querySelector(".page-intro");Array.prototype.slice.call(view.children).forEach(function(child){if(child!==intro)child.hidden=true});var note=intro&&intro.querySelector("p");if(note)note.textContent=message;view.appendChild(emptyState(message));}
-  if(!isDemo){
-    var txIntro=document.querySelector("#view-transactions .page-intro p");if(txIntro)txIntro.textContent="Review activity recorded for this organization. PayPal history is not imported automatically.";
-    var reportBars=$("report-bars");if(reportBars)reportBars.textContent="Loading organization report…";
-    var hero=document.querySelector(".dashboard-hero-card");
-    if(hero){var eyebrow=hero.querySelector(".eyebrow"),heading=hero.querySelector("h2"),copy=hero.querySelector(".dashboard-hero-copy p"),art=hero.querySelector(".dashboard-hero-art");if(eyebrow)eyebrow.textContent="Organization overview";if(heading)heading.textContent="Your financial activity, at a glance.";if(copy)copy.textContent="Dashboard metrics below use reports returned for this organization.";if(art){art.hidden=true;art.style.display="none"}}
-    var health=document.querySelector(".financial-health-card");if(health){health.replaceWith(emptyState("A live financial health score is not available for this organization."))}
-    var invoiceKpis=document.querySelector("#view-invoices .module-kpis");if(invoiceKpis){invoiceKpis.hidden=true;invoiceKpis.style.display="none"}
-    replaceStaticView("view-ledger","Live ledger entries are not connected in this view yet.");
-    replaceStaticView("view-documents","No live document records are available for this organization.");
-    replaceStaticView("view-fundraising","No live fundraising records are available for this organization.");
-    replaceStaticView("view-maintenance","No live maintenance records are available for this organization.");
-    replaceStaticView("view-transparency","No live transparency records are available for this organization.");
+  function getUser(){
+    try{
+      var raw=localStorage.getItem("novapay-demo-user");
+      if(raw)return JSON.parse(raw);
+    }catch(e){}
+    return {name:"NovaPay User",email:"user@novapay.app"};
   }
+  var user=getUser();
+  try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login");return;}}catch(e){location.replace("preview.html#login");return;}
+  $("user-name").textContent=user.name||"NovaPay User";
+  $("user-email").textContent=user.email||"user@novapay.app";
+  $("user-avatar").textContent=(user.name||"F").trim().charAt(0).toUpperCase();
 
   var THEME_KEY="novapay-theme", root=document.documentElement;
   function savedTheme(){try{var t=localStorage.getItem(THEME_KEY);return t==="light"||t==="dark"?t:null}catch(e){return null}}
@@ -52,14 +24,33 @@
   applyTheme(currentTheme());
 
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
-  var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents",fundraising:"Fundraising",maintenance:"Maintenance",transparency:"Transparency"};
-  function activate(view,writeHash,preserveScroll){
+  var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents","community-funds":"Community Funds",maintenance:"Maintenance"};
+  function canonicalView(view){return view==="fundraising"||view==="transparency"?"community-funds":view;}
+  function applyView(view,writeHash,preserveScroll){
+    view=canonicalView(view);
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
     title.textContent=titles[view];
+    var aiKick=$("ai-top-kicker"); if(aiKick) aiKick.hidden=view!=="ai-assistant";
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
     if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+  }
+  function activate(view,writeHash,preserveScroll){
+    view=canonicalView(view);
+    if(!titles[view])view="dashboard";
+    var current=document.querySelector("[data-view-panel]:not([hidden])");
+    var next=$("view-"+view), reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(!next||next===current){applyView(view,writeHash,preserveScroll);return;}
+    /* Keep the outgoing panel in the snapshot while swapping to the incoming panel. */
+    if(!reduced&&document.startViewTransition){
+      if(current)current.classList.add("module-transition-active");
+      document.startViewTransition(function(){
+        if(current)current.classList.remove("module-transition-active");
+        next.classList.add("module-transition-active");
+        applyView(view,writeHash,preserveScroll);
+      }).finished.finally(function(){panels.forEach(function(p){p.classList.remove("module-transition-active")})});
+    }else applyView(view,writeHash,preserveScroll);
   }
   window.NovaPayActivateView=activate;
   function route(){activate(location.hash.slice(1)||"dashboard",false)}
@@ -67,30 +58,42 @@
   window.addEventListener("hashchange",route); window.addEventListener("popstate",route); route();
 
   $("logout").addEventListener("click",function(){
-    $("logout").disabled=true;
-    auth.signOut().then(function(){window.location.href="preview.html#home";},function(error){$("logout").disabled=false;showToast(error.message||"Sign-out failed. Please try again.");});
+    try{localStorage.removeItem("novapay-demo-auth")}catch(e){}
+    window.location.href="preview.html#home";
   });
 
   document.querySelectorAll(".table-action,.report-card .table-action").forEach(function(b){
-    b.addEventListener("click",function(){if(b.dataset.uiAction)return;showToast(auth.mode==="demo"?"Sample data · action selected; no live transaction was changed.":"This action is unavailable for this organization.");});
+    b.addEventListener("click",function(){showToast("Sample action selected — no live transaction is changed.");});
   });
 
-  function moneyApi(value,currency){var n=Number(value);return Number.isFinite(n)?(currency||"")+" "+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):"Unavailable"}
-  function invoiceDate(value){return value?new Date(value).toLocaleDateString():"Unavailable"}
-  async function loadInvoices(){if(auth.mode!=="supabase")return;var body=document.querySelector("#invoice-table tbody"),note=$("invoice-source-note");if(!body)return;body.textContent="";try{var data=await window.NovaPayApi.request("/api/invoices?limit=100"),rows=Array.isArray(data.invoices)?data.invoices:[];rows.forEach(function(inv){var tr=document.createElement("tr"),state=String(inv.state||"unknown"),status=document.createElement("span"),action=document.createElement("button");[inv.invoiceNumber||"Unavailable",inv.customerName||"Unavailable",invoiceDate(inv.createdAt),"Unavailable",moneyApi(inv.total,inv.currency),state].forEach(function(v,i){var td=document.createElement("td");if(i===5){status.className="status "+(state==="paid"?"ok":state==="void"?"danger":"warn");status.textContent=state.charAt(0).toUpperCase()+state.slice(1);td.appendChild(status)}else td.textContent=v;tr.appendChild(td)});var td=document.createElement("td");action.type="button";action.className="table-action";action.textContent="View";action.addEventListener("click",function(){showToast("Invoice "+(inv.invoiceNumber||"record")+" · "+state+" · sending is SIMULATED.")});td.appendChild(action);tr.appendChild(td);body.appendChild(tr)});if(!rows.length){var tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.textContent="No invoices are recorded for this organization.";tr.appendChild(td);body.appendChild(tr)}if(note)note.textContent="Organization invoices · sending is SIMULATED; no PayPal invoice or recipient notification is sent."}catch(error){body.textContent="";if(note)note.textContent="Invoice data unavailable: "+error.message}}
-  function reportDates(){var select=$("report-period"),end=new Date(),start=new Date(end);if(select&&select.selectedIndex===1)start=new Date(end.getFullYear(),Math.floor(end.getMonth()/3)*3,1);else if(select&&select.selectedIndex===2)start=new Date(end.getFullYear(),0,1);else start=new Date(end.getFullYear(),end.getMonth(),1);return{from:start.toISOString().slice(0,10),to:end.toISOString().slice(0,10)}}
-  async function loadReport(){if(auth.mode!=="supabase")return;var d=reportDates(),q="?from="+d.from+"&to="+d.to+"&currency=USD";try{var r=await window.NovaPayApi.request("/api/reports/profit-and-loss"+q),f=await window.NovaPayApi.request("/api/reports/fees"+q),feeRows=Array.isArray(f.rows)?f.rows:[],fee=feeRows.reduce(function(a,x){return a+Number(x.fee_minor||0)},0)/100,t=r.totals||{};$("report-gross").textContent=moneyApi(Number(t.revenueMinor||0)/100,"USD");$("report-fees").textContent="− "+moneyApi(fee,"USD");$("report-refunds").textContent="− "+moneyApi(Number(t.refundsMinor||0)/100,"USD");$("report-net").textContent=moneyApi(Number(t.netIncomeMinor||0)/100,"USD");$("report-period-label").textContent="Period "+r.from+" to "+r.to+" · USD";var bars=$("report-bars"),rows=Array.isArray(r.rows)?r.rows:[],periods={};rows.filter(function(x){return x.account_type==="revenue"}).forEach(function(x){periods[x.period]=(periods[x.period]||0)+Number(x.amount_minor||0)/100});var entries=Object.keys(periods).sort().slice(-4),max=Math.max.apply(null,entries.map(function(k){return periods[k]}).concat([1]));bars.textContent="";entries.forEach(function(k){var item=document.createElement("div"),label=document.createElement("span"),bar=document.createElement("i"),amount=document.createElement("b");label.textContent=new Date(k+"T00:00:00").toLocaleDateString(undefined,{month:"short"});bar.style.setProperty("--bar",Math.max(12,periods[k]/max*100)+"%");amount.textContent=moneyApi(periods[k],"USD");item.appendChild(label);item.appendChild(bar);item.appendChild(amount);bars.appendChild(item)});if(!entries.length){bars.textContent="No revenue rows were returned for this period."}}catch(error){["report-gross","report-fees","report-refunds","report-net"].forEach(function(id){$(id).textContent="Unavailable"});$("report-period-label").textContent="Organization report unavailable: "+error.message}}
-  var reportPeriod=$("report-period");if(reportPeriod)reportPeriod.addEventListener("change",loadReport);loadInvoices();loadReport();
-  document.querySelectorAll('[data-ui-action="reports-export"]').forEach(function(button){button.addEventListener("click",async function(){if(auth.mode!=="supabase"){showToast("Demo mode: report export unavailable.");return}button.disabled=true;try{var d=reportDates(),csv=await window.NovaPayApi.request("/api/reports/profit-and-loss?from="+d.from+"&to="+d.to+"&currency=USD&format=csv",{responseType:"text"}),url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})),a=document.createElement("a");a.href=url;a.download="profit-and-loss.csv";a.click();URL.revokeObjectURL(url);showToast("Organization report CSV downloaded.")}catch(error){showToast("Report export failed: "+error.message)}finally{button.disabled=false}})});
-
-  function assistantRecords(){if(auth.mode!=="demo")return [];return [].slice.call(document.querySelectorAll("#transactions-table-body tr")).map(function(r){return{id:r.dataset.txId||"Unavailable",type:r.dataset.type||"Unavailable",status:r.dataset.status||"Unavailable",gross:r.cells[3]?r.cells[3].textContent:"Unavailable"}})}
-  function updateAiDataStatus(){var el=$("ai-data-status");if(el)el.textContent=auth.mode==="demo"?"DEMO MODE · local illustrative examples only; no organization data is sent with your question.":"Organization-scoped answers use verified backend evidence. No browser transaction data is sent."}
+  function assistantRecords(){return [].slice.call(document.querySelectorAll("#transactions-table-body tr")).map(function(r){var source=r.dataset.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data";return{id:r.dataset.txId||"Unavailable",type:r.dataset.type||"Unavailable",status:r.dataset.status||"Unavailable",date:r.dataset.date||"Unavailable",buyer:r.dataset.buyer||"Unavailable",gross:r.cells[3]?r.cells[3].textContent:"Unavailable",fee:r.cells[4]?r.cells[4].textContent:"Unavailable",net:r.cells[5]?r.cells[5].textContent:"Unavailable",currency:r.dataset.currency||"Unavailable",source:source}})}
+  function updateAiDataStatus(){var rows=assistantRecords(),hasSandbox=rows.some(function(r){return r.source==="PayPal Sandbox"}),hasDemo=rows.some(function(r){return r.source==="Illustrative sample data"}),el=$("ai-data-status");if(el)el.textContent=hasSandbox&&hasDemo?"Data available: PayPal Sandbox captures and illustrative sample examples.":hasSandbox?"Data available: PayPal Sandbox captures made in this workspace.":hasDemo?"Data available: illustrative sample data only; no live transaction records are loaded.":"No transaction data is available. Connect the backend and capture a sandbox payment to add records."}
   window.NovaPayAssistant={refreshStatus:updateAiDataStatus};
-  function appendAiMessage(q,response){var box=$("ai-conversation");if(!box)return;var user=document.createElement("div"),ud=document.createElement("div"),up=document.createElement("p");user.className="ai-bubble ai-bubble--user";ud.appendChild(up);up.textContent=q;user.appendChild(ud);var bot=document.createElement("div"),bd=document.createElement("div"),name=document.createElement("b"),p=document.createElement("p");bot.className="ai-bubble ai-bubble--assistant";name.textContent="NovaPay";p.textContent=response.reply;bd.appendChild(name);bd.appendChild(p);bot.appendChild(bd);if(response.limited){var limit=document.createElement("p");limit.className="ai-evidence";limit.textContent="Usage limit reached · "+response.reply;bd.appendChild(limit)}if(response.insufficientEvidence){var insuff=document.createElement("p");insuff.className="ai-evidence";insuff.textContent="Insufficient evidence to answer from available organization records.";bd.appendChild(insuff)}if(response.citations&&response.citations.length){var ev=document.createElement("div");ev.className="ai-evidence";ev.setAttribute("aria-label","Citations");response.citations.forEach(function(c){var chip=document.createElement("span");chip.className="status info";chip.textContent=String(c);ev.appendChild(chip)});bd.appendChild(ev)}var route=String(response.route||"llm").toLowerCase(),badge=document.createElement("small");badge.className="ai-answer-mode";badge.textContent="Route · "+(["code","sql","llm"].indexOf(route)>=0?route:"llm");badge.title=response.reason||"";badge.setAttribute("aria-label","Route "+badge.textContent.slice(8)+(response.reason?": "+response.reason:""));bd.appendChild(badge);if(response.mode){var mode=document.createElement("small");mode.className="ai-answer-mode";mode.textContent=response.mode;bd.appendChild(mode)}if(response.usage){var usage=document.createElement("small");usage.className="ai-answer-mode";usage.textContent="Usage · "+Number(response.usage.inputTokens||0)+" input / "+Number(response.usage.outputTokens||0)+" output tokens";bd.appendChild(usage)}box.appendChild(user);box.appendChild(bot);box.scrollTop=box.scrollHeight;if(response.proposal)renderAssistantProposal(response.proposal,assistantRecords())}
-  function localAnswer(q,records){var usable=records.filter(function(r){return r.id!=="Unavailable"});if(!usable.length)return{reply:"No illustrative records are available in this demo workspace.",route:"llm",citations:[],mode:"DEMO MODE · no organization data sent"};return{reply:"DEMO MODE · Local illustrative values only. Review the sample records in Transactions; this is not an organization-backed analysis.",route:"llm",citations:[],mode:"DEMO MODE · local illustrative fallback"}}
+  var aiTypeSeq=0;
+  function appendAiMessage(q,response){
+    var box=$("ai-conversation");if(!box)return;
+    var user=document.createElement("div"),ud=document.createElement("div"),up=document.createElement("p");user.className="ai-bubble ai-bubble--user";ud.appendChild(up);up.textContent=q;user.appendChild(ud);
+    var bot=document.createElement("div"),bd=document.createElement("div"),name=document.createElement("b"),p=document.createElement("p");bot.className="ai-bubble ai-bubble--assistant";name.textContent="NovaPay";p.textContent=response.reply;bd.appendChild(name);bd.appendChild(p);bot.appendChild(bd);
+    /* Finish any earlier typing so only the newest answer animates. */
+    [].forEach.call(box.querySelectorAll(".text-type"),function(n){if(n.__textType)n.__textType.finish()});
+    box.appendChild(user);box.appendChild(bot);box.scrollTop=box.scrollHeight;
+    var seq=++aiTypeSeq;
+    /* Evidence, mode label and proposal appear once the reply has finished typing. */
+    function reveal(){
+      if(bd.querySelector(".ai-evidence,.ai-answer-mode"))return;
+      if(response.evidence&&response.evidence.length){var ev=document.createElement("p");ev.className="ai-evidence";ev.textContent="Evidence: "+response.evidence.join(" · ");bd.appendChild(ev)}
+      if(response.mode){var mode=document.createElement("small");mode.className="ai-answer-mode";mode.textContent=response.mode;bd.appendChild(mode)}
+      box.scrollTop=box.scrollHeight;
+      if(response.proposal&&seq===aiTypeSeq)renderAssistantProposal(response.proposal,assistantRecords());
+    }
+    if(window.NovaTextType){
+      NovaTextType(p,{text:response.reply,typingSpeed:14,typeEffect:"fade",mistakes:0,cursorStyle:"bar",cursorGlide:true,showCursor:true,loop:false,hideCursorOnComplete:true,onUpdate:function(){box.scrollTop=box.scrollHeight},onTypingComplete:reveal});
+    }else reveal();
+  }
+  function localAnswer(q,records){var usable=records.filter(function(r){return r.id!=="Unavailable"}),evidence=usable.map(function(r){return r.id+" ("+r.type+", "+r.gross+", "+r.status+")"}),k=q.toLowerCase();if(!usable.length)return{reply:"I can’t answer from transaction records because none are available. Start the backend and capture a PayPal Sandbox payment, or review the illustrative examples when they are loaded.",evidence:[],mode:"Local fallback · no transaction data"};var selected;if(/fee/.test(k))selected=usable.filter(function(r){return r.fee!=="Unavailable"&&r.fee.indexOf("not returned")<0});else if(/refund/.test(k))selected=usable.filter(function(r){return /refund/i.test(r.type)});else if(/attention|unusual|explain/.test(k))selected=usable.filter(function(r){return /review|duplicate|refund/i.test(r.status+" "+r.type)});else selected=usable.slice(0,6);if(!selected.length)return{reply:"The available rows do not contain enough evidence to answer that. Try asking about a transaction ID, its displayed status, amount, or fee.",evidence:[],mode:"Local fallback · based on available workspace data"};return{reply:"I can summarize the records currently shown, but this local fallback does not determine whether activity is fraudulent or unusual. "+selected.length+" matching record(s) are available; review their details in Transactions.",evidence:selected.map(function(r){return r.id+" · "+r.gross+" · fee "+r.fee+" · "+r.status+" · "+r.source}),mode:"Local fallback · illustrative values are not live PayPal activity"}}
   function renderAssistantProposal(proposal,records){var slot=$("ai-proposal-slot");slot.textContent="";var ref=String(proposal.txId||""),row=records.find(function(r){return r.id===ref}),knownType=["refund","dispute-evidence","hold-payout"].indexOf(proposal.type)>-1,sourceRow=row&&document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(row.id)+'"]'),sandboxRefund=!!(row&&row.source==="PayPal Sandbox"&&proposal.type==="refund"&&row.currency==="USD"&&Number(sourceRow&&sourceRow.dataset.amount)>0),card=document.createElement("article"),title=document.createElement("h4"),copy=document.createElement("p"),dl=document.createElement("dl"),button=document.createElement("button"),reason=String(proposal.reason||"No reason supplied."),canSend=!!row&&knownType&&(proposal.type!=="refund"||row.source!=="PayPal Sandbox"||sandboxRefund);card.className="ai-proposal-card";card.tabIndex=-1;title.textContent=knownType?({refund:"Refund suggestion","dispute-evidence":"Dispute evidence suggestion","hold-payout":"Payout review suggestion"}[proposal.type]):"Informational finding · simulated only";copy.textContent=reason;card.appendChild(document.createTextNode("AI suggestion for review"));var mode=document.createElement("span");mode.className="status info";mode.textContent=sandboxRefund?"PayPal Sandbox · approval required":"Simulated only";card.appendChild(mode);card.appendChild(title);card.appendChild(copy);[["Reference",ref||"Unavailable"],["Amount",row?row.gross:"Unavailable"],["Currency",row?row.currency:"Unavailable"],["Source",row?row.source:"NovaPay AI"]].forEach(function(pair){var wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=pair[0];dd.textContent=pair[1];wrap.appendChild(dt);wrap.appendChild(dd);dl.appendChild(wrap)});card.appendChild(dl);button.type="button";button.className="btn btn--primary";button.textContent="Send to Approvals";button.disabled=!canSend;button.addEventListener("click",function(){if(!canSend)return;var item={type:proposal.type,txId:row.id,title:String(proposal.title||title.textContent),reason:reason,display:row.gross,source:"NovaPay AI",simulatedOnly:true,requiresSandbox:sandboxRefund,evidence:row.id+" · "+row.type+" · "+row.gross+" · "+row.status};if(sandboxRefund){item.captureId=row.id;item.currency="USD";item.usd=Number(sourceRow.dataset.amount);item.simulatedOnly=false}NovaLive.addProposal(item);button.disabled=true;button.textContent="Sent to Approvals";$("ai-live-status").textContent="Proposal sent to Approvals. Review it there before any action."});card.appendChild(button);if(!row){var note=document.createElement("p");note.className="ai-proposal-warning";note.textContent="This proposal has no matching transaction reference in the available data, so it cannot be sent as an actionable item.";card.appendChild(note)}else if(!knownType){var note2=document.createElement("p");note2.className="ai-proposal-warning";note2.textContent="This action type is not supported and will remain informational; no action can be attempted.";card.appendChild(note2)}else if(proposal.type==="refund"&&row.source==="PayPal Sandbox"&&!sandboxRefund){var note3=document.createElement("p");note3.className="ai-proposal-warning";note3.textContent="This capture is missing a supported USD amount, so the refund suggestion cannot be sent as an actionable item.";card.appendChild(note3)}slot.appendChild(card);card.focus()}
   var aiBusy=false;
-  function ask(q){q=(q||"").trim();if(!q||aiBusy)return;aiBusy=true;var box=$("ai-conversation"),status=$("ai-live-status"),send=$("ai-send");$("ai-proposal-slot").textContent="";status.textContent="Preparing an answer…";send.disabled=true;var pending=document.createElement("p");pending.className="ai-loading";pending.setAttribute("role","status");pending.textContent="NovaPay is checking organization records…";box.appendChild(pending);box.scrollTop=box.scrollHeight;var finish=function(response){pending.remove();appendAiMessage(q,response);status.textContent=response&&response.error?response.error:"Answer ready.";send.disabled=false;aiBusy=false};if(auth.mode==="supabase"&&window.NovaLive){NovaLive.assistantChat(q).then(finish,function(error){var msg=String(error.message||"Assistant request failed.");if(error.code==="AI_DAILY_BUDGET_EXCEEDED"||error.code==="AI_BUDGET_EXCEEDED")msg="AI usage limit reached: "+msg;finish({reply:msg,route:"llm",citations:[],error:msg})})}else if(auth.mode==="demo"){finish(localAnswer(q,assistantRecords()))}else{finish({reply:"Sign in to use the assistant.",route:"llm",citations:[]})}}
+  function ask(q){q=(q||"").trim();if(!q||aiBusy)return;aiBusy=true;var records=assistantRecords(),box=$("ai-conversation"),status=$("ai-live-status"),send=$("ai-send");$("ai-proposal-slot").textContent="";status.textContent="Preparing an answer…";send.disabled=true;var pending=document.createElement("p");pending.className="ai-loading";pending.setAttribute("role","status");pending.textContent="NovaPay is reviewing the available records…";box.appendChild(pending);box.scrollTop=box.scrollHeight;var finish=function(response){pending.remove();appendAiMessage(q,response);status.textContent="Answer ready.";send.disabled=false;aiBusy=false};if(window.NovaLive&&NovaLive.live.ai){NovaLive.assistantChat(q,records).then(finish,function(){var svc=$("ai-service-status");svc.textContent="AI service unavailable · Local fallback";svc.className="status warn";finish(localAnswer(q,records))})}else{setTimeout(function(){finish(localAnswer(q,records))},250)}}
   var aiAttachmentText="";
   function askFromComposer(){var input=$("ai-input"),q=input.value.trim();if(aiAttachmentText)q=(q||"Please review the attached file.")+"\n\nAttached file content:\n"+aiAttachmentText;if(q&&!aiBusy){ask(q);input.value="";aiAttachmentText="";$("ai-attachment").hidden=true;$("ai-file-input").value=""}}
   $("ai-send").addEventListener("click",askFromComposer);
@@ -228,14 +231,13 @@
   }
 
   // Phase 5 — dashboard controls and dynamic illustrative cash-flow data.
-  var displayName=(user.name||"").trim();if(!displayName||/^novapay (demo )?user$/i.test(displayName))displayName="there";if(auth.mode==="demo")displayName=displayName.replace(/\s*\bdemo\b\s*/i," ").trim()||"there";
-  $("greeting-name").textContent=displayName.split(/\s+/)[0];
+  var displayName=(user.name||"").trim();if(!displayName||/^novapay (demo )?user$/i.test(displayName))displayName="there";displayName=displayName.replace(/\s*\bdemo\b\s*/i," ").trim()||"there";
+  var greetingName=$("greeting-name");if(greetingName)greetingName.textContent=displayName.split(/\s+/)[0];
   var greetingHour=new Date().getHours(),greetingPrefix=greetingHour<12?"Good morning":greetingHour<18?"Good afternoon":"Good evening";
   var greeting=$("dashboard-subtitle");if(greeting&&greeting.firstChild)greeting.firstChild.textContent=greetingPrefix+", ";
   $("user-name").textContent=displayName;
-  $("user-email").textContent=user.email||"Demo account";
+  $("user-email").textContent="Business Owner";
   $("profile-name").textContent=displayName;
-  var profileEmail=$("profile-popover").querySelector(".profile-popover-head small");if(profileEmail)profileEmail.textContent=user.email||"Demo account";
   $("user-avatar").textContent=displayName.charAt(0).toUpperCase();
 
   var notifications=$("notifications"), notificationPopover=$("notification-popover"), profileButton=$("profile-button"), profilePopover=$("profile-popover");
@@ -243,8 +245,7 @@
     if(notificationPopover){notificationPopover.hidden=true;notifications.setAttribute("aria-expanded","false");}
     if(profilePopover){profilePopover.hidden=true;profileButton.setAttribute("aria-expanded","false");}
   }
-  async function loadNotifications(){if(auth.mode!=="supabase"){var list=$("notification-list");if(list)list.textContent="DEMO MODE · organization notifications are unavailable.";return}var list=$("notification-list"),count=$("notification-count"),dot=document.querySelector(".notification-dot");try{var data=await window.NovaPayApi.request("/api/notifications?limit=50"),items=Array.isArray(data.notifications)?data.notifications:[],unread=items.filter(function(x){return x.status==="unread"}).length;if(count)count.textContent=unread+" unread";if(dot)dot.hidden=!unread;list.textContent="";if(!items.length){var empty=document.createElement("p");empty.className="notification-item";empty.textContent="No organization notifications.";list.appendChild(empty)}items.forEach(function(item){var button=document.createElement("button"),wrap=document.createElement("span"),title=document.createElement("b"),meta=document.createElement("small"),action=document.createElement("span");button.type="button";button.className="notification-item";button.setAttribute("role","listitem");title.textContent=String(item.rule||item.title||"Organization notification").replaceAll("_"," ");meta.textContent=String(item.severity||"info").toUpperCase()+" · "+(item.createdAt?new Date(item.createdAt).toLocaleString():"Date unavailable")+" · "+String(item.status||"unread");action.textContent=item.status==="unread"?"Mark read":"Dismiss";wrap.appendChild(title);wrap.appendChild(meta);button.appendChild(wrap);button.appendChild(action);button.addEventListener("click",async function(){var operation=item.status==="unread"?"read":"dismiss";try{await window.NovaPayApi.request("/api/notifications/"+encodeURIComponent(item.id)+"/"+operation,{method:"POST"});await loadNotifications()}catch(error){showToast("Notification update failed: "+error.message)}});list.appendChild(button)})}catch(error){if(count)count.textContent="Unavailable";if(list)list.textContent="Notifications unavailable: "+error.message}}
-  if(notifications){notifications.addEventListener("click",function(e){e.stopPropagation();var open=notificationPopover.hidden;closePopovers();notificationPopover.hidden=!open;notifications.setAttribute("aria-expanded",String(open));if(open)loadNotifications();});}
+  if(notifications){notifications.addEventListener("click",function(e){e.stopPropagation();var open=notificationPopover.hidden;closePopovers();notificationPopover.hidden=!open;notifications.setAttribute("aria-expanded",String(open));});}
   if(profileButton){profileButton.addEventListener("click",function(e){e.stopPropagation();var open=profilePopover.hidden;closePopovers();profilePopover.hidden=!open;profileButton.setAttribute("aria-expanded",String(open));});}
   document.addEventListener("click",function(e){if(!e.target.closest(".popover")&&!e.target.closest("#notifications")&&!e.target.closest("#profile-button"))closePopovers();});
   document.querySelectorAll("[data-profile-action]").forEach(function(b){b.addEventListener("click",function(){var action=b.dataset.profileAction;if(action==="settings"){closePopovers();activate("settings",true);}else if(action==="logout")$("logout").click();});});
@@ -294,7 +295,6 @@
     if(area){if(motion.reduced()){area.style.transform="scaleX(1)";}else requestAnimationFrame(function(){area.style.transition="transform "+motion.chart.duration+"ms "+motion.easing;area.style.transform="scaleX(1)";});}
   }
   function renderKpis(key, animate){
-    if(auth.mode==="supabase")return;
     var set=kpiSets[key]||kpiSets.today;
     ["revenue","fees","refunds","disputes","net"].forEach(function(k,idx){
       var d=set[k],val=d[0],pct=d[1],up=pct>=0,good=lowerIsBetter[k]?!up:up;
@@ -311,26 +311,8 @@
   }
   var dateSelect=$("dashboard-date");
   if(dateSelect){var now=new Date(),yesterday=new Date(now);yesterday.setDate(now.getDate()-1);var week=new Date(now);week.setDate(now.getDate()-6);var dateFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short",year:"numeric"}),rangeFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short"});dateSelect.options[0].textContent=dateFormat.format(now);dateSelect.options[1].textContent=dateFormat.format(yesterday);dateSelect.options[2].textContent=rangeFormat.format(week)+" – "+dateFormat.format(now);}
-  if(dateSelect){dateSelect.addEventListener("change",function(){loadDashboardReports(dateSelect.value,true);});}
+  if(dateSelect){dateSelect.addEventListener("change",function(){renderKpis(dateSelect.value, true);showToast("Dashboard date set to "+dateSelect.options[dateSelect.selectedIndex].text+". Sample data remains illustrative.");});}
   renderKpis("today", false);
-  function isoDate(date){return date.toISOString().slice(0,10);}
-  function reportRange(key){var end=new Date(),start=new Date(end);if(key==="yesterday"){start.setDate(end.getDate()-1);end.setDate(end.getDate()-1)}else if(key==="week")start.setDate(end.getDate()-6);return{from:isoDate(start),to:isoDate(end)}}
-  function minorMoney(value){var n=Number(value);return Number.isFinite(n)?n/100:null}
-  async function loadDashboardReports(key,animate){
-    if(auth.mode!=="supabase"||!window.NovaPayApi)return;
-    var dates=reportRange(key),query="?from="+dates.from+"&to="+dates.to+"&currency=INR";
-    try{
-      var result=await window.NovaPayApi.request("/api/reports/profit-and-loss"+query);
-      var fees=await window.NovaPayApi.request("/api/reports/fees"+query);
-      var totals=result.totals||{},feeRows=Array.isArray(fees.rows)?fees.rows:[],feeMinor=feeRows.reduce(function(sum,row){return sum+Number(row.fee_minor||0)},0);
-      var values={revenue:minorMoney(totals.revenueMinor),fees:feeMinor/100,refunds:minorMoney(totals.refundsMinor),net:minorMoney(totals.netIncomeMinor)};
-      Object.keys(values).forEach(function(name){var value=values[name],el=$("kpi-"+name),trend=$("kpi-"+name+"-trend");if(value!==null){el.textContent=inr(value);trend.textContent="Reported · "+dates.from+" to "+dates.to}else{el.textContent="Unavailable";trend.textContent="Not returned by report"}});
-      $("kpi-disputes").textContent="Unavailable";$("kpi-disputes-trend").textContent="Not provided by reports API";
-      var status=$("dashboard-report-source");if(status)status.textContent="Source: organization reports · "+result.from+" to "+result.to;
-      if(animate)showToast("Dashboard updated from organization reports.");
-    }catch(error){["revenue","fees","refunds","disputes","net"].forEach(function(k){$("kpi-"+k).textContent="Unavailable";$("kpi-"+k+"-trend").textContent="Report unavailable"});}
-  }
-  if(auth.mode==="supabase")loadDashboardReports("today",false);
   applyChartTheme();
 
   /* Cash flow: deterministic demo series per range; totals always equal the sum of the plotted points */
@@ -352,10 +334,9 @@
   function xAt(i,n){return PAD+i*(W-PAD*2)/(n-1);}
   function pathFor(vals,max){return vals.map(function(v,i){return (i?"L":"M")+xAt(i,vals.length).toFixed(1)+" "+(PAD+(1-v/max)*(H-PAD*2)).toFixed(1);}).join(" ");}
   function areaFor(vals,max){return pathFor(vals,max)+" L"+xAt(vals.length-1,vals.length).toFixed(1)+" "+(H-PAD)+" L"+PAD+" "+(H-PAD)+" Z";}
-  function renderCashflow(range, animate, supplied){
-    if(auth.mode==="supabase"&&!supplied){cf=null;["cash-in","cash-out","cash-net"].forEach(function(id){$(id).textContent="Loading…"});$("cf-sub").textContent="Loading organization cash movement…";return;}
+  function renderCashflow(range, animate){
     var cfg=ranges[range]||ranges["30D"];cfRange=range;
-    var mi=supplied&&supplied.mi||series(cfg,cfg.in,0),mo=supplied&&supplied.mo||series(cfg,cfg.out,5),net=mi.map(function(v,i){return v-mo[i];});
+    var mi=series(cfg,cfg.in,0),mo=series(cfg,cfg.out,5),net=mi.map(function(v,i){return v-mo[i];});
     var totIn=mi.reduce(function(a,b){return a+b;},0),totOut=mo.reduce(function(a,b){return a+b;},0);
     var peak=Math.max.apply(null,mi),stepV=Math.pow(10,Math.floor(Math.log10(peak))),max=Math.ceil(peak/stepV*1.1/(stepV>=1?1:1))*stepV;
     max=Math.ceil(peak*1.08/(stepV/2))*(stepV/2);
@@ -376,21 +357,7 @@
     $("cf-tip").hidden=true;$("cf-cursor").hidden=true;$("cf-crosshair-y").hidden=true;
     document.querySelectorAll("#cashflow-tabs button").forEach(function(b){var on=b.dataset.range===range;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.setAttribute("role","tab");});
   }
-  async function loadCashflow(range,animate){
-    if(auth.mode!=="supabase"||!window.NovaPayApi){renderCashflow(range,animate);return}
-    var end=new Date(),start=new Date(end),days=range==="7D"?7:range==="30D"?30:range==="3M"?90:365;start.setDate(start.getDate()-days+1);
-    try{
-      var data=await window.NovaPayApi.request("/api/reports/cash-movement?from="+isoDate(start)+"&to="+isoDate(end)+"&currency=INR");
-      var rows=Array.isArray(data.rows)?data.rows:[],periods={},keys=[];
-      rows.forEach(function(row){var key=String(row.period||"");if(!key)return;if(!periods[key]){periods[key]=0;keys.push(key)}periods[key]+=Number(row.cash_movement_minor||0)});
-      keys.sort();var signed=keys.map(function(k){return periods[k]/100}),positive=signed.map(function(v){return Math.max(0,v)}),negative=signed.map(function(v){return Math.max(0,-v)});
-      if(!keys.length){$("cash-in").textContent="₹0";$("cash-out").textContent="₹0";$("cash-net").textContent="₹0";$("cf-sub").textContent="No posted cash movement for this period · INR";$("cf-grid").textContent="";$("cf-y").textContent="";$("cf-x").textContent="";["cash-in-line","cash-out-line","cash-net-line","cash-in-area","cash-net-area"].forEach(function(id){$(id).setAttribute("d","")});return}
-      if(keys.length===1){keys.unshift(keys[0]);signed.unshift(0);positive.unshift(0);negative.unshift(0)}
-      var dynamic=Object.assign({},ranges[range]||ranges["30D"],{n:keys.length,labels:function(i){var d=new Date(keys[i]+"T00:00:00");return d.toLocaleDateString(undefined,{day:"numeric",month:"short"})},ticks:keys.length>5?[0,Math.floor((keys.length-1)/4),Math.floor((keys.length-1)/2),Math.floor(3*(keys.length-1)/4),keys.length-1]:keys.map(function(_,i){return i}),sub:(ranges[range]||ranges["30D"]).sub});
-      ranges[range]=dynamic;renderCashflow(range,animate,{mi:positive,mo:negative});$("cf-sub").textContent=dynamic.sub+" · organization cash-movement report · INR";
-    }catch(error){["cash-in","cash-out","cash-net"].forEach(function(id){$(id).textContent="Unavailable"});$("cf-sub").textContent="Cash movement report unavailable."}
-  }
-  document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){loadCashflow(b.dataset.range,true);});});
+  document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){renderCashflow(b.dataset.range,true);});});
 
   var plot=$("cf-plot"),tip=$("cf-tip"),cursor=$("cf-cursor"),crosshairY=$("cf-crosshair-y");
   function hover(e){
@@ -405,9 +372,8 @@
   plot.addEventListener("mousemove",hover);plot.addEventListener("touchstart",function(e){hover(e.touches[0]);},{passive:true});plot.addEventListener("touchmove",function(e){hover(e.touches[0]);},{passive:true});
   plot.addEventListener("mouseleave",function(){tip.hidden=true;cursor.hidden=true;crosshairY.hidden=true;});
   renderCashflow("30D",false);
-  if(auth.mode==="supabase")loadCashflow("30D",false);
   applyChartTheme();
-  if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); renderKpis(dateSelect?dateSelect.value:"today",false); loadCashflow(cfRange,false); });
+  if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); renderKpis(dateSelect?dateSelect.value:"today",false); renderCashflow(cfRange,false); });
 
   function animateHealth(){
     var ring=document.querySelector(".health-ring"),seg=document.querySelector(".health-segment-main"),value=document.querySelector("[data-health-value]");
@@ -458,7 +424,7 @@
   document.addEventListener("click",function(e){var row=e.target.closest(".transaction-row");if(row&&!e.target.closest("button"))openTx(row.dataset.txId);});
   document.addEventListener("keydown",function(e){var row=e.target.closest&&e.target.closest(".transaction-row");if(row&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openTx(row.dataset.txId);}});
   document.querySelectorAll("[data-close-transaction]").forEach(function(b){b.addEventListener("click",closeTx);});
-  $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction,context=["ID: "+d.ref,"type: "+d.type,"status: "+d.status,"gross: "+d.amount,"fee: "+d.fee,"net: "+d.net,"currency: "+(d.currency||"Unavailable"),"buyer: "+(d.buyer||"Unavailable"),"source: "+(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data")].join("; ");$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.live.ai&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply;$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(){$("tx-ai-answer").textContent=auth.mode==="demo"?"DEMO MODE · Sample data: "+context:"AI backend unavailable. No local answer was generated."});else $("tx-ai-answer").textContent=auth.mode==="demo"?"DEMO MODE · Sample data: "+context:"AI backend unavailable. No local answer was generated.";});
+  $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction,context=["ID: "+d.ref,"type: "+d.type,"status: "+d.status,"gross: "+d.amount,"fee: "+d.fee,"net: "+d.net,"currency: "+(d.currency||"Unavailable"),"buyer: "+(d.buyer||"Unavailable"),"source: "+(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data")].join("; ");$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.live.ai&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply;$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(){$("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context});else $("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context;});
   $("tx-send-approval").addEventListener("click",function(){if(!selectedTransaction)return;var answer=$("tx-ai-answer"),reason=answer.textContent.trim();if(!reason||reason.indexOf("Thinking")===0){showToast("Ask the AI and review its finding first.");return}if(window.NovaLive&&NovaLive.addTransactionFinding){var p=null;try{p=JSON.parse(answer.dataset.proposal||"null")}catch(e){}if(p&&["refund","dispute-evidence","hold-payout"].indexOf(p.type)>-1){p.reason=p.reason||reason;p.txId=selectedTransaction.ref;p.display=selectedTransaction.amount;p.source=p.source||"NovaPay AI";p.simulatedOnly=true;NovaLive.addProposal(p)}else NovaLive.addTransactionFinding(selectedTransaction,reason);closeTx();location.hash="#approvals";showToast("Finding sent to Approvals for human review.")}else showToast("Approvals service is unavailable.")});
   document.addEventListener("keydown",function(e){
     if(!txModal||txModal.hidden)return;
@@ -509,19 +475,27 @@
     if(mobileBackdrop) mobileBackdrop.addEventListener("click",function(){setNav(false);});
     nav.forEach(function(a){a.addEventListener("click",function(){if(matchMedia("(max-width: 700px)").matches)setNav(false);});});
   }
+  /* Desktop/tablet sidebar collapse (arrow in the navigation bar) */
+  var sbClose=$("sidebar-collapse"), sbOpen=$("sidebar-reopen"), sbKey="novapay-sidebar-collapsed";
+  function setSidebar(collapsed,persist){
+    document.body.classList.toggle("sidebar-collapsed",!!collapsed);
+    if(sbClose) sbClose.setAttribute("aria-expanded",String(!collapsed));
+    if(sbOpen){ sbOpen.hidden=!collapsed; sbOpen.setAttribute("aria-expanded",String(!collapsed)); }
+    if(persist){ try{ localStorage.setItem(sbKey,collapsed?"1":"0"); }catch(e){} }
+  }
+  if(sbClose) sbClose.addEventListener("click",function(){ setSidebar(true,true); if(sbOpen) sbOpen.focus(); });
+  if(sbOpen) sbOpen.addEventListener("click",function(){ setSidebar(false,true); if(sbClose) sbClose.focus(); });
+  try{ if(localStorage.getItem(sbKey)==="1") setSidebar(true,false); }catch(e){}
+
   /* Mobile AI bottom sheet */
   var aiFab=$("mobile-ai-fab"), aiView=$("view-ai-assistant");
   if(aiFab && aiView){
-    var closeAi=document.createElement("button"); closeAi.type="button"; closeAi.className="btn btn--ghost ai-sheet-close"; closeAi.textContent="Close AI"; closeAi.hidden=true;
-    var intro=aiView.querySelector(".page-intro"); if(intro) intro.appendChild(closeAi);
     function syncAiSheet(){
       var mobile=matchMedia("(max-width: 700px)").matches;
       var active=location.hash==="#ai-assistant";
       aiView.classList.toggle("ai-sheet-open",mobile&&active);
-      closeAi.hidden=!(mobile&&active);
     }
     aiFab.addEventListener("click",function(){activate("ai-assistant",true);syncAiSheet();});
-    closeAi.addEventListener("click",function(){activate("dashboard",true);syncAiSheet();});
     window.addEventListener("resize",syncAiSheet); window.addEventListener("hashchange",syncAiSheet); window.addEventListener("popstate",syncAiSheet);
     syncAiSheet();
   }
@@ -535,13 +509,6 @@
       else if(first && last && !e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
     }
   });
-  /* FX conversion is always supplied by the authenticated API in live mode. */
-  var fxTimer=null;
-  function fxTimestamp(value){var d=new Date(value);return Number.isNaN(d.getTime())?"Timestamp unavailable":d.toLocaleString()+" ("+d.toISOString()+")"}
-  async function convertFx(){var amount=$("fx-amount"),from=$("fx-from"),to=$("fx-to"),value=$("fx-result-value"),note=$("fx-rate-note"),meta=document.querySelector(".fx-result small");if(!amount||!from||!to)return;if(auth.mode!=="supabase"){value.textContent="USD $60.00";note.textContent="Illustrative reference rate · 1 INR = 0.012 USD";if(meta)meta.textContent="Sample data · illustrative rate · not a settlement quote";return}var n=Number(amount.value);if(!Number.isFinite(n)||n<=0||Math.round(n*100)!==n*100){value.textContent="Enter a positive amount";note.textContent="Up to two decimal places";if(meta)meta.textContent="";return}value.textContent="Converting…";try{var r=await window.NovaPayApi.request("/api/fx/convert?amount="+encodeURIComponent(n.toFixed(2))+"&base="+encodeURIComponent(from.value)+"&quote="+encodeURIComponent(to.value));value.textContent=r.quoteCurrency+" "+Number(r.convertedAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});note.textContent="1 "+r.baseCurrency+" = "+r.rate+" "+r.quoteCurrency+" · source: "+r.source;if(meta)meta.textContent="Indicative · "+r.label+" · "+fxTimestamp(r.timestamp)}catch(error){value.textContent="Conversion unavailable";note.textContent=error.message;if(meta)meta.textContent="No cached or provider rate was returned."}}
-  ["fx-amount","fx-from","fx-to"].forEach(function(id){var el=$(id);if(el)el.addEventListener(el.tagName==="INPUT"?"input":"change",function(){clearTimeout(fxTimer);fxTimer=setTimeout(convertFx,250)})});
-  if(auth.mode==="supabase")convertFx();
-
   /* Demo feedback for otherwise non-destructive controls. */
   document.addEventListener("click",function(e){
     var b=e.target.closest("button[data-demo-feedback]");
@@ -549,7 +516,6 @@
   });
 
   document.querySelectorAll(".report-card button").forEach(function(b){
-    b.addEventListener("click",function(){activate("reports",true);showToast(auth.mode==="demo"?"Sample data · report opened.":"Organization report opened.");});
+    b.addEventListener("click",function(){activate("reports",true);showToast("Report opened with sample data.");});
   });
-  }
 })();
