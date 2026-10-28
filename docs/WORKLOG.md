@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: rerun cross-tenant document check; branch `phase5-backend`.
-- Last finished: server restart healthy; fixed membership setup PASS (A->org A only; B->org B only/no org A); B auth context was B JWT + org B. One synthetic upload HTTP 201.
-- Blocker: processing HTTP 429 `AI_DAILY_LIMIT`; request-count remaining budget is user 0, org 15 (loaded limits 5/20). Sample cleanup HTTP 200; server now stopped.
-- Probes (a) hybrid/RPC, (b) list/get, (c) Storage RLS, (d) org A positive control: all UNVERIFIED and not run. No fix applied.
-- Next: wait for user direction/budget reset; do not retry until authorized. Then run all probes separately and stop at first failed assertion.
-- Pending: user to correct raised user limit in `.env`/restart or direct resume; `.env.example` has unrelated pre-existing modification and must not be committed.
+- Current task: diagnose cross-tenant and deletion outcomes; branch `phase5-backend`.
+- Last complete live run: loaded AI limits 100/300; health 200; fixed memberships valid (B no org A); one synthetic sample uploaded/processed/indexed (1 chunk).
+- Results: B hybrid AI 200/0 citations PASS; B search RPC 403/0 rows PASS; B list 200/0 org A rows PASS; B get by ID 405 FAIL; B Storage read 400/0 PASS; A positive control 200/1 citation PASS.
+- Delete: API 200; document/chunks/search hits gone; Storage list prefix 0 rows; owner audit row 1; direct owner object GET after deletion HTTP 200 -> cascade FAIL/inconsistent.
+- Root cause/proposed smallest fix: GET 405 is `server/src/app.js` unmatched API fallback (lines 88-91) because no GET-by-ID route; add tenant-scoped GET route returning 404. No fix applied. Cascade object inconsistency unresolved; no fix applied.
+- Run-scoped sample deleted; server stopped; results logged in TEST-REPORT.md. Next: await user direction before any fixes or probes.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3308,3 +3308,36 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: check branch/status/tracked `.env` and staged names; WHY: commit only continuity docs, preserving unrelated `.env.example` modification.
 2026-10-28 | RESULT: phase5-backend confirmed; `.env` not tracked; `.env.example` untouched and remains pre-existing modified; only docs/CONTEXT, TEST-REPORT, WORKLOG will be staged; next local WIP commit.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant rerun blocked by budget`; WHY: checkpoint exact results and resume pointer without including `.env.example`; never push.
+2026-10-28 | ABOUT TO: verify branch/status and identify any listener on port 3000; WHY: prepare a fresh server start and ensure this run uses the requested loaded AI limits.
+2026-10-28 | RESULT: branch phase5-backend; no port-3000 listener; `.env.example` remains unrelated modified content; no process required killing; next start server fresh.
+2026-10-28 | ABOUT TO: start NovaPay with `npm start`; WHY: load current `.env` into a clean process before checking requested limit values.
+2026-10-28 | RESULT: fresh server started successfully on port 3000; startup confirms Gemini adapter enabled; next load numeric AI limits and health metadata.
+2026-10-28 | ABOUT TO: load config and `/api/status`, printing only the two numeric limits and health status; WHY: enforce the user's stop condition before creating sample data.
+2026-10-28 | RESULT: fresh loaded limits match required 100/300; health HTTP 200 authenticated; next verify fixed memberships/JWTs and perform one sample sequence.
+2026-10-28 | ABOUT TO: execute live cross-tenant sequence with existing fixed users/orgs and one generated synthetic PDF; WHY: process/index, run separate B JWT/orgB checks, positive control, cascade, and run-only cleanup.
+2026-10-28 | ABOUT TO: collect live sample-processing and probe output; WHY: current sequential run is active; no duplicate requests.
+2026-10-28 | RESULT: fixed membership setup PASS; B has no org A membership; B probes use own JWT/org B; sample upload PASS HTTP 201; processing/index active.
+2026-10-28 | ABOUT TO: wait for sample processing completion before the Org B checks; WHY: all retrieval assertions require a confirmed indexed chunk.
+2026-10-28 | RESULT: sample processing/index PASS (200, 1 chunk); (a1) AI hybrid PASS 200/0 citations; (a2) search RPC PASS 403/0 rows; (b1) list PASS 200/0 org A rows; (b2) get returned FAIL 405 (expected 403/404); (c) Storage RLS PASS, B HTTP 400/0 rows, A HTTP 200; next complete positive control and cascade as requested.
+2026-10-28 | ABOUT TO: run (d) Org A same-question positive control, then delete only this sample and check cascade/object/audit; WHY: complete required checks after recording b2 failure, without fixing it.
+2026-10-28 | RESULT: (d) PASS HTTP 200/1 citation; cascade FAIL despite DELETE 200: sample chunks/search hits were checked, object still HTTP 200, audit query rows 0; next query exact run metadata and inspect route/storage adapter semantics before cleanup.
+2026-10-28 | ABOUT TO: inspect DELETE route, Storage remove implementation and live rows for exact sample ID/path; WHY: distinguish route absence/cache/policy behavior and safely clean only this run's residual object.
+2026-10-28 | RESULT: live sequence completed; b2 and delete cascade failures need precise diagnosis; no code changed; next inspect current server logs/request IDs and run-scoped metadata only.
+2026-10-28 | ABOUT TO: read recent server log lines and route response shapes; WHY: identify the exact failing route/policy without exposing document content or secrets.
+2026-10-28 | RESULT: app logs show GET `/api/documents/:id` returns 405 (no GET-by-id route); delete returned 200; next query exact run-scoped database/storage counts to establish cascade failure details.
+2026-10-28 | ABOUT TO: query only document ID c6e640f6-912d-4dd7-8c8f-dbc99886eaea under fixed org A for document/chunk/hit/audit/storage metadata counts; WHY: pinpoint cascade components and avoid touching unrelated records.
+2026-10-28 | RESULT: exact run queries show document/chunks/search hits rows 0; audit REST returned 403 and Storage SQL metadata endpoint 404, so previous 0 audit/object counts were not valid evidence; next inspect service auth/list API and use direct Storage list for this path.
+2026-10-28 | ABOUT TO: inspect Supabase service header setup and Storage list endpoint usage; WHY: obtain authoritative run-scoped object/audit presence without broader data reads.
+2026-10-28 | RESULT: service role is explicitly granted INSERT-only on audit_log, so 403 on audit SELECT is expected; owner-read policy is available. Next use owner JWT for exact audit query and Storage object list API for the run's prefix.
+2026-10-28 | ABOUT TO: perform read-only run-prefix Storage list and owner A audit query; WHY: establish actual cleanup status without trying any code or unrelated-data mutation.
+2026-10-28 | ABOUT TO: collect read-only owner audit and Storage prefix results; WHY: request is in flight and must not be duplicated.
+2026-10-28 | RESULT: owner-A audit query found 1 run delete row; Storage object list prefix returned 0 rows; DB document/chunk/search-hit counts were 0. Prior owner object GET after delete returned 200, contradictory and treated as unresolved failure; next inspect 405 fallback source and stop server.
+2026-10-28 | ABOUT TO: inspect unmatched API route handling to identify exact source of GET-by-ID HTTP 405; WHY: propose the smallest fix without applying it.
+2026-10-28 | RESULT: exact 405 source is app.js unmatched API fallback at lines 88-91; no document GET-by-ID route exists; propose a tenant-scoped GET-by-ID returning 404, not applied. Cascade inconsistency remains: Storage metadata list 0 rows but owner GET after deletion 200.
+2026-10-28 | ABOUT TO: stop server after all requested probes and run-scoped deletion; WHY: live checks are complete and failures are documented; no further writes.
+2026-10-28 | RESULT: server stopped; all live probes complete; sample document was deleted; next append per-check results and update handoff before local commit.
+2026-10-28 | ABOUT TO: append numeric-only live outcomes and update CONTEXT/RESUME POINTER; WHY: preserve failures and proposed fixes without applying code changes.
+2026-10-28 | RESULT: TEST-REPORT records each check separately; CONTEXT/RESUME updated with failures and unimplemented smallest fix proposal; next check branch/status/no `.env`, then WIP commit docs only.
+2026-10-28 | ABOUT TO: inspect branch/status/tracked `.env` and staged paths; WHY: commit only logs/context, not pre-existing `.env.example` changes.
+2026-10-28 | RESULT: branch phase5-backend; `.env` not tracked; `.env.example` left unstaged and untouched; only three continuity docs staged next; WIP commit.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant results`; WHY: checkpoint live results/proposed fixes locally only; never push.

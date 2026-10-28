@@ -1211,3 +1211,13 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | (c) Org B Storage object read | UNVERIFIED | Not run because process returned HTTP 429 first.
 2026-10-28 | (d) Org A positive-control AI answer | UNVERIFIED | Not run because process returned HTTP 429 first.
 2026-10-28 | Remaining-budget correction | CORRECTION | Limits count non-cache `ai_usage` rows, not tokens. Exact counts after 429 were user 5/5 (remaining 0), org 5/20 (remaining 15); an earlier zero/zero estimate based on tokens was invalid.
+2026-10-28 | Loaded runtime limits | PASS | `AI_DAILY_USER_LIMIT=100`, `AI_DAILY_ORG_LIMIT=300`; `/api/status` HTTP 200; Gemini config present (no value printed).
+2026-10-28 | Fixed-user membership/JWT setup | PASS | A membership only in org A; B membership only in org B, none in org A. All B requests used B JWT and X-Org-Id org B; service role not used for B checks.
+2026-10-28 | Synthetic upload/process/index | PASS | Upload HTTP 201; process HTTP 200; indexed document chunk rows=1.
+2026-10-28 | (a1) Org B hybrid search `/api/ai/chat` | PASS | HTTP 200; citation rows=0; insufficient-evidence true; no sample marker/document ID in response.
+2026-10-28 | (a2) Org B search RPC permission | PASS | `search_document_chunks` called with B JWT/org B; HTTP 403; rows=0.
+2026-10-28 | (b1) Org B document list | PASS | HTTP 200; total rows=0; org A document rows=0.
+2026-10-28 | (b2) Org B document GET by ID | FAIL | HTTP 405; returned document rows=0. No GET-by-ID route; unmatched API fallback in server/src/app.js returns 405.
+2026-10-28 | (c) Org B Storage object RLS | PASS | B JWT read denied HTTP 400, rows=0; owner A read before deletion HTTP 200.
+2026-10-28 | (d) Org A positive-control AI question | PASS | Same question HTTP 200; citation rows=1.
+2026-10-28 | Delete cascade | FAIL | DELETE HTTP 200; document/chunk/search-hit rows after=0; Storage list prefix rows=0; owner audit query rows=1; direct owner object GET after delete still HTTP 200, inconsistent with Storage list result.

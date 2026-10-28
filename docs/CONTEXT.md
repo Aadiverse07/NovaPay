@@ -3,58 +3,58 @@
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
-- Last code checkpoint: `0401e44`; this diagnostic checkpoint pending
-- Current task: cross-tenant document rerun stopped at AI budget 429
+- Current code checkpoint: `f4f53b8`; this diagnostic log commit pending
+- Current task: live cross-tenant check completed; two failures recorded; no fix applied
 
 ## DONE
-- Phase 5 Parts 1–4 complete; migrations 0015/0016 applied/live-verified.
-- Fresh baseline: `npm ci`; `npm test` 164/164; `npm run check:migrations` 16/16.
-- Fixed owner A membership is org A only; fixed owner B is org B only and has no org A membership. B probe headers were configured with B's own JWT and org B `X-Org-Id`; no service-role credential used for B probes.
-- Server health HTTP 200. One synthetic sample uploaded HTTP 201; processing HTTP 429 `AI_DAILY_LIMIT`; this run's document cleanup HTTP 200. Server stopped.
+- Fresh server start: loaded AI limits user 100/org 300; `/api/status` HTTP 200.
+- Fixed users: A belongs to org A only; B belongs to org B only and has no org A membership. B requests used B JWT plus org B X-Org-Id, never service role.
+- One synthetic sample uploaded 201, processed 200, indexed 1 chunk.
+- B AI hybrid 200/0 citations PASS; B search RPC 403/0 rows PASS; B list 200/0 org A rows PASS; B Storage read 400 denied PASS; A positive control 200/1 citation PASS.
+- Run-scoped deletion returned 200; document/chunks/search hits absent; Storage prefix listing 0; owner audit query 1 row.
 
 ## IN PROGRESS
-- Cross-tenant subchecks (a) hybrid AI/search RPC, (b) list/get, (c) Storage RLS, (d) org A positive control are UNVERIFIED; none ran because sample processing hit 429.
-- Loaded limits: 5 user/20 org. Correct request-count query: remaining user budget 0, org budget 15. AI budgets count non-cache ai_usage rows, not tokens.
-- No fix applied. Prior token-based budget estimate was invalid and is corrected in TEST-REPORT.md.
+- B GET-by-ID returned 405 (FAIL): no GET route; app unmatched API fallback in `server/src/app.js` returns 405.
+- Delete cascade marked FAIL/inconsistent because owner direct Storage GET after deletion returned 200 while Storage list prefix reported 0 rows. No fix applied.
+- Server stopped; synthetic record was deleted; no run rows intentionally left.
 
 ## NEXT STEPS
-1. Await user's direction or configuration change; current `AI_DAILY_USER_LIMIT` is 5 in loaded config.
-2. After authorization/budget availability, process one synthetic sample and verify chunk count.
-3. Run each requested Org B API/RPC/Storage check separately and positive-control Org A AI question; record status/counts only.
-4. Run deletion cascade only after required probes complete; clean only run-created rows.
+1. Await user approval before fixes or additional live probes.
+2. Proposed smallest GET fix: add tenant-scoped `GET /api/documents/:documentId` returning 404 for foreign/nonexistent IDs; do not apply until `APPLY FIX`.
+3. Investigate object GET/list inconsistency only with user direction; no code change made.
 
 ## USER ACTIONS PENDING
-- Ensure raised AI user limit is present in `.env` and direct a fresh rerun after any budget reset.
-- Browser checklist remains pending.
+- Reply `APPLY FIX` to authorize the scoped GET-by-ID change, if desired.
+- Direct further diagnosis of post-delete Storage GET/list inconsistency, if desired.
 
 ## LIVE STATE
-- Server stopped; last health HTTP 200 before test.
-- Fixed users/orgs reused; no identities created.
-- Migrations 0001–0016 applied; no migration changed.
-- Key names only: `GEMINI_API_KEY`, `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Migrations 0001–0016 applied; no migration changes.
+- Server stopped. Limits loaded 100/300 in last fresh process.
+- Fixed users/orgs reused; no new users/orgs.
+- `.env.example` has an unrelated pre-existing modification; leave untouched.
+- Key names only: `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`, `GEMINI_API_KEY`.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Setup memberships/JWT scope | PASS | A belongs to org A; B belongs to org B/no org A; intended B calls use B JWT/org B. |
-| Sample upload/process | FAIL | Upload 201; process 429 AI_DAILY_LIMIT; cleanup 200. |
-| Remaining budget | 0 user, 15 org | ai_usage request counts 5/5 and 5/20. |
-| (a) hybrid AI/search RPC | UNVERIFIED | Not run after 429. |
-| (b) list/get | UNVERIFIED | Not run after 429. |
-| (c) Storage RLS | UNVERIFIED | Not run after 429. |
-| (d) Org A positive control | UNVERIFIED | Not run after 429. |
+| B hybrid AI isolation | PASS | 200, 0 citations. |
+| B search RPC grant | PASS | 403, 0 rows. |
+| B list isolation | PASS | 200, 0 org A rows. |
+| B get by ID | FAIL | 405 due missing route/unmatched fallback. |
+| B Storage RLS | PASS | B read 400 denied, 0 rows. |
+| A positive control | PASS | 200, 1 citation. |
+| Delete cascade | FAIL/inconsistent | DB rows 0, Storage list 0, audit 1, but direct object GET after delete 200. |
 
 ## KNOWN ISSUES AND RISKS
-- Loaded user limit is still 5; user says it was increased but this process/config did not reflect that change.
-- No Org B probe executed in this rerun; no leak conclusion can be drawn.
-- `.env.example` has an unrelated existing modification; leave it untouched.
+- No GET-by-ID route; unmatched GET receives 405 instead of expected 404.
+- Storage metadata list and object GET disagree after deletion; cause unresolved.
 
 ## LESSONS LEARNED
-- SQL Editor is transactional; never edit applied migrations; add numbered migrations.
+- Supabase SQL Editor is transactional; never edit applied migrations; add numbered migrations.
 - SECURITY DEFINER/posting RPCs revoke public/anon/authenticated and grant only service_role; prove ordinary JWT denial.
 - PostgREST embeds need explicit FK names with multiple relationships.
 - audit_log is insert-only/ON DELETE RESTRICT; cleanup journal entries, audit_log, organizations, auth.users; reuse fixed users/orgs.
-- PayPal sandbox US Personal buyer, USD seller, Visa; webhook ends `/api/webhook`; raw body required for signature verification.
+- PayPal sandbox buyer US Personal; seller USD; Visa; webhook ends `/api/webhook`; raw body required for signature verification.
 - Never print `.env` values or JWTs.
 
 ## DO NOT LIST
