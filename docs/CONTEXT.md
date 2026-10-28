@@ -1,9 +1,9 @@
 # NovaPay Phase 5 Handoff
 
 ## HEADER
-- Updated: 2026-10-28 14:53 Asia/Kolkata.
+- Updated: 2026-10-28 15:04 Asia/Kolkata.
 - Branch: `phase5-backend`; last implementation commit `eca1196` (`WIP Phase 5 task 1: document upload foundation`); no push.
-- Current phase/task: Phase 5, Part 1 complete; task 1/4. Migration 0015 awaits human apply; stop here until the user says `CONTINUE`.
+- Current phase/task: Phase 5, Part 1 complete; task 1/4. User confirmed migration 0015 applied; stop here until the user says `CONTINUE`.
 
 ## DONE
 - Part 1: private document bucket policies, `documents`, `document_chunks` (768-dimension vector), `document_search_hits`, atomic hourly upload reservation/audit RPC, and raw authenticated upload API.
@@ -15,20 +15,18 @@
 ## IN PROGRESS
 - Exact task: Part 1 implementation, checks and local WIP commit are complete; migration 0015 is deliberately not applied.
 - Files changed: `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `package.json`, `package-lock.json`, `server/src/app.js`, `server/src/config.js`, `server/src/routes/documents.js`, `server/src/services/supabase.js`, `server/test/documents-upload.test.js`, `server/test/supabase.test.js`, `supabase/migrations/0015_documents_rag.sql`.
-- Left: human applies migration 0015 and confirms; migration-dependent runtime checks remain unverified. No application code is left in Part 1.
+- Left: direct live verification of migration 0015, pgvector, Storage policies and RLS remains UNVERIFIED. No application code is left in Part 1.
 
 ## NEXT STEPS
-1. Human applies `supabase/migrations/0015_documents_rag.sql` using the steps under USER ACTIONS PENDING and replies `applied`.
-2. Until confirmed, keep all live migration/Storage/RLS tests UNVERIFIED; do not call live migration-dependent APIs.
-3. After user says `CONTINUE`, implement Part 2 OCR, extraction validation/arithmetic checks, duplicate detection, and tests.
+1. Wait for user `CONTINUE` before starting Part 2 OCR, extraction validation/arithmetic checks, duplicate detection, and tests.
+2. When continuing, directly verify migration 0015 objects and privilege boundaries before relying on them; user apply confirmation alone is not runtime test evidence.
 
 ## USER ACTIONS PENDING
-- Apply migration 0015: open Supabase Dashboard → project → Database → Extensions; enable `vector` in schema `extensions` if not enabled. Open SQL Editor → New query; paste the entire contents of `supabase/migrations/0015_documents_rag.sql` from this repository and run once. Confirm the query succeeds, then reply `applied`. Supabase SQL Editor runs the script transactionally; on any error, the migration rolls back. Do not run a partial selection.
-- Alternatively, from the repo with the Supabase CLI linked to the intended project, run `supabase db push` and confirm 0015 is shown applied. Do not use both paths.
-- After migration confirmation, ask for `CONTINUE` before Part 2.
+- No migration action pending; user confirmed migration 0015 applied.
+- Reply `CONTINUE` to authorize Part 2. Runtime checks remain unverified until actually performed.
 
 ## LIVE STATE
-- Real Supabase migrations 0001–0014: previously user-confirmed applied. Migration 0015: authored, syntax parsed, NOT applied; runtime status UNVERIFIED.
+- Real Supabase migrations 0001–0014: previously user-confirmed applied. Migration 0015: user-confirmed applied on 2026-10-28; live object/RLS/function checks not yet run and remain UNVERIFIED.
 - Tunnel/webhook: last reported fixed by user; not checked in this task. No live API or browser checks run for Part 1.
 - Tests last run live: none in this task.
 - Key names only: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `DOCUMENT_MAX_FILE_MB`, `DOCUMENT_MAX_PAGES`, `DOCUMENT_MAX_CONCURRENT_JOBS_PER_ORG`, `DOCUMENT_MAX_UPLOADS_PER_ORG_PER_HOUR`.
