@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
-- Current code checkpoint: `f4f53b8`; this fix/checkpoint commit pending
+- Latest local code/log checkpoint: `7b6ab23`; no push
 - Current task: GET-by-ID fix applied; deletion response diagnosed; live checks and final tests complete
 
 ## DONE
