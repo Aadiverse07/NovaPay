@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 3 code complete on phase5-backend; implementation checkpoint 6dba84b. Migration 0016 awaits human apply before live permission checks.
-- Last finished step: npm test PASS 163/163; npm run check:migrations PASS 16/16; node --check PASS for 14 changed JS files; git diff --check PASS.
-- DONE: Gemini gemini-embedding-001 at 768 dims; OCR-text indexing; per-call ai_usage budgets; org-scoped hybrid retrieval/cited answers; accountant confirm/reject/delete with audit/cascade; extraction/answer injection tests.
-- NEXT: human applies supabase/migrations/0016_document_search_and_delete.sql in Supabase SQL Editor and says applied. Verify ordinary JWT 403 and safe service-role calls without deleting real data. Do not start Part 4 until user says CONTINUE.
-- Pending human action: Supabase Dashboard → SQL Editor → New query → paste the entire 0016 file → Run once → wait for success → reply applied. Do not reload schema cache yet.
+- Current task: Phase 5 Part 3 complete on phase5-backend; migration 0016 user-applied and live permission checks passed.
+- Last finished step: fixed accountant session/membership HTTP 200; service-role search HTTP 200 (0 rows); service-role delete(nonexistent random UUID) HTTP 200/null; ordinary accountant JWT gets 403 on both RPCs. Schema cache not reloaded.
+- DONE: Gemini 768-d embeddings, OCR-text indexing, per-call ai_usage budgets, org-scoped hybrid retrieval/citations, accountant confirm/reject/delete with audit/cascade, extraction/answer injection tests; migration 0016 applied and live RPC boundaries checked.
+- NEXT: stop and wait for user CONTINUE before Part 4. Do not start UI wiring until then.
+- Pending human action: none for Part 3. Part 4 browser/UI checks will be listed in its handoff.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -3027,3 +3027,23 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 Asia/Kolkata | ABOUT TO retry Part 3 WIP checkpoint | previous wrapper failed before any command ran; verify branch and env paths, then commit locally.
 2026-10-28 Asia/Kolkata | RESULT: PASS; Part 3 implementation WIP commit 6dba84b created on phase5-backend; no env paths tracked/staged; no push. NEXT: refresh CONTEXT and top RESUME POINTER to the committed Part 3 checkpoint, then commit this handoff update locally.
 2026-10-28 Asia/Kolkata | ABOUT TO finalize Part 3 commit metadata in the handoff docs | make the resume pointer name the exact implementation checkpoint and the human migration action.
+2026-10-28 Asia/Kolkata | RESULT: PASS; Part 3 handoff metadata committed as 08f6aab; Part 3 implementation checkpoint is 6dba84b. No push. Next action is human apply of migration 0016; live role checks remain UNVERIFIED.
+2026-10-28 Asia/Kolkata | ABOUT TO record user confirmation and locate the fixed-accountant live verification method | migration 0016 is reported applied; prepare read-only permission checks without exposing secrets.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; documentation inspection wrapper had invalid JavaScript string quoting; no commands ran and no files changed. NEXT: inspect fixture identifiers/key presence with a valid command, then update the pointer.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect fixed live fixture identifiers and env-key presence | keep all values/tokens out of output.
+2026-10-28 Asia/Kolkata | RESULT: PARTIAL; fixed accountant is novapay-phase3-accountant@example.test; first fixture inspection succeeded, but env-key presence probe had a local eval syntax error so no key state was read. No credentials/token values printed. NEXT: inspect exact existing magic-link and fixed-org logic before a safe read-only 0016 probe.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect the existing fixed accountant login/org flow | reuse exact established fixtures and avoid creating users, organizations, or documents.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; live-probe wrapper used nested JavaScript template literals inside the exec template and did not run. No credentials or API calls occurred. NEXT: retry with a plain quoted Node heredoc and string concatenation.
+2026-10-28 Asia/Kolkata | ABOUT TO retry the read-only 0016 live permission probe | previous wrapper failed during parsing; keep token/key values in memory and print statuses only.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; live-result documentation wrapper contained nested Markdown backticks and did not execute; live RPC outcomes remain verified in memory and no docs were updated by that call. NEXT: reapply report/context updates with a delimiter-safe command.
+2026-10-28 Asia/Kolkata | ABOUT TO record live 0016 results and refresh handoff | previous command failed before execution; preserve the measured HTTP outcomes and keep Part 4 gated.
+2026-10-28 Asia/Kolkata | RESULT: PASS; live 0016 search/delete RPC checks passed with ordinary JWT 403 and service-role HTTP 200; nonexistent document probe made no changes; schema cache untouched. NEXT: refresh CONTEXT/RESUME POINTER with live evidence, then locally checkpoint and wait for CONTINUE before Part 4.
+2026-10-28 Asia/Kolkata | ABOUT TO update final Part 3 live verification handoff | mark migration 0016 applied/live-verified, remove pending SQL action, and wait for explicit Part 4 authorization.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT and RESUME POINTER now show migration 0016 applied/live verified; human apply action removed; Part 4 explicitly gated on user CONTINUE.
+2026-10-28 Asia/Kolkata | ABOUT TO verify live-result handoff and pending paths | ensure migration status/report match the successful read-only RPC probes and append-only history remains intact.
+2026-10-28 Asia/Kolkata | RESULT: REVIEW; live-result append succeeded, but CONTEXT exact replacements missed stale header/next-step/user-action lines, and one known-issues row still labels 0016 unverified. NEXT: correct those exact fields before checkpointing.
+2026-10-28 Asia/Kolkata | ABOUT TO correct remaining stale CONTEXT fields | ensure the user-reported applied state and measured 403/200 results are reflected consistently.
+2026-10-28 Asia/Kolkata | RESULT: FAIL; exact CONTEXT patch did not match the current text, so no changes were applied. NEXT: read the current header and stale rows, then patch only their exact wording.
+2026-10-28 Asia/Kolkata | ABOUT TO inspect exact remaining CONTEXT text | avoid broad replacements after earlier partial-match issues.
+2026-10-28 Asia/Kolkata | RESULT: PASS; CONTEXT now reflects applied migration 0016, successful service-role search/delete (200), ordinary accountant JWT denial (403), and Part 4 gate; TEST-REPORT has individual live results. NEXT: verify docs/status/no-env and commit this handoff locally.
+2026-10-28 Asia/Kolkata | ABOUT TO checkpoint live verification docs | check branch, whitespace, applied-state consistency, and env-path absence; never push.

@@ -1167,3 +1167,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | npm run check:migrations (Part 3 final) | PASS | 16/16 numbered migrations parsed by PostgreSQL 17 parser; 0016 remains unapplied.
 2026-10-28 | node --check (Part 3 changed JavaScript) | PASS | 14 changed JS files parsed successfully.
 2026-10-28 | git diff --check (Part 3 final) | PASS | No whitespace errors.
+2026-10-28 | Migration 0016 live verification | PASS | Fixed accountant magic-link session and membership HTTP 200; service-role search_document_chunks HTTP 200 with 0 rows; service-role delete_document(nonexistent random UUID) HTTP 200/null (no row deleted); ordinary accountant JWT search_document_chunks HTTP 403; ordinary accountant JWT delete_document HTTP 403.
+2026-10-28 | Migration 0016 applied-state confirmation | PASS | User confirmed applied; RPC calls above prove search/delete functions are live; schema cache was not reloaded.
