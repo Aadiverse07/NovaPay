@@ -1,9 +1,9 @@
 # NovaPay Phase 5 Handoff
 
 ## HEADER
-- Updated: 2026-10-28 14:40 Asia/Kolkata.
-- Branch: `phase5-backend`; starting commit `110b171e102c6f542ecc623088d9f059b0fb7794` (update to Part 1 WIP commit after checkpoint).
-- Current phase/task: Phase 5, Part 1 complete; task 1/4. Stop here until the user says `CONTINUE`.
+- Updated: 2026-10-28 14:53 Asia/Kolkata.
+- Branch: `phase5-backend`; last implementation commit `eca1196` (`WIP Phase 5 task 1: document upload foundation`); no push.
+- Current phase/task: Phase 5, Part 1 complete; task 1/4. Migration 0015 awaits human apply; stop here until the user says `CONTINUE`.
 
 ## DONE
 - Part 1: private document bucket policies, `documents`, `document_chunks` (768-dimension vector), `document_search_hits`, atomic hourly upload reservation/audit RPC, and raw authenticated upload API.
@@ -13,15 +13,14 @@
 - `npm test`: PASS, 140/140. `npm run check:migrations`: PASS, 15/15 syntax parsed. `node --check`: PASS (6 JS files). `git diff --check`: PASS.
 
 ## IN PROGRESS
-- Exact task: finish Part 1 checkpoint docs and local WIP commit; migration 0015 is deliberately not applied.
+- Exact task: Part 1 implementation, checks and local WIP commit are complete; migration 0015 is deliberately not applied.
 - Files changed: `docs/CONTEXT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`, `package.json`, `package-lock.json`, `server/src/app.js`, `server/src/config.js`, `server/src/routes/documents.js`, `server/src/services/supabase.js`, `server/test/documents-upload.test.js`, `server/test/supabase.test.js`, `supabase/migrations/0015_documents_rag.sql`.
-- Left: verify final doc state, ensure no `.env` is staged/tracked, make local WIP commit on `phase5-backend`, refresh pointer with commit hash, then stop.
+- Left: human applies migration 0015 and confirms; migration-dependent runtime checks remain unverified. No application code is left in Part 1.
 
 ## NEXT STEPS
-1. Complete Part 1 docs and local checkpoint commit; do not push.
-2. Human applies `supabase/migrations/0015_documents_rag.sql` using the steps under USER ACTIONS PENDING and replies `applied`.
-3. Until confirmed, keep all live migration/Storage/RLS tests UNVERIFIED; do not call live migration-dependent APIs.
-4. After user says `CONTINUE`, implement Part 2 OCR, extraction validation/arithmetic checks, duplicate detection, and tests.
+1. Human applies `supabase/migrations/0015_documents_rag.sql` using the steps under USER ACTIONS PENDING and replies `applied`.
+2. Until confirmed, keep all live migration/Storage/RLS tests UNVERIFIED; do not call live migration-dependent APIs.
+3. After user says `CONTINUE`, implement Part 2 OCR, extraction validation/arithmetic checks, duplicate detection, and tests.
 
 ## USER ACTIONS PENDING
 - Apply migration 0015: open Supabase Dashboard → project → Database → Extensions; enable `vector` in schema `extensions` if not enabled. Open SQL Editor → New query; paste the entire contents of `supabase/migrations/0015_documents_rag.sql` from this repository and run once. Confirm the query succeeds, then reply `applied`. Supabase SQL Editor runs the script transactionally; on any error, the migration rolls back. Do not run a partial selection.
@@ -47,7 +46,7 @@
 
 ## KNOWN ISSUES AND RISKS
 - Migration runtime and Storage RLS were not executed against Supabase. All dependent checks remain UNVERIFIED until 0015 is applied and tested.
-- Document processing concurrency, OCR, usage/budget accounting for OCR and embedding calls, confirm/reject/delete routes, chunks, retrieval, injection tests and UI are later parts.
+- OCR worker does not yet call the 0015 processing-claim RPC; OCR, ai_usage/budget integration, confirm/reject/delete routes, retrieval, injection tests and UI remain later parts.
 - Only documents/OCR text are in the initial index. Do not index transaction descriptions, quotations or campaign descriptions before core passes.
 - Free-tier Gemini terms may allow use of submitted data; use sample documents only.
 - PDF extraction is untrusted. Phase 3 must test hidden instructions at extraction and answer stages.

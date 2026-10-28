@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: Phase 5 Part 1 (document upload foundation); branch `phase5-backend`; code/tests/docs are written; local WIP checkpoint remains.
+- Current task: Phase 5 Part 1 complete; branch `phase5-backend`; implementation WIP commit `eca1196`; no push.
 - Last finished step: final local checks complete: `npm test` PASS 140/140, migration syntax PASS 15/15, `node --check` PASS 6 files, `git diff --check` PASS. First `npm test` failed on missing injected-config default; fixed and reran PASS.
 - Migration: `supabase/migrations/0015_documents_rag.sql` exists and was NOT applied. User must enable `vector` in schema `extensions`, run the full migration once in Supabase SQL Editor (or linked CLI `supabase db push`), then say `applied`.
 - Runtime DB, pgvector, Storage policy and RLS verification remain UNVERIFIED until applied. No live API or browser checks were run.
-- NEXT: verify only intended paths are changed and `.env` is not staged/tracked; make a local WIP commit on `phase5-backend`; record its hash in CONTEXT; then STOP and wait for `CONTINUE`.
+- NEXT: human applies migration 0015 using CONTEXT steps and replies `applied`; migration-dependent checks stay UNVERIFIED. Then STOP and wait for `CONTINUE` before Part 2.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -2866,3 +2866,15 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 14:48 IST — ABOUT TO: Recheck staged paths and staged `.env`/protected-file absence before commit. WHY: the previous staging operation added the final WORKLOG pointer entry; ensure commit scope remains safe.
 2026-10-28 14:49 IST — RESULT: PASS; staged list contains only intended Part 1 files/docs; no `.env` path is staged. WORKLOG has one new verification line, so stage it now before commit.
 2026-10-28 14:49 IST — ABOUT TO: Commit the completed Part 1 checkpoint locally as a WIP commit. WHY: required after the part’s passing checks and continuity-doc updates; never push.
+2026-10-28 14:50 IST — RESULT: PASS; local Part 1 WIP commit created on `phase5-backend`: `eca1196` (`WIP Phase 5 task 1: document upload foundation`); no push. NEXT: update CONTEXT and RESUME POINTER with this code checkpoint hash, record the commit result, and commit the handoff correction locally.
+2026-10-28 14:50 IST — ABOUT TO: Refresh CONTEXT header/task status and RESUME POINTER to reference completed Part 1 WIP commit `eca1196`. WHY: handoff must accurately show source committed and the exact next action.
+2026-10-28 14:50 IST — RESULT: FAIL; pointer/context refresh patch matched stale expected CONTEXT wording; no patch was applied. NEXT: inspect current exact header, IN PROGRESS, NEXT STEPS and pointer lines, then patch against actual text.
+2026-10-28 14:51 IST — ABOUT TO: Update handoff using the exact current text after the prior patch failed. WHY: point future work to committed Part 1 hash `eca1196`, not the stale planning state.
+2026-10-28 14:51 IST — RESULT: FAIL; exact CONTEXT patch did not apply (the file text changed from the displayed slice by the time this patch was evaluated); no user source files were modified by this failed patch. NEXT: read only exact matching lines again and update WORKLOG pointer independently, then replace entire CONTEXT to avoid stale-context edits.
+2026-10-28 14:52 IST — ABOUT TO: Update exact CONTEXT matches and WORKLOG pointer with the completed commit state. WHY: previous attempts used mismatched wording; the current exact lines were inspected.
+2026-10-28 14:52 IST — RESULT: PASS; CONTEXT and top RESUME POINTER now reference implementation commit `eca1196`; Part 1 complete and migration 0015 application is the only required human step before live migration checks. NEXT: refresh timestamp, inspect diff/status/length and run final docs whitespace check.
+2026-10-28 14:53 IST — ABOUT TO: Record the approved OCR provider-interface default and refresh CONTEXT update time. WHY: the user required all provider/default choices to be captured in DECISIONS before proceeding.
+2026-10-28 14:53 IST — RESULT: PASS; Context timestamp refreshed and DECISIONS records the Gemini vision OCR/provider-interface default, with exact model verification deferred to Part 2. NEXT: inspect final docs scope, test-record tails, git status and diff cleanliness before docs checkpoint.
+2026-10-28 14:54 IST — RESULT: PASS; CONTEXT is 75 lines (<150); test/decision tails include final 140/140 result and selected OCR/embedding defaults; only CONTEXT, DECISIONS and WORKLOG remain modified after implementation commit; final diff check clean.
+2026-10-28 | `git diff --check` (handoff docs after commit) | PASS | No whitespace errors.
+2026-10-28 14:54 IST — ABOUT TO: Stage the handoff pointer/context/decision update and final diff-check record. WHY: persist post-commit status and all current continuity docs in a small local WIP checkpoint.
