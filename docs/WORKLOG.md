@@ -1,10 +1,11 @@
 ## RESUME POINTER
-- Current task: verify Phase 5 document isolation/deletion live, branch `phase5-backend`.
-- Last finished step: fixed Phase 3 owner accounts/orgs preflight passed; one synthetic PDF upload returned 201; process returned HTTP 503 before indexing; run-scoped DELETE returned 200; server stopped.
-- Exact work in progress: no code changes. Three live checks are UNVERIFIED because processing failed before search/Storage probes. Results appended to TEST-REPORT.md.
-- Last code/doc commit: `54b53b6`; verification log edits are pending local WIP commit; never push.
-- Next: wait for user direction on the processing 503; then diagnose only when authorized and rerun checks with fixed accounts/sample data.
-- Pending human action: decide whether to authorize diagnosis/fix of document processing 503; no RLS or cascade assertion was performed.
+- Current task: HANDOFF after Phase 5 Parts 1–4, branch `phase5-backend` based on main after PR #6.
+- Last local commit: `844e6a4`; no Phase 5 branch changes pushed; no PR yet.
+- DONE: upload/limits, OCR/validation, duplicate detection, embeddings/hybrid search, OCR router branch, Documents view wiring. Migrations 0015/0016 applied and live-verified. `npm test` 164/164; migrations 16/16; protected-file diff empty.
+- ACCEPTANCE: duplicate flag PASS; wrong-total flag PASS; injection PASS; cross-tenant retrieval, delete cascade and Storage-object RLS UNVERIFIED because last live processing returned HTTP 503 before indexing.
+- 503 status: root cause undiagnosed. User successfully reloaded PostgREST schema; user is adding GEMINI_API_KEY. Suspects: schema cache (reloaded), missing/invalid Gemini key, embedding model/dimension mismatch, provider rate limit.
+- Pending human: finish `.env`, restart `npm start`, run `docs/BROWSER-CHECKLIST.md` with sample docs only, then authorize push of `phase5-backend` and PR into main.
+- Next: (1) restart and diagnose 503 with one sample upload/log; small config/code fix only with test; (2) rerun three live checks with fixed users, one TEST-REPORT line each; (3) after authorization push phase5-backend and open PR; (4) Phase 7 hardening only if time remains.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3185,3 +3186,8 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: inspect branch, status, staged paths and tracked `.env` presence; WHY: ensure only continuity docs are committed and no secret files are included.
 2026-10-28 | RESULT: on `phase5-backend`; only three continuity docs modified, no staged files, `.env` not tracked; next create local WIP checkpoint, never push.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 live document verification`; WHY: preserve the blocked live-check results and current resume pointer locally.
+2026-10-28 | ABOUT TO: update HANDOFF RESUME POINTER, CONTEXT, TEST-REPORT and DECISIONS; WHY: preserve user's latest 503 status and precise next actions before stopping.
+2026-10-28 | RESULT: RESUME POINTER/CONTEXT rewritten with commit 844e6a4, Part 1–4 state and current 503 blocker; TEST-REPORT and DECISIONS append-only entries added; next verify status/no staged `.env` and create local WIP checkpoint.
+2026-10-28 | ABOUT TO: inspect current branch, worktree and staged filenames only; WHY: ensure the requested local checkpoint contains no `.env` or secrets.
+2026-10-28 | RESULT: branch `phase5-backend`; only CONTEXT/DECISIONS/TEST-REPORT/WORKLOG modified; `.env` not tracked and no files staged; next commit the handoff locally.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 handoff after 503`; WHY: checkpoint the requested resume pointer and live-test statuses; never push.
