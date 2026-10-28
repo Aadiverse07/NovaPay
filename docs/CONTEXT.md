@@ -2,7 +2,7 @@
 
 ## HEADER
 - Updated: 2026-10-28 15:27 Asia/Kolkata.
-- Branch: phase5-backend; last prior commit b97b849; Part 3 local WIP checkpoint being created; no push.
+- Branch: phase5-backend; last Part 3 implementation commit 6dba84b; no push.
 - Current phase/task: Phase 5 Part 3 code complete (task 3/4); migration 0016 is unapplied and its live permission checks remain pending. Migration 0015 is user-confirmed applied.
 
 ## DONE
