@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   var reduce = matchMedia("(prefers-reduced-motion: reduce)");
-  var SEL = ".module-table-wrap tbody tr, .table-scroll tbody tr, .transparency-row, .maintenance-list > article, .report-bars > div, .document-review";
+  var SEL = ".module-table-wrap tbody tr, .table-scroll tbody tr, .transparency-row, .maintenance-list > article, .report-bars > div, .campaign-grid > .campaign-card, .document-review";
   var EXCLUDE = "#view-transactions, #view-dashboard";
   var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("rb-in"); io.unobserve(e.target); } });
@@ -16,9 +16,8 @@
   }
   function place(host, item) {
     var ind = host._rb, r = item.getBoundingClientRect(), b = host.getBoundingClientRect();
-    var isTransparency = item.classList.contains("transparency-row");
-    ind.style.width = (r.width + (isTransparency ? 20 : 8)) + "px"; ind.style.height = (r.height + 6) + "px";
-    ind.style.transform = "translate(" + (r.left - b.left + host.scrollLeft - (isTransparency ? 16 : 4)) + "px," + (r.top - b.top + host.scrollTop - 3) + "px)";
+    ind.style.width = (r.width + 8) + "px"; ind.style.height = (r.height + 6) + "px";
+    ind.style.transform = "translate(" + (r.left - b.left + host.scrollLeft - 4) + "px," + (r.top - b.top + host.scrollTop - 3) + "px)";
     ind.classList.add("is-on");
   }
   function fades(h) {
