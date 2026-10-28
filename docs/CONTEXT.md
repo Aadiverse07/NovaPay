@@ -4,7 +4,7 @@
 - Date/time: 2026-10-28 (Asia/Kolkata)
 - Branch: `phase5-backend`
 - Last feature checkpoint: `ac25bfb`; live-verification journal commit pending
-- Current task: live document isolation verification; stopped after cross-tenant failure
+- Current task: diagnose cross-tenant document failure only; stopped before Org B probes
 
 ## DONE
 - Phase 5 Parts 1–4 complete; migrations 0015/0016 applied/live-verified.
@@ -13,13 +13,13 @@
 - Server health HTTP 200; fixed existing owner A/org A uploaded and processed/indexed one synthetic sample; cleanup DELETE HTTP 200; server stopped.
 
 ## IN PROGRESS
-- Cross-tenant check FAIL: Org B aggregate AI/list/direct-fetch isolation assertion failed; run output did not retain which subassertion.
+- Membership setup confirmed: owner A belongs to org A; owner B belongs to org B and has no org A membership. Intended Org B calls use B JWT and X-Org-Id org B. Sample upload 201, processing 429 AI_DAILY_LIMIT; run-scoped cleanup 200. No Org B sub-check ran.
 - Delete cascade UNVERIFIED: cleanup DELETE succeeded, but chunks/search hits/object/audit were not individually checked.
 - Storage-object RLS UNVERIFIED: probe not run because user instructed stop after a failure.
 - Do not diagnose/fix or rerun without user authorization.
 
 ## NEXT STEPS
-1. Await user authorization to investigate which Org B assertion failed.
+1. Await user direction after AI daily budget reset; the earlier aggregate probe failure was inconclusive, and current rerun did not reach Org B checks.
 2. If authorized, isolate the failing API assertion with the existing fixed owner A/B and org A/B; use synthetic samples only.
 3. After the failure is understood and approved, rerun cross-tenant, delete cascade and Storage RLS checks; log each actual result.
 4. Never push without explicit authorization; Phase 7 only if time remains.
@@ -30,7 +30,7 @@
 ## LIVE STATE
 - Migrations 0001–0016 user-confirmed applied; no migrations changed.
 - Fixed Phase 3 users/orgs used; no new users/orgs created.
-- Last server run: `/api/status` 200; upload/process/index succeeded; cross-tenant assertion failed; run-scoped delete HTTP 200; server stopped.
+- Last server run: fixed-user membership setup valid; synthetic upload 201; processing 429 AI_DAILY_LIMIT; run-scoped cleanup 200; server stopped.
 - Key names only: `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 
 ## TEST STATE
@@ -39,7 +39,7 @@
 | `npm ci` | PASS | 94 packages added, 95 audited, 0 vulnerabilities; install-script warning logged. |
 | `npm test` | PASS 164/164 | Fresh install baseline. |
 | Migration parser | PASS 16/16 | `npm run check:migrations`. |
-| Cross-tenant retrieval/fetch | FAIL | Aggregate Org B AI/list/fetch assertion failed after sample was indexed. |
+| Cross-tenant retrieval/fetch | UNVERIFIED | Re-indexing sample blocked by HTTP 429 AI_DAILY_LIMIT; Org B probes not run. |
 | Delete cascade | UNVERIFIED | Cleanup DELETE 200; no component assertions. |
 | Storage-object RLS | UNVERIFIED | Stopped before different-org JWT probe. |
 

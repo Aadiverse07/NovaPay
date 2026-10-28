@@ -1197,3 +1197,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | Live cross-tenant retrieval/fetch | FAIL | One synthetic sample was uploaded/processed and indexed for fixed owner A/org A; Org B aggregate AI/list/direct-fetch isolation assertion failed (the diagnostic run did not retain which sub-assertion); only this run's document was deleted via HTTP 200. Stopped without further probes or fixes.
 2026-10-28 | Live delete cascade | UNVERIFIED | Stopped after cross-tenant failure; cleanup DELETE HTTP 200, but chunks, search hits, Storage object and audit row were not individually verified.
 2026-10-28 | Live Storage-object RLS | UNVERIFIED | Stopped after cross-tenant failure; different-org JWT object read was not run.
+2026-10-28 | (a1) dedicated document search endpoint candidate | UNVERIFIED | No dedicated search HTTP route exists in current route source; request not run because sample processing returned HTTP 429 `AI_DAILY_LIMIT` before probes.
+2026-10-28 | (a2) hybrid-search path via `/api/ai/chat` | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | (b) Org B document list/get | UNVERIFIED | Neither request run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | (c) Org B Storage object read | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | (d) Org B document-specific AI question | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
+2026-10-28 | Fixed-user test setup | PASS | Membership query confirmed owner A belongs to org A; owner B belongs to org B and has no org A membership. B requests were configured to use B JWT and X-Org-Id org B; service-role credentials not used for B API/Storage calls.
+2026-10-28 | Sample preparation | FAIL | One synthetic upload succeeded HTTP 201; processing returned HTTP 429 `AI_DAILY_LIMIT`; run-scoped cleanup returned HTTP 200. No Org B content or document data printed.
