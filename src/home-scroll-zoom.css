@@ -1,0 +1,13 @@
+/* Scroll-driven transforms are written by home-scroll-zoom.js. */
+.home-zoom-active {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-zoom-active {
+    transform: none !important;
+    opacity: 1 !important;
+    will-change: auto;
+  }
+}
