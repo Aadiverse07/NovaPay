@@ -1,9 +1,10 @@
 ## RESUME POINTER
-- Current task: diagnose cross-tenant document failure only; branch `phase5-backend`.
-- Last completed: confirmed fixed memberships (A->org A, B->org B; B has no org A membership); B checks were configured with own JWT and X-Org-Id org B; service role not used for B requests.
-- Live blocker: one synthetic upload returned HTTP 201; processing returned HTTP 429 `AI_DAILY_LIMIT`; run-scoped DELETE returned HTTP 200; server stopped. No Org B sub-check ran.
-- Sub-checks (a1 search endpoint candidate, a2 hybrid AI path, b list/get, c Storage RLS, d AI question): UNVERIFIED; recorded individually in TEST-REPORT.md. Current routes have no dedicated search endpoint.
-- Next: await user's direction after daily AI budget reset or other approved test setup; do not bypass budget or reuse stale document IDs; no code fix applied.
+- Current task: rerun cross-tenant document check; branch `phase5-backend`.
+- Last finished: server restart healthy; fixed membership setup PASS (A->org A only; B->org B only/no org A); B auth context was B JWT + org B. One synthetic upload HTTP 201.
+- Blocker: processing HTTP 429 `AI_DAILY_LIMIT`; request-count remaining budget is user 0, org 15 (loaded limits 5/20). Sample cleanup HTTP 200; server now stopped.
+- Probes (a) hybrid/RPC, (b) list/get, (c) Storage RLS, (d) org A positive control: all UNVERIFIED and not run. No fix applied.
+- Next: wait for user direction/budget reset; do not retry until authorized. Then run all probes separately and stop at first failed assertion.
+- Pending: user to correct raised user limit in `.env`/restart or direct resume; `.env.example` has unrelated pre-existing modification and must not be committed.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3277,3 +3278,33 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: inspect branch/status/tracked `.env` and staged names; WHY: prepare safe local continuity checkpoint only.
 2026-10-28 | RESULT: phase5-backend confirmed; only continuity docs modified; `.env` not tracked; no staged files; next commit diagnostic results locally.
 2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant diagnosis blocked`; WHY: preserve membership/JWT evidence and the daily-budget blocker; never push.
+2026-10-28 | ABOUT TO: verify branch/status and check server port health; WHY: start the requested cross-tenant rerun only on phase5-backend and avoid duplicate server processes.
+2026-10-28 | RESULT: branch phase5-backend; `/api/status` already HTTP 200 authenticated; `.env.example` is pre-existing modified content and will not be touched; next identify the server process and loaded budget presence without printing values.
+2026-10-28 | ABOUT TO: inspect listening server process and loaded budget numeric values only; WHY: confirm the restarted process uses the raised limits before creating the sample.
+2026-10-28 | RESULT: server PID 72140 is listening; fresh config loader reports limits 5/user and 20/org, not raised; no document created; next verify PID command and restart to load current .env.
+2026-10-28 | ABOUT TO: inspect PID command (no environment) and stop only the NovaPay server on port 3000; WHY: user requested server restart so updated limit config is loaded.
+2026-10-28 | RESULT: PID 72140 is `node server/index.js`; next stop this identified NovaPay server and restart via npm start.
+2026-10-28 | ABOUT TO: terminate only PID 72140; WHY: restart the exact app process to load updated environment configuration.
+2026-10-28 | RESULT: identified app process stopped; next start npm start to load current environment.
+2026-10-28 | ABOUT TO: start NovaPay using npm start; WHY: required fresh process for current AI limits.
+2026-10-28 | RESULT: fresh server started; startup reports Gemini enabled; next confirm health and fresh limits by numbers only.
+2026-10-28 | ABOUT TO: query `/api/status` and loaded config booleans/numeric limits; WHY: validate runtime readiness and whether user-raised budgets loaded before sample upload.
+2026-10-28 | RESULT: fresh server `/api/status` HTTP 200; Gemini key present; loaded limits are user 5/org 20, so raised values are not reflected; next attempt exactly one fixed-user synthetic upload/process and stop on 429.
+2026-10-28 | ABOUT TO: authenticate fixed owners A/B, verify memberships, upload one small synthetic PDF as A, process once, then run separated B checks and positive control only if indexing succeeds; WHY: satisfy requested diagnosis while isolating each API route/status/count.
+2026-10-28 | ABOUT TO: collect sample upload/process output; WHY: live operation is running and must not be duplicated.
+2026-10-28 | RESULT: processing returned HTTP 429 AI_DAILY_LIMIT despite config being loaded; numeric remaining budgets reported user 0/org 0; run-scoped cleanup 200; Org B checks not reached; next stop server.
+2026-10-28 | ABOUT TO: stop server started for this attempt; WHY: user specified stop if processing returns 429.
+2026-10-28 | RESULT: server stopped on 429 as directed; logs confirm health, upload and cleanup; next verify how usage limits are measured before reporting the numeric remaining budget.
+2026-10-28 | ABOUT TO: inspect reserve_ai_usage semantics in applied migration; WHY: ensure reported remaining-budget numbers use request count/token unit correctly, without another live call.
+2026-10-28 | RESULT: migration shows daily limits count non-cache ai_usage rows, not tokens; prior budget arithmetic was incorrect and is discarded; next read counts only to calculate numeric remaining budget after 429.
+2026-10-28 | ABOUT TO: issue read-only exact-count queries for today's fixed A user/org ai_usage; WHY: report remaining request budget in the correct unit, with no content or secret output; no more checks or writes.
+2026-10-28 | RESULT: exact usage counts show remaining request budgets user 0, org 15; loaded limits 5/20, user limit remains default; no further probes/writes; next stop server and record status.
+2026-10-28 | ABOUT TO: stop the server started for this attempt; WHY: HTTP 429 requires stopping the cross-tenant sequence.
+2026-10-28 | RESULT: stored server session no longer exists when sending Ctrl-C; next check API health/port to confirm whether the process already exited.
+2026-10-28 | ABOUT TO: query localhost API status and listener metadata only; WHY: verify server stopped after the failed live attempt.
+2026-10-28 | RESULT: `/api/status` now ECONNREFUSED and no listener; server is stopped; next append attempt results and update resume pointer.
+2026-10-28 | ABOUT TO: log the repeat run's per-step outcomes and correct prior remaining-budget arithmetic; WHY: preserve accurate 429 diagnosis without claiming any unrun probe.
+2026-10-28 | RESULT: report now has one line per requested subcheck, all unrun checks UNVERIFIED; context/pointer reflect 429 and corrected numeric budgets; next inspect status/no .env and checkpoint docs only.
+2026-10-28 | ABOUT TO: check branch/status/tracked `.env` and staged names; WHY: commit only continuity docs, preserving unrelated `.env.example` modification.
+2026-10-28 | RESULT: phase5-backend confirmed; `.env` not tracked; `.env.example` untouched and remains pre-existing modified; only docs/CONTEXT, TEST-REPORT, WORKLOG will be staged; next local WIP commit.
+2026-10-28 | ABOUT TO: commit `WIP Phase 5 cross-tenant rerun blocked by budget`; WHY: checkpoint exact results and resume pointer without including `.env.example`; never push.

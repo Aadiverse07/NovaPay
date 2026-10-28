@@ -1204,3 +1204,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | (d) Org B document-specific AI question | UNVERIFIED | Not run; sample processing returned HTTP 429 `AI_DAILY_LIMIT` before Org B probes.
 2026-10-28 | Fixed-user test setup | PASS | Membership query confirmed owner A belongs to org A; owner B belongs to org B and has no org A membership. B requests were configured to use B JWT and X-Org-Id org B; service-role credentials not used for B API/Storage calls.
 2026-10-28 | Sample preparation | FAIL | One synthetic upload succeeded HTTP 201; processing returned HTTP 429 `AI_DAILY_LIMIT`; run-scoped cleanup returned HTTP 200. No Org B content or document data printed.
+2026-10-28 | Cross-tenant rerun setup | PASS | Fixed owner A is member of org A only; fixed owner B is member of org B only and has no org A membership; all intended B requests carried B's own JWT and X-Org-Id org B; no service-role credential used for B API/Storage calls.
+2026-10-28 | Sample upload/process | FAIL | Synthetic upload HTTP 201; process HTTP 429 `AI_DAILY_LIMIT`; cleanup HTTP 200. Loaded limits were user 5/org 20. Correct request-count query: remaining user budget 0, org budget 15.
+2026-10-28 | (a) Org B hybrid AI search and search RPC | UNVERIFIED | Not run because process returned HTTP 429 first; no direct RPC attempt. A dedicated document search HTTP route does not exist in current source.
+2026-10-28 | (b) Org B list/get org A document | UNVERIFIED | Not run because process returned HTTP 429 first.
+2026-10-28 | (c) Org B Storage object read | UNVERIFIED | Not run because process returned HTTP 429 first.
+2026-10-28 | (d) Org A positive-control AI answer | UNVERIFIED | Not run because process returned HTTP 429 first.
+2026-10-28 | Remaining-budget correction | CORRECTION | Limits count non-cache `ai_usage` rows, not tokens. Exact counts after 429 were user 5/5 (remaining 0), org 5/20 (remaining 15); an earlier zero/zero estimate based on tokens was invalid.
