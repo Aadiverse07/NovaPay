@@ -1,0 +1,29 @@
+/* Scroll entrance for the five home page capability cards. Uses the individual
+   translate property so it does not replace the cards' existing hover/tilt transform. */
+#features .feature-card.capability-enter-left,
+#features .feature-card.capability-enter-right {
+  opacity: 0;
+  transition: opacity 760ms cubic-bezier(.2, .75, .25, 1),
+    translate 900ms cubic-bezier(.2, .75, .25, 1);
+  transition-delay: var(--capability-delay, 0ms);
+  will-change: opacity, translate;
+}
+
+#features .feature-card.capability-enter-left { translate: -72px 0; }
+#features .feature-card.capability-enter-right { translate: 72px 0; }
+
+#features .feature-card.capability-enter-left.is-entered,
+#features .feature-card.capability-enter-right.is-entered {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #features .feature-card.capability-enter-left,
+  #features .feature-card.capability-enter-right {
+    opacity: 1;
+    translate: none;
+    transition: none;
+    will-change: auto;
+  }
+}

@@ -60,3 +60,11 @@
 @media(max-width:520px){.module-kpis,.module-kpis--two{grid-template-columns:1fr}.module-toolbar,.module-inline{align-items:stretch;flex-direction:column}.module-toolbar input,.module-toolbar select{width:100%}.report-summary-grid{gap:14px;padding:14px}.report-summary-grid strong{font-size:1.15rem}.report-bars{height:190px;gap:8px}.card-heading{align-items:flex-start;flex-wrap:wrap}.module-table-wrap{margin:0 -5px}.upload-card{padding:20px 14px}.document-review .table-action{width:100%}.dashboard-sidebar{padding-top:72px}.fx-controls{align-items:stretch;flex-direction:column}.fx-controls>span{align-self:center;transform:rotate(90deg)}}
 @media(max-width:560px){.invoice-dialog{padding:24px 18px}.invoice-form-grid{grid-template-columns:1fr}.invoice-field--wide{grid-column:auto}.invoice-form-actions button{flex:1}}
 @media(prefers-reduced-motion:reduce){.invoice-dialog{animation:none}}
+#invoice-table tbody tr{cursor:pointer;transition:background-color .18s ease,box-shadow .18s ease}
+#invoice-table tbody tr:hover,#invoice-table tbody tr:focus-visible{background:var(--surface-sunken);outline:2px solid var(--focus-ring);outline-offset:-2px}
+#invoice-detail-modal .approval-dialog{animation:invoice-dialog-in .24s ease both}
+
+/* New invoice dialog: close (×) in the top-right corner.
+   .specular-button { position: relative } was overriding .modal-close { position: absolute }. */
+.invoice-dialog>.modal-close{position:absolute;top:18px;right:18px;left:auto;margin:0;float:none;z-index:4}
+@media(max-width:560px){.invoice-dialog>.modal-close{top:14px;right:14px}}

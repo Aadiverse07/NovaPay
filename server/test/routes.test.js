@@ -137,6 +137,17 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
   });
 });
 
+test('events route returns empty activity when the snapshot read fails', async () => {
+  const repos = createRepositories();
+  repos.events.snapshot = async () => { throw Object.assign(new Error('database read failed'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' }); };
+  const app = createApp({ config: baseConfig, repos, identity });
+  await withServer(app, async (base, _logs, request) => {
+    const response = await request(`${base}/api/events`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { events: [], calls: [] });
+  });
+});
+
 test('AI route accepts legacy context fields but supplies only verified membership context', async () => {
   const repos = createRepositories();
   let observed;
@@ -210,7 +221,7 @@ test('AI provider error bodies and keys do not reach responses or activity logs'
       const response = await request(`${base}/api/ai/chat`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: 'question' }) });
       const responseText = await response.text();
       assert.equal(response.status, 200);
-      assert.deepEqual(JSON.parse(responseText), { answer: 'AI temporarily unavailable. Please try again later.', route: 'llm', reason: 'general_read_only_question', citations: [], usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
+      assert.deepEqual(JSON.parse(responseText), { answer: 'AI temporarily unavailable. Please try again later.', route: 'llm', reason: 'general_read_only_question', citations: [], usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false, unavailable: true });
       assert.equal(responseText.includes(secret), false);
       assert.equal(responseText.includes('at '), false);
       const activityText = await (await request(`${base}/api/events`)).text();

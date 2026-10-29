@@ -34,7 +34,7 @@
 :root[data-theme="dark"]  .modal.auth-split { box-shadow: 0 0 0 1px rgba(var(--glow-lav), .25), 0 0 46px rgba(var(--glow-lav), .28), 0 24px 80px rgba(0,0,0,.55); }
 
 :root .modal.auth-split .modal-close {
-  z-index: 20; left: 14px; right: auto; top: 14px;
+  z-index: 20; left: auto; right: 14px; top: 14px;
   width: 40px; height: 40px; display: grid; place-items: center;
   border: 1px solid rgba(255,255,255,.8); border-radius: 50%;
   background: color-mix(in srgb, var(--surface) 92%, white);
