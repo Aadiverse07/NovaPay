@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   var reduce = matchMedia("(prefers-reduced-motion: reduce)");
-  var SEL = ".module-table-wrap tbody tr, .table-scroll tbody tr, .transparency-row, .maintenance-list > article, .report-bars > div, .campaign-grid > .campaign-card, .document-review";
+  var SEL = ".module-table-wrap tbody tr, .table-scroll tbody tr, .transparency-row, .maintenance-list > article, .report-bars > div, .document-review";
   var EXCLUDE = "#view-transactions, #view-dashboard";
   var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("rb-in"); io.unobserve(e.target); } });

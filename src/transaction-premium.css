@@ -32,16 +32,63 @@
   animation: tx-ripple .7s ease-out forwards; z-index: 2; }
 @keyframes tx-ripple { to { transform: scale(26); opacity: 0; } }
 
-/* 3. Type badges come alive on row hover */
-#view-transactions .tx-badge { display: inline-flex; transition: transform .3s cubic-bezier(.2,.9,.3,1.4), box-shadow .3s; }
-#view-transactions .transaction-row:hover .tx-badge { box-shadow: 0 0 0 4px color-mix(in srgb, var(--info-text) 14%, transparent), 0 6px 14px color-mix(in srgb, var(--info-text) 22%, transparent); }
-#view-transactions .transaction-row:hover .tx-badge.payment { animation: tx-fly-out .7s ease; }
-#view-transactions .transaction-row:hover .tx-badge.payout { animation: tx-rise .7s ease; }
-#view-transactions .transaction-row:hover .tx-badge.refund { animation: tx-spin-back .8s cubic-bezier(.3,.7,.2,1); }
+/* 3. Type badges: the icon is drawn centred inside a fixed tile (the old text arrows sat off-centre
+      and the whole tile slid/faded on hover). Only the icon moves; the tile never leaves the centre.
+      Every type has its own smooth animation, like Refund's spin, on row hover / keyboard focus. */
+#view-transactions .tx-badge {
+  --tx-ico: none;
+  position: relative; display: inline-block; flex: none; box-sizing: border-box;
+  width: 26px; height: 26px; margin-right: 9px; border-radius: 8px; overflow: hidden;
+  vertical-align: middle; font-size: 0; line-height: 0; /* hides the text glyph; the icon is the ::before */
+  transition: box-shadow .3s;
+}
+#view-transactions .tx-badge::before {
+  content: ""; position: absolute; inset: 0; margin: auto; width: 14px; height: 14px;
+  background: currentColor; transform-origin: 50% 50%; will-change: transform;
+  -webkit-mask: var(--tx-ico) center / contain no-repeat; mask: var(--tx-ico) center / contain no-repeat;
+}
+#view-transactions .tx-badge.payment { --tx-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17L17 7M8 7h9v9'/%3E%3C/svg%3E"); }
+#view-transactions .tx-badge.payout  { --tx-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17L17 7M8 7h9v9'/%3E%3C/svg%3E"); }
+#view-transactions .tx-badge.refund  { --tx-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 14L4 9l5-5'/%3E%3Cpath d='M4 9h10.5a5.5 5.5 0 0 1 0 11H11'/%3E%3C/svg%3E"); }
+#view-transactions .tx-badge.dispute { --tx-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v9M12 19.5h.01'/%3E%3C/svg%3E"); }
+
+/* The row hover zoom scales each cell around its centre, which slid the icon sideways. Anchor the
+   Type cell at its left edge so the icon stays where it is and only grows slightly. */
+#view-transactions .data-table tbody tr.transaction-row > td:nth-child(2) { transform-origin: left center; }
+
+#view-transactions .transaction-row:is(:hover, :focus-visible) .tx-badge {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--info-text) 14%, transparent), 0 6px 14px color-mix(in srgb, var(--info-text) 22%, transparent);
+}
+/* Refund: spins back (counter-clockwise) */
+#view-transactions .transaction-row:is(:hover, :focus-visible) .tx-badge.refund::before { animation: tx-ico-spin-back .8s cubic-bezier(.3,.7,.2,1); }
+/* Payment: the arrow shoots out of the tile and re-enters from the opposite corner */
+#view-transactions .transaction-row:is(:hover, :focus-visible) .tx-badge.payment::before { animation: tx-ico-fly-out .8s cubic-bezier(.3,.7,.2,1); }
+/* Payout: the arrow lifts off and settles back with a small bounce */
+#view-transactions .transaction-row:is(:hover, :focus-visible) .tx-badge.payout::before { animation: tx-ico-rise .8s cubic-bezier(.3,.7,.2,1); }
+/* Dispute: the "!" wiggles and the tile keeps its warning pulse */
+#view-transactions .transaction-row:is(:hover, :focus-visible) .tx-badge.dispute::before { animation: tx-ico-shake .8s cubic-bezier(.3,.7,.2,1); }
 #view-transactions .tx-badge.dispute { animation: tx-alert 2.4s ease-in-out infinite; }
-@keyframes tx-fly-out { 40% { transform: translate(5px,-5px) scale(1.15); } 41% { opacity: 0; } 42% { transform: translate(-5px,5px); } 100% { transform: none; opacity: 1; } }
-@keyframes tx-rise { 50% { transform: translateY(-6px) scale(1.15); } }
-@keyframes tx-spin-back { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+@keyframes tx-ico-spin-back { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+@keyframes tx-ico-fly-out {
+  0% { transform: translate(0, 0); opacity: 1; }
+  42% { transform: translate(15px, -15px); opacity: 0; }
+  43% { transform: translate(-15px, 15px); opacity: 0; }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
+@keyframes tx-ico-rise {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-5px) scale(1.25); }
+  70% { transform: translateY(1px) scale(.95); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes tx-ico-shake {
+  0% { transform: rotate(0) scale(1); }
+  20% { transform: rotate(-22deg) scale(1.2); }
+  40% { transform: rotate(18deg) scale(1.2); }
+  60% { transform: rotate(-12deg) scale(1.1); }
+  80% { transform: rotate(6deg) scale(1.05); }
+  100% { transform: rotate(0) scale(1); }
+}
 @keyframes tx-alert { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.5); } 60% { box-shadow: 0 0 0 9px rgba(245,158,11,0); } }
 
 /* 4. Status chips: tick pop, review pulse, duplicate shimmer, refund nudge */
@@ -74,15 +121,21 @@
 .transaction-dialog { position: relative; overflow: hidden; }
 .transaction-dialog::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; transform-origin: left;
   background: linear-gradient(90deg, var(--info-text), #7dd3fc, var(--info-text)); background-size: 200% 100%; }
-#transaction-modal:not([hidden]) .transaction-dialog::before { animation: tx-flow 1.4s linear infinite, tx-grow .8s cubic-bezier(.2,.8,.2,1) both; }
+#transaction-modal:not([hidden]) .transaction-dialog::before,
+#campaign-create-modal:not([hidden]) .transaction-dialog::before,
+#maintenance-create-modal:not([hidden]) .transaction-dialog::before,
+#report-detail-modal:not([hidden]) .transaction-dialog::before { animation: tx-flow 1.4s linear infinite, tx-grow .8s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes tx-flow { to { background-position: -200% 0; } }
 @keyframes tx-grow { from { transform: scaleX(0); } }
-#transaction-modal:not([hidden]) .transaction-modal-backdrop { backdrop-filter: blur(8px); }
+#transaction-modal:not([hidden]) .transaction-modal-backdrop,
+#campaign-create-modal:not([hidden]) .transaction-modal-backdrop,
+#maintenance-create-modal:not([hidden]) .transaction-modal-backdrop,
+#report-detail-modal:not([hidden]) .transaction-modal-backdrop { backdrop-filter: blur(8px); }
 .transaction-detail-grid > div { transition: transform .25s, background .25s; }
 .transaction-detail-grid > div:hover { transform: translateY(-3px); }
 
 @media (prefers-reduced-motion: reduce) {
   #view-transactions .table-scroll::after, #view-transactions .tx-badge, #view-transactions .status,
-  #view-transactions .status::before, #view-transactions .status::after, #view-transactions #tx-empty,
+  #view-transactions .tx-badge::before, #view-transactions .status::before, #view-transactions .status::after, #view-transactions #tx-empty,
   #view-transactions #tx-empty .empty-icon, .transaction-dialog::before, .tx-ripple { animation: none !important; }
 }

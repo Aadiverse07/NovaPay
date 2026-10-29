@@ -100,3 +100,20 @@ Safeguards: reduced-motion (static), touch/low-power (lighter or off), hidden ta
 - Amounts in the video now show dollars: "$300" on the card and "$2,500.00" on the Payment Successful screen (was ₹).
 - Clicking the theme toggle now restarts the hero animation automatically with the matching (light / blue-hands) cut.
 - Hero Cash flow card now in dollars too ($84,500 in / $4,000 out / $80,500 net). The dashboard pages still use illustrative INR amounts.
+
+## Community Funds — consistent load animation (2026-10-29)
+- Campaign cards no longer start hidden at 82% scale (`modules-reactbits.js` no longer manages `.campaign-card`); this was why they looked different until the pointer crossed them.
+- Intro, stat row and campaign row now share one short reveal; cards inside the campaign row don't animate a second time (`module-list-enter.css`).
+- Disabled the delayed "magic bento" re-entrance and the KPI count-up on this page; totals no longer flicker.
+- Both "Active" badges use the same `status info` pill; "Start a campaign" card has the same hover lift.
+- Cache-busting `?v=2` on the touched CSS/JS in `dashboard.html`.
+
+## Transactions — centred, animated type icons (2026-10-29)
+- Type badges (Payment / Refund / Dispute / Payout) now draw their icon centred inside a fixed 26px tile and line up with the label (`transaction-premium.css`). The old text arrows sat off-centre and the whole tile slid and faded out on hover.
+- Every type animates its icon (not the tile) on row hover / keyboard focus, in the same style as Refund's spin: Refund spins back, Payment shoots out and re-enters, Payout lifts and settles, Dispute wiggles (its warning pulse is kept).
+- The Type cell is anchored at its left edge during the row hover zoom so the icon no longer drifts sideways.
+- Reduced-motion users get no icon animation.
+
+## Reports — currency converter swap button (2026-10-29)
+- The plain "→" text between From and To sat below the dropdowns' centre line. It is now a round 42px swap button, vertically centred on the controls, with a two-way arrow icon.
+- Clicking it swaps From and To and updates the converted amount; the icon half-turns on hover and on click. Keyboard-accessible, with reduced-motion support (`dashboard.html`, `modules.js`, `modules.css`).
