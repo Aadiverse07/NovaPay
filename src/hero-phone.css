@@ -4,7 +4,7 @@
    Story (10 s, plays once, then holds the last frame): hand enters -> phone arrives -> finger taps -> loading ring ->
    "Payment Successful ₹2,500.00" with the green tick.  After the tap the right hand eases back beside the phone and STAYS
    there (it no longer leaves the frame).   Playback logic: src/hero-video.js.
-   Dark theme uses assets/novapay-payment-dark.webm/.mp4 — same animation with the hands recoloured blue (swapped by hero-video.js).
+   Dark theme uses assets/novapay-payment-dark.webm/.mp4 — same animation with the hands the same natural skin tones as the light theme (swapped by hero-video.js).
    The video lives in the old .laptop-wrap box, so the orbiting cards, glow and shadow keep the footprint the laptop had.
    Resize it with --hp-w below. */
 .laptop-wrap .lp-float { perspective: none; }                 /* gentle bob (fx-bob-l) is inherited from hero-laptop.css */
@@ -20,6 +20,10 @@
   filter: drop-shadow(0 1.6cqw 2.2cqw rgba(24, 47, 120, .20));
 }
 .laptop-wrap .hp-video.is-visible { opacity: 1; }
+/* Dark theme: soft lavender glow from the hands instead of the light-mode blue shadow. */
+:root[data-theme="dark"] .laptop-wrap .hp-video {
+  filter: drop-shadow(0 0 1.6cqw rgba(255, 220, 200, .16)) drop-shadow(0 1.6cqw 2.2cqw rgba(8, 4, 24, .45));
+}
 @media (prefers-reduced-motion: reduce) {
   .laptop-wrap .hp-video { transition: none; }
 }

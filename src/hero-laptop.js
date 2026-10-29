@@ -65,7 +65,10 @@
     if (reduceMQ.matches || !canWAAPI) { clearPre(); }
     else {
       /* The hero has no images or web fonts to wait for, so start as soon as the DOM + CSS are ready. */
-      requestAnimationFrame(function () { requestAnimationFrame(startIntro); });
+      var begin = function () { requestAnimationFrame(function () { requestAnimationFrame(startIntro); }); };
+      /* The NovaPay opening (src/opening.js) plays first; the hero intro starts when it hands over. */
+      if (window.__npOpening && !window.__npOpeningDone) window.addEventListener("novapay:opening-done", begin, { once: true });
+      else begin();
     }
   }
 

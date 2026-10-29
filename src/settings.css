@@ -1,0 +1,94 @@
+/* NovaPay Settings — loaded last so it wins over the module stylesheets.
+   Structure: .settings-layout > .settings-nav (section menu) + .settings-content > .set-panel > .set-group > .settings-card (rows) */
+.settings-layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:20px;align-items:start}
+
+/* Section menu */
+.settings-nav{position:sticky;top:16px;display:grid;gap:3px;padding:12px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow-sm)}
+.settings-nav-label{margin:14px 10px 4px;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text-subtle)}
+.settings-nav-label:first-child{margin-top:4px}
+.settings-nav button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border:0;border-radius:11px;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer;transition:background .15s,color .15s}
+.settings-nav button svg{flex:none;opacity:.8}
+.settings-nav button:hover{background:var(--surface-sunken)}
+.settings-nav button:focus-visible{outline:2px solid var(--info-text);outline-offset:1px}
+.settings-nav button[aria-current="true"]{background:var(--info-soft);color:var(--info-text)}
+.settings-nav button[aria-current="true"] svg{opacity:1}
+
+/* Section panel */
+.settings-content{min-width:0}
+.set-panel{padding:26px 28px}
+.set-panel[hidden]{display:none}
+.set-panel-head{margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.set-panel-head h3{margin:0;font-size:1.25rem}
+.set-panel-head p{margin:4px 0 0;font-size:13px;color:var(--text-subtle)}
+
+/* Group inside a panel */
+.set-group+.set-group{margin-top:26px}
+.set-group-title{margin:0 0 8px 2px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-subtle)}
+.set-group .settings-card{padding:0 18px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+:root[data-theme="dark"] .set-group .settings-card{border-color:var(--border);box-shadow:none;background:transparent}
+.set-group .settings-card label{cursor:default}
+.set-group .settings-card label:last-child,.set-group .settings-card .set-row:last-child{border-bottom:0}
+.set-group .settings-actions{padding:0 0 14px}
+.set-group>.settings-actions{padding:14px 0 0}
+.set-group--danger .settings-card{border-color:var(--danger)}
+:root[data-theme="dark"] .set-group--danger .settings-card{border-color:rgba(240,100,100,.55)}
+.set-group--danger .set-group-title{color:var(--danger-text)}
+
+/* Controls */
+.settings-layout .settings-card input[type=text],.settings-layout .settings-card input[type=password],.settings-layout .settings-card select{width:240px;max-width:52%;min-height:40px;padding:0 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface-sunken);color:var(--text);font:inherit;font-size:13px}
+.settings-layout .settings-card input[readonly]{opacity:.75}
+.settings-layout .settings-card input[type=checkbox]{width:20px;height:20px;flex:none;cursor:pointer}
+.settings-layout .settings-card select{cursor:pointer}
+.settings-layout .settings-card input:focus-visible,.settings-layout .settings-card select:focus-visible{outline:2px solid var(--info-text);outline-offset:2px}
+.settings-layout .settings-card input:disabled,.settings-layout .settings-card select:disabled{opacity:.5;cursor:not-allowed}
+.settings-actions{display:flex;justify-content:flex-end}
+
+/* Rows that hold a button instead of a field */
+.settings-card .set-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 4px;border-bottom:1px solid var(--border)}
+.settings-card .set-row>span{display:grid}
+.settings-card .set-row .btn{flex:none}
+
+/* Inline form feedback */
+.set-status{min-height:18px;margin:10px 4px 0;font-size:12px;font-weight:600;color:var(--text-subtle)}
+.set-status.is-error{color:var(--danger-text)}
+.set-status.is-ok{color:var(--ok-text)}
+
+/* Tablet / mobile: the section menu becomes a scrollable strip */
+@media (max-width:900px){
+  .settings-layout{grid-template-columns:1fr;gap:14px}
+  .settings-nav{position:relative;display:flex;gap:6px;overflow-x:auto;padding:8px;scrollbar-width:thin}
+  .settings-nav-label{display:none}
+  .settings-nav button{width:auto;flex:none;white-space:nowrap;padding:9px 13px}
+  .set-panel{padding:20px 18px}
+}
+@media (max-width:560px){
+  .settings-card .set-row{flex-wrap:wrap}
+  .settings-layout .settings-card input[type=text],.settings-layout .settings-card input[type=password],.settings-layout .settings-card select{width:100%;max-width:100%}
+  .settings-card label:has(input[type=text],input[type=password],select){flex-wrap:wrap}
+  .settings-card label>span,.settings-card .set-row>span{flex:1 1 0;min-width:0}
+  .settings-card label:has(input[type=text],input[type=password],select)>span{flex-basis:100%}
+  .set-group .settings-card{padding:0 14px}
+}
+
+/* Danger actions */
+.btn--danger{background:var(--danger);border-color:transparent;color:#fff}
+.btn--danger:hover{filter:brightness(1.08)}
+.btn--danger:focus-visible{outline:2px solid var(--danger);outline-offset:2px}
+.set-row--danger b{color:var(--danger-text)}
+
+/* Confirmation dialog */
+.confirm-modal{width:min(440px,100%)}
+.confirm-modal h2{margin:0 0 8px;font-size:1.2rem}
+.confirm-modal p{margin:0;color:var(--text-subtle);font-size:14px;line-height:1.55}
+
+/* Notifications */
+.notification-item[hidden],.notification-dot[hidden],.notif-empty[hidden]{display:none!important}
+.notif-empty{margin:6px 4px 4px;padding:14px 10px;text-align:center;color:var(--text-subtle);font-size:13px}
+
+/* Compact layout */
+:root.density-compact .dash-card{padding:14px 16px}
+:root.density-compact .dash-card th{padding:7px 9px}
+:root.density-compact .dash-card td{padding:7px 9px}
+:root.density-compact .settings-card label,:root.density-compact .settings-card .set-row{padding-top:10px;padding-bottom:10px}
+:root.density-compact .module-kpis,:root.density-compact .maintenance-list{gap:10px}
+:root.density-compact .page-intro{padding-bottom:2px}

@@ -1,0 +1,26 @@
+/* Full-screen NOVAPAY opener inspired by the supplied FLAME reference. */
+.np-world-intro {
+  position: fixed; inset: 0; z-index: 9999; overflow: hidden; display: grid; place-items: center;
+  color: #f7f8fc; background: #080a0d; isolation: isolate;
+  animation: np-intro-exit .9s cubic-bezier(.7,0,.2,1) 8.2s forwards;
+}
+.np-world-intro::before { content:""; position:absolute; inset:-20%; z-index:-1; background:radial-gradient(ellipse at 50% 52%,#17212d 0,transparent 45%),radial-gradient(ellipse at 10% 8%,#101821 0,transparent 38%); }
+.np-world-intro__top,.np-world-intro__bottom { position:absolute; left:clamp(20px,4vw,64px); right:clamp(20px,4vw,64px); display:flex; align-items:center; justify-content:space-between; z-index:4; color:#8a929c; font:600 10px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; }
+.np-world-intro__top { top:clamp(22px,4vh,42px); } .np-world-intro__bottom { bottom:clamp(22px,4vh,42px); }
+.np-world-intro__skip { padding:9px 0 9px 12px; border:0; color:#d7dce2; background:none; font:inherit; letter-spacing:.08em; cursor:pointer; }
+.np-world-intro__skip span { color:#58d5e9; margin-left:8px; }
+.np-world-intro__world { position:absolute; top:15%; left:7%; color:rgba(178,196,214,.22); font:500 clamp(10px,1vw,13px)/1.7 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.25em; }
+.np-world-intro__word { position:relative; z-index:1; width:100%; text-align:center; white-space:nowrap; color:#f6f7f9; font:800 clamp(58px,16vw,250px)/.8 Montserrat,Arial,sans-serif; letter-spacing:-.105em; padding-right:.1em; animation:np-intro-word 1.15s cubic-bezier(.2,.7,.2,1) both; }
+.np-world-intro__portraits { position:absolute; inset:0; z-index:2; pointer-events:none; }
+.np-world-tile { position:absolute; z-index:var(--layer); left:var(--x); top:var(--y); width:clamp(62px,7.4vw,112px); aspect-ratio:.77; margin:0; overflow:hidden; padding:3px; background:#141b22; border:1px solid rgba(205,224,238,.28); box-shadow:0 18px 50px #0009; opacity:0; animation-name:np-tile-arrive,np-tile-drift; animation-duration:2.15s,var(--speed); animation-timing-function:cubic-bezier(.2,.65,.2,1),ease-in-out; animation-delay:var(--delay),calc(var(--delay) + 2s); animation-fill-mode:both; animation-iteration-count:1,infinite; animation-direction:normal,alternate; }
+.np-world-tile img { width:100%; height:calc(100% - 16px); object-fit:cover; display:block; filter:saturate(.78) contrast(1.07); }
+.np-world-tile figcaption { height:16px; display:flex; justify-content:space-between; align-items:center; color:#d2dbe3; font:600 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.12em; }
+@keyframes np-tile-arrive { 0% { opacity:0; transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(.62); } 18% { opacity:.95; } 100% { opacity:.95; transform:translate3d(0,0,0) rotate(0) scale(1); } }
+@keyframes np-tile-drift { from { transform:translate3d(0,0,0) rotate(-2deg) scale(.96); } to { transform:translate3d(var(--sway-x),var(--sway-y),0) rotate(var(--sway-r)) scale(1.04); } }
+@keyframes np-intro-word { from { opacity:0; transform:scale(.9); filter:blur(16px); clip-path:inset(0 50%); } to { opacity:1; transform:none; filter:none; clip-path:inset(0); } }
+@keyframes np-tile-flight { 0% { opacity:0; transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(.65); } 12% { opacity:1; } 72% { opacity:1; transform:translate3d(0,0,0) rotate(0) scale(1); } 100% { opacity:.92; transform:translate3d(0,0,0) rotate(0) scale(1); } }
+@keyframes np-intro-exit { to { opacity:0; visibility:hidden; pointer-events:none; } }
+.np-world-intro.is-skipped { animation:np-intro-skip .55s ease forwards; }
+@keyframes np-intro-skip { to { opacity:0; visibility:hidden; pointer-events:none; } }
+@media(max-width:650px) { .np-world-intro__word { font-size:17vw; } .np-world-tile { width:clamp(48px,13vw,76px); } .np-world-tile:nth-child(n+19){display:none} .np-world-intro__world{top:22%;left:8%;font-size:9px}.np-world-intro__top,.np-world-intro__bottom{font-size:8px} }
+@media(prefers-reduced-motion:reduce) { .np-world-intro { animation:none; } .np-world-intro__word,.np-world-tile { animation:none; opacity:1; transform:none; filter:none; } }
