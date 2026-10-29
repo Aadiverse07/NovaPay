@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="src/transaction-glass.css">
 <link rel="stylesheet" href="src/transaction-motion.css">
 <link rel="stylesheet" href="src/transaction-premium.css">
+<link rel="stylesheet" href="src/tx-icons.css">
 <link rel="stylesheet" href="src/modules-premium.css">
 <link rel="stylesheet" href="src/modules-reactbits.css">
 <link rel="stylesheet" href="src/animated-list.css">
@@ -39,6 +40,8 @@
 <link rel="stylesheet" href="src/module-icons.css">
 <link rel="stylesheet" href="src/text-type.css">
 <script src="src/novapay-logo.js"></script>
+<link rel="stylesheet" href="src/modal-close-corner.css">
+<link rel="stylesheet" href="src/fx-swap-logo.css">
 </head>
 <body class="dashboard-body">
 <div class="novapay-scene novapay-scene--dashboard" data-novapay-scene aria-hidden="true"><span class="scene-orb scene-orb--a"></span><span class="scene-orb scene-orb--b"></span><span class="scene-cube scene-cube--a"></span></div><button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button><div class="mobile-nav-backdrop" id="mobile-nav-backdrop" hidden></div><button class="mobile-ai-fab" id="mobile-ai-fab" type="button" aria-label="Open NovaPay AI"><novapay-logo size="18" variant="mark"></novapay-logo></button>
@@ -270,7 +273,7 @@
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/reports.png" alt="" width="64" height="64"><h2>Reports</h2><p>Financial summaries designed to reconcile to the ledger. Figures below are illustrative sample data.</p></div>
         <article class="dash-card module-card"><div class="card-heading"><div><h3>Performance overview</h3><p>Period ending 21 October 2026 · INR</p></div><div class="module-inline"><select id="report-period" aria-label="Report period"><option>This month</option><option>This quarter</option><option>This year</option></select><button class="btn btn--ghost" data-ui-action="reports-export">Export CSV</button></div></div><div class="report-summary-grid"><div><small>Gross receipts</small><strong>₹8,45,000</strong></div><div><small>Processing fees</small><strong>− ₹23,500</strong></div><div><small>Refunds</small><strong>− ₹12,000</strong></div><div><small>Net activity</small><strong>₹8,09,500</strong></div></div><div class="report-bars" aria-label="Illustrative monthly income chart"><div><span>Jul</span><i style="--bar:48%"></i><b>₹5.4L</b></div><div><span>Aug</span><i style="--bar:68%"></i><b>₹6.8L</b></div><div><span>Sep</span><i style="--bar:57%"></i><b>₹6.1L</b></div><div><span>Oct</span><i style="--bar:86%"></i><b>₹8.4L</b></div></div><div class="module-foot"><span>Source: illustrative sample series · reports should reconcile to posted ledger activity.</span></div></article>
         <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Profit &amp; loss</h3><p>Income, fees, refunds and net activity by period.</p><button class="table-action" data-ui-action="report-open" data-report-type="profit-loss">Open report →</button></article><article class="dash-card"><h3>Trial balance</h3><p>Debits and credits grouped by account.</p><button class="table-action" data-ui-action="report-open" data-report-type="trial-balance">Open report →</button></article></div>
-        <article class="dash-card fx-converter"><div><span class="section-kicker">FINANCE UTILITY</span><h3>Currency converter</h3><p>Quick estimates for planning. Verify the latest provider rate before booking.</p></div><div class="fx-controls"><label>Amount<input id="fx-amount" type="number" min="0" step="0.01" value="5000" inputmode="decimal"></label><label>From<select id="fx-from"><option value="INR">INR · ₹</option><option value="USD">USD · $</option></select></label><span aria-hidden="true">→</span><label>To<select id="fx-to"><option value="USD">USD · $</option><option value="INR">INR · ₹</option></select></label></div><div class="fx-result"><strong id="fx-result-value">USD $60.00</strong><span id="fx-rate-note">Illustrative reference rate · 1 INR = 0.012 USD</span><small>Sample rate only · source timestamp: 21 Oct 2026, 12:00 UTC</small></div></article>
+        <article class="dash-card fx-converter"><div><span class="section-kicker">FINANCE UTILITY</span><h3>Currency converter</h3><p>Quick estimates for planning. Verify the latest provider rate before booking.</p></div><div class="fx-controls"><label>Amount<input id="fx-amount" type="number" min="0" step="0.01" value="5000" inputmode="decimal"></label><label>From<select id="fx-from"><option value="INR">INR · ₹</option><option value="USD">USD · $</option></select></label><span class="fx-swap-logo" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><defs><linearGradient id="fxsw-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><circle class="fxsw-ring" cx="24" cy="24" r="21"/><g class="fxsw-orbit"><path class="fxsw-arc" d="M24 7a17 17 0 0 1 15.3 9.6"/><path class="fxsw-head" d="M40.2 10.8l-.9 5.8-5.7-1"/><path class="fxsw-arc" d="M24 41a17 17 0 0 1-15.3-9.6"/><path class="fxsw-head" d="M7.8 37.2l.9-5.8 5.7 1"/></g><g class="fxsw-coin"><circle cx="24" cy="24" r="9"/><text x="24" y="28.4" text-anchor="middle" class="fxsw-sym fxsw-sym--a">$</text><text x="24" y="28.4" text-anchor="middle" class="fxsw-sym fxsw-sym--b">₹</text></g></svg></span><label>To<select id="fx-to"><option value="USD">USD · $</option><option value="INR">INR · ₹</option></select></label></div><div class="fx-result"><strong id="fx-result-value">USD $60.00</strong><span id="fx-rate-note">Illustrative reference rate · 1 INR = 0.012 USD</span><small>Sample rate only · source timestamp: 21 Oct 2026, 12:00 UTC</small></div></article>
       </div>
       <div class="view" id="view-documents" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/documents.png" alt="" width="64" height="64"><h2>Documents</h2><p>Upload invoices and receipts, review extracted fields, and check for possible duplicates before creating a draft.</p></div>
@@ -413,6 +416,7 @@
 <script src="src/documents.js"></script>
 <script src="src/transaction-effects.js"></script>
 <script src="src/transaction-premium.js"></script>
+<script src="src/tx-icons.js"></script>
 <script src="src/modules-premium.js"></script>
 <script src="src/modules-reactbits.js"></script>
 <script src="src/capabilities-holo.js"></script>
