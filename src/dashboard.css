@@ -465,7 +465,7 @@ body .sidebar-reopen{position:fixed;top:26px;left:10px;z-index:35;box-shadow:var
 
 /* Claude-style dictation: mic -> composer becomes a scrolling waveform with cancel (✕) and done (✓) */
 .ai-tool-button svg{display:block;margin:auto}
-.ai-dictation{display:none;flex:1 1 0;min-width:0;align-items:center;gap:10px;min-height:48px;padding:6px 8px;border:1px solid var(--border);border-radius:14px;background:var(--surface-sunken)}
+.ai-dictation{display:none;flex:1 1 0;min-width:0;align-items:center;gap:10px;min-height:48px;padding:6px 8px;border:0;border-radius:0;background:transparent;box-shadow:none}
 .ai-chat-row.is-dictating>*:not(.ai-dictation){display:none!important}
 .ai-chat-row.is-dictating .ai-dictation{display:flex}
 .ai-dict-wave{flex:1;min-width:0;height:32px}
