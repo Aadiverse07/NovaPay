@@ -238,7 +238,7 @@
       <div class="view" id="view-ledger" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/ledger.png" alt="" width="64" height="64"><h2>Ledger</h2><p>A clear, double-entry view of money movement. Sample entries are illustrative and are not posted to a live ledger.</p></div>
         <div class="module-kpis"><article class="dash-card"><small>Period debits</small><strong>₹4,86,300</strong><span class="status info">Illustrative</span></article><article class="dash-card"><small>Period credits</small><strong>₹4,86,300</strong><span class="status ok">Balanced</span></article><article class="dash-card"><small>Unreconciled</small><strong>1 item</strong><span class="status warn">Review</span></article></div>
-        <article class="dash-card module-card"><div class="card-heading"><div><h3>Journal entries</h3><p>Debits and credits balance for each sample posting.</p></div><label>Period <select id="ledger-period"><option>Last 30 days</option><option>This quarter</option><option>This year</option></select></label></div><div class="module-table-wrap"><table class="module-table"><thead><tr><th>Date</th><th>Reference</th><th>Account</th><th>Debit</th><th>Credit</th><th>Source</th></tr></thead><tbody><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>PayPal clearing</td><td>₹10,000</td><td>—</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>Sales revenue</td><td>—</td><td>₹10,000</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>Processing fees</td><td>₹300</td><td>—</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>PayPal clearing</td><td>—</td><td>₹300</td><td><span class="status info">Illustrative</span></td></tr></tbody></table></div><div class="module-foot"><span>Example journal · entries shown for product preview only</span><button class="btn btn--ghost" data-ui-action="ledger-export">Export CSV</button></div></article>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Journal entries</h3><p>Debits and credits balance for each sample posting.</p></div><div class="ledger-period-control"><span>Period</span><select id="ledger-period" aria-label="Ledger period"><option>Last 30 days</option><option>This quarter</option><option>This year</option></select></div></div><div class="module-table-wrap"><table class="module-table"><thead><tr><th>Date</th><th>Reference</th><th>Account</th><th>Debit</th><th>Credit</th><th>Source</th></tr></thead><tbody><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>PayPal clearing</td><td>₹10,000</td><td>—</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>Sales revenue</td><td>—</td><td>₹10,000</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>Processing fees</td><td>₹300</td><td>—</td><td><span class="status info">Illustrative</span></td></tr><tr><td>21 Oct 2026</td><td>PAY-1001</td><td>PayPal clearing</td><td>—</td><td>₹300</td><td><span class="status info">Illustrative</span></td></tr></tbody></table></div><div class="module-foot"><span>Example journal · entries shown for product preview only</span><button class="btn btn--ghost" data-ui-action="ledger-export">Export CSV</button></div></article>
       </div>
       <div class="view" id="view-invoices" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/invoices.png" alt="" width="64" height="64"><h2>Invoices</h2><p>Create and track invoices with totals calculated from line items. Sending an invoice should require approval.</p></div>
@@ -269,7 +269,7 @@
       <div class="view" id="view-reports" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/reports.png" alt="" width="64" height="64"><h2>Reports</h2><p>Financial summaries designed to reconcile to the ledger. Figures below are illustrative sample data.</p></div>
         <article class="dash-card module-card"><div class="card-heading"><div><h3>Performance overview</h3><p>Period ending 21 October 2026 · INR</p></div><div class="module-inline"><select id="report-period" aria-label="Report period"><option>This month</option><option>This quarter</option><option>This year</option></select><button class="btn btn--ghost" data-ui-action="reports-export">Export CSV</button></div></div><div class="report-summary-grid"><div><small>Gross receipts</small><strong>₹8,45,000</strong></div><div><small>Processing fees</small><strong>− ₹23,500</strong></div><div><small>Refunds</small><strong>− ₹12,000</strong></div><div><small>Net activity</small><strong>₹8,09,500</strong></div></div><div class="report-bars" aria-label="Illustrative monthly income chart"><div><span>Jul</span><i style="--bar:48%"></i><b>₹5.4L</b></div><div><span>Aug</span><i style="--bar:68%"></i><b>₹6.8L</b></div><div><span>Sep</span><i style="--bar:57%"></i><b>₹6.1L</b></div><div><span>Oct</span><i style="--bar:86%"></i><b>₹8.4L</b></div></div><div class="module-foot"><span>Source: illustrative sample series · reports should reconcile to posted ledger activity.</span></div></article>
-        <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Profit &amp; loss</h3><p>Income, fees, refunds and net activity by period.</p><button class="table-action" data-ui-action="report-open">Open report →</button></article><article class="dash-card"><h3>Trial balance</h3><p>Debits and credits grouped by account.</p><button class="table-action" data-ui-action="report-open">Open report →</button></article></div>
+        <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Profit &amp; loss</h3><p>Income, fees, refunds and net activity by period.</p><button class="table-action" data-ui-action="report-open" data-report-type="profit-loss">Open report →</button></article><article class="dash-card"><h3>Trial balance</h3><p>Debits and credits grouped by account.</p><button class="table-action" data-ui-action="report-open" data-report-type="trial-balance">Open report →</button></article></div>
         <article class="dash-card fx-converter"><div><span class="section-kicker">FINANCE UTILITY</span><h3>Currency converter</h3><p>Quick estimates for planning. Verify the latest provider rate before booking.</p></div><div class="fx-controls"><label>Amount<input id="fx-amount" type="number" min="0" step="0.01" value="5000" inputmode="decimal"></label><label>From<select id="fx-from"><option value="INR">INR · ₹</option><option value="USD">USD · $</option></select></label><span aria-hidden="true">→</span><label>To<select id="fx-to"><option value="USD">USD · $</option><option value="INR">INR · ₹</option></select></label></div><div class="fx-result"><strong id="fx-result-value">USD $60.00</strong><span id="fx-rate-note">Illustrative reference rate · 1 INR = 0.012 USD</span><small>Sample rate only · source timestamp: 21 Oct 2026, 12:00 UTC</small></div></article>
       </div>
       <div class="view" id="view-documents" data-view-panel hidden>
@@ -321,6 +321,54 @@
     <div class="detail-note" id="detail-note">This is illustrative sample data. No live PayPal transaction is accessed or changed.</div>
     <div class="tx-ai-controls"><label for="tx-ai-question">Ask AI about this transaction</label><div><input id="tx-ai-question" placeholder="Ask using the available transaction data"><button class="btn btn--ghost" id="tx-ai-ask" type="button">Ask AI</button></div><p id="tx-ai-answer" aria-live="polite"></p><button class="btn btn--primary" id="tx-send-approval" type="button">Send finding to Approvals</button></div>
     <button class="btn btn--ghost" type="button" data-close-transaction>Close</button>
+  </section>
+</div>
+<div class="transaction-modal campaign-modal" id="campaign-create-modal" hidden aria-hidden="true">
+  <div class="transaction-modal-backdrop" data-campaign-close></div>
+  <section class="transaction-dialog campaign-dialog" role="dialog" aria-modal="true" aria-labelledby="campaign-create-title">
+    <button class="modal-close" type="button" data-campaign-close aria-label="Close campaign form" style="left:auto!important;right:16px!important;top:14px!important;float:none!important">×</button>
+    <span class="section-kicker">COMMUNITY FUND · NEW CAMPAIGN</span>
+    <h2 id="campaign-create-title">Create a campaign</h2>
+    <p>Share the goal and purpose so your community knows what it is supporting.</p>
+    <form id="campaign-create-form" class="campaign-form">
+      <label>Campaign title<input name="title" required maxlength="140" autocomplete="off" placeholder="e.g. Community garden refresh"></label>
+      <label>Purpose<textarea name="purpose" required maxlength="1000" rows="3" placeholder="What will this campaign fund?"></textarea></label>
+      <div class="campaign-form-row">
+        <label>Fundraising goal (₹)<input name="target" type="number" required min="1" step="1" inputmode="decimal" placeholder="50000"></label>
+        <label>Target date <span class="form-optional">Optional</span><input name="deadline" type="date"></label>
+      </div>
+      <p class="campaign-form-note">Campaign details will be shown with the public contribution and spending record.</p>
+      <p class="campaign-form-status" id="campaign-form-status" role="status" aria-live="polite"></p>
+      <div class="campaign-form-actions"><button class="btn btn--primary" type="submit">Continue</button><button class="btn btn--ghost" type="button" data-campaign-close>Cancel</button></div>
+    </form>
+  </section>
+</div>
+<div class="transaction-modal maintenance-request-modal" id="maintenance-create-modal" hidden aria-hidden="true">
+  <div class="transaction-modal-backdrop" data-maintenance-close></div>
+  <section class="transaction-dialog maintenance-request-dialog" role="dialog" aria-modal="true" aria-labelledby="maintenance-create-title">
+    <button class="modal-close" type="button" data-maintenance-close aria-label="Close maintenance request form">×</button>
+    <span class="section-kicker">COMMUNITY OPERATIONS · NEW REQUEST</span>
+    <h2 id="maintenance-create-title">New maintenance request</h2>
+    <p>Describe the work needed. Requests should include a clear scope and estimated cost.</p>
+    <form id="maintenance-create-form" class="campaign-form">
+      <label>Request title<input name="title" required maxlength="160" autocomplete="off" placeholder="e.g. Repair community hall roof"></label>
+      <label>Work scope<textarea name="scope" required maxlength="2000" rows="4" placeholder="Describe the repair or maintenance work"></textarea></label>
+      <label>Estimated cost (₹)<input name="estimate" type="number" min="1" step="1" inputmode="decimal" placeholder="Optional"></label>
+      <p class="campaign-form-note">Requests are reviewed before approval, payment, and completion evidence are recorded.</p>
+      <div class="campaign-form-actions"><button class="btn btn--primary" type="submit">Continue</button><button class="btn btn--ghost" type="button" data-maintenance-close>Cancel</button></div>
+    </form>
+  </section>
+</div>
+<div class="transaction-modal report-modal" id="report-detail-modal" hidden aria-hidden="true">
+  <div class="transaction-modal-backdrop" data-report-close></div>
+  <section class="transaction-dialog report-dialog" role="dialog" aria-modal="true" aria-labelledby="report-detail-title">
+    <button class="modal-close" type="button" data-report-close aria-label="Close report">×</button>
+    <span class="section-kicker">FINANCIAL REPORT · ILLUSTRATIVE DATA</span>
+    <h2 id="report-detail-title">Report</h2>
+    <p id="report-detail-description"></p>
+    <div class="report-detail-table-wrap"><table class="report-detail-table"><thead><tr id="report-detail-head"></tr></thead><tbody id="report-detail-rows"></tbody><tfoot><tr id="report-detail-total"></tr></tfoot></table></div>
+    <p class="report-detail-note">Illustrative sample data for the selected period. Reconcile final figures to posted ledger activity.</p>
+    <button class="btn btn--ghost" type="button" data-report-close>Close</button>
   </section>
 </div>
 <div class="approval-modal" id="approval-detail-modal" hidden aria-hidden="true">

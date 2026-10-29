@@ -82,6 +82,7 @@
 /* TRANSPARENCY: audit rows trace down a vertical timeline with pulsing nodes */
 .transparency-row { position: relative; }
 .transparency-row::before { content: ""; position: absolute; left: -9px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--mp-a); animation: mp-node 2.4s ease-out infinite; }
+#view-community-funds .community-transparency-section > .module-kpis--two .transparency-row::before { content: none; display: none; animation: none; }
 @keyframes mp-node { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mp-a) 55%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
 
 /* AI ASSISTANT: bubbles spring in, avatar breathes, suggestion chips float, send button glows */

@@ -74,10 +74,16 @@
 .transaction-dialog { position: relative; overflow: hidden; }
 .transaction-dialog::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; transform-origin: left;
   background: linear-gradient(90deg, var(--info-text), #7dd3fc, var(--info-text)); background-size: 200% 100%; }
-#transaction-modal:not([hidden]) .transaction-dialog::before { animation: tx-flow 1.4s linear infinite, tx-grow .8s cubic-bezier(.2,.8,.2,1) both; }
+#transaction-modal:not([hidden]) .transaction-dialog::before,
+#campaign-create-modal:not([hidden]) .transaction-dialog::before,
+#maintenance-create-modal:not([hidden]) .transaction-dialog::before,
+#report-detail-modal:not([hidden]) .transaction-dialog::before { animation: tx-flow 1.4s linear infinite, tx-grow .8s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes tx-flow { to { background-position: -200% 0; } }
 @keyframes tx-grow { from { transform: scaleX(0); } }
-#transaction-modal:not([hidden]) .transaction-modal-backdrop { backdrop-filter: blur(8px); }
+#transaction-modal:not([hidden]) .transaction-modal-backdrop,
+#campaign-create-modal:not([hidden]) .transaction-modal-backdrop,
+#maintenance-create-modal:not([hidden]) .transaction-modal-backdrop,
+#report-detail-modal:not([hidden]) .transaction-modal-backdrop { backdrop-filter: blur(8px); }
 .transaction-detail-grid > div { transition: transform .25s, background .25s; }
 .transaction-detail-grid > div:hover { transform: translateY(-3px); }
 

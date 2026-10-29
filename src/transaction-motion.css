@@ -133,12 +133,26 @@
 
 #transaction-modal:not([hidden]) .transaction-modal-backdrop { animation: tx-backdrop-in .24s ease both; }
 #transaction-modal:not([hidden]) .transaction-dialog { animation: tx-detail-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#campaign-create-modal:not([hidden]) .transaction-modal-backdrop { animation: tx-backdrop-in .24s ease both; }
+#campaign-create-modal:not([hidden]) .transaction-dialog { animation: tx-detail-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#campaign-create-modal:not([hidden]) .transaction-dialog.campaign-dialog-origin-open { animation: campaign-dialog-origin-in .48s cubic-bezier(.18,.78,.25,1) both; }
+#campaign-create-modal:not([hidden]) .campaign-form > * { animation: tx-field-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#campaign-create-modal:not([hidden]) .campaign-form > *:nth-child(2n) { animation-delay: 45ms; }
+#campaign-create-modal:not([hidden]) .campaign-form > *:nth-child(3n) { animation-delay: 90ms; }
+#maintenance-create-modal:not([hidden]) .transaction-modal-backdrop { animation: tx-backdrop-in .24s ease both; }
+#maintenance-create-modal:not([hidden]) .transaction-dialog { animation: tx-detail-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#maintenance-create-modal:not([hidden]) .campaign-form > * { animation: tx-field-in .42s cubic-bezier(.18,.78,.25,1) both; }
+#maintenance-create-modal:not([hidden]) .campaign-form > *:nth-child(2n) { animation-delay: 45ms; }
+#maintenance-create-modal:not([hidden]) .campaign-form > *:nth-child(3n) { animation-delay: 90ms; }
+#report-detail-modal:not([hidden]) .transaction-modal-backdrop { animation: tx-backdrop-in .24s ease both; }
+#report-detail-modal:not([hidden]) .transaction-dialog { animation: tx-detail-in .42s cubic-bezier(.18,.78,.25,1) both; }
 #transaction-modal:not([hidden]) .transaction-detail-grid > div { animation: tx-field-in .42s cubic-bezier(.18,.78,.25,1) both; }
 #transaction-modal:not([hidden]) .transaction-detail-grid > div:nth-child(2n) { animation-delay: 45ms; }
 #transaction-modal:not([hidden]) .transaction-detail-grid > div:nth-child(3n) { animation-delay: 90ms; }
 @keyframes tx-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes tx-detail-in { from { opacity: 0; transform: translateY(22px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes tx-field-in { from { opacity: 0; transform: translateY(10px) scale(.97); filter: blur(3px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes campaign-dialog-origin-in { from { opacity: .72; transform: translate(var(--campaign-origin-x),var(--campaign-origin-y)) scale(var(--campaign-origin-scale-x),var(--campaign-origin-scale-y)); filter: blur(4px); } to { opacity: 1; transform: translate(0,0) scale(1); filter: blur(0); } }
 
 @media (prefers-reduced-motion: reduce) {
   #view-transactions .page-intro,
@@ -156,5 +170,14 @@
   #view-transactions .transaction-row.tx-row-enter td,
   #transaction-modal:not([hidden]) .transaction-modal-backdrop,
   #transaction-modal:not([hidden]) .transaction-dialog,
-  #transaction-modal:not([hidden]) .transaction-detail-grid > div { animation: none; }
+  #transaction-modal:not([hidden]) .transaction-detail-grid > div,
+  #campaign-create-modal:not([hidden]) .transaction-modal-backdrop,
+  #campaign-create-modal:not([hidden]) .transaction-dialog,
+  #campaign-create-modal:not([hidden]) .transaction-dialog.campaign-dialog-origin-open,
+  #campaign-create-modal:not([hidden]) .campaign-form > *,
+  #maintenance-create-modal:not([hidden]) .transaction-modal-backdrop,
+  #maintenance-create-modal:not([hidden]) .transaction-dialog,
+  #maintenance-create-modal:not([hidden]) .campaign-form > *,
+  #report-detail-modal:not([hidden]) .transaction-modal-backdrop,
+  #report-detail-modal:not([hidden]) .transaction-dialog { animation: none; }
 }
