@@ -1,0 +1,21 @@
+/* Close (×) buttons: always the top-right corner of their dialog.
+   Root cause of the top-left bug: specular-buttons.js adds .specular-button
+   (position: relative) to every button, which overrode .modal-close
+   (position: absolute) wherever it loaded later. This file loads last and wins.
+   The Transaction detail dialog keeps its sticky/float-right close so it stays
+   visible while that dialog scrolls (it is already top-right). */
+.modal-close:not(#transaction-modal .modal-close) {
+  position: absolute !important;
+  top: 16px;
+  right: 16px;
+  left: auto !important;
+  bottom: auto;
+  float: none;
+  margin: 0;
+  z-index: 5;
+}
+/* keep long titles from running underneath the × */
+.modal-close ~ h2 { padding-right: 46px; }
+@media (max-width: 560px) {
+  .modal-close:not(#transaction-modal .modal-close) { top: 12px; right: 12px; }
+}

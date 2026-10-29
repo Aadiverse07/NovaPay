@@ -256,6 +256,30 @@
       return button;
     };
 
+    function openDetails(item) {
+      var modal = make("div", "action-modal maintenance-detail-modal");
+      modal.setAttribute("role", "presentation");
+      var backdrop = make("div", "action-modal-backdrop");
+      var dialog = make("section", "action-dialog");
+      dialog.setAttribute("role", "dialog"); dialog.setAttribute("aria-modal", "true");
+      dialog.setAttribute("aria-labelledby", "maintenance-detail-title");
+      var close = make("button", "modal-close", "×"); close.type = "button"; close.setAttribute("aria-label", "Close request details");
+      close.addEventListener("click", function () { modal.remove(); });
+      dialog.appendChild(close);
+      dialog.appendChild(make("span", "status info", "Maintenance request"));
+      var title = make("h2", "", item.title || "Maintenance request"); title.id = "maintenance-detail-title"; dialog.appendChild(title);
+      var fields = make("dl", "maintenance-detail-fields");
+      var details = [["Request ID", item.id || "Unavailable"], ["Status", String(item.status || "unknown").replaceAll("_", " ")], ["Scope", item.scope || "Unavailable"], ["Amount", item.amountMinor == null ? "Unavailable" : amount(item.amountMinor)], ["Contractor", item.contractor && item.contractor.name || "Unavailable"], ["Quotation", item.quotation ? amount(item.quotation.amountMinor) + " · " + (item.quotation.id || "") : "Unavailable"], ["Payment", item.payment ? (item.payment.mode || "Unavailable") + (item.paymentReference ? " · " + item.paymentReference : "") : "Unavailable"], ["Evidence", (item.evidence || []).length ? item.evidence.map(function (entry) { return (entry.kind || "item") + " · " + (entry.reviewStatus || entry.review_status || "pending"); }).join(", ") : "Unavailable"]];
+      details.forEach(function (pair) { var wrap = make("div"), dt = make("dt", "", pair[0]), dd = make("dd", "", String(pair[1])); wrap.appendChild(dt); wrap.appendChild(dd); fields.appendChild(wrap); });
+      dialog.appendChild(fields);
+      if (item.gap) dialog.appendChild(make("p", "module-foot", item.gap));
+      if (item.mode === "SIMULATED" || item.payment && item.payment.mode === "SIMULATED") dialog.appendChild(make("p", "module-foot", "SIMULATED · no money sent"));
+      modal.appendChild(backdrop); modal.appendChild(dialog); document.body.appendChild(modal);
+      backdrop.addEventListener("click", function () { modal.remove(); });
+      modal.addEventListener("keydown", function (event) { if (event.key === "Escape") modal.remove(); });
+      close.focus();
+    }
+
     function message(title, copy, isError) {
       root.textContent = "";
       var state = make("div", "empty-state");
@@ -369,6 +393,9 @@
       }
       rows.forEach(function (item) {
         var card = make("article", "dash-card module-card");
+        card.tabIndex = 0; card.setAttribute("aria-label", "Open details for " + (item.title || "maintenance request"));
+        card.addEventListener("click", function (event) { if (!event.target.closest("button,a,input,select,textarea,form")) openDetails(item); });
+        card.addEventListener("keydown", function (event) { if ((event.key === "Enter" || event.key === " ") && event.target === card) { event.preventDefault(); openDetails(item); } });
         card.appendChild(make("h3", "", item.title || "Maintenance request"));
         card.appendChild(make("p", "", "Request " + String(item.id || "Unavailable") + " · " + (item.scope || "Scope details are not exposed by the transparency read.")));
         card.appendChild(make("p", "", "Amount " + (item.amountMinor == null ? "Unavailable" : amount(item.amountMinor))));

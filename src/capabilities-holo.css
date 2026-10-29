@@ -89,16 +89,27 @@
   transition: rotate 140ms ease-out, transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease), border-color .2s var(--motion-ease);
 }
 
+.transaction-modal .transaction-dialog.holo-target {
+  position: relative;
+  --holo-strength: 0;
+  rotate: var(--holo-rotation, 0deg);
+  transform-style: preserve-3d;
+  transition: rotate 140ms ease-out, transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease), border-color .2s var(--motion-ease);
+}
+
 #view-approvals .approval-card.holo-target { rotate: var(--holo-rotation, 0deg); }
 
 .dashboard-main .holo-target:hover,
-.action-modal .holo-target:hover { --holo-strength: .9; }
+.action-modal .holo-target:hover,
+.transaction-modal .transaction-dialog.holo-target:hover { --holo-strength: .9; }
 .dashboard-main .holo-target.holo-active,
-.action-modal .holo-target.holo-active { --holo-strength: 1; }
+.action-modal .holo-target.holo-active,
+.transaction-modal .transaction-dialog.holo-target.holo-active { --holo-strength: 1; }
 
 .dashboard-main .holo-target:not(.dashboard-hero-card):not(.agent-card)::after,
 .dashboard-main .holo-target:is(.dashboard-hero-card, .agent-card)::before,
-.action-modal .holo-target::after {
+.action-modal .holo-target::after,
+.transaction-modal .transaction-dialog.holo-target::after {
   content: "";
   position: absolute;
   z-index: 1;
@@ -114,13 +125,21 @@
   transition: opacity 180ms ease;
 }
 
+/* Restore pointer-following shine on module cards in dark mode; their tilt remains independently driven by `rotate`. */
+:root[data-theme="dark"] .dashboard-main :is(#view-ledger, #view-invoices, #view-reports, #view-community-funds, #view-maintenance) .holo-target::after { display: block !important; }
+:root[data-theme="dark"] .dashboard-main .view .holo-target::after { display: block !important; }
+:root[data-theme="dark"] .transaction-modal .transaction-dialog.holo-target::after { display: block !important; }
+:root[data-theme="dark"] :is(.dashboard-main .view .holo-target.holo-active, .action-modal .holo-target.holo-active, .transaction-modal .holo-target.holo-active) { filter: drop-shadow(0 0 16px color-mix(in srgb, #63b3ff 38%, transparent)); }
+:root[data-theme="light"] .transaction-modal .transaction-dialog.holo-target::after { display: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   #hero-stage :is(.float-card, .lpui-card, .lpui-kpi) { rotate: var(--r, 0deg); transition: none; }
   #hero-stage :is(.float-card, .lpui-card, .lpui-kpi)::after { display: none; }
   .dashboard-main .holo-target { rotate: none; transition: none; }
   .dashboard-main .holo-target::before,
   .dashboard-main .holo-target::after,
-  .action-modal .holo-target::after { opacity: 0; }
+  .action-modal .holo-target::after,
+  .transaction-modal .transaction-dialog.holo-target::after { opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

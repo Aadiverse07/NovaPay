@@ -1,0 +1,70 @@
+/* Animated currency-exchange logo — replaces the static "→" between the
+   From / To selectors in Reports › Currency converter. */
+.fx-controls > .fx-swap-logo {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  align-self: end;
+  margin-bottom: -2px;
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, #6366f1 35%, transparent));
+}
+.fx-swap-logo svg { width: 100%; height: 100%; overflow: visible; }
+.fx-swap-logo svg * { transform-box: fill-box; transform-origin: center; }
+
+/* pulsing outer ring */
+.fxsw-ring {
+  fill: none;
+  stroke: url(#fxsw-g);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 5;
+  opacity: .55;
+  animation: fxsw-spin-rev 14s linear infinite, fxsw-pulse 2.8s ease-in-out infinite;
+}
+
+/* two arrows chase each other around the coin */
+.fxsw-orbit { animation: fxsw-spin 3.2s cubic-bezier(.6,0,.3,1) infinite; }
+.fxsw-arc, .fxsw-head {
+  fill: none;
+  stroke: url(#fxsw-g);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* centre coin flips between $ and ₹ */
+.fxsw-coin circle { fill: url(#fxsw-g); }
+.fxsw-coin { animation: fxsw-bob 3.2s ease-in-out infinite; }
+.fxsw-sym {
+  fill: #fff;
+  stroke: none;
+  font: 800 13px/1 "Montserrat", system-ui, sans-serif;
+}
+.fxsw-sym--a { animation: fxsw-flip-a 3.2s ease-in-out infinite; }
+.fxsw-sym--b { animation: fxsw-flip-b 3.2s ease-in-out infinite; }
+
+@keyframes fxsw-spin     { to { transform: rotate(360deg); } }
+@keyframes fxsw-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes fxsw-pulse    { 0%,100% { opacity: .35; } 50% { opacity: .8; } }
+@keyframes fxsw-bob      { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes fxsw-flip-a {
+  0%, 40%   { opacity: 1; transform: scaleX(1); }
+  50%       { opacity: 0; transform: scaleX(0); }
+  90%, 100% { opacity: 0; transform: scaleX(0); }
+}
+@keyframes fxsw-flip-b {
+  0%, 40%   { opacity: 0; transform: scaleX(0); }
+  50%, 90%  { opacity: 1; transform: scaleX(1); }
+  100%      { opacity: 0; transform: scaleX(0); }
+}
+
+/* stacked mobile layout: point the logo downward like the old arrow */
+@media (max-width: 520px) {
+  .fx-controls > .fx-swap-logo { align-self: center; margin: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-swap-logo svg *, .fxsw-ring { animation: none !important; }
+  .fxsw-sym--b { opacity: 0; }
+}

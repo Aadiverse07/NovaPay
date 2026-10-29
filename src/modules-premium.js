@@ -111,20 +111,20 @@
     document.addEventListener("pointerdown", function (event) { if (!wrapper.contains(event.target)) close(); });
   });
 
-  /* FX currency choices use an in-page themed menu because native option popups
+  /* These controls use an in-page themed menu because native option popups
      ignore the dashboard surface colors in several desktop browsers. */
-  document.querySelectorAll("#view-reports .fx-controls select").forEach(function (select) {
+  document.querySelectorAll("#view-reports .fx-controls select, #view-reports #report-period, #view-invoices #invoice-filter").forEach(function (select) {
     if (select.dataset.themedDropdown === "true") return;
     select.dataset.themedDropdown = "true";
     var wrapper = document.createElement("div"), trigger = document.createElement("button"), menu = document.createElement("div"), arrow = document.createElement("span"), options = [];
     var label = select.parentElement;
     var labelText = label ? Array.prototype.find.call(label.childNodes, function (node) { return node.nodeType === 3 && node.textContent.trim(); }) : null;
-    wrapper.className = "fx-select";
+    wrapper.className = select.id === "report-period" ? "fx-select report-period-select" : "fx-select";
     trigger.type = "button";
     trigger.className = "fx-select__trigger";
     trigger.setAttribute("aria-haspopup", "listbox");
     trigger.setAttribute("aria-expanded", "false");
-    trigger.setAttribute("aria-label", labelText ? labelText.textContent.trim() : "Choose currency");
+    trigger.setAttribute("aria-label", labelText ? labelText.textContent.trim() : (select.getAttribute("aria-label") || "Choose currency"));
     menu.className = "fx-select__menu";
     menu.id = select.id + "-options";
     menu.setAttribute("role", "listbox");
@@ -280,7 +280,6 @@
       if (window.NovaLive && typeof window.NovaLive.renderQueue === "function") window.NovaLive.renderQueue();
     }
     view.querySelectorAll(".spark-line").forEach(function (p) { p.setAttribute("pathLength", "1"); });
-    if (view.id === "view-community-funds") return; /* keep campaign totals steady; no count-up flicker */
     view.querySelectorAll(".module-kpis strong, .report-summary-grid strong, .campaign-numbers b, .report-bars b, .kpi-card > strong").forEach(function (el, i) {
       setTimeout(function () { countUp(el, 1100); }, 120 + i * 90);
     });

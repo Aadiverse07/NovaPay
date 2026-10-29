@@ -184,7 +184,7 @@
     var tb=$("transactions-table-body");
     if(tb&&!tb.querySelector('[data-tx-id="REF-28491"]')){
       var r=document.createElement("tr");r.className="transaction-row";r.tabIndex=0;r.dataset.txId="REF-28491";r.dataset.type="Refund";r.dataset.status="Refunded (Simulated)";r.dataset.amount="2000";r.dataset.currency="INR";r.dataset.source="demo";r.dataset.buyer="Unavailable";
-      ["Unavailable","↩ Refund","Unavailable","INR 2,000.00","Unavailable","-INR 2,000.00","Refunded (Simulated)","REF-28491"].forEach(function(v){var td=document.createElement("td");td.textContent=v;r.appendChild(td)});
+      ["Unavailable","↩ Refund","Unavailable","INR 2,000.00","Unavailable","-INR 2,000.00","Refunded (Simulated)","REF-28491"].forEach(function(v){var td=document.createElement("td");if(v==="↩ Refund"){td.innerHTML='<span class="tx-badge refund"></span> Refund'}else{td.textContent=v}r.appendChild(td)});
       tb.insertBefore(r,tb.firstChild);
       if(typeof txRows!=="undefined")txRows=document.querySelectorAll("#view-transactions tbody tr");
     }
