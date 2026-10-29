@@ -68,6 +68,67 @@
 
 /* The landing-page hero "approval-card" decoration shares this class name and was shrinking/tilting the queue cards. Reset it for the dashboard queue. */
 #view-approvals .approval-card{position:relative;width:auto;max-width:none;min-width:0;left:auto;top:auto;right:auto;bottom:auto;transform:none;animation:none;rotate:none}
+#view-approvals .approval-card[data-proposal-id]{cursor:pointer}
+#view-approvals .approval-card[data-proposal-id]:focus-visible{outline:3px solid var(--info-text);outline-offset:3px}
+
+/* Match the Transactions detail dialog entrance for approval and invoice details. */
+#approval-detail-modal:not([hidden]) .approval-modal-backdrop,
+#invoice-detail-modal:not([hidden]) .approval-modal-backdrop{animation:tx-backdrop-in .24s ease both}
+#approval-detail-modal:not([hidden]) .approval-dialog,
+#invoice-detail-modal:not([hidden]) .approval-dialog{animation:tx-detail-in .42s cubic-bezier(.18,.78,.25,1) both}
+#approval-detail-modal .approval-dialog.transaction-dialog,
+#invoice-detail-modal .approval-dialog.transaction-dialog{width:min(860px,100%);max-height:min(90vh,900px);padding:30px;border:1px solid var(--border);border-radius:22px;overflow:auto}
+#approval-detail-modal .approval-dialog.transaction-dialog::before,
+#invoice-detail-modal .approval-dialog.transaction-dialog::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;transform-origin:left;background:linear-gradient(90deg,var(--info-text),#7dd3fc,var(--info-text));background-size:200% 100%}
+#approval-detail-modal:not([hidden]) .approval-dialog.transaction-dialog::before,
+#invoice-detail-modal:not([hidden]) .approval-dialog.transaction-dialog::before{animation:tx-flow 1.4s linear infinite,tx-grow .8s cubic-bezier(.2,.8,.2,1) both}
+#approval-detail-modal:not([hidden]) .approval-modal-backdrop,
+#invoice-detail-modal:not([hidden]) .approval-modal-backdrop{backdrop-filter:blur(8px)}
+#approval-detail-modal .approval-dialog.transaction-dialog h2,
+#invoice-detail-modal .approval-dialog.transaction-dialog h2{margin:8px 50px 6px 0;font-size:32px;line-height:1.15}
+#approval-detail-modal .approval-dialog.transaction-dialog>p:not(.approval-detail-effect):not(.approval-detail-limits):not([role]),
+#invoice-detail-modal .approval-dialog.transaction-dialog>p:not(.approval-detail-effect):not(.approval-detail-limits):not([role]){margin:5px 0 14px;color:var(--text-muted);font-size:15px}
+#approval-detail-modal .transaction-detail-grid,
+#invoice-detail-modal .transaction-detail-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0 12px}
+#approval-detail-modal .transaction-detail-grid>div,
+#invoice-detail-modal .transaction-detail-grid>div{min-width:0;padding:11px 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface-sunken);transition:transform .25s,background .25s}
+#approval-detail-modal .transaction-detail-grid>div:hover,
+#invoice-detail-modal .transaction-detail-grid>div:hover{transform:translateY(-3px)}
+#approval-detail-modal .transaction-detail-grid dt,
+#invoice-detail-modal .transaction-detail-grid dt{display:block;color:var(--text-subtle);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.08em}
+#approval-detail-modal .transaction-detail-grid dd,
+#invoice-detail-modal .transaction-detail-grid dd{display:block;margin:4px 0 0;color:var(--text);font-size:15px;font-weight:750;line-height:1.3;overflow-wrap:anywhere}
+#approval-detail-modal .approval-detail-effect.detail-note,
+#invoice-detail-modal .approval-detail-effect.detail-note{margin:0 0 14px;padding:12px;border:0;border-radius:12px;background:var(--info-soft);color:var(--info-text);font-size:13px;line-height:1.5}
+#approval-detail-modal .approval-dialog .agent-actions{margin-top:12px}
+#approval-detail-modal:not([hidden]) .approval-detail-fields>div,
+#invoice-detail-modal:not([hidden]) .approval-detail-fields>div{animation:tx-field-in .42s cubic-bezier(.18,.78,.25,1) both}
+#approval-detail-modal:not([hidden]) .approval-detail-fields>div:nth-child(2n),
+#invoice-detail-modal:not([hidden]) .approval-detail-fields>div:nth-child(2n){animation-delay:45ms}
+#approval-detail-modal:not([hidden]) .approval-detail-fields>div:nth-child(3n),
+#invoice-detail-modal:not([hidden]) .approval-detail-fields>div:nth-child(3n){animation-delay:90ms}
+@media(prefers-reduced-motion:reduce){
+  #approval-detail-modal:not([hidden]) .approval-modal-backdrop,
+  #invoice-detail-modal:not([hidden]) .approval-modal-backdrop,
+  #approval-detail-modal:not([hidden]) .approval-dialog,
+  #invoice-detail-modal:not([hidden]) .approval-dialog,
+  #approval-detail-modal:not([hidden]) .approval-detail-fields>div,
+  #invoice-detail-modal:not([hidden]) .approval-detail-fields>div,
+  #approval-detail-modal .approval-dialog.transaction-dialog::before,
+  #invoice-detail-modal .approval-dialog.transaction-dialog::before{animation:none}
+}
+@media(max-width:760px){
+  #approval-detail-modal .approval-dialog.transaction-dialog,
+  #invoice-detail-modal .approval-dialog.transaction-dialog{padding:24px 20px}
+  #approval-detail-modal .transaction-detail-grid,
+  #invoice-detail-modal .transaction-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:480px){
+  #approval-detail-modal .transaction-detail-grid,
+  #invoice-detail-modal .transaction-detail-grid{grid-template-columns:1fr}
+  #approval-detail-modal .approval-dialog.transaction-dialog h2,
+  #invoice-detail-modal .approval-dialog.transaction-dialog h2{font-size:27px}
+}
 #view-approvals .approval-card dd{min-width:0;overflow-wrap:anywhere}
 #view-approvals .approval-filters select{width:100%;min-width:0;max-width:100%}
 @media (max-width:700px){#view-approvals .approval-filters{grid-template-columns:1fr}}
@@ -112,3 +173,16 @@
 #view-approvals .approval-filters{position:relative;z-index:100}
 #view-approvals .approval-select.is-open{z-index:101}
 #view-approvals .approval-select__menu{z-index:102}
+
+/* Close (×) button: top-right corner of the Approvals and Invoices detail/confirm dialogs.
+   .specular-button { position: relative } was overriding .modal-close { position: absolute },
+   which dropped the button into normal flow at the top-left. */
+.approval-dialog{position:relative}
+.approval-dialog>.modal-close{position:absolute;top:18px;right:18px;left:auto;margin:0;float:none;z-index:4}
+@media(max-width:560px){.approval-dialog>.modal-close{top:14px;right:14px}}
+
+/* Approvals dialogs: hide the up/down scrollbar (content can still be scrolled with wheel/touch/keys). */
+#approval-detail-modal .approval-dialog,
+#approval-confirm-modal .approval-dialog{scrollbar-width:none;-ms-overflow-style:none}
+#approval-detail-modal .approval-dialog::-webkit-scrollbar,
+#approval-confirm-modal .approval-dialog::-webkit-scrollbar{display:none;width:0;height:0}
