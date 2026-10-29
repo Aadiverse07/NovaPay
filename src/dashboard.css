@@ -465,7 +465,7 @@ body .sidebar-reopen{position:fixed;top:26px;left:10px;z-index:35;box-shadow:var
 
 /* Claude-style dictation: mic -> composer becomes a scrolling waveform with cancel (✕) and done (✓) */
 .ai-tool-button svg{display:block;margin:auto}
-.ai-dictation{display:none;flex:1 1 0;min-width:0;align-items:center;gap:10px;min-height:48px;padding:6px 8px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.ai-dictation{display:none;flex:1 1 0;min-width:0;align-items:center;gap:10px;min-height:48px;padding:6px 8px;border:1px solid var(--border);border-radius:14px;background:var(--surface-sunken)}
 .ai-chat-row.is-dictating>*:not(.ai-dictation){display:none!important}
 .ai-chat-row.is-dictating .ai-dictation{display:flex}
 .ai-dict-wave{flex:1;min-width:0;height:32px}
@@ -589,3 +589,33 @@ html.ai-fs-lock,html.ai-fs-lock body{overflow:hidden}
 .ai-thought .animated-item{margin:0;transform:translateY(4px) scale(.96);opacity:0;transform-origin:left center;transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .32s ease}
 .ai-thought .animated-item.is-in{transform:none;opacity:1}
 @media (prefers-reduced-motion:reduce){.ai-thought .animated-item,.ai-thought .item,.ai-thought .item-mark{transition:none}.ai-thought .animated-item{transform:none;opacity:1}.ai-thought .item.complete .ai-tick-path{animation:none;stroke-dashoffset:0}.ai-thought-spinner,.ai-thought-dots i,.ai-thought .item.current .item-mark::after{animation:none}}
+
+/* Transaction detail: same dictation mic as the AI assistant (waveform + cancel / done) */
+#transaction-modal .tx-ai-row{position:relative;align-items:center}
+#transaction-modal .tx-ai-row .ai-tool-button{width:36px;min-width:36px;height:36px;border-radius:10px;flex:none}
+#transaction-modal .tx-ai-row.is-dictating>*:not(.ai-dictation){display:none!important}
+#transaction-modal .tx-ai-row.is-dictating .ai-dictation{display:flex;flex:1 1 0;min-height:40px;padding:2px 6px}
+#transaction-modal .tx-ai-row.is-dictating .ai-dict-btn{width:32px;height:32px}
+#transaction-modal #tx-voice-status{margin:0;font-size:12px;color:var(--text-muted)}
+#transaction-modal #tx-voice-status:empty{display:none}
+
+/* Voice dictation (AI assistant + transaction popup): no backing box behind the sphere.
+   The sphere itself is drawn on a transparent canvas, so removing the container's
+   background, border and shadow leaves only the sphere, timer and the two buttons. */
+.ai-dictation,
+#transaction-modal .tx-ai-row.is-dictating .ai-dictation{
+  background:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.ai-dict-wave,
+.ai-dict-wave.strands-container,
+.ai-dict-wave canvas{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+}

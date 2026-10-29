@@ -424,6 +424,66 @@
   document.addEventListener("click",function(e){var row=e.target.closest(".transaction-row");if(row&&!e.target.closest("button"))openTx(row.dataset.txId);});
   document.addEventListener("keydown",function(e){var row=e.target.closest&&e.target.closest(".transaction-row");if(row&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openTx(row.dataset.txId);}});
   document.querySelectorAll("[data-close-transaction]").forEach(function(b){b.addEventListener("click",closeTx);});
+  /* Transaction detail voice input: same dictation behaviour as the AI assistant mic. */
+  (function setupTransactionMic(){
+    var mic=$("tx-ai-mic"),row=$("tx-ai-row"),input=$("tx-ai-question"),status=$("tx-voice-status"),wave=$("tx-dict-wave"),timeEl=$("tx-dict-time"),okBtn=$("tx-dict-confirm"),noBtn=$("tx-dict-cancel");
+    if(!mic||!row||!input)return;
+    var recognition=null,stream=null,audioContext=null,raf=0,active=false,pending=false,buffer="",interim="",startedAt=0,timerId=0,peak=0,lastPush=0,strands=null;
+    function ensureStrands(){if(!strands&&window.NovaStrands&&wave)strands=window.NovaStrands.create(wave,{listening:true,energy:.12,lightMode:document.documentElement.dataset.theme==="light"});return strands}
+    function cleanup(){
+      active=false;pending=false;cancelAnimationFrame(raf);raf=0;clearInterval(timerId);timerId=0;
+      if(recognition){var r=recognition;recognition=null;r.onend=null;r.onerror=null;r.onresult=null;try{r.abort()}catch(e){}}
+      if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
+      if(audioContext){try{audioContext.close()}catch(e){}audioContext=null}
+      if(strands){strands.setLevel(0);strands.setListening(false)}
+      row.classList.remove("is-dictating");mic.classList.remove("is-listening");mic.setAttribute("aria-label","Start voice input")
+    }
+    function cancelDictation(){cleanup();buffer="";interim=""}
+    function confirmDictation(){
+      var text=(buffer+" "+interim).replace(/\s+/g," ").trim();cleanup();buffer="";interim="";
+      if(text){input.value=(input.value?input.value.replace(/\s+$/,"")+" ":"")+text;status.textContent=""}
+      else status.textContent="No speech was detected. Try again.";
+      input.focus()
+    }
+    function monitor(analyser){
+      var td=new Uint8Array(analyser.fftSize);peak=0;lastPush=performance.now();if(strands)strands.setListening(true);
+      function frame(now){
+        analyser.getByteTimeDomainData(td);var sum=0;
+        for(var q=0;q<td.length;q++){var d=(td[q]-128)/128;sum+=d*d}
+        var lvl=Math.min(1,Math.sqrt(sum/td.length)*5);peak=Math.max(lvl,peak*.82);
+        if(strands)strands.setLevel(peak);
+        if(now-lastPush>=60){peak*=.25;lastPush=now}
+        raf=requestAnimationFrame(frame)
+      }
+      raf=requestAnimationFrame(frame)
+    }
+    function startListening(){
+      var Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!Speech){status.textContent="Voice input is not supported by this browser. Use Chrome or Edge, or type your question.";return}
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent="Microphone access requires a supported browser on HTTPS or localhost.";return}
+      if(active||pending)return;pending=true;status.textContent="";mic.classList.add("is-listening");buffer="";interim="";
+      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}}).then(function(media){
+        if(!pending){media.getTracks().forEach(function(t){t.stop()});return}
+        pending=false;active=true;stream=media;
+        row.classList.add("is-dictating");ensureStrands();
+        var Ctx=window.AudioContext||window.webkitAudioContext;
+        if(Ctx){audioContext=new Ctx();var analyser=audioContext.createAnalyser();analyser.fftSize=1024;analyser.smoothingTimeConstant=.4;audioContext.createMediaStreamSource(stream).connect(analyser);monitor(analyser)}
+        mic.setAttribute("aria-label","Stop voice input");
+        startedAt=Date.now();timeEl.textContent="0:00";timerId=setInterval(function(){var sec=Math.floor((Date.now()-startedAt)/1000);timeEl.textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0")},250);
+        recognition=new Speech();recognition.lang=navigator.language||"en-US";recognition.interimResults=true;recognition.continuous=true;
+        recognition.onresult=function(e){var fin="",tmp="";for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else tmp+=e.results[i][0].transcript}if(fin)buffer=(buffer?buffer+" ":"")+fin.trim();interim=tmp};
+        recognition.onerror=function(e){if(e.error==="not-allowed"||e.error==="service-not-allowed"){cancelDictation();status.textContent="Microphone permission denied."}else if(e.error==="network"||e.error==="audio-capture"){cancelDictation();status.textContent=e.error==="network"?"Speech service is unreachable. Check your connection.":"No microphone was found."}};
+        recognition.onend=function(){if(!active||!recognition)return;if(interim){buffer=(buffer?buffer+" ":"")+interim.trim();interim=""}try{recognition.start()}catch(err){}};
+        try{recognition.start()}catch(err){}
+      }).catch(function(){cancelDictation();status.textContent="Microphone access was denied or is unavailable."})
+    }
+    mic.addEventListener("click",function(){if(active||pending)confirmDictation();else startListening()});
+    okBtn.addEventListener("click",confirmDictation);noBtn.addEventListener("click",cancelDictation);
+    document.addEventListener("keydown",function(e){if(!active)return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();cancelDictation()}else if(e.key==="Enter"&&!e.isComposing){e.preventDefault();e.stopPropagation();confirmDictation()}},true);
+    /* Stop the mic whenever the popup closes, and start clean when it opens. */
+    if(txModal)new MutationObserver(function(){if(txModal.hidden){cancelDictation();status.textContent=""}}).observe(txModal,{attributes:true,attributeFilter:["hidden"]});
+    window.addEventListener("pagehide",cancelDictation);
+  })();
   $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction,context=["ID: "+d.ref,"type: "+d.type,"status: "+d.status,"gross: "+d.amount,"fee: "+d.fee,"net: "+d.net,"currency: "+(d.currency||"Unavailable"),"buyer: "+(d.buyer||"Unavailable"),"source: "+(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data")].join("; ");$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.live.ai&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply;$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(){$("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context});else $("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context;});
   $("tx-send-approval").addEventListener("click",function(){if(!selectedTransaction)return;var answer=$("tx-ai-answer"),reason=answer.textContent.trim();if(!reason||reason.indexOf("Thinking")===0){showToast("Ask the AI and review its finding first.");return}if(window.NovaLive&&NovaLive.addTransactionFinding){var p=null;try{p=JSON.parse(answer.dataset.proposal||"null")}catch(e){}if(p&&["refund","dispute-evidence","hold-payout"].indexOf(p.type)>-1){p.reason=p.reason||reason;p.txId=selectedTransaction.ref;p.display=selectedTransaction.amount;p.source=p.source||"NovaPay AI";p.simulatedOnly=true;NovaLive.addProposal(p)}else NovaLive.addTransactionFinding(selectedTransaction,reason);closeTx();location.hash="#approvals";showToast("Finding sent to Approvals for human review.")}else showToast("Approvals service is unavailable.")});
   document.addEventListener("keydown",function(e){
