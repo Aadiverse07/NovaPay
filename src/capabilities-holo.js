@@ -5,10 +5,12 @@
     "#features .feature-grid .feature-card", "#feature-summary", "#hero-stage .float-card",
     "#hero-stage .lpui-card", "#hero-stage .lpui-kpi", ".dashboard-main .dashboard-hero-card",
     ".dashboard-main .kpi-card", ".dashboard-main .dash-kpis > article",
-    ".dashboard-main .ledger-summary > article", ".dashboard-main .dash-card",
+    ".dashboard-main .ledger-summary > article", ".dashboard-main .dash-card", ".dashboard-main article",
+    ".dashboard-main .document-review", ".dashboard-main .report-card",
+    ".dashboard-main .maintenance-list > article", ".dashboard-main .campaign-grid > article",
     ".dashboard-main .approval-card", ".dashboard-main .agent-card",
     ".dashboard-main .ai-proposal-card", ".dashboard-main .suggested-action",
-    ".dashboard-main .hero-paypal-card", ".action-modal .action-dialog",
+    ".dashboard-main .hero-paypal-card", ".action-modal .action-dialog", ".transaction-modal .transaction-dialog",
     ".action-modal .action-summary"
   ].join(",");
   if (!window.matchMedia || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -38,7 +40,7 @@
           return;
         }
         var isHeroCard = card.matches("#hero-stage .float-card, #hero-stage .lpui-card, #hero-stage .lpui-kpi");
-        var isDashboardCard = card.matches(".dashboard-main .holo-target, .action-modal .holo-target");
+        var isDashboardCard = card.matches(".dashboard-main .holo-target, .action-modal .holo-target, .transaction-modal .transaction-dialog.holo-target");
         var rx = ((.5 - y) * 11);
         var ry = ((x - .5) * 13);
         card.style.setProperty("--holo-rx", rx.toFixed(2) + "deg");
@@ -61,7 +63,7 @@
         card.style.setProperty("--holo-ry", "0deg");
         card.style.setProperty("--holo-x", "50%");
         card.style.setProperty("--holo-y", "50%");
-        if (card.matches("#hero-stage .float-card, #hero-stage .lpui-card, #hero-stage .lpui-kpi, .dashboard-main .holo-target, .action-modal .holo-target")) card.style.removeProperty("--holo-rotation");
+        if (card.matches("#hero-stage .float-card, #hero-stage .lpui-card, #hero-stage .lpui-kpi, .dashboard-main .holo-target, .action-modal .holo-target, .transaction-modal .transaction-dialog.holo-target")) card.style.removeProperty("--holo-rotation");
       }
 
       card.addEventListener("pointerenter", move, { passive: true });
