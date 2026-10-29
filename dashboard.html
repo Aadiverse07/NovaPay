@@ -50,7 +50,10 @@
 <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
     <button class="sidebar-collapse" id="sidebar-collapse" type="button" aria-label="Close navigation" aria-expanded="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
     <a class="dashboard-brand" href="preview.html#home" aria-label="Return to NovaPay home"><img src="assets/novapay-logo.png" alt="NovaPay — Smarter Payments. Powered by AI." class="dashboard-logo-full" style="width:130px;height:auto;display:block;"><img src="assets/novapay-mark-clean.png" alt="" class="dashboard-logo-mark" aria-hidden="true"></a>
-    <div class="demo-session"><span class="session-dot"></span><span>Active session</span></div>
+    <button type="button" class="user-chip sidebar-user" id="sidebar-user" aria-haspopup="dialog" aria-label="View profile details">
+      <span class="avatar" id="user-avatar">S</span>
+      <span><b id="user-name">Shikhar</b><small id="user-email">Business Owner</small></span>
+    </button>
     <nav class="dashboard-nav" id="dashboard-nav">
       <a href="#dashboard" data-view="dashboard" aria-label="Dashboard" aria-current="page"><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/dashboard.png" alt="" width="38" height="38"></span><b>Dashboard</b></a>
       <a href="#transactions" data-view="transactions" aria-label="Transactions"><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/transactions.png" alt="" width="38" height="38"></span><b>Transactions</b></a>
@@ -75,32 +78,24 @@
         <span class="top-subkicker" id="ai-top-kicker" hidden>NOVAPAY AI · MERCHANT ASSISTANT</span>
       </div>
       <div class="top-actions">
-        <label class="date-selector" aria-label="Select dashboard date range">
-          <span aria-hidden="true">▣</span>
-          <select id="dashboard-date">
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="week">Last 7 days</option>
-          </select>
-        </label>
+        <button class="icon-button calendar-button" id="calendar-button" type="button" aria-label="Open calendar" aria-expanded="false" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></button>
         <button class="icon-button notification-button" id="notifications" type="button" aria-label="View notifications" aria-expanded="false"><span aria-hidden="true" style="font-weight:700">$</span><span class="notification-dot" aria-hidden="true"></span></button>
         <button class="theme-toggle" id="dashboard-theme" type="button" aria-label="Switch theme" aria-pressed="false">☼</button>
-        <button class="user-chip user-menu-button" id="profile-button" type="button" aria-expanded="false">
-          <span class="avatar" id="user-avatar">S</span>
-          <span><b id="user-name">Shikhar</b><small id="user-email">Business Owner</small></span>
-          <span class="profile-chevron" aria-hidden="true">⌄</span>
-        </button>
-        <button class="btn btn--ghost logout-btn" id="logout">Log Out</button>
+        <button class="icon-button more-button" id="more-button" type="button" aria-label="More options" aria-expanded="false" aria-haspopup="menu"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>
       </div>
       <div class="popover notification-popover" id="notification-popover" hidden>
         <div class="popover-title"><b>Notifications</b><span class="status info">2 new</span></div>
         <button type="button" class="notification-item" data-notification-view="approvals"><span class="notif-icon warn">✓</span><span><b>Proposals ready for review</b><small>Open Approvals to review suggested actions.</small></span></button>
         <button type="button" class="notification-item" data-notification-view="ai-assistant"><span class="notif-icon info"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="16" height="16" style="width:16px;height:16px;display:block;object-fit:contain"></span><span><b>NovaPay AI insight ready</b><small>Open AI Assistant for a summary.</small></span></button>
       </div>
-      <div class="popover profile-popover" id="profile-popover" hidden>
-        <div class="profile-popover-head"><span class="avatar">S</span><span><b id="profile-name">Shikhar</b><small>Business Owner</small></span></div>
-        <button type="button" class="popover-link" data-profile-action="settings">⚙ Settings <span>→</span></button>
-        <button type="button" class="popover-link" data-profile-action="logout">↪ Log out <span>→</span></button>
+      <div class="popover calendar-popover" id="calendar-popover" role="dialog" aria-label="Calendar" hidden>
+        <div class="cal-head"><button type="button" class="cal-nav" id="cal-prev" aria-label="Previous month">‹</button><b id="cal-title"></b><button type="button" class="cal-nav" id="cal-next" aria-label="Next month">›</button></div>
+        <div class="cal-grid cal-dow" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+        <div class="cal-grid" id="cal-days"></div>
+      </div>
+      <div class="popover more-popover" id="more-popover" role="menu" hidden>
+        <button type="button" class="popover-link" role="menuitem" data-profile-action="settings">⚙ Settings <span>→</span></button>
+        <button type="button" class="popover-link" role="menuitem" id="logout">↪ Log out <span>→</span></button>
       </div>
     </header>
 
@@ -236,7 +231,6 @@
           <article class="dash-card"><div class="card-heading"><h3>Webhook events</h3><span>/api/webhook</span></div><p>Configure this endpoint in your PayPal Sandbox app’s Webhooks. For local testing, expose the server with a trusted tunnel and use its HTTPS URL ending in <code>/api/webhook</code>. Set <code>PAYPAL_WEBHOOK_ID</code> to the webhook ID from PayPal to enable signature verification.</p><ul class="np-log" id="webhook-log" aria-live="polite"><li class="np-empty">No events received. Webhook events are session-only and are not used as transaction records.</li></ul></article>
           <article class="dash-card"><div class="card-heading"><h3>API activity</h3><span>Session-only server log</span></div><p>Recent PayPal and AI requests. These entries are held in memory and clear when the server restarts.</p><ul class="np-log" id="api-log" aria-live="polite"><li class="np-empty">No calls yet.</li></ul></article>
         </div>
-        <article class="dash-card settings-card" style="margin-top:16px"><label><span><b>Notifications</b><small>Show review notifications.</small></span><input type="checkbox" checked></label><label><span><b>AI suggestions</b><small>Show suggested questions in the AI workspace.</small></span><input type="checkbox" checked></label><label><span><b>Reduced motion</b><small>Respect the browser accessibility preference.</small></span><input type="checkbox" id="reduce-motion-toggle"></label></article>
       </div>
       <div class="view" id="view-ledger" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/ledger.png" alt="" width="64" height="64"><h2>Ledger</h2><p>A clear, double-entry view of money movement. Sample entries are illustrative and are not posted to a live ledger.</p></div>
@@ -290,6 +284,44 @@
         <article class="dash-card transparency-hero"><span class="status success">Public transparency · read only</span><h2>Maple Grove Community Fund</h2><p>Contributions and expenses are shared with personal details removed. This demonstration uses illustrative data.</p><div class="report-summary-grid"><div><small>Raised</small><strong>₹4,82,000</strong></div><div><small>Spent</small><strong>₹1,28,400</strong></div><div><small>Available</small><strong>₹3,53,600</strong></div></div></article>
         <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Recent contributions</h3><div class="transparency-row"><span>Community supporter</span><b>₹5,000</b><small>21 Oct · Verified</small></div><div class="transparency-row"><span>Anonymous</span><b>₹2,500</b><small>20 Oct · Verified</small></div><div class="transparency-row"><span>Community supporter</span><b>₹1,000</b><small>19 Oct · Verified</small></div></article><article class="dash-card"><h3>Recent spending</h3><div class="transparency-row"><span>Playground safety surface</span><b>₹26,700</b><small>Approved · Paid · Evidence complete</small></div><div class="transparency-row"><span>Community hall water pump</span><b>₹18,400</b><small>Approved · Payment evidence pending</small></div><p class="module-foot">Each expense links to approval, invoice, payment reference and completion evidence.</p></article></div>
         </section>
+      </div>
+      <div class="view" id="view-settings" data-view-panel hidden>
+        <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/settings.png" alt="" width="64" height="64"><h2>Settings</h2><p>Manage your profile, appearance, notifications, AI preferences and session. Preferences are saved in this browser.</p></div>
+        <div class="settings-grid">
+          <article class="dash-card" id="set-profile"><div class="card-heading"><div><h3>Profile</h3><p>How your name appears across NovaPay.</p></div></div>
+            <div class="settings-card">
+              <label for="set-name"><span><b>Display name</b><small>Shown in the sidebar and dashboard greeting.</small></span><input type="text" id="set-name" maxlength="40" placeholder="Your name" autocomplete="name"></label>
+              <label for="set-email"><span><b>Email</b><small>Used to sign in. Read-only in this demo.</small></span><input type="text" id="set-email" readonly></label>
+              <label for="set-role"><span><b>Role</b><small>Your role in this workspace.</small></span><input type="text" id="set-role" value="Business Owner" readonly></label>
+            </div>
+            <div class="settings-actions"><button class="btn btn--primary" id="set-save-profile" type="button">Save profile</button></div></article>
+          <article class="dash-card" id="set-appearance"><div class="card-heading"><div><h3>Appearance</h3><p>Theme and motion.</p></div></div>
+            <div class="settings-card">
+              <label for="set-theme"><span><b>Theme</b><small>Light or dark interface.</small></span><select id="set-theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+              <label><span><b>Reduced motion</b><small>Turn off animations and transitions.</small></span><input type="checkbox" id="reduce-motion-toggle"></label>
+            </div></article>
+          <article class="dash-card" id="set-notifications"><div class="card-heading"><div><h3>Notifications</h3><p>Choose what gets your attention.</p></div></div>
+            <div class="settings-card">
+              <label><span><b>In-app notifications</b><small>Show the notification bell and review alerts.</small></span><input type="checkbox" id="set-notif" checked></label>
+              <label><span><b>Approval alerts</b><small>Highlight proposals waiting for review.</small></span><input type="checkbox" id="set-approval-alerts" checked></label>
+              <label><span><b>Weekly email summary</b><small>Preference saved; email delivery is not active in this demo.</small></span><input type="checkbox" id="set-email-digest"></label>
+            </div></article>
+          <article class="dash-card" id="set-ai"><div class="card-heading"><div><h3>AI Assistant</h3><p>Control how NovaPay AI behaves.</p></div></div>
+            <div class="settings-card">
+              <label><span><b>AI suggestions</b><small>Show suggested questions in the AI workspace.</small></span><input type="checkbox" id="set-ai-suggestions" checked></label>
+              <label><span><b>Ask before any action</b><small>AI proposals always need your approval first.</small></span><input type="checkbox" id="set-ai-confirm" checked disabled></label>
+            </div></article>
+          <article class="dash-card" id="set-workspace"><div class="card-heading"><div><h3>Workspace</h3><p>Regional information.</p></div></div>
+            <div class="settings-card">
+              <label><span><b>Currency</b><small>All amounts are shown in Indian Rupees.</small></span><input type="text" value="INR (₹)" readonly></label>
+              <label><span><b>Time zone</b><small>Detected from your browser.</small></span><input type="text" id="set-tz" readonly></label>
+            </div></article>
+          <article class="dash-card" id="set-security"><div class="card-heading"><div><h3>Security &amp; data</h3><p>Session and local data.</p></div></div>
+            <div class="settings-card">
+              <label><span><b>Sign out</b><small>End this session on this device.</small></span><button class="btn btn--ghost" id="set-logout" type="button">Log out</button></label>
+              <label><span><b>Reset preferences</b><small>Restore default settings saved in this browser.</small></span><button class="btn btn--ghost" id="set-reset" type="button">Reset</button></label>
+            </div></article>
+        </div>
       </div>
       <div class="view" id="view-maintenance" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/maintenance.png" alt="" width="64" height="64"><h2>Maintenance</h2><p>Follow each request from quotation to approval, payment evidence and completion.</p></div>
@@ -402,6 +434,24 @@
     <div class="action-summary"><span>Transaction</span><b>PAY-28491</b><small>Possible duplicate transaction · Simulated action</small></div>
     <div class="action-modal-buttons"><button class="btn btn--primary" id="confirm-refund" type="button">Confirm Refund</button><button class="btn btn--ghost" data-close-action type="button">Cancel</button></div>
   </section>
+</div>
+<div class="modal-backdrop" id="profile-modal" hidden aria-hidden="true">
+  <div class="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="pm-title">
+    <button class="modal-close" id="profile-modal-close" type="button" aria-label="Close">×</button>
+    <div class="pm-head"><span class="avatar pm-avatar" id="pm-avatar">S</span><div><h2 id="pm-title">User</h2><p id="pm-role">Business Owner</p><span class="status ok pm-status"><span class="session-dot"></span> Active session</span></div></div>
+    <dl class="pm-list">
+      <div><dt>Full name</dt><dd id="pm-name"></dd></div>
+      <div><dt>Email</dt><dd id="pm-email"></dd></div>
+      <div><dt>Role</dt><dd>Business Owner</dd></div>
+      <div><dt>Workspace</dt><dd>NovaPay Sample Workspace</dd></div>
+      <div><dt>Account type</dt><dd>Demo account</dd></div>
+      <div><dt>Signed in</dt><dd id="pm-signed"></dd></div>
+      <div><dt>Time zone</dt><dd id="pm-tz"></dd></div>
+      <div><dt>Currency</dt><dd>INR (₹)</dd></div>
+      <div><dt>Theme</dt><dd id="pm-theme"></dd></div>
+    </dl>
+    <div class="pm-actions"><button class="btn btn--ghost" id="pm-settings" type="button">Edit in Settings</button><button class="btn btn--primary" id="pm-logout" type="button">Log out</button></div>
+  </div>
 </div>
 <div class="toast" id="dashboard-toast" role="status" aria-live="polite"></div>
 <script src="src/chart-theme.js"></script>

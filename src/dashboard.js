@@ -24,7 +24,7 @@
   applyTheme(currentTheme());
 
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
-  var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents","community-funds":"Community Funds",maintenance:"Maintenance"};
+  var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents","community-funds":"Community Funds",maintenance:"Maintenance",settings:"Settings"};
   function canonicalView(view){return view==="fundraising"||view==="transparency"?"community-funds":view;}
   function applyView(view,writeHash,preserveScroll){
     view=canonicalView(view);
@@ -32,7 +32,7 @@
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
     title.textContent=titles[view];
-    var subs={transactions:"TRANSACTIONS","ai-assistant":"NOVAPAY AI \u00b7 MERCHANT ASSISTANT",approvals:"HUMAN-IN-THE-LOOP",sandbox:"PAYPAL DEVELOPER PLATFORM",ledger:"FINANCIAL CORE",invoices:"FINANCE UTILITIES",reports:"FINANCE UTILITIES",documents:"DOCUMENTS & OCR","community-funds":"COMMUNITY FUNDS",maintenance:"COMMUNITY OPERATIONS"},aiKick=$("ai-top-kicker"); if(aiKick){aiKick.textContent=subs[view]||"";aiKick.hidden=!subs[view]}
+    var subs={transactions:"TRANSACTIONS","ai-assistant":"NOVAPAY AI \u00b7 MERCHANT ASSISTANT",approvals:"HUMAN-IN-THE-LOOP",sandbox:"PAYPAL DEVELOPER PLATFORM",ledger:"FINANCIAL CORE",invoices:"FINANCE UTILITIES",reports:"FINANCE UTILITIES",documents:"DOCUMENTS & OCR","community-funds":"COMMUNITY FUNDS",maintenance:"COMMUNITY OPERATIONS",settings:"PREFERENCES"},aiKick=$("ai-top-kicker"); if(aiKick){aiKick.textContent=subs[view]||"";aiKick.hidden=!subs[view]}
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
     if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
@@ -222,13 +222,53 @@
   }
   [txSearch,txType,$("tx-status"),$("tx-from"),$("tx-to"),$("tx-min"),$("tx-max")].forEach(function(c){c.addEventListener(c.tagName==="INPUT"&&c.type==="search"?"input":"change",filterTx)});
 
-  var sugToggle=document.querySelectorAll("#view-sandbox .settings-card input[type=checkbox]")[1], qa=document.querySelector(".ai-quick-actions");
-  if(sugToggle&&qa)sugToggle.addEventListener("change",function(){qa.hidden=!sugToggle.checked;});
-  var reduce=$("reduce-motion-toggle");
-  if(reduce){
-    reduce.checked=matchMedia("(prefers-reduced-motion: reduce)").matches;
-    reduce.addEventListener("change",function(){showToast(reduce.checked?"Preference saved visually.":"Browser motion preference remains respected.")});
+  /* Settings module — preferences persist in localStorage ("novapay-settings"). */
+  var SET_KEY="novapay-settings",qa=document.querySelector(".ai-quick-actions");
+  var defaults={reduceMotion:matchMedia("(prefers-reduced-motion: reduce)").matches,notif:true,approvalAlerts:true,emailDigest:false,aiSuggestions:true};
+  function loadSet(){var o={};try{o=JSON.parse(localStorage.getItem(SET_KEY)||"{}")||{}}catch(e){}return Object.assign({},defaults,o);}
+  function saveSet(o){try{localStorage.setItem(SET_KEY,JSON.stringify(o))}catch(e){}}
+  var prefs=loadSet();
+  function applyPrefs(){
+    root.classList.toggle("reduce-motion",!!prefs.reduceMotion);
+    var nb=$("notifications");if(nb){nb.hidden=!prefs.notif;if(!prefs.notif&&$("notification-popover"))$("notification-popover").hidden=true;}
+    var navCount=$("nav-approvals-count");if(navCount)navCount.classList.toggle("is-muted",!prefs.approvalAlerts);
+    if(qa)qa.hidden=!prefs.aiSuggestions;
   }
+  var bindings={"reduce-motion-toggle":"reduceMotion","set-notif":"notif","set-approval-alerts":"approvalAlerts","set-email-digest":"emailDigest","set-ai-suggestions":"aiSuggestions"};
+  Object.keys(bindings).forEach(function(id){var el=$(id),key=bindings[id];if(!el)return;el.checked=!!prefs[key];el.addEventListener("change",function(){prefs[key]=el.checked;saveSet(prefs);applyPrefs();showToast("Setting saved.");});});
+  applyPrefs();
+  var setTheme=$("set-theme");if(setTheme){setTheme.value=currentTheme();setTheme.addEventListener("change",function(){try{localStorage.setItem(THEME_KEY,setTheme.value)}catch(e){}applyTheme(setTheme.value);showToast("Theme updated.");});$("dashboard-theme").addEventListener("click",function(){setTheme.value=currentTheme();});}
+  var setName=$("set-name"),setEmail=$("set-email");
+  if(setName)setName.value=user.name&&!/^novapay (demo )?user$/i.test(user.name)?user.name:"";
+  if(setEmail)setEmail.value=user.email||"user@novapay.app";
+  if($("set-tz"))$("set-tz").value=(Intl.DateTimeFormat().resolvedOptions().timeZone)||"Local";
+  if($("set-save-profile"))$("set-save-profile").addEventListener("click",function(){
+    var n=setName.value.trim();if(!n){showToast("Please enter a display name.");setName.focus();return;}
+    user.name=n;try{localStorage.setItem("novapay-demo-user",JSON.stringify(user))}catch(e){}
+    $("user-name").textContent=n;$("user-avatar").textContent=n.charAt(0).toUpperCase();
+    var g=$("greeting-name");if(g)g.textContent=n.split(/\s+/)[0];
+    showToast("Profile saved.");
+  });
+  /* Profile details dialog (sidebar user chip) */
+  var pm=$("profile-modal"),pmOpener=null;
+  function fillProfile(){
+    var n=$("user-name").textContent;
+    $("pm-title").textContent=n;$("pm-name").textContent=n;$("pm-avatar").textContent=n.charAt(0).toUpperCase();
+    $("pm-email").textContent=user.email||"user@novapay.app";
+    $("pm-tz").textContent=Intl.DateTimeFormat().resolvedOptions().timeZone||"Local";
+    $("pm-theme").textContent=currentTheme()==="dark"?"Dark":"Light";
+    var t=0;try{t=parseInt(localStorage.getItem("novapay-session-start")||"0",10)}catch(e){}
+    if(!t){t=Date.now();try{localStorage.setItem("novapay-session-start",String(t))}catch(e){}}
+    $("pm-signed").textContent=new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(new Date(t));
+  }
+  function openProfile(trigger){if(!pm)return;pmOpener=trigger;fillProfile();pm.hidden=false;pm.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");$("profile-modal-close").focus();}
+  function closeProfile(){if(!pm||pm.hidden)return;pm.hidden=true;pm.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open");if(pmOpener&&pmOpener.isConnected)pmOpener.focus();}
+  if($("sidebar-user"))$("sidebar-user").addEventListener("click",function(){openProfile(this);});
+  if(pm){pm.addEventListener("click",function(e){if(e.target===pm)closeProfile();});$("profile-modal-close").addEventListener("click",closeProfile);document.addEventListener("keydown",function(e){if(e.key==="Escape")closeProfile();});
+    $("pm-settings").addEventListener("click",function(){pmOpener=null;closeProfile();activate("settings",true);});
+    $("pm-logout").addEventListener("click",function(){$("logout").click();});}
+  if($("set-logout"))$("set-logout").addEventListener("click",function(){$("logout").click();});
+  if($("set-reset"))$("set-reset").addEventListener("click",function(){try{localStorage.removeItem(SET_KEY)}catch(e){}prefs=Object.assign({},defaults);Object.keys(bindings).forEach(function(id){if($(id))$(id).checked=!!prefs[bindings[id]];});applyPrefs();showToast("Preferences reset to defaults.");});
 
   // Phase 5 — dashboard controls and dynamic illustrative cash-flow data.
   var displayName=(user.name||"").trim();if(!displayName||/^novapay (demo )?user$/i.test(displayName))displayName="there";displayName=displayName.replace(/\s*\bdemo\b\s*/i," ").trim()||"there";
@@ -237,17 +277,31 @@
   var greeting=$("dashboard-subtitle");if(greeting&&greeting.firstChild)greeting.firstChild.textContent=greetingPrefix+", ";
   $("user-name").textContent=displayName;
   $("user-email").textContent="Business Owner";
-  $("profile-name").textContent=displayName;
   $("user-avatar").textContent=displayName.charAt(0).toUpperCase();
 
-  var notifications=$("notifications"), notificationPopover=$("notification-popover"), profileButton=$("profile-button"), profilePopover=$("profile-popover");
+  var notifications=$("notifications"), notificationPopover=$("notification-popover"), calendarButton=$("calendar-button"), calendarPopover=$("calendar-popover"), moreButton=$("more-button"), morePopover=$("more-popover");
   function closePopovers(){
     if(notificationPopover){notificationPopover.hidden=true;notifications.setAttribute("aria-expanded","false");}
-    if(profilePopover){profilePopover.hidden=true;profileButton.setAttribute("aria-expanded","false");}
+    if(calendarPopover){calendarPopover.hidden=true;calendarButton.setAttribute("aria-expanded","false");}
+    if(morePopover){morePopover.hidden=true;moreButton.setAttribute("aria-expanded","false");}
   }
   if(notifications){notifications.addEventListener("click",function(e){e.stopPropagation();var open=notificationPopover.hidden;closePopovers();notificationPopover.hidden=!open;notifications.setAttribute("aria-expanded",String(open));});}
-  if(profileButton){profileButton.addEventListener("click",function(e){e.stopPropagation();var open=profilePopover.hidden;closePopovers();profilePopover.hidden=!open;profileButton.setAttribute("aria-expanded",String(open));});}
-  document.addEventListener("click",function(e){if(!e.target.closest(".popover")&&!e.target.closest("#notifications")&&!e.target.closest("#profile-button"))closePopovers();});
+  function bindPopover(btn,pop,onOpen){if(!btn)return;btn.addEventListener("click",function(e){e.stopPropagation();var open=pop.hidden;closePopovers();pop.hidden=!open;btn.setAttribute("aria-expanded",String(open));if(open&&onOpen)onOpen();});}
+  var calView=new Date();calView.setDate(1);
+  function renderCalendar(){
+    var title=$("cal-title"),days=$("cal-days");if(!title||!days)return;
+    var today=new Date(),y=calView.getFullYear(),m=calView.getMonth(),first=new Date(y,m,1).getDay(),count=new Date(y,m+1,0).getDate(),html="";
+    title.textContent=new Intl.DateTimeFormat(undefined,{month:"long",year:"numeric"}).format(calView);
+    for(var i=0;i<first;i++)html+='<span class="cal-empty"></span>';
+    for(var d=1;d<=count;d++){var isToday=d===today.getDate()&&m===today.getMonth()&&y===today.getFullYear();html+='<span class="cal-day'+(isToday?' is-today"  aria-current="date':'')+'">'+d+'</span>';}
+    days.innerHTML=html;
+  }
+  bindPopover(calendarButton,calendarPopover,function(){calView=new Date();calView.setDate(1);renderCalendar();});
+  bindPopover(moreButton,morePopover);
+  if($("cal-prev"))$("cal-prev").addEventListener("click",function(e){e.stopPropagation();calView.setMonth(calView.getMonth()-1);renderCalendar();});
+  if($("cal-next"))$("cal-next").addEventListener("click",function(e){e.stopPropagation();calView.setMonth(calView.getMonth()+1);renderCalendar();});
+  document.addEventListener("click",function(e){if(!e.target.closest(".popover")&&!e.target.closest("#notifications")&&!e.target.closest("#calendar-button")&&!e.target.closest("#more-button"))closePopovers();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closePopovers();});
   document.querySelectorAll("[data-profile-action]").forEach(function(b){b.addEventListener("click",function(){var action=b.dataset.profileAction;if(action==="settings"){closePopovers();activate("settings",true);}else if(action==="logout")$("logout").click();});});
   document.querySelectorAll(".notification-item").forEach(function(b){b.addEventListener("click",function(){closePopovers();activate(b.dataset.notificationView||"dashboard",true);});});
 
