@@ -105,10 +105,20 @@
 
 /* Lift only the signup form content inside the fixed desktop panel. */
 @media (min-width: 761px) {
-  :root .modal.auth-split .auth-stage.active .form-box.Register { translate: 0 -32px; }
-  :root .modal.auth-split .auth-stage.active .info-content.Register { translate: 0 -32px; }
+  /* The sign-up form is taller than the fixed 450px panel once lifted, which
+     pushed the "Sign Up" title above the top edge where overflow:hidden clipped
+     it. No lift any more; spacing is tightened below so everything fits. */
   :root .modal.auth-split .form-box.Register,
-  :root .modal.auth-split .info-content.Register { translate: 0 0; transition: translate .7s ease; }
+  :root .modal.auth-split .info-content.Register,
+  :root .modal.auth-split .auth-stage.active .form-box.Register,
+  :root .modal.auth-split .auth-stage.active .info-content.Register { translate: 0 0; }
+
+  :root .modal.auth-split .form-box.Register { padding-top: 28px; padding-bottom: 28px; box-sizing: border-box; }
+  :root .modal.auth-split .form-box.Register h2 { font-size: 28px; line-height: 1.15; }
+  :root .modal.auth-split .form-box.Register .input-box { height: 42px; margin-top: 14px; }
+  :root .modal.auth-split .form-box.Register .input-box[style*="height:auto"] { height: auto; margin-top: 14px; }
+  :root .modal.auth-split .form-box.Register .auth-google { margin-top: 10px; }
+  :root .modal.auth-split .form-box.Register .regi-link { margin-top: 10px; font-size: 12.5px; }
 }
 
 
