@@ -221,3 +221,27 @@
    so the freed space is added back as bottom padding). */
 :root .modal.auth-split .info-content.Login    { padding-bottom: 128px; }
 :root .modal.auth-split .info-content.Register { padding-bottom: 92px; }
+
+/* ---- Neon glow border (matches the supplied reference: crisp cyan edge + soft cyan halo around the whole panel) ---- */
+:root {
+  --auth-neon: #00e5ff;
+  --auth-neon-rgb: 0, 229, 255;
+}
+:root .modal.auth-split,
+:root[data-theme="light"] .modal.auth-split,
+:root[data-theme="dark"] .modal.auth-split {
+  border: 2px solid var(--auth-neon);
+  box-shadow:
+    0 0 6px  rgba(var(--auth-neon-rgb), .95),
+    0 0 18px rgba(var(--auth-neon-rgb), .70),
+    0 0 42px rgba(var(--auth-neon-rgb), .42),
+    0 0 90px rgba(var(--auth-neon-rgb), .20),
+    inset 0 0 0 1px rgba(var(--auth-neon-rgb), .35);
+}
+:root[data-theme="light"] .modal.auth-split {
+  box-shadow:
+    0 0 6px  rgba(var(--auth-neon-rgb), .85),
+    0 0 18px rgba(var(--auth-neon-rgb), .55),
+    0 0 40px rgba(var(--auth-neon-rgb), .30),
+    inset 0 0 0 1px rgba(var(--auth-neon-rgb), .30);
+}

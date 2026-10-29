@@ -73,16 +73,15 @@
     if (typeof window.novapayOpenDashboard === "function") window.novapayOpenDashboard("dashboard.html"); else goDashboard();
   }
   function validateDemoLogin() {
-    var e = loginEmail.value.trim().toLowerCase(), p = loginPass.value, acct = getAccounts()[e];
-    if (e === DEMO_EMAIL && p === DEMO_PASSWORD) {
-      setSession({ name: "NovaPay User", email: DEMO_EMAIL });
-    } else if (acct && acct.password === p) {
-      setSession({ name: acct.name, email: e });
-    } else {
+    var e = loginEmail.value.trim().toLowerCase(), p = loginPass.value, acct = getAccounts()[e], ok = false, name = "";
+    if (acct && typeof acct.password === "string") { ok = acct.password === p; name = acct.name; }   // created accounts, or a changed demo password
+    else if (e === DEMO_EMAIL) { ok = p === DEMO_PASSWORD; name = acct && acct.name; }
+    if (!ok) {
       showToast("Login failed. Use user@novapay.app / novapay123, or an account you created here.");
       loginPass.focus();
       return;
     }
+    setSession({ name: name || "NovaPay User", email: e });
     goDashboard();
   }
   function googleDemo() {
@@ -141,6 +140,12 @@
   authMode = "login";
   syncAuthMode();
   if (location.hash === "#login" && !isAuthed()) { openModal("login"); history.replaceState(null, "", location.pathname); }
+  try {
+    if (localStorage.getItem("novapay-signout-reason") === "inactive") {
+      localStorage.removeItem("novapay-signout-reason");
+      setTimeout(function () { showToast("You were signed out after a period of inactivity."); }, 300);
+    }
+  } catch (err) {}
 
   /* Navigation: mobile menu, active-section highlight, logged-in state */
   var menu = $("mobile-menu"), mtoggle = $("menu-toggle");
