@@ -38,8 +38,17 @@
 <script src="src/novapay-logo.js"></script>
 <link rel="stylesheet" href="src/modal-close-corner.css">
 <link rel="stylesheet" href="src/home-fx.css">
+<script>(function(){try{var d=document.documentElement;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches||location.hash||/[?&]nointro/.test(location.search))return;d.classList.add("np-intro-on");window.__npOpening=true;setTimeout(function(){if(!window.__npIntroJs){d.classList.remove("np-intro-on");window.__npOpeningDone=true}},9000)}catch(e){}})();</script>
+<link rel="stylesheet" href="src/intro.css">
 </head>
 <body class="landing-body">
+<div class="np-intro" id="np-intro" aria-hidden="true">
+  <div class="np-band np-band--1" style="--n:0"><p class="np-band-text">Accurate &amp; Faster</p></div>
+  <div class="np-band np-band--2" style="--n:1"><p class="np-band-text">Secured</p></div>
+  <div class="np-band np-band--3" style="--n:2"><p class="np-band-text">Reliable</p></div>
+  <div class="np-band np-band--4" style="--n:3"><p class="np-band-text">Auditable</p></div>
+</div>
+
 <div class="ambient ambient--one" aria-hidden="true"></div>
 <div class="ambient ambient--two" aria-hidden="true"></div>
 <div class="particle-field" aria-hidden="true"></div>
@@ -271,6 +280,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="src/intro.js"></script>
 <script src="src/landing.js"></script>
 <script src="src/hero-laptop.js"></script>
 <script src="src/hero-video.js"></script>

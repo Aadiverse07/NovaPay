@@ -1,0 +1,130 @@
+/* NovaPay intro page — plays before the home page.
+   Four palette bands slide in one after another, then a stair-step block wipe (intro.js) reveals the home page: 1 right→left, 2 left→right, 3 right→left, 4 left→right.
+   Each word lives INSIDE its band (overflow hidden) so it travels with the band and never leaves it.
+   Font: Lemon Milk Bold — drop LemonMilk-Bold.otf (or .ttf/.woff2) into assets/fonts/ (see README there). */
+
+@font-face {
+  font-family: "Lemon Milk";
+  src: local("Lemon Milk Bold"), local("LemonMilk-Bold"), local("LEMON MILK Bold"),
+       url("../assets/fonts/LemonMilk-Bold.woff2") format("woff2"),
+       url("../assets/fonts/LemonMilk-Bold.otf") format("opentype"),
+       url("../assets/fonts/LemonMilk-Bold.ttf") format("truetype");
+  font-weight: 700; font-style: normal; font-display: block;
+}
+
+.np-intro { display: none; }
+html.np-intro-on { overflow: hidden; }
+html.np-intro-on .np-intro {
+  position: fixed; inset: 0; z-index: 99999;
+  display: grid; grid-template-rows: repeat(4, 1fr); gap: 6px;
+  background: #020d33; overflow: hidden; cursor: pointer;
+  will-change: transform;
+}
+/* Stair-step block wipe (intro.js): solid boxes above the slide intro. Four columns rise to cover it, then seven
+   rows wipe away left to right to uncover the home page. Only transforms are animated, so edges stay razor sharp. */
+.np-wipe { position: fixed; inset: 0; z-index: 100000; overflow: hidden; pointer-events: auto; }
+.np-wipe-cols, .np-wipe-rows { position: absolute; inset: 0; }
+.np-wipe-col, .np-wipe-row { position: absolute; background: var(--np-wipe, #081523); will-change: transform; backface-visibility: hidden; transform: translateZ(0); }
+.np-wipe-col { top: 0; bottom: 0; width: calc(100% / 4 + 1px); transform: translateY(100%); }   /* +1px: no hairline seams */
+.np-wipe-row { left: 0; right: 0; height: calc(100% / 7 + 1px); }
+
+.np-band {
+  position: relative; min-height: 0; overflow: hidden;      /* clips the text to its own colour box */
+  display: flex; align-items: center;
+  padding: 0 clamp(18px, 4vw, 64px);
+  transform: translateX(var(--from));
+  will-change: transform;
+}
+.np-band--1 { --from: 101%;  background: linear-gradient(100deg, #021a5c 0%, #0036a8 55%, #0556f2 100%); color: #ffffff; }
+.np-band--2 { --from: -101%; background: linear-gradient(100deg, #63d9fb 0%, #9fe9ff 55%, #c9f6ff 100%); color: #000000; }
+.np-band--3 { --from: 101%;  background: linear-gradient(110deg, #0357dc 0%, #00a2ff 60%, #14e6ff 100%); color: #fff; }
+.np-band--4 { --from: -101%; background: linear-gradient(100deg, #dbe8fd 0%, #f0f5ff 50%, #ffffff 100%); color: #000000; }
+
+.np-band--2, .np-band--4 { justify-content: flex-end; }          /* "Secured" and "Auditable" sit in the right corner */
+.np-band--2 .np-band-text, .np-band--4 .np-band-text { text-align: right; }
+
+.np-intro.is-playing .np-band {
+  animation: np-band-in .95s cubic-bezier(.77, 0, .18, 1) calc(var(--n) * .8s) forwards;
+}
+@keyframes np-band-in { from { transform: translateX(var(--from)); } to { transform: translateX(0); } }
+
+.np-intro .np-band .np-band-text {
+  color: inherit; opacity: 1; margin: 0; max-width: 100%; white-space: nowrap; overflow: hidden;
+  font-family: "Lemon Milk", "Montserrat", "Segoe UI", Arial, sans-serif;
+  font-weight: 700; line-height: 1.1; letter-spacing: .01em;
+  font-size: clamp(18px, 5vw, 88px);                          /* refined by intro.js so it always fits */
+  text-align: left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.np-intro-on .np-intro { display: none; }
+  html.np-intro-on { overflow: auto; }
+}
+
+/* NOVAPAY loader on the dark opening screen — Uiverse "stroke loader" by SelfMadeSystem (keyframes kept as published).
+   Each letter is its own 80x80 SVG; .dash letters draw/retract, the O (.spin) also rotates. */
+.np-opening-loader { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0; }
+.np-opening-loader.is-in { animation: np-loader-in .35s cubic-bezier(.22,1,.36,1) both; }
+.np-opening-loader.is-out { opacity: 1; animation: np-loader-out .35s ease both; }
+.np-opening-loader .loader { display: flex; margin: 0.25em 0; align-items: center; justify-content: center; --np-letter: clamp(34px, 8.6vw, 112px); }
+.np-opening-loader .loader svg { width: var(--np-letter); height: var(--np-letter); margin: 0 calc(var(--np-letter) * -0.06); overflow: visible; flex: none; }
+.np-opening-loader .loader path { fill: none; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+.np-opening-loader .absolute { position: absolute; }
+.np-opening-loader .inline-block { display: inline-block; }
+.np-opening-loader .w-2 { width: 0.5em; }
+.np-opening-loader .g-blue   { stroke: url(#np-grad-blue); }
+.np-opening-loader .g-pink   { stroke: url(#np-grad-pink); }
+.np-opening-loader .g-green  { stroke: url(#np-grad-green); }
+
+/* One pass only: starts as dots (the 50% keyframe), assembles into the word, holds for a moment as it settles,
+   then breaks back into dots (0% -> 50%) - the same look the loader has when it first appears.
+   The negative delay starts each stroke half-way through the 2.4s cycle; 1.5 iterations = exactly one assemble + one disassemble. */
+.np-opening-loader .dash {
+  animation: dashArray 2.4s ease-in-out calc(-1.2s + var(--s, 0s)) 1.5 both,
+    dashOffset 2.4s linear calc(-1.2s + var(--s, 0s)) 1.5 both,
+    strokeOut 2.4s linear var(--s, 0s) 1 both;
+}
+.np-opening-loader .spin {
+  animation: spinDashArray 2.4s ease-in-out calc(-1.2s + var(--s, 0s)) 1.5 both,
+    spin 2.4s ease-in-out var(--s, 0s) 1 both,
+    dashOffset 2.4s linear calc(-1.2s + var(--s, 0s)) 1.5 both,
+    strokeOut 2.4s linear var(--s, 0s) 1 both;
+  transform-origin: center;
+}
+/* Run only once the dark screen is showing. */
+.np-opening-loader .loader path { animation-play-state: paused; }
+.np-opening-loader.is-in .loader path, .np-opening-loader.is-out .loader path { animation-play-state: running; }
+/* Letters start a beat after each other, left to right. */
+.np-opening-loader .loader svg:nth-child(2) { --s: .05s; }
+.np-opening-loader .loader svg:nth-child(3) { --s: .10s; }
+.np-opening-loader .loader svg:nth-child(4) { --s: .15s; }
+.np-opening-loader .loader svg:nth-child(5) { --s: .20s; }
+.np-opening-loader .loader svg:nth-child(6) { --s: .25s; }
+.np-opening-loader .loader svg:nth-child(7) { --s: .30s; }
+
+/* The leftover dots fade away as they finish forming, so nothing is left on screen when the stair starts. */
+@keyframes strokeOut { 0%, 78% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes dashArray {
+  0% { stroke-dasharray: 0 1 359 0; }
+  50% { stroke-dasharray: 0 359 1 0; }
+  100% { stroke-dasharray: 359 1 0 0; }
+}
+@keyframes spinDashArray {
+  0% { stroke-dasharray: 270 90; }
+  50% { stroke-dasharray: 0 360; }
+  100% { stroke-dasharray: 270 90; }
+}
+@keyframes dashOffset {
+  0% { stroke-dashoffset: 365; }
+  100% { stroke-dashoffset: 5; }
+}
+@keyframes spin {
+  0% { rotate: 0deg; }
+  12.5%, 25% { rotate: 270deg; }
+  37.5%, 50% { rotate: 540deg; }
+  62.5%, 75% { rotate: 810deg; }
+  87.5%, 100% { rotate: 1080deg; }
+}
+@keyframes np-loader-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes np-loader-out { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .np-opening-loader.is-in, .np-opening-loader.is-out { animation-duration: .01ms; } }

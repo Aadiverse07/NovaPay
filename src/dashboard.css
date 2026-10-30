@@ -555,12 +555,23 @@ body .sidebar-reopen{position:fixed;top:26px;left:10px;z-index:35;box-shadow:var
 .ai-command-card.is-fullscreen .ai-fs-btn .ai-fs-expand{display:none}
 .ai-command-card.is-fullscreen .ai-fs-btn .ai-fs-collapse{display:block}
 .ai-command-card.is-fullscreen{height:100vh;height:100dvh;width:100%;max-width:none;border-radius:0;padding:28px max(28px,calc((100vw - 1200px)/2)) 24px;background:radial-gradient(circle at 88% 0%,var(--info-soft),transparent 38%),var(--bg,var(--surface))}
+.ai-command-card.is-fullscreen>*{position:relative;z-index:1}
+.ai-command-card.is-fullscreen:before,.ai-command-card.is-fullscreen:after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none}
+.ai-command-card.is-fullscreen:before{inset:0;opacity:.8;background:radial-gradient(ellipse at 8% 50%,color-mix(in srgb,var(--info-text) 19%,transparent),transparent 18%),radial-gradient(ellipse at 92% 50%,color-mix(in srgb,var(--info-text) 19%,transparent),transparent 18%),radial-gradient(circle at 6% 30%,var(--info-text) 0 3px,transparent 4px),radial-gradient(circle at 9% 70%,var(--info-text) 0 3px,transparent 4px),radial-gradient(circle at 94% 30%,var(--info-text) 0 3px,transparent 4px),radial-gradient(circle at 91% 70%,var(--info-text) 0 3px,transparent 4px);animation:ai-fs-gutter-breathe 6s ease-in-out infinite alternate}
+.ai-command-card.is-fullscreen:after{opacity:.72;background:radial-gradient(ellipse 54px 92px at 6% 50%,transparent 64%,color-mix(in srgb,var(--info-text) 35%,transparent) 66% 68%,transparent 70%),radial-gradient(ellipse 54px 92px at 94% 50%,transparent 64%,color-mix(in srgb,var(--info-text) 35%,transparent) 66% 68%,transparent 70%),radial-gradient(circle at 6% 30%,var(--info-text) 0 1.5px,transparent 2.5px),radial-gradient(circle at 9% 70%,var(--info-text) 0 1.5px,transparent 2.5px),radial-gradient(circle at 94% 30%,var(--info-text) 0 1.5px,transparent 2.5px),radial-gradient(circle at 91% 70%,var(--info-text) 0 1.5px,transparent 2.5px);animation:ai-fs-gutter-drift 10s ease-in-out infinite alternate}
+@keyframes ai-fs-gutter-breathe{from{background-position:0 -12px,0 12px,0 -8px,0 8px,0 8px,0 -8px;opacity:.52}to{background-position:0 12px,0 -12px,0 8px,0 -8px,0 -8px,0 8px;opacity:.85}}
+@keyframes ai-fs-gutter-drift{from{transform:translateY(-12px)}to{transform:translateY(12px)}}
 .ai-command-card.is-fullscreen .ai-conversation{padding:22px 4px}
+:root[data-theme="dark"] .ai-command-card.is-fullscreen .ai-conversation{padding:22px 18px;background-color:transparent;border:0;border-radius:0}
+:root[data-theme="dark"] .ai-command-card.is-fullscreen .ai-bubble--assistant{background-color:var(--surface-sunken);border-color:var(--border)}
+.ai-command-card.is-fullscreen .ai-quick-actions{margin-top:4px}
+.ai-command-card.is-fullscreen .ai-chat-row{margin-top:0}
 .ai-command-card.is-fullscreen .ai-bubble p{font-size:16px}
 .ai-command-card.is-fs-fallback{position:fixed;inset:0;z-index:500;margin:0;transform:none!important;animation:none!important}
 html.ai-fs-lock,html.ai-fs-lock body{overflow:hidden}
 .ai-command-card:fullscreen::backdrop{background:var(--surface)}
 @media (max-width:900px){.ai-command-card.is-fullscreen{padding:16px 14px}}
+@media (prefers-reduced-motion:reduce){.ai-command-card.is-fullscreen:before,.ai-command-card.is-fullscreen:after{animation:none}}
 
 /* AI Assistant: thinking list - compact reference style (dollar icon heading, wave dots, small muted steps) */
 .scroll-list-container.ai-thought{position:relative;width:min(500px,100%);align-self:flex-start;padding:0 16px 10px;transition:opacity .25s ease}
@@ -672,3 +683,44 @@ html.ai-fs-lock,html.ai-fs-lock body{overflow:hidden}
 .pm-list dt{color:var(--text-subtle)}
 .pm-list dd{margin:0;font-weight:650;text-align:right;overflow-wrap:anywhere}
 .pm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+
+/* Evidence trail chat treatment: scoped to the AI Assistant conversation only. */
+.ai-command-card .ai-bubble--user{border:1px solid rgba(255,255,255,.12);border-top-right-radius:6px;background:linear-gradient(135deg,#111a32 0%,#202c4d 100%);color:#fff;box-shadow:0 10px 26px rgba(12,20,42,.22)}
+.ai-command-card .ai-bubble--user b,.ai-command-card .ai-bubble--user p{color:#fff}
+.ai-command-card .ai-bubble--user .ai-user-mark{background:rgba(255,255,255,.14);color:#fff}
+.ai-command-card .ai-bubble--assistant>div{min-width:0;flex:1}
+.ai-evidence-trail{width:min(100%,640px);margin-top:12px;overflow:hidden;border:1px solid color-mix(in srgb,var(--info-text) 22%,var(--border));border-radius:15px;background:color-mix(in srgb,var(--surface) 94%,transparent);box-shadow:inset 3px 0 0 var(--info-text),0 8px 24px rgba(18,32,58,.06)}
+.ai-evidence-summary{display:flex;align-items:center;gap:10px;min-height:58px;padding:9px 13px;cursor:pointer;list-style:none}
+.ai-evidence-summary::-webkit-details-marker{display:none}
+.ai-evidence-summary:focus-visible{outline:2px solid var(--info-text);outline-offset:-3px;border-radius:14px}
+.ai-evidence-mark{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:10px;background:var(--info-soft);color:var(--info-text);font-size:14px;font-weight:850}
+.ai-evidence-label{display:grid;gap:2px;min-width:0;flex:1}
+.ai-evidence-label b{font-size:11px;letter-spacing:.01em}
+.ai-evidence-label small{font-size:10px;color:var(--text-subtle)}
+.ai-evidence-chevron{color:var(--text-subtle);font-size:17px;transition:transform .2s ease}
+.ai-evidence-trail[open] .ai-evidence-chevron{transform:rotate(180deg)}
+.ai-evidence-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--border)}
+.ai-evidence-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 14px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}
+.ai-evidence-row:last-child{border-bottom:0}
+.ai-evidence-main{display:grid;gap:3px;min-width:0}
+.ai-evidence-main>b{overflow:hidden;color:var(--text);font-family:var(--font-mono,monospace);font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.ai-evidence-main small,.ai-evidence-source{color:var(--text-subtle);font-size:9px;line-height:1.4}
+.ai-evidence-meta{display:grid;justify-items:end;gap:3px;text-align:right}
+.ai-evidence-meta>b{color:var(--text);font-size:11px;font-variant-numeric:tabular-nums}
+.ai-evidence-status{display:inline-flex;align-items:center;max-width:190px;padding:3px 7px;border-radius:99px;background:var(--info-soft);color:var(--info-text);font-size:9px;font-weight:750;white-space:nowrap}
+.ai-evidence-source{grid-column:1/-1;overflow-wrap:anywhere}
+.ai-view-evidence{grid-column:1/-1;justify-self:end;padding:4px 0;border:0;background:transparent;color:var(--info-text);font:inherit;font-size:10px;font-weight:750;cursor:pointer}
+.ai-view-evidence:hover{text-decoration:underline;text-underline-offset:3px}
+.ai-view-evidence:focus-visible{outline:2px solid var(--info-text);outline-offset:3px;border-radius:4px}
+.ai-evidence-row{animation:ai-in .28s ease both}
+@media(max-width:560px){.ai-evidence-row{gap:7px 8px;padding:10px}.ai-evidence-status{max-width:140px;white-space:normal}.ai-evidence-summary{padding:8px 10px}}
+@media(prefers-reduced-motion:reduce){.ai-evidence-chevron,.ai-evidence-row{transition:none;animation:none}}
+
+/* Let a short chat shrink to its content instead of stretching an empty message well. */
+.ai-command-card{height:auto;max-height:calc(100dvh - 240px);min-height:0}
+.ai-command-card .ai-conversation{flex:0 1 auto;min-height:0;max-height:min(46vh,440px);overflow-y:auto}
+.ai-command-card.is-fullscreen{height:100dvh;max-height:none}
+.ai-command-card.is-fullscreen .ai-conversation{flex:1 1 0;min-height:0;max-height:none;overflow-y:auto;align-content:start;grid-auto-rows:max-content}
+.ai-command-card.is-fullscreen .ai-bubble{width:fit-content;max-width:min(92%,760px)}
+@media(max-width:900px){.ai-command-card{height:auto;max-height:calc(100dvh - 185px);min-height:0}.ai-command-card .ai-conversation{max-height:min(38vh,340px)}}
+@media(max-height:700px){.ai-command-card{max-height:calc(100dvh - 150px)}.ai-command-card .ai-conversation{max-height:30vh}}
