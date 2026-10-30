@@ -1,0 +1,29 @@
+/* Settings → Help & support */
+.help-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.help-card{display:grid;gap:4px;justify-items:start;text-align:left;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,border-color .2s}
+.help-card:hover{transform:translateY(-3px);border-color:var(--focus-ring);box-shadow:0 12px 26px -12px color-mix(in srgb,var(--focus-ring) 55%,transparent)}
+.help-card:active{transform:scale(.97)}
+.help-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.help-card-ico{width:38px;height:38px;display:grid;place-items:center;margin-bottom:6px;border-radius:11px;background:var(--info-soft);color:var(--info-text);transition:transform .35s cubic-bezier(.34,1.8,.64,1)}
+.help-card:hover .help-card-ico{transform:rotate(-8deg) scale(1.1)}
+.help-card b{font-size:14px}.help-card small{font-size:12px;line-height:1.45;color:var(--text-subtle)}
+
+.help-faqs{padding:0 18px}
+.help-faq{border-bottom:1px solid var(--border)}.help-faq:last-child{border-bottom:0}
+.help-faq summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;font-size:14px;font-weight:700;cursor:pointer;list-style:none}
+.help-faq summary::-webkit-details-marker{display:none}
+.help-faq summary svg{flex:none;color:var(--text-subtle);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.help-faq[open] summary svg{transform:rotate(180deg);color:var(--info-text)}
+.help-faq summary:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:6px}
+.help-faq p{margin:0 0 15px;font-size:13px;line-height:1.65;color:var(--text-muted)}
+.help-faq[open] p{animation:help-open .3s ease both}
+@keyframes help-open{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+#help-form .help-msg{align-items:flex-start}
+#help-message{width:100%;min-height:96px;resize:vertical;padding:10px 12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);font:inherit;font-size:13px;line-height:1.5}
+#help-message:focus{outline:0;border-color:var(--focus-ring);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus-ring) 22%,transparent)}
+.help-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+
+@media (max-width:760px){.help-cards{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.help-card,.help-card-ico,.help-faq summary svg{transition:none}.help-faq[open] p{animation:none}}
+.reduce-motion .help-card,.reduce-motion .help-card-ico{transition:none}
