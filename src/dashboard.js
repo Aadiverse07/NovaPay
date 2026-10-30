@@ -60,7 +60,7 @@
 
   $("logout").addEventListener("click",function(){
     try{localStorage.removeItem("novapay-demo-auth")}catch(e){}
-    window.location.href="preview.html#home";
+    window.location.href="preview.html";
   });
 
   document.querySelectorAll(".table-action,.report-card .table-action").forEach(function(b){
@@ -418,7 +418,7 @@
         keys=[];for(i=0;i<sessionStorage.length;i++){k=sessionStorage.key(i);if(k&&k.indexOf("novapay-")===0)keys.push(k);}
         keys.forEach(function(key){sessionStorage.removeItem(key)});
       }catch(e){}
-      window.location.href="preview.html#home";
+      window.location.href="preview.html";
     });
   });
 
@@ -426,7 +426,7 @@
   window.addEventListener("storage",function(e){
     if(e.key===SET_KEY){prefs=loadSet();syncControls();applyPrefs();}
     else if(e.key===THEME_KEY){applyTheme(currentTheme());syncControls();}
-    else if(e.key==="novapay-demo-auth"&&e.newValue!=="true"){location.replace("preview.html#home");}
+    else if(e.key==="novapay-demo-auth"&&e.newValue!=="true"){location.replace("preview.html");}
   });
   /* Profile details dialog (sidebar user chip) */
   var pm=$("profile-modal"),pmOpener=null;
