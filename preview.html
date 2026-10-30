@@ -8,7 +8,6 @@
 <meta name="color-scheme" content="light dark">
 <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("novapay-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
 <script>(function(){try{var d=document.documentElement;if(window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;d.classList.add("fx-pre");setTimeout(function(){if(!window.__fxStarted)d.classList.remove("fx-pre")},2500)}catch(e){}})();</script>
-<script>(function(){try{var d=document.documentElement;var qs=location.search,ONCE_PER_SESSION=false;if(/[?&]opening=off\b/.test(qs))return;if(!/[?&]opening=(1|on)\b/.test(qs)&&(matchMedia("(prefers-reduced-motion: reduce)").matches||(ONCE_PER_SESSION&&sessionStorage.getItem("novapay-opening")==="1")))return;window.__npOpening=true;d.classList.add("np-opening-on");window.__npOpeningEnd=function(ms){if(window.__npOpeningDone)return;window.__npOpeningDone=true;try{sessionStorage.setItem("novapay-opening","1")}catch(e){}window.dispatchEvent(new Event("novapay:opening-done"));setTimeout(function(){d.classList.remove("np-opening-on")},ms||0)};setTimeout(function(){window.__npOpeningEnd(0)},10000)}catch(e){}})();</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23155eef%27/%3E%3Cpath d=%27M16 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2z%27 fill=%27white%27/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,20 +37,9 @@
 <link rel="stylesheet" href="src/payment-theme.css">
 <script src="src/novapay-logo.js"></script>
 <link rel="stylesheet" href="src/modal-close-corner.css">
-<link rel="stylesheet" href="src/opening.css">
 <link rel="stylesheet" href="src/home-fx.css">
 </head>
 <body class="landing-body">
-<div class="np-opening" id="np-opening" role="dialog" aria-label="NovaPay opening">
-  <span class="np-open-corner" aria-hidden="true"></span>
-  <ul class="np-open-top" aria-label="Trail effects"><li>NOVAPAY</li><li data-mode class="on">TRAIL</li><li data-mode>STACK</li><li data-mode>SCATTER</li></ul>
-  <div class="np-open-cols" aria-hidden="true"><ul><li>Transfer</li><li>Settle</li><li>Remit</li><li>Invoice</li><li>Ledger</li><li>Receipt</li><li>Payout</li><li>Refund</li><li>Escrow</li><li>Clearing</li><li>Currency</li><li>Balance</li></ul><ul><li>Reconcile</li><li>Insight</li><li>Anomaly</li><li>Approval</li><li>Evidence</li><li>Forecast</li><li>Cashflow</li><li>Audit</li><li>Report</li><li>Trust</li><li>Clarity</li><li>Control</li></ul><ul><li>Speed</li><li>Global</li><li>Secure</li><li>Seamless</li><li>Instant</li><li>Borderless</li><li>Precision</li><li>Growth</li><li>Human</li><li>Review</li><li>Action</li><li>Confidence</li></ul></div>
-  <div class="np-open-side" aria-hidden="true"><span>RECONCILE</span><span>EXPLAIN</span><span>ACT</span></div>
-  <div class="np-open-word" aria-label="NovaPay"></div>
-  <div class="np-open-hint">A SERIES OF PEOPLE FLOWING THROUGH NOVAPAY / CLICK TO SWITCH TRAIL EFFECTS<br><b id="np-open-mode"></b></div>
-  <button type="button" class="np-open-enter">Enter NovaPay &rarr;</button>
-</div>
-<script src="src/opening.js"></script>
 <div class="ambient ambient--one" aria-hidden="true"></div>
 <div class="ambient ambient--two" aria-hidden="true"></div>
 <div class="particle-field" aria-hidden="true"></div>
