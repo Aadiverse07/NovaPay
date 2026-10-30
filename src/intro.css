@@ -24,7 +24,7 @@ html.np-intro-on .np-intro {
    rows wipe away left to right to uncover the home page. Only transforms are animated, so edges stay razor sharp. */
 .np-wipe { position: fixed; inset: 0; z-index: 100000; overflow: hidden; pointer-events: auto; }
 .np-wipe-cols, .np-wipe-rows { position: absolute; inset: 0; }
-.np-wipe-col, .np-wipe-row { position: absolute; background: var(--np-wipe, #0f0f0f); will-change: transform; backface-visibility: hidden; transform: translateZ(0); }
+.np-wipe-col, .np-wipe-row { position: absolute; background: var(--np-wipe, #081523); will-change: transform; backface-visibility: hidden; transform: translateZ(0); }
 .np-wipe-col { top: 0; bottom: 0; width: calc(100% / 4 + 1px); transform: translateY(100%); }   /* +1px: no hairline seams */
 .np-wipe-row { left: 0; right: 0; height: calc(100% / 7 + 1px); }
 

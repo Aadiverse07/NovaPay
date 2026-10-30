@@ -44,7 +44,7 @@
                 which uncovers the home page underneath as a descending staircase.
      Everything is plain solid-colour boxes moved with transform (GPU only), so the edges are razor sharp. */
   var HOLD = 200;             // ms the finished slide frame is held before the wipe starts
-  var WIPE_COLOR = "#0f0f0f"; // wipe colour (sampled from the reference recording)
+  var WIPE_COLOR = "#081523"; // wipe colour: NovaPay dark navy (--bg in dark theme)
   var COLS = 4;               // cover: number of rising columns
   var COL_MS = 360;           // cover: time for one column to rise
   var COL_STAGGER = 50;       // cover: delay between neighbouring columns
@@ -85,9 +85,9 @@
     var mark = document.createElement("div");
     mark.className = "np-opening-loader"; mark.setAttribute("aria-hidden", "true");
     mark.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' +
-      '<linearGradient id="np-grad-blue" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="8"><stop stop-color="#973BED"/><stop stop-color="#007CFF" offset="1"/></linearGradient>' +
-      '<linearGradient id="np-grad-pink" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="8"><stop stop-color="#FF1FD0"/><stop stop-color="#FFB020" offset="1"/></linearGradient>' +
-      '<linearGradient id="np-grad-green" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="8"><stop stop-color="#00E0ED"/><stop stop-color="#00DA72" offset="1"/></linearGradient></defs></svg>' +
+      '<linearGradient id="np-grad-blue" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="8"><stop stop-color="#155eef"/><stop stop-color="#7fb2ff" offset="1"/></linearGradient>' +
+      '<linearGradient id="np-grad-pink" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="8"><stop stop-color="#0a8fe8"/><stop stop-color="#63d9fb" offset="1"/></linearGradient>' +
+      '<linearGradient id="np-grad-green" gradientUnits="userSpaceOnUse" x1="0" y1="72" x2="0" y2="8"><stop stop-color="#087f78"/><stop stop-color="#55d1c2" offset="1"/></linearGradient></defs></svg>' +
       '<div class="loader" role="img" aria-label="NovaPay">' +
       '<svg viewBox=\"0 0 80 80\" height=\"80\" width=\"80\"><path class=\"dash g-blue\" pathLength=\"360\" d=\"M14 72V8L66 72V8\"/></svg>' +
       '<svg viewBox=\"0 0 80 80\" height=\"80\" width=\"80\"><path class=\"spin g-pink\" pathLength=\"360\" d=\"M40 12a28 28 0 1 1 0 56a28 28 0 1 1 0-56\"/></svg>' +
