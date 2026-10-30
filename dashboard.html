@@ -26,14 +26,14 @@
 <link rel="stylesheet" href="src/novapay-dark-glow.css">
 <link rel="stylesheet" href="src/transaction-glass.css">
 <link rel="stylesheet" href="src/transaction-motion.css">
-<link rel="stylesheet" href="src/transaction-premium.css">
+<link rel="stylesheet" href="src/transaction-premium.css?v=8">
 <link rel="stylesheet" href="src/tx-icons.css">
 <link rel="stylesheet" href="src/modules-premium.css">
 <link rel="stylesheet" href="src/modules-reactbits.css">
 <link rel="stylesheet" href="src/animated-list.css">
 <link rel="stylesheet" href="src/approvals-polish.css">
 <link rel="stylesheet" href="src/modules.css">
-<link rel="stylesheet" href="src/capabilities-holo.css">
+<link rel="stylesheet" href="src/capabilities-holo.css?v=2">
 <link rel="stylesheet" href="src/hero-scene.css">
 <link rel="stylesheet" href="src/nav-colorful.css">
 <link rel="stylesheet" href="src/dashboard-enter.css">
@@ -43,7 +43,7 @@
 <script src="src/novapay-logo.js"></script>
 <link rel="stylesheet" href="src/modal-close-corner.css">
 <link rel="stylesheet" href="src/fx-swap-logo.css">
-<link rel="stylesheet" href="src/settings.css?v=3">
+<link rel="stylesheet" href="src/settings.css?v=4">
 <link rel="stylesheet" href="src/help-support.css">
 <link rel="stylesheet" href="src/topbar-fx.css">
 <link rel="stylesheet" href="src/date-picker.css">
@@ -427,16 +427,11 @@
             </section>
             <section class="set-group"><h4 class="set-group-title">Contact support</h4>
               <form class="settings-card" id="help-form" novalidate>
-                <label for="help-topic"><span><b>Topic</b><small>Pick what your message is about.</small></span><select id="help-topic"><option>Question about my workspace</option><option>Something is not working</option><option>PayPal Sandbox</option><option>Feature request</option><option>Other</option></select></label>
+                <label for="help-topic"><span><b>Topic</b><small>Pick what your message is about.</small></span><select id="help-topic"><option>Payment issue</option><option>Refund question</option><option>Dispute question</option><option>Payout question</option><option>PayPal Sandbox</option><option>Other</option></select></label>
                 <label for="help-message" class="help-msg"><span><b>Message</b><small>Describe what you need. Please don't include passwords.</small></span><textarea id="help-message" rows="4" maxlength="1500" placeholder="How can we help?"></textarea></label>
                 <p class="set-status" id="help-status" role="status" aria-live="polite"></p>
                 <div class="settings-actions help-actions"><button class="btn btn--ghost" id="help-copy" type="button">Copy support email</button><button class="btn btn--primary" id="help-send" type="submit">Send message</button></div>
               </form>
-            </section>
-            <section class="set-group"><h4 class="set-group-title">About</h4>
-              <div class="settings-card">
-                <div class="set-row"><span><b>NovaPay</b><small>Version 2.0.0 · Sample workspace with PayPal Sandbox</small></span><span class="status info">Sandbox</span></div>
-              </div>
             </section>
           </article>
           </div>
@@ -591,11 +586,11 @@
 <script src="src/modules.js"></script>
 <script src="src/documents.js"></script>
 <script src="src/transaction-effects.js"></script>
-<script src="src/transaction-premium.js"></script>
+<script src="src/transaction-premium.js?v=6"></script>
 <script src="src/tx-icons.js"></script>
-<script src="src/modules-premium.js"></script>
+<script src="src/modules-premium.js?v=4"></script>
 <script src="src/modules-reactbits.js"></script>
-<script src="src/capabilities-holo.js"></script>
+<script src="src/capabilities-holo.js?v=2"></script>
 <script src="src/click-spark.js"></script>
 <script src="src/specular-buttons.js"></script>
 <script src="src/line-sidebar.js"></script>

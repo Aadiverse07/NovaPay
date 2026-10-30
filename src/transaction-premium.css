@@ -9,6 +9,81 @@
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   animation: tx-orbit 7s linear infinite; opacity: .75;
 }
+
+/* Cursor-follow glow on the transaction module card (dark theme only). */
+#view-transactions > .dash-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(300px circle at var(--tx-card-glow-x, 50%) var(--tx-card-glow-y, 50%),
+    rgba(83, 168, 255, .28), rgba(67, 130, 255, .13) 38%, rgba(67, 130, 255, .035) 65%, transparent 78%);
+  mix-blend-mode: screen;
+  transition: opacity .28s ease;
+}
+#view-transactions > .dash-card > * { position: relative; z-index: 1; }
+#view-transactions > .dash-card.tx-card-glow-active::after { opacity: 1; }
+:root:not([data-theme="dark"]) #view-transactions > .dash-card::after { display: none; }
+
+/* Finance workspace cards get a dedicated cursor sheen in dark theme. */
+:root[data-theme="dark"] .dashboard-main .cursor-holo-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+:root[data-theme="dark"] .dashboard-main .cursor-holo-card > .cursor-holo-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at var(--cursor-holo-x, 50%) var(--cursor-holo-y, 50%), rgba(255,255,255,.62), transparent 42%),
+    conic-gradient(from var(--cursor-holo-angle, 0deg) at var(--cursor-holo-x, 50%) var(--cursor-holo-y, 50%), rgba(255,55,170,.24), rgba(35,190,255,.42), rgba(55,120,255,.35), rgba(145,90,255,.3), rgba(255,55,170,.24)),
+    repeating-linear-gradient(116deg, rgba(255,255,255,.08) 0 1px, transparent 1px 4px);
+  mix-blend-mode: overlay;
+  transition: opacity 180ms ease;
+}
+:root[data-theme="dark"] .dashboard-main .cursor-holo-card > *:not(.cursor-holo-sheen) {
+  position: relative;
+  z-index: 1;
+}
+:root[data-theme="dark"] .dashboard-main .cursor-holo-card > .cursor-holo-sheen.is-active {
+  opacity: .95;
+}
+:root[data-theme="dark"] .dashboard-main .cursor-holo-card.cursor-holo-active {
+  filter: drop-shadow(0 0 16px color-mix(in srgb, #63b3ff 38%, transparent));
+}
+:root:not([data-theme="dark"]) .dashboard-main .cursor-holo-sheen { display: none; }
+
+/* Transaction type/status options use the dashboard's themed in-page menu. */
+#view-transactions .tx-filters > .tx-filter-select {
+  position: relative;
+  min-width: 140px;
+  flex: 0 1 180px;
+}
+#view-transactions .tx-filters { position: relative; z-index: 20; }
+#view-transactions .tx-filters > .tx-filter-select.is-open { z-index: 130; }
+#view-transactions .tx-filters > .tx-filter-select.is-open .fx-select__menu { z-index: 131; }
+#view-transactions .tx-result-count,
+#view-transactions .table-scroll { position: relative; z-index: 1; }
+#view-transactions .tx-filter-select .fx-select__menu {
+  top: calc(100% + 7px);
+  right: auto;
+  bottom: auto;
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(280px, 82vw);
+}
+@media (max-width: 700px) {
+  #view-transactions .tx-filters > .tx-filter-select { width: 100%; min-width: 0; }
+}
+
 @keyframes tx-orbit { to { --tx-angle: 360deg; } }
 #view-transactions.tx-enter .data-table thead th { position: relative; overflow: hidden; }
 #view-transactions.tx-enter .data-table thead th::after {

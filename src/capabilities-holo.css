@@ -128,6 +128,8 @@
 /* Restore pointer-following shine on module cards in dark mode; their tilt remains independently driven by `rotate`. */
 :root[data-theme="dark"] .dashboard-main :is(#view-ledger, #view-invoices, #view-reports, #view-community-funds, #view-maintenance) .holo-target::after { display: block !important; }
 :root[data-theme="dark"] .dashboard-main .view .holo-target::after { display: block !important; }
+:root[data-theme="dark"] .dashboard-main #view-ledger :is(.module-kpis > .dash-card, article.module-card).holo-target::after { display: block !important; }
+:root[data-theme="dark"] .dashboard-main #view-ledger :is(.module-kpis > .dash-card, article.module-card).holo-target:hover { --holo-strength: .9; }
 :root[data-theme="dark"] .transaction-modal .transaction-dialog.holo-target::after { display: block !important; }
 :root[data-theme="dark"] :is(.dashboard-main .view .holo-target.holo-active, .action-modal .holo-target.holo-active, .transaction-modal .holo-target.holo-active) { filter: drop-shadow(0 0 16px color-mix(in srgb, #63b3ff 38%, transparent)); }
 :root[data-theme="light"] .transaction-modal .transaction-dialog.holo-target::after { display: none !important; }

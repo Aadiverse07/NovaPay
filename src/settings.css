@@ -39,6 +39,8 @@
 .settings-layout .settings-card input[readonly]{opacity:.75}
 .settings-layout .settings-card input[type=checkbox]{width:20px;height:20px;flex:none;cursor:pointer}
 .settings-layout .settings-card select{cursor:pointer}
+.settings-layout .settings-card select.fx-select__native{position:absolute;width:1px;height:1px;min-height:0;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}
+.settings-layout .settings-theme-select{width:240px;max-width:52%;flex:0 0 240px}
 .settings-layout .settings-card input:focus-visible,.settings-layout .settings-card select:focus-visible{outline:2px solid var(--info-text);outline-offset:2px}
 .settings-layout .settings-card input:disabled,.settings-layout .settings-card select:disabled{opacity:.5;cursor:not-allowed}
 .settings-actions{display:flex;justify-content:flex-end}
@@ -66,6 +68,7 @@
   .settings-layout .settings-card input[type=text],.settings-layout .settings-card input[type=password],.settings-layout .settings-card select{width:100%;max-width:100%}
   .settings-card label:has(input[type=text],input[type=password],select){flex-wrap:wrap}
   .settings-card label>span,.settings-card .set-row>span{flex:1 1 0;min-width:0}
+  .settings-layout .settings-theme-select{width:100%;max-width:100%;flex:1 1 100%}
   .settings-card label:has(input[type=text],input[type=password],select)>span{flex-basis:100%}
   .set-group .settings-card{padding:0 14px}
 }
