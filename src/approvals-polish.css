@@ -186,3 +186,8 @@
 #approval-confirm-modal .approval-dialog{scrollbar-width:none;-ms-overflow-style:none}
 #approval-detail-modal .approval-dialog::-webkit-scrollbar,
 #approval-confirm-modal .approval-dialog::-webkit-scrollbar{display:none;width:0;height:0}
+
+/* Keep the Approvals filter bar (z-index 100+) from painting over the top-bar calendar / notification / menu popovers.
+   Contain Approvals' internal stacking in its own context so those z-indexes only compete inside the view. */
+#view-approvals{isolation:isolate}
+.dashboard-topbar .popover{z-index:150}

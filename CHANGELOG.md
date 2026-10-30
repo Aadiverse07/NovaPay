@@ -1,15 +1,3 @@
-## Settings — structured into sections
-- Settings is now a two-pane layout: a section menu (Account: Profile, Security · Preferences: Appearance, Notifications, AI Assistant · Workspace: Workspace, Data & privacy) and one titled panel at a time, each split into labelled groups (e.g. Password / Session, Theme / Layout / Accessibility, Export / Preferences / Danger zone).
-- Keyboard: arrow keys, Home and End move between sections; the last section opened is remembered for the session; "Edit in Settings" opens Profile. On narrow screens the menu becomes a swipeable tab strip.
-- All control IDs are unchanged; only the markup around them and `src/settings.css` changed.
-
-## Settings — every option now works
-- Rebuilt the Settings page (`dashboard.html`, `src/dashboard.js`, new `src/settings.css`); each control has a real effect and is saved in `novapay-settings`.
-- Added: change password, auto sign-out after inactivity, theme "Match device", compact layout, start page, AI insight alerts, AI "show thinking steps" and "animate answers", clear AI chat, export transactions (CSV), export my data (JSON), delete account, confirm dialogs.
-- Fixed: display name now survives log out/in; approval and AI alerts now drive the notification list, count badge and dot; reduced motion and compact layout apply before first paint.
-- Removed: the "Weekly email summary" toggle (no email service exists to honour it).
-- `src/landing.js`: sign-in now honours a changed password (including the built-in demo login) and shows a notice after an inactivity sign-out.
-
 ## Header logo animation
 - Bigger header logo; N -> P -> pixels -> "NovaPay" forming intro (`logo-intro.css/js`, layered logo PNGs). See README.
 

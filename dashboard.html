@@ -44,6 +44,7 @@
 <link rel="stylesheet" href="src/modal-close-corner.css">
 <link rel="stylesheet" href="src/fx-swap-logo.css">
 <link rel="stylesheet" href="src/settings.css?v=3">
+<link rel="stylesheet" href="src/topbar-fx.css">
 </head>
 <body class="dashboard-body">
 <div class="novapay-scene novapay-scene--dashboard" data-novapay-scene aria-hidden="true"><span class="scene-orb scene-orb--a"></span><span class="scene-orb scene-orb--b"></span><span class="scene-cube scene-cube--a"></span></div><button class="mobile-menu-toggle" id="mobile-menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button><div class="mobile-nav-backdrop" id="mobile-nav-backdrop" hidden></div><button class="mobile-ai-fab" id="mobile-ai-fab" type="button" aria-label="Open NovaPay AI"><novapay-logo size="18" variant="mark"></novapay-logo></button>
@@ -80,9 +81,9 @@
         <span class="top-subkicker" id="ai-top-kicker" hidden>NOVAPAY AI · MERCHANT ASSISTANT</span>
       </div>
       <div class="top-actions">
-        <button class="icon-button calendar-button" id="calendar-button" type="button" aria-label="Open calendar" aria-expanded="false" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></button>
-        <button class="icon-button notification-button" id="notifications" type="button" aria-label="View notifications" aria-expanded="false"><span aria-hidden="true" style="font-weight:700">$</span><span class="notification-dot" aria-hidden="true"></span></button>
-        <button class="theme-toggle" id="dashboard-theme" type="button" aria-label="Switch theme" aria-pressed="false">☼</button>
+        <button class="icon-button calendar-button" id="calendar-button" type="button" aria-label="Open calendar" aria-expanded="false" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="cal-body" x="3.5" y="5" width="17" height="15.5" rx="3"/><path class="cal-pin cal-pin-l" d="M8 3v4"/><path class="cal-pin cal-pin-r" d="M16 3v4"/><path class="cal-bar" d="M3.5 10h17"/><g class="cal-dots" stroke="none" fill="currentColor"><circle style="--i:0" cx="8" cy="13.6" r="1.1"/><circle style="--i:1" cx="12" cy="13.6" r="1.1"/><circle style="--i:2" cx="16" cy="13.6" r="1.1"/><circle style="--i:3" cx="8" cy="17" r="1.1"/><circle class="cal-today" style="--i:4" cx="12" cy="17" r="1.1"/><circle style="--i:5" cx="16" cy="17" r="1.1"/></g></svg></button>
+        <button class="icon-button notification-button" id="notifications" type="button" aria-label="View notifications" aria-expanded="false"><span class="fx-glyph fx-coin" aria-hidden="true" style="font-weight:700">$</span><span class="notification-dot" aria-hidden="true"></span></button>
+        <button class="theme-toggle" id="dashboard-theme" type="button" aria-label="Switch theme" aria-pressed="false"><span class="fx-glyph fx-sun">☼</span></button>
         <button class="icon-button more-button" id="more-button" type="button" aria-label="More options" aria-expanded="false" aria-haspopup="menu"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>
       </div>
       <div class="popover notification-popover" id="notification-popover" hidden>
@@ -98,8 +99,8 @@
         <div class="cal-grid" id="cal-days"></div>
       </div>
       <div class="popover more-popover" id="more-popover" role="menu" hidden>
-        <button type="button" class="popover-link" role="menuitem" data-profile-action="settings">⚙ Settings <span>→</span></button>
-        <button type="button" class="popover-link" role="menuitem" id="logout">↪ Log out <span>→</span></button>
+        <button type="button" class="popover-link" role="menuitem" data-profile-action="settings"><span class="menu-lead"><span class="menu-ico menu-ico--settings"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.8v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>Settings</span><span class="menu-arrow">→</span></button>
+        <button type="button" class="popover-link" role="menuitem" id="logout"><span class="menu-lead"><span class="menu-ico menu-ico--logout"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>Log out</span><span class="menu-arrow">→</span></button>
       </div>
     </header>
 
@@ -192,7 +193,7 @@
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/ai-assistant.png" alt="" width="64" height="64"><h2 data-text-type data-text-type-options='{"typingSpeed":75,"deletingSpeed":50,"typeEffect":"fade","mistakes":0.2,"cursorStyle":"bar","cursorGlide":true,"showCursor":true,"loop":false,"startOnVisible":true,"hideCursorOnComplete":true}'>Understand the activity you can see</h2><p>Ask about available transaction records and review the evidence behind each answer. NovaPay does not import your full PayPal history.</p></div>
         <div class="ai-command-grid">
           <article class="ai-workspace dash-card ai-command-card">
-            <div class="ai-panel-head"><div><span class="ai-spark"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="20" height="20" style="width:20px;height:20px;display:block;object-fit:contain"></span><div><b>NovaPay AI</b><small>Answers use only activity shown in this workspace</small></div></div><span class="ai-head-right"><span class="status warn" id="ai-service-status">Checking AI service…</span><button type="button" class="ai-fs-btn" id="ai-fullscreen" aria-pressed="false" aria-label="Enter full screen" title="Full screen"><svg class="ai-fs-expand" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="ai-fs-collapse" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></span></div>
+            <div class="ai-panel-head"><div><span class="ai-spark"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="20" height="20" style="width:20px;height:20px;display:block;object-fit:contain"></span><div><b>NovaPay AI</b><small>Answers use only activity shown in this workspace</small></div></div><span class="ai-head-right"><button type="button" class="ai-fs-btn" id="ai-fullscreen" aria-pressed="false" aria-label="Enter full screen" title="Full screen"><svg class="ai-fs-expand" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="ai-fs-collapse" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></span></div>
             <div class="ai-data-status" id="ai-data-status" role="status">Checking available transaction data…</div>
             <div class="ai-conversation" id="ai-conversation" role="log" aria-label="Assistant conversation" aria-live="polite" aria-relevant="additions text">
               <div class="ai-bubble ai-bubble--assistant"><span class="ai-avatar"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="22" height="22" style="width:22px;height:22px;display:block;object-fit:contain"></span><div><b>NovaPay</b><p data-text-type data-text-type-options='{"typingSpeed":28,"deletingSpeed":50,"typeEffect":"fade","mistakes":0.2,"cursorStyle":"bar","cursorGlide":true,"showCursor":true,"loop":false,"startOnVisible":true,"hideCursorOnComplete":true}'>Hi. I can summarize the activity available here, explain a transaction, and point to the records behind an answer. Missing fields stay marked unavailable.</p></div></div>
@@ -558,7 +559,7 @@
 <script src="src/text-type.js"></script>
 <script src="src/strands.js"></script>
 <script src="src/ai-thoughts.js?v=3"></script>
-<script src="src/dashboard.js?v=4"></script>
+<script src="src/dashboard.js?v=6"></script>
 <script src="src/ai-fullscreen.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
@@ -573,5 +574,6 @@
 <script src="src/specular-buttons.js"></script>
 <script src="src/line-sidebar.js"></script>
 <script src="src/magic-bento-dashboard.js"></script>
+<script src="src/topbar-fx.js"></script>
 </body>
 </html>
