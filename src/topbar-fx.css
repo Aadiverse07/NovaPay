@@ -1,0 +1,99 @@
+/* NovaPay top-bar button motion: spring press, pulse ring, coin flip, sun/moon reveal, dots morph. */
+.top-actions > button{
+  --fx-accent:var(--focus-ring,#2871e8);
+  position:relative;display:inline-grid;place-items:center;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background-color .2s ease,border-color .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.top-actions > button:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 8px 20px -6px color-mix(in srgb,var(--fx-accent) 45%,transparent),var(--shadow-sm)}
+.top-actions > button:active{transform:scale(.88);transition-duration:.08s}
+.top-actions > button[aria-expanded="true"]{border-color:var(--fx-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--fx-accent) 22%,transparent),var(--shadow-sm)}
+.top-actions > button:focus-visible{outline:2px solid var(--fx-accent);outline-offset:3px}
+
+/* expanding ring on every click (JS adds .fx-ring) */
+.top-actions > button::before{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--fx-accent);opacity:0;pointer-events:none}
+.top-actions > button.fx-ring::before{animation:fx-ring .65s cubic-bezier(.2,.7,.3,1)}
+@keyframes fx-ring{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.9)}}
+
+.fx-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:5}
+.fx-burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;font-style:normal}
+.fx-burst i.is-coin{width:10px;height:10px;left:-5px;top:-5px;background:radial-gradient(circle at 35% 30%,#fff6c8,#f5b82e 55%,#c98a0b);box-shadow:inset 0 0 0 1px rgba(150,98,0,.45)}
+.fx-burst i.is-txt{width:auto;height:auto;left:-5px;top:-8px;font:800 12px/1 inherit;color:#c98a0b;border-radius:0}
+.fx-burst i.is-star{width:6px;height:6px;left:-3px;top:-3px;border-radius:0;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+
+/* ---------- Calendar: pins hop, body flips, date grid dots pop in ---------- */
+.calendar-button svg{overflow:visible}
+.calendar-button .cal-pin,.calendar-button .cal-dots circle{transform-box:fill-box;transform-origin:center}
+.calendar-button.fx-go .cal-pin-l{animation:fx-pin .55s cubic-bezier(.3,1.6,.5,1)}
+.calendar-button.fx-go .cal-pin-r{animation:fx-pin .55s .07s cubic-bezier(.3,1.6,.5,1)}
+@keyframes fx-pin{0%{transform:translateY(0)}35%{transform:translateY(-3.5px) scaleY(1.2)}100%{transform:translateY(0)}}
+.calendar-button.fx-go .cal-body{transform-box:fill-box;transform-origin:50% 0;animation:fx-flip .6s cubic-bezier(.3,1.3,.5,1)}
+@keyframes fx-flip{0%{transform:perspective(60px) rotateX(0)}40%{transform:perspective(60px) rotateX(-28deg)}100%{transform:perspective(60px) rotateX(0)}}
+.calendar-button .cal-dots circle{opacity:0;transform:scale(0);transition:transform .35s cubic-bezier(.34,1.8,.64,1),opacity .2s}
+.calendar-button[aria-expanded="true"] .cal-dots circle{opacity:1;transform:scale(1);transition-delay:calc(var(--i)*45ms)}
+.calendar-button[aria-expanded="true"] .cal-dots .cal-today{fill:var(--fx-accent);transform:scale(1.5)}
+
+/* ---------- $ button: coin spin + live ping on the notification dot ---------- */
+.notification-button{--fx-accent:#e0a21a}
+.fx-coin{display:inline-block;will-change:transform}
+.notification-button.fx-go .fx-coin{animation:fx-coin .85s cubic-bezier(.3,.9,.4,1)}
+@keyframes fx-coin{0%{transform:rotateY(0) scale(1)}30%{transform:rotateY(300deg) scale(1.35) translateY(-3px)}100%{transform:rotateY(720deg) scale(1) translateY(0)}}
+.notification-dot::after{content:"";position:absolute;inset:-2px;border-radius:50%;background:inherit;animation:fx-ping 2.2s ease-out infinite}
+@keyframes fx-ping{0%{transform:scale(1);opacity:.55}70%,100%{transform:scale(2.4);opacity:0}}
+.notification-button.fx-go .notification-dot{animation:fx-dot .6s cubic-bezier(.3,1.9,.5,1)}
+@keyframes fx-dot{0%{transform:scale(1)}40%{transform:scale(2)}100%{transform:scale(1)}}
+
+/* ---------- Theme toggle: sun rays spin / moon swings in ---------- */
+.theme-toggle{--fx-accent:#f59e0b;overflow:visible}
+.fx-sun{display:inline-block;line-height:1;will-change:transform}
+.theme-toggle:hover .fx-sun{animation:fx-sun-idle 6s linear infinite}
+:root[data-theme="dark"] .theme-toggle:hover .fx-sun{animation:fx-moon-rock 2.4s ease-in-out infinite}
+@keyframes fx-moon-rock{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+@keyframes fx-sun-idle{to{transform:rotate(360deg)}}
+.theme-toggle.fx-go .fx-sun{animation:fx-sun-swap .75s cubic-bezier(.3,1.4,.5,1)}
+@keyframes fx-sun-swap{0%{transform:rotate(0) scale(1)}35%{transform:rotate(-200deg) scale(.2);opacity:.2}70%{transform:rotate(-340deg) scale(1.3);opacity:1}100%{transform:rotate(-360deg) scale(1)}}
+:root[data-theme="dark"] .theme-toggle{--fx-accent:#8b9cff}
+
+/* ---------- More button: ⋮ morphs to ⋯ while the menu is open ---------- */
+.more-button svg{transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.more-button[aria-expanded="true"] svg{transform:rotate(90deg)}
+.more-button svg circle{transform-box:fill-box;transform-origin:center}
+.more-button.fx-go svg circle:nth-child(1){animation:fx-dot-hop .5s cubic-bezier(.3,1.6,.5,1)}
+.more-button.fx-go svg circle:nth-child(2){animation:fx-dot-hop .5s .07s cubic-bezier(.3,1.6,.5,1)}
+.more-button.fx-go svg circle:nth-child(3){animation:fx-dot-hop .5s .14s cubic-bezier(.3,1.6,.5,1)}
+@keyframes fx-dot-hop{0%{transform:scale(1)}40%{transform:scale(1.9)}100%{transform:scale(1)}}
+
+/* ---------- Popovers: spring open from the corner, staggered contents ---------- */
+.top-actions ~ .popover:not([hidden]){transform-origin:top right;animation:fx-pop .38s cubic-bezier(.34,1.45,.64,1) both}
+.top-actions ~ .calendar-popover:not([hidden]){transform-origin:top center}
+@keyframes fx-pop{0%{opacity:0;transform:translateY(-8px) scale(.86)}100%{opacity:1;transform:none}}
+.top-actions ~ .popover:not([hidden]) :is(.notification-item,.popover-link){animation:fx-item .4s cubic-bezier(.2,.8,.3,1) both}
+.top-actions ~ .popover:not([hidden]) :is(.notification-item,.popover-link):nth-of-type(1){animation-delay:.06s}
+.top-actions ~ .popover:not([hidden]) :is(.notification-item,.popover-link):nth-of-type(2){animation-delay:.12s}
+.top-actions ~ .popover:not([hidden]) :is(.notification-item,.popover-link):nth-of-type(3){animation-delay:.18s}
+@keyframes fx-item{0%{opacity:0;transform:translateX(10px)}100%{opacity:1;transform:none}}
+.calendar-popover:not([hidden]) .cal-day{animation:fx-day .35s cubic-bezier(.34,1.6,.5,1) both;animation-delay:calc(var(--i,0)*14ms + .08s)}
+@keyframes fx-day{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:none}}
+
+/* ---------- Theme switch: circular reveal (View Transitions) ---------- */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
+
+.reduce-motion .top-actions > button,.reduce-motion .fx-burst{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .top-actions > button,.top-actions > button *{animation:none!important;transition-duration:.001ms!important}
+  .top-actions > button:hover{transform:none}
+}
+
+/* ---------- ⋮ menu: icon tiles for Settings / Log out ---------- */
+.more-popover .menu-lead{display:flex;align-items:center;gap:11px}
+.more-popover .menu-ico{width:32px;height:32px;display:grid;place-items:center;flex:0 0 auto;border-radius:10px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.more-popover .menu-ico--settings{background:var(--info-soft);color:var(--info-text)}
+.more-popover .menu-ico--logout{background:var(--danger-soft);color:var(--danger-text)}
+.more-popover .menu-arrow{transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.more-popover .popover-link:hover .menu-arrow{transform:translateX(4px)}
+.more-popover .popover-link:hover .menu-ico--settings svg{animation:fx-gear 1s linear}
+.more-popover .popover-link:hover .menu-ico--logout svg{animation:fx-exit .5s cubic-bezier(.3,1.4,.5,1)}
+@keyframes fx-gear{to{transform:rotate(180deg)}}
+@keyframes fx-exit{40%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.more-popover *{animation:none!important}}
