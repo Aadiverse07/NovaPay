@@ -1,0 +1,62 @@
+/* NovaPay home page header: same button motion as the dashboard top bar. */
+.header-actions > .icon-button{
+  --fx-accent:var(--focus-ring,#2871e8);position:relative;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background-color .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.header-actions > .icon-button:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 8px 20px -6px color-mix(in srgb,var(--fx-accent) 45%,transparent)}
+.header-actions > .icon-button:active{transform:scale(.88);transition-duration:.08s}
+.header-actions > .icon-button[aria-expanded="true"]{box-shadow:0 0 0 3px color-mix(in srgb,var(--fx-accent) 24%,transparent)}
+.header-actions > .icon-button:focus-visible{outline:2px solid var(--fx-accent);outline-offset:3px}
+#theme{--fx-accent:#f59e0b}:root[data-theme="dark"] #theme{--fx-accent:#8b9cff}
+
+/* ring that expands from the button on click */
+.header-actions > .icon-button::before{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--fx-accent);opacity:0;pointer-events:none}
+.header-actions > .icon-button.fx-ring::before{animation:hfx-ring .65s cubic-bezier(.2,.7,.3,1)}
+@keyframes hfx-ring{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.9)}}
+
+.fx-burst{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:5}
+.fx-burst i{position:absolute;left:-3px;top:-3px;width:6px;height:6px;font-style:normal;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+
+/* theme: sun idles on hover, swaps with a spin on click */
+#theme .ti{will-change:transform}
+#theme:hover .ti-sun{animation:hfx-spin 6s linear infinite}
+#theme:hover .ti-moon{animation:hfx-rock 2.4s ease-in-out infinite}
+@keyframes hfx-spin{to{transform:rotate(360deg)}}
+@keyframes hfx-rock{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+#theme.fx-go .ti{animation:hfx-swap .75s cubic-bezier(.3,1.4,.5,1)}
+@keyframes hfx-swap{0%{transform:rotate(0) scale(1)}35%{transform:rotate(-200deg) scale(.2);opacity:.2}70%{transform:rotate(-340deg) scale(1.3);opacity:1}100%{transform:rotate(-360deg) scale(1)}}
+
+/* hamburger morphs into a close icon while the menu is open */
+.menu-ham path{transform-box:fill-box;transform-origin:center;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .2s}
+.menu-toggle[aria-expanded="true"] .ham-1{transform:translateY(5px) rotate(45deg)}
+.menu-toggle[aria-expanded="true"] .ham-2{opacity:0;transform:scaleX(.2)}
+.menu-toggle[aria-expanded="true"] .ham-3{transform:translateY(-5px) rotate(-45deg)}
+
+/* mobile menu: spring open, links slide in */
+.mobile-menu:not([hidden]){transform-origin:top right;animation:hfx-pop .38s cubic-bezier(.34,1.45,.64,1) both}
+.mobile-menu:not([hidden]) a{animation:hfx-item .4s cubic-bezier(.2,.8,.3,1) both}
+.mobile-menu:not([hidden]) a:nth-child(1){animation-delay:.05s}.mobile-menu:not([hidden]) a:nth-child(2){animation-delay:.1s}
+.mobile-menu:not([hidden]) a:nth-child(3){animation-delay:.15s}.mobile-menu:not([hidden]) a:nth-child(4){animation-delay:.2s}
+@keyframes hfx-pop{0%{opacity:0;transform:translateY(-8px) scale(.9)}100%{opacity:1;transform:none}}
+@keyframes hfx-item{0%{opacity:0;transform:translateX(10px)}100%{opacity:1;transform:none}}
+
+/* Login / Get Started: springy press, arrow nudge */
+.header-actions > .btn{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease,background-color .2s ease,border-color .2s ease}
+.header-actions > .btn:hover{transform:translateY(-2px)}
+.header-actions > .btn:active{transform:scale(.95);transition-duration:.08s}
+.header-actions > .btn--primary span{display:inline-block;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.header-actions > .btn--primary:hover span{transform:translateX(4px)}
+
+/* theme switch: circular reveal (View Transitions) */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
+
+.reduce-motion .header-actions > *,.reduce-motion .fx-burst{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .header-actions > *,.header-actions > * *,.mobile-menu,.mobile-menu *{animation:none!important;transition-duration:.001ms!important}
+  .header-actions > *:hover{transform:none}
+}
+
+/* The hero (z-index 1, later in the DOM) was painting over the open mobile menu; lift the header above it. */
+body .landing-header{z-index:30}
