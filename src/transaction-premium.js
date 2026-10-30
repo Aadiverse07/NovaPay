@@ -4,8 +4,68 @@
   var view = document.getElementById("view-transactions");
   var tbody = document.getElementById("transactions-table-body");
   if (!view || !tbody) return;
+  var card = view.querySelector(":scope > .dash-card");
   var reduce = matchMedia("(prefers-reduced-motion: reduce)");
   var ease = function (t) { return 1 - Math.pow(1 - t, 4); };
+
+  /* Dark theme card glow follows the cursor across the transaction workspace. */
+  if (card) {
+    card.addEventListener("pointermove", function (e) {
+      var r = card.getBoundingClientRect();
+      card.style.setProperty("--tx-card-glow-x", (e.clientX - r.left).toFixed(1) + "px");
+      card.style.setProperty("--tx-card-glow-y", (e.clientY - r.top).toFixed(1) + "px");
+      card.classList.add("tx-card-glow-active");
+    });
+    card.addEventListener("pointerleave", function () {
+      card.classList.remove("tx-card-glow-active");
+    });
+  }
+
+  /* Dedicated cursor sheen for the ledger and finance workspace cards. */
+  var holoCardSelector = [
+    "#view-ledger .module-kpis > .dash-card", "#view-ledger > article.module-card",
+    "#view-invoices .module-kpis > .dash-card", "#view-invoices > article.module-card",
+    "#view-reports .module-kpis > .dash-card", "#view-reports > article.module-card", "#view-reports > article.fx-converter",
+    "#view-documents .module-kpis > .dash-card", "#view-documents > article.module-card",
+    "#view-community-funds .module-kpis > .dash-card", "#view-community-funds .campaign-grid > article.campaign-card",
+    "#view-community-funds .campaign-grid > article.campaign-create", "#view-community-funds > .community-transparency-section > article.transparency-hero",
+    "#view-maintenance > article.module-card"
+  ].join(",");
+  var initializedHoloCards = new WeakSet();
+  function addCursorSheen(root) {
+    var cards = [];
+    if (root.nodeType === 1 && root.matches(holoCardSelector)) cards.push(root);
+    if (root.querySelectorAll) cards = cards.concat([].slice.call(root.querySelectorAll(holoCardSelector)));
+    cards.forEach(function (target) {
+      if (initializedHoloCards.has(target)) return;
+      initializedHoloCards.add(target);
+      target.classList.add("cursor-holo-card");
+      var sheen = document.createElement("span");
+      sheen.className = "cursor-holo-sheen";
+      sheen.setAttribute("aria-hidden", "true");
+      target.appendChild(sheen);
+      target.addEventListener("pointermove", function (e) {
+        var r = target.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        sheen.style.setProperty("--cursor-holo-x", (x * 100).toFixed(1) + "%");
+        sheen.style.setProperty("--cursor-holo-y", (y * 100).toFixed(1) + "%");
+        sheen.style.setProperty("--cursor-holo-angle", (Math.atan2(y - .5, x - .5) * 180 / Math.PI).toFixed(1) + "deg");
+        sheen.classList.add("is-active");
+        target.classList.add("cursor-holo-active");
+      }, { passive: true });
+      target.addEventListener("pointerleave", function () {
+        sheen.classList.remove("is-active");
+        target.classList.remove("cursor-holo-active");
+      });
+    });
+  }
+  addCursorSheen(document);
+  if (window.MutationObserver) new MutationObserver(function (records) {
+    records.forEach(function (record) {
+      record.addedNodes.forEach(function (node) { if (node.nodeType === 1) addCursorSheen(node); });
+    });
+  }).observe(document.body, { childList: true, subtree: true });
 
   /* Animate any number inside text, keeping prefix, sign, grouping and decimals. */
   function countUp(el, ms) {

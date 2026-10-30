@@ -113,18 +113,19 @@
 
   /* These controls use an in-page themed menu because native option popups
      ignore the dashboard surface colors in several desktop browsers. */
-  document.querySelectorAll("#view-reports .fx-controls select, #view-reports #report-period, #view-invoices #invoice-filter").forEach(function (select) {
+  document.querySelectorAll("#view-reports .fx-controls select, #view-reports #report-period, #view-invoices #invoice-filter, #view-transactions #tx-type, #view-transactions #tx-status, #view-settings #set-autologout, #view-settings #set-theme, #view-settings #set-landing").forEach(function (select) {
     if (select.dataset.themedDropdown === "true") return;
     select.dataset.themedDropdown = "true";
     var wrapper = document.createElement("div"), trigger = document.createElement("button"), menu = document.createElement("div"), arrow = document.createElement("span"), options = [];
     var label = select.parentElement;
     var labelText = label ? Array.prototype.find.call(label.childNodes, function (node) { return node.nodeType === 3 && node.textContent.trim(); }) : null;
-    wrapper.className = select.id === "report-period" ? "fx-select report-period-select" : "fx-select";
+    wrapper.className = select.id === "report-period" ? "fx-select report-period-select" : (select.id === "tx-type" || select.id === "tx-status" ? "fx-select tx-filter-select" : (["set-autologout", "set-theme", "set-landing"].indexOf(select.id) > -1 ? "fx-select settings-theme-select" : "fx-select"));
     trigger.type = "button";
     trigger.className = "fx-select__trigger";
     trigger.setAttribute("aria-haspopup", "listbox");
     trigger.setAttribute("aria-expanded", "false");
-    trigger.setAttribute("aria-label", labelText ? labelText.textContent.trim() : (select.getAttribute("aria-label") || "Choose currency"));
+    var selectLabels = { "set-autologout": "Auto sign-out", "set-theme": "Theme", "set-landing": "Start page" };
+    trigger.setAttribute("aria-label", selectLabels[select.id] || (labelText ? labelText.textContent.trim() : (select.getAttribute("aria-label") || "Choose currency")));
     menu.className = "fx-select__menu";
     menu.id = select.id + "-options";
     menu.setAttribute("role", "listbox");
