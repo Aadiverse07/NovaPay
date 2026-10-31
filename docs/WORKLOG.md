@@ -3590,3 +3590,5 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-11-01 | ABOUT TO: stage missing-currency warning, failed-hash duplicate filter, tests and continuity docs | WHY: checkpoint the tested fix without secrets or protected files.
 2026-11-01 | RESULT: local checkpoint b8930b9 created on fix-ocr-validation; no push. C remains failed because uploads were prohibited; subsequent retry will now process with a visible currency warning.
 2026-11-01 | ABOUT TO: commit only docs/WORKLOG.md before push preflight | WHY: it is the sole working-tree change; `.env` is untracked and no files are staged.
+2026-11-01 | RESULT: sole change WORKLOG committed as 3fd9c9d; no .env tracked/staged. NEXT: fetch origin refs and scan the exact branch diff for secret patterns without printing matches.
+2026-11-01 | ABOUT TO: fetch origin refs for an accurate push diff | WHY: scan `origin/main..HEAD` against the current remote main before authorized push.
