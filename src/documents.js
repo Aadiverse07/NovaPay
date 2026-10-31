@@ -4,6 +4,7 @@
   var api = window.NovaPayApi;
   var rows = [];
   var role = "";
+  var roleLoaded = false;
   var selected = null;
   var busy = false;
   var createdDraftId = "";
@@ -21,7 +22,7 @@
     parent.appendChild(node);
     return node;
   }
-  function canWrite() { return ["owner", "admin", "accountant"].includes(role); }
+  function canWrite() { return roleLoaded && ["owner", "admin", "accountant"].includes(role); }
   function renderList() {
     var list = el("documents-list");
     var count = el("documents-count");
@@ -104,11 +105,14 @@
   }
   async function load() {
     if (!api) return;
+    role = "";
+    roleLoaded = false;
     status("Loading organization documents…");
     try {
       var result = await api.request("/api/documents");
       rows = Array.isArray(result.documents) ? result.documents : [];
       role = result.role || "";
+      roleLoaded = typeof result.role === "string" && Boolean(result.role);
       renderList();
       status(rows.length ? "Live organization data · " + rows.length + " document(s)." : "Live organization data · no documents yet.");
       if (selected) {
@@ -116,12 +120,16 @@
         if (current) renderReview(current);
       }
     } catch (error) {
+      role = "";
+      roleLoaded = false;
       status(error.message || "Documents could not be loaded. Retry when the API is available.", "warn");
       var list = el("documents-list"); if (list) { list.replaceChildren(); addText(list, "p", "Document data is unavailable. No sample records are shown."); }
     }
   }
   async function upload(file) {
     if (!file || busy) return;
+    if (!roleLoaded) await load();
+    if (!roleLoaded) { status("Your organization role could not be verified. Refresh and try again.", "warn"); return; }
     if (!canWrite()) { status("Upload requires an owner, admin or accountant role.", "warn"); return; }
     var selectedName = el("document-upload-name");
     if (selectedName) selectedName.textContent = file.name;
@@ -164,10 +172,15 @@
   }
   document.addEventListener("DOMContentLoaded", function () {
     var file = el("document-upload");
-    if (file) file.addEventListener("change", function () { if (file.files && file.files[0]) upload(file.files[0]); });
+    if (file) file.addEventListener("change", function () { if (file.files && file.files[0]) return upload(file.files[0]); });
     var refresh = el("documents-refresh"); if (refresh) refresh.addEventListener("click", load);
     var nav = document.querySelector('[data-view="documents"], [data-view-target="documents"], [href="#documents"]');
     if (nav) nav.addEventListener("click", load);
     if (window.NovaPayAuth) Promise.resolve(window.NovaPayAuth.ready).then(function () { load(); });
+    document.addEventListener("novapay:auth", function (event) {
+      role = ""; roleLoaded = false; rows = []; selected = null; renderList();
+      if (event.detail && event.detail.signedIn) load();
+      else status("Sign in to load organization documents.", "warn");
+    });
   });
 }());

@@ -1235,3 +1235,19 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `node --check server/src/routes/documents.js` and `node --check server/test/documents-upload.test.js` | PASS | Both changed JavaScript files parse.
 2026-10-28 | `git diff --check` | PASS | No whitespace errors.
 2026-10-28 | Prior post-delete HTTP 200 root cause | UNRESOLVED | It was not reproduced. Fresh direct authenticated Storage GET returned 400 JSON/88 bytes with CF cache BYPASS; no cache-control/age; Storage list count 0. Prior response metadata was not retained.
+
+2026-10-31 — `node --test server/test/login-auth.test.js` — FAIL — unknown passed, unknown failed.
+
+2026-10-31 — `node --test server/test/login-auth.test.js` — FAIL — unknown passed, unknown failed.
+
+2026-10-31 — `node --test server/test/login-auth.test.js` — FAIL — unknown passed, unknown failed.
+
+2026-10-31 — `npm test` on fix-login-errors — FAIL — 169 passed, 1 failed. ✖ authenticated API client bypasses conditional HTTP caching (19.456292ms)
+
+2026-10-31 — `npm run check:migrations` on fix-login-errors — PASS — 16/16 migrations parsed (exit 0).
+
+2026-10-31 | `node --test server/test/login-auth.test.js` | PASS | 5 passed, 0 failed; supersedes earlier entries whose helper output count was unavailable.
+2026-10-31 | `npm test` | FAIL | 169 passed, 1 failed: API client did not set expected `Cache-Control: no-store`; unrelated to login changes.
+2026-10-31 | `npm run check:migrations` | PASS | 16/16 migration files parse.
+2026-10-31 | `node --check` on `src/auth.js`, `src/landing.js`, `src/documents.js`, `server/test/login-auth.test.js`; `git diff --check`; protected-file diff | PASS | All four JS files parse, whitespace clean, protected diff empty.
+2026-10-31 | Real browser login and Documents owner role | UNVERIFIED | No existing-user credentials/JWT used; no new user created.

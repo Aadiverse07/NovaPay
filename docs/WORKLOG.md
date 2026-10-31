@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`; latest local checkpoint `7b6ab23`, not pushed.
-- DONE: org-scoped GET added; focused tests 6/6; full npm test 165/165; migrations 16/16; node --check 2 changed JS files; git diff --check PASS.
-- Live checks: B retrieval 200/1 citation not referencing org A; B RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage 400 denied; A positive retrieval 200/1 citation.
-- Delete: API 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1; post-delete direct Storage GET 400 JSON/88 bytes, CF BYPASS, no cache-control/age.
-- Diagnosis: current object deletion works; previous HTTP 200 was not reproduced and its cause is undetermined. Storage objects SQL count UNVERIFIED (no local SQL client/CLI/connection). Storage code checks DELETE response.ok. No fix 2 applied.
-- Next: review staged paths; keep pre-existing `.env.example` unstaged; WIP-commit locally; never push.
-- Pending: optional user-provided SQL path if exact `storage.objects` SQL count is still needed.
+- Current task: login repair on `fix-login-errors`, based on `origin/main` at branch creation; no push.
+- DONE: preview/dashboard load Supabase auth; login errors map to invalid credentials, unconfirmed email, rate limit, or network/config; saved sessions restore the existing workspace; Documents refreshes role after auth changes and before upload. Added `server/test/login-auth.test.js` (5/5 PASS).
+- Root cause: preview used only local demo auth and dashboard guarded only on `novapay-demo-auth`; real Supabase sessions were not used. A stale/late role could trigger the upload role banner.
+- CHECKS: `npm test` FAIL 169/170 on existing API no-store test; `npm run check:migrations` PASS 16/16; focused tests 5/5; changed JS syntax PASS; `git diff --check` PASS; protected diff empty.
+- UNVERIFIED: no real account credentials/JWT were used, so browser sign-in and live Documents role are not verified. Running server config probe showed Supabase configured and public URL host `zdiisgqvllbcomawnizp.supabase.co`.
+- NEXT: review diff and secret-safe status; make local `WIP-BROKEN:` checkpoint naming the unrelated no-store failure. Do not push.
+- PENDING: human may sign in with the existing account in browser and verify Documents shows owner actions; no new users created.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3425,3 +3425,46 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: update ignore rules and issue a no-op cached removal if applicable; WHY: prevent future .env variants from entering Git without excluding .env.example.
 2026-10-28 | RESULT: PASS; .env was already untracked and ignored; added .env.* ignore rule with !.env.example exception. NEXT: commit the ignore-rule hardening as requested.
 2026-10-28 | ABOUT TO: commit .gitignore and WORKLOG.md as Stop tracking .env; WHY: record and preserve the safe ignore rules.
+2026-10-31 | RESULT: created fix-login-errors from origin/main; WORKLOG restore conflicted, kept origin/main version and re-recorded current diagnosis here.
+2026-10-31 | ABOUT TO: inspect browser script loading and prepare Supabase login wiring/tests; WHY: address the confirmed root cause on the correct branch.
+2026-10-31 | ABOUT TO: wire the existing Supabase auth module into both pages, categorize login errors, restore workspaces for saved sessions, and refresh document role after auth changes; WHY: close the diagnosed login/session gap without redesign.
+2026-10-31 | RESULT: wired Supabase auth into preview/dashboard, categorized auth errors, restored workspaces for saved sessions, and made Documents role reload on auth changes. NEXT: add tests for categories, owner workspace restoration, script loading, and fresh role before upload.
+2026-10-31 | ABOUT TO: add browser-auth tests using mocked Supabase sessions/API only; WHY: verify login behavior without creating auth users or exposing credentials.
+2026-10-31 | RESULT: added tests for auth error categories, login/restore workspace, fresh Documents role, and script order. NEXT: run focused browser-auth tests and correct any defects they expose.
+2026-10-31 | ABOUT TO: run `node --test server/test/login-auth.test.js`; WHY: validate the new login and role-refresh behaviors before the full suite.
+2026-10-31 | RESULT: focused auth tests FAIL; passed=unknown; failed=unknown. NEXT: fix any failure or run full npm test.
+2026-10-31 | RESULT: focused test exposed an incorrect assertion: browser sends only organizationName; server derives user id from verified JWT. Corrected test to assert the name. NEXT: rerun focused auth tests.
+2026-10-31 | ABOUT TO: rerun focused auth test file; WHY: confirm all new coverage passes after correcting the test expectation.
+2026-10-31 | RESULT: focused auth tests FAIL; passed=unknown; failed=unknown. NEXT: run full suite and requested static checks.
+2026-10-31 | ABOUT TO: strengthen the script integration test to assert login invokes Supabase and demo login is gated by absent config; WHY: ensure the root cause cannot regress while retaining demo fallback.
+2026-10-31 | RESULT: script wiring test now asserts Supabase signIn is selected and demo fallback is behind the demo-mode branch. NEXT: rerun focused tests, then run full suite.
+2026-10-31 | ABOUT TO: rerun focused login/auth test file; WHY: verify stronger integration assertions.
+2026-10-31 | RESULT: focused auth suite FAIL; passed=unknown; failed=unknown. NEXT: run full npm test.
+2026-10-31 | ABOUT TO: run full npm test after login/auth changes; WHY: verify integration with the repository suite and detect any pre-existing failures.
+2026-10-31 | RESULT: npm test FAIL; passed=169; failed=1; first failure=✖ authenticated API client bypasses conditional HTTP caching (19.456292ms). NEXT: run migrations, syntax checks, and diff checks.
+2026-10-31 | ABOUT TO: run migration syntax, changed-JS syntax, whitespace, and protected-file diff checks; WHY: complete all requested validation gates.
+2026-10-31 | RESULT: migration/parser, node syntax, whitespace, and protected-file diff gate results printed above; npm test remains 169/170 due existing cache test. NEXT: update CONTEXT/resume/DECISIONS and checkpoint WIP-BROKEN.
+2026-10-31 | RESULT: migration, syntax, whitespace, protected-file checks all PASS (16 migrations, 4 JS, empty protected diff); a report helper referenced a shell variable in Python and failed after checks, recording verified migration result now. NEXT: finalize context/resume and local WIP-BROKEN checkpoint.
+2026-10-31 | ABOUT TO: append verified migration PASS to TEST-REPORT; WHY: log the real check outcome despite the helper error.
+2026-10-31 | RESULT: TEST-REPORT records migration PASS 16/16. NEXT: refresh handoff docs and commit locally.
+2026-10-31 | ABOUT TO: make landing auth navigation wait for initialized Supabase mode and avoid stale demo markers; WHY: prevent a cached demo flag from masking a Supabase login state.
+2026-10-31 00:00 UTC | About to inspect login/auth/doc diffs and current handoff sections | Verify navigation patch and determine final documentation edits.
+2026-10-31 | RESULT: navigation inspection confirms Supabase/demo auth split and async hash handling; one new WORKLOG pre-action line added. NEXT: rerun focused tests and capture exact outcomes.
+2026-10-31 | ABOUT TO: rerun login/auth tests and inspect current handoff/decision tails | WHY: validate latest navigation code and prepare accurate checkpoint metadata.
+2026-10-31 | ABOUT TO: run full npm test on fix-login-errors | WHY: verify the complete suite after login, session restoration, and fresh document-role changes.
+2026-10-31 | RESULT: focused login/auth tests PASS 5/5; full suite FAIL 169/170 on existing api-client no-store assertion. NEXT: finish required migration, syntax, whitespace, and protected-file checks.
+2026-10-31 | ABOUT TO: run migration check, syntax checks for changed JS, whitespace check, and protected-file diff | WHY: complete the requested validation gates and ensure protected UI assets stayed untouched.
+2026-10-31 | RESULT: migration syntax PASS 16/16; four changed JS files parse; git diff --check passes; protected-file diff is empty. NEXT: replace stale CONTEXT/resume pointer and append accurate test/decision entries.
+2026-10-31 | ABOUT TO: inspect only the top of WORKLOG and current context file boundaries | WHY: safely rewrite the RESUME POINTER without disturbing the append-only journal.
+2026-10-31 | ABOUT TO: rewrite CONTEXT and WORKLOG RESUME POINTER, append test corrections and login decision | WHY: the checked-out main ancestry contains stale Phase 5 handoff state; make the new branch resumable and report exact outcomes.
+2026-10-31 | RESULT: CONTEXT and resume pointer now identify fix-login-errors, root cause, exact test status, and live/browser limits; TEST-REPORT and DECISIONS append corrections and scope decision. NEXT: verify secret-safe status, report whitespace, and stage paths for local checkpoint.
+2026-10-31 | ABOUT TO: inspect branch, tracked .env state, diff summary, and whitespace after handoff edits | WHY: ensure only intended login/docs changes are committed and no environment file enters Git.
+2026-10-31 | ABOUT TO: stage only login implementation, focused tests, and continuity docs | WHY: prepare an exact local checkpoint while excluding environment files and unrelated paths.
+2026-10-31 | RESULT: staged exactly 10 intended files; .env is not tracked or staged. NEXT: validate staged names/whitespace, then create local WIP-BROKEN commit.
+2026-10-31 | ABOUT TO: inspect staged paths and whitespace before local commit | WHY: ensure the checkpoint contains only the intended login fix and handoff records.
+2026-10-31 | RESULT: staged path list contains only intended HTML, JS, tests, and docs; staged whitespace check PASS; no .env entry. NEXT: include the post-stage journal result, then commit.
+2026-10-31 | ABOUT TO: stage the latest WORKLOG result line | WHY: keep the append-only journal synchronized with the exact checkpoint.
+2026-10-31 | RESULT: latest WORKLOG line staged. NEXT: final staged whitespace/path check, then local WIP-BROKEN commit.
+2026-10-31 | ABOUT TO: recheck staged whitespace and .env exclusion | WHY: verify the exact index immediately before committing.
+2026-10-31 | RESULT: staged paths remain the intended 9 files; diff check PASS. NEXT: stage this result and commit the tested login fix with WIP-BROKEN marker for the unrelated no-store failure.
+2026-10-31 | ABOUT TO: stage final journal state for the login checkpoint | WHY: the current worklog result must be included in the local commit.

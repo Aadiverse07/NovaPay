@@ -8,7 +8,6 @@
 <meta name="color-scheme" content="light dark">
 <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("novapay-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
 <script>try{var _s=JSON.parse(localStorage.getItem("novapay-settings")||"{}")||{},_r=document.documentElement;if(_s.reduceMotion)_r.classList.add("reduce-motion");if(_s.compact)_r.classList.add("density-compact")}catch(e){}</script>
-<script>try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login")}}catch(e){location.replace("preview.html#login")}</script>
 <script>try{if(sessionStorage.getItem("novapay-hero-enter")==="1"){sessionStorage.removeItem("novapay-hero-enter");document.documentElement.classList.add("fx-enter");setTimeout(function(){document.documentElement.classList.remove("fx-enter")},1100)}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -575,6 +574,9 @@
   </div>
 </div>
 <div class="toast" id="dashboard-toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+<script src="src/auth.js"></script>
+<script src="src/api-client.js"></script>
 <script src="src/chart-theme.js"></script>
 <script src="src/motion.js"></script>
 <script src="src/text-type.js"></script>
@@ -598,5 +600,14 @@
 <script src="src/topbar-fx.js"></script>
 <script src="src/date-picker.js"></script>
 <script src="src/help-support.js"></script>
+<script>
+(function () {
+  var auth = window.NovaPayAuth;
+  if (!auth) { location.replace("preview.html#login"); return; }
+  auth.ready.then(function () {
+    if (!auth.isAuthenticated()) location.replace("preview.html#login");
+  }).catch(function () { location.replace("preview.html#login"); });
+})();
+</script>
 </body>
 </html>
