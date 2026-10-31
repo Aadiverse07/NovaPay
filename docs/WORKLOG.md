@@ -1,11 +1,12 @@
 ## RESUME POINTER
-- Current task: login repair on `fix-login-errors`, based on `origin/main` at branch creation; latest code checkpoint `2969413`, handoff checkpoint `666fddc`; no push.
-- DONE: preview/dashboard load Supabase auth; login errors map to invalid credentials, unconfirmed email, rate limit, or network/config; saved sessions restore the existing workspace; Documents refreshes role after auth changes and before upload. Added `server/test/login-auth.test.js` (5/5 PASS).
-- Root cause: preview used only local demo auth and dashboard guarded only on `novapay-demo-auth`; real Supabase sessions were not used. A stale/late role could trigger the upload role banner.
-- CHECKS: `npm test` FAIL 169/170 on existing API no-store test; `npm run check:migrations` PASS 16/16; focused tests 5/5; changed JS syntax PASS; `git diff --check` PASS; protected diff empty.
-- UNVERIFIED: no real account credentials/JWT were used, so browser sign-in and live Documents role are not verified. Running server config probe showed Supabase configured and public URL host `zdiisgqvllbcomawnizp.supabase.co`.
-- NEXT: review diff and secret-safe status; make local `WIP-BROKEN:` checkpoint naming the unrelated no-store failure. Do not push.
-- PENDING: human may sign in with the existing account in browser and verify Documents shows owner actions; no new users created.
+- Current task: diagnose two failed document OCR runs on `fix-login-errors`; no push, no new users.
+- Config: current dotenv values were checked by presence only: `GEMINI_API_KEY` present, `DOCUMENT_OCR_MODEL` present, `AI_DAILY_USER_LIMIT=100`, `AI_DAILY_ORG_LIMIT=300`. Running server started after `.env` modification; `/api/status` confirms server/Supabase but does not expose OCR settings.
+- Findings: both named rows in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678` are `failed`, code `OCR_FIELD_VALIDATION`; no failure message field is stored. Latest usage rows are `ocr/invalid_response` (2). The validator maps field failures to HTTP 422. No provider HTTP code was persisted.
+- Cause: OCR returned data that failed strict local field/schema validation (possibly required currency/date/shape); exact invalid field is unavailable. This is not evidence of invalid key, model 404, quota 429, local budget, or PDF size error. No validation was weakened and no fix applied.
+- Logs: server stdout is attached to `/dev/ttys001`; no captured log file was found/read, so individual request-log lines remain unavailable. Need sanitized 422 log detail to identify exact validator failure.
+- Checks: `npm test` FAIL 169/170 (known API no-store assertion); migrations PASS 16/16; `node --check` and `git diff --check` PASS.
+- NEXT: review sanitized server output for the two request IDs or add safe validation-code logging in a separately approved fix; do not retry uploads yet. No push.
+- PENDING: user can provide the two sanitized server log lines (HTTP status and safe error code only) if recoverable.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3476,3 +3477,20 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-31 | ABOUT TO: verify final branch, worktree and .env tracking | WHY: confirm the login work remains on the requested local branch and no environment file is tracked.
 2026-10-31 | RESULT: final state is fix-login-errors; .env untracked; WORKLOG has the final status-check entry unstaged. NEXT: clarify separate code and handoff checkpoint hashes in the resume pointer.
 2026-10-31 | ABOUT TO: clarify checkpoint hashes in RESUME POINTER and commit the final journal state | WHY: distinguish the code checkpoint from the later docs-only checkpoint.
+2026-10-31 | ABOUT TO: inspect the resume pointer, config/status implementation, and server process/log locations | WHY: establish which running process/config and safe read-only diagnostic sources are available.
+2026-10-31 | ABOUT TO: inspect status route and running server output descriptors | WHY: determine which requested config metadata and processing-attempt log records can be verified without reading or printing secrets.
+2026-10-31 | ABOUT TO: query running server status and safely filter its process environment | WHY: report only presence and numeric daily limits without exposing key/model values.
+2026-10-31 | ABOUT TO: inspect dotenv startup path, Supabase read helper, schema fields, and available log files | WHY: distinguish missing runtime config from process-environment visibility and prepare metadata-only reads.
+2026-10-31 | RESULT: `/api/status` exposes Supabase but not OCR/model/budgets; dotenv is loaded only at server startup. Stdout is a terminal, with no accessible log file identified. NEXT: verify current dotenv config without printing values, compare file/process timestamps, and inspect metadata schema.
+2026-10-31 | ABOUT TO: read migration column definitions and safe current-config metadata | WHY: prepare targeted service-role selects and distinguish current .env from the already-running server.
+2026-10-31 | ABOUT TO: perform service-role read-only lookup for the existing owner, org, two document failure codes, and recent OCR usage statuses | WHY: identify actual persisted failure metadata without reading or printing OCR text or secret values.
+2026-10-31 | RESULT: Existing owner/org found; both named documents are failed with stored code OCR_FIELD_VALIDATION; no message is stored. Two recent ai_usage rows are ocr/invalid_response, with no error-code column. Current dotenv snapshot has Gemini key/model and limits 100/300; server started after .env mtime, but /api/status omits these settings. NEXT: run requested full test suite.
+2026-10-31 | ABOUT TO: run npm test for the requested diagnostic checkpoint | WHY: verify the existing suite and confirm the known no-store failure remains the only failure.
+2026-10-31 | RESULT: npm test FAIL 169/170; sole failure remains authenticated API client no-store assertion. NEXT: run explicit migration, JS syntax, and whitespace checks.
+2026-10-31 | ABOUT TO: run required migration check and JS syntax/whitespace checks | WHY: complete requested verification after diagnosing stored OCR failures.
+2026-10-31 | RESULT: migrations PASS 16/16; server document route and OCR service syntax PASS; git diff --check PASS. NEXT: write the failure diagnosis and explicit log limitation into continuity docs, then make a local WIP-BROKEN checkpoint.
+2026-10-31 | ABOUT TO: update CONTEXT, WORKLOG RESUME POINTER, TEST-REPORT, and DECISIONS with the OCR validation diagnosis | WHY: preserve row metadata, config evidence, missing log detail, and the known unrelated test failure for continuation.
+2026-10-31 | RESULT: CONTEXT/RESUME POINTER, TEST-REPORT, DECISIONS updated with validation diagnosis and unavailable-log limitation. NEXT: check docs/whitespace and ensure only continuity files are pending before WIP commit.
+2026-10-31 | ABOUT TO: inspect pending paths, context length, and whitespace | WHY: ensure the diagnostic checkpoint contains only docs and no .env or secrets.
+2026-10-31 | RESULT: only four continuity documents are pending; CONTEXT is 53 lines; diff check PASS; `.env` is not tracked. NEXT: stage docs and create local WIP-BROKEN checkpoint.
+2026-10-31 | ABOUT TO: stage the diagnosis and continuity docs | WHY: preserve the read-only findings and test outcomes in a local checkpoint.

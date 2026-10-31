@@ -1251,3 +1251,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-31 | `npm run check:migrations` | PASS | 16/16 migration files parse.
 2026-10-31 | `node --check` on `src/auth.js`, `src/landing.js`, `src/documents.js`, `server/test/login-auth.test.js`; `git diff --check`; protected-file diff | PASS | All four JS files parse, whitespace clean, protected diff empty.
 2026-10-31 | Real browser login and Documents owner role | UNVERIFIED | No existing-user credentials/JWT used; no new user created.
+
+2026-10-31 | Read-only service-role metadata query for aadi.owner org, two named documents, latest ai_usage | PASS | Owner org identified; both docs `failed` with `OCR_FIELD_VALIDATION` and no stored message; latest two routes `ocr`, statuses `invalid_response`; no content read or printed.
+2026-10-31 | Running config probe | PASS | Server up; startup predates neither .env change (process started later); current dotenv reports Gemini key/model present and limits 100/300; `/api/status` itself omits OCR settings.
+2026-10-31 | Server log lines for the two processing attempts | UNVERIFIED | stdout is attached to terminal `/dev/ttys001`; no captured log file found/read. Route/code evidence maps `OCR_FIELD_VALIDATION` to HTTP 422.
+2026-10-31 | `npm test` | FAIL | 169 passed, 1 failed: existing API client test expects missing `Cache-Control: no-store`.
+2026-10-31 | `npm run check:migrations` | PASS | 16/16.
+2026-10-31 | `node --check server/src/routes/documents.js`, `node --check server/src/services/documentOcr.js`, `git diff --check` | PASS | Syntax and whitespace checks clean.

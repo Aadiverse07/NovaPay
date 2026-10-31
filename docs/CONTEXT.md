@@ -2,44 +2,52 @@
 
 ## HEADER
 - Date/time: 2026-10-31 (Asia/Kolkata)
-- Branch: `fix-login-errors`, created from `origin/main`; no push
-- Current task: diagnose and repair Supabase login and fresh Documents role resolution
+- Branch: `fix-login-errors`; work performed in `/Users/aditya/Paypal_hackathon/NovaPay`; no push
+- Current task: diagnose two existing document processing failures; no users or records created
 
 ## DONE
-- Running `/api/status` and `/api/public-config` confirmed Supabase config is available; only URL host was recorded.
-- Wired pinned Supabase SDK and `src/auth.js` into `preview.html`; login calls Supabase when configured and exposes category-specific safe messages.
-- Wired Supabase auth and API client into `dashboard.html`; guard waits for initialized session.
-- Saved sessions call onboarding workspace restoration; existing membership is restored by the server onboarding service.
-- Documents clears stale role and fetches `/api/documents` on auth change and before upload; role comes from the authenticated API response.
-- Added `server/test/login-auth.test.js`; focused result PASS 5/5.
+- Running server is up on port 3000; `/api/status` confirms backend and Supabase configured.
+- Current dotenv config (values never printed): Gemini key present, OCR model present, user daily limit 100, org daily limit 300. `.env` mtime precedes running server start; startup imports `dotenv/config`.
+- Existing user is owner of org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678`.
+- Both named document rows are `failed`, with stored `extraction.errorCode=OCR_FIELD_VALIDATION`; no stored failure message. Two latest org usage rows are route `ocr`, status `invalid_response`; schema has no error-code column.
+- Route maps `OCR_FIELD_VALIDATION` to HTTP 422. `validateDocumentExtraction` is the likely failure stage after provider response; exact invalid field cannot be determined from persisted rows.
+- No code/config fix applied; validation was not weakened.
 
 ## IN PROGRESS
-- Review changes and create a local WIP-BROKEN checkpoint. No push.
+- None; waiting for sanitized server log detail before proposing a specific validator or prompt correction.
 
 ## NEXT STEPS
-1. Inspect final diff/status and confirm `.env` is not tracked or staged.
-2. Commit locally with a `WIP-BROKEN:` message because full `npm test` still has one unrelated failure.
-3. Human may verify browser login and owner role using the existing account; no new account was created.
+1. Obtain the two safe server log lines or request IDs with HTTP status and error code only; do not include document text or secrets.
+2. Identify exact schema/date/currency validation failure; only then consider a targeted fix and test.
+3. Avoid re-upload/reprocessing until failure cause is known.
 
 ## USER ACTIONS PENDING
-- Optional browser check: sign in with the existing account, open Documents, verify owner actions appear. No credentials are requested or stored here.
+- If available, provide sanitized log records for the two `/api/documents/:id/process` requests (status/code only; no document content or credentials).
 
 ## LIVE STATE
-- API config probe: Supabase configured; public URL host `zdiisgqvllbcomawnizp.supabase.co`.
-- No live Supabase user login or JWT check was performed; no users or database rows created.
-- Secrets and key values are not recorded.
+- Running server process is up; started after `.env` mtime. `/api/status` does not expose OCR model/budget settings; current dotenv snapshot is present/100/300.
+- Existing org only was queried read-only. No documents, users, or database rows changed.
+- Server request logs go to terminal `/dev/ttys001`; no log file was identified or read.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused login/auth/role tests | PASS | `node --test server/test/login-auth.test.js`, 5/5 |
-| Full suite | FAIL | `npm test`, 169/170; `authenticated API client bypasses conditional HTTP caching` expects missing `Cache-Control: no-store` |
-| Migrations | PASS | `npm run check:migrations`, 16/16 |
-| Changed JS syntax | PASS | `node --check` on 4 changed JS files |
-| Whitespace | PASS | `git diff --check` |
-| Protected-file diff | PASS | empty for protected paths |
-| Real browser login / Documents owner role | UNVERIFIED | no real credentials/JWT used |
+| `npm test` | FAIL | 169/170; known `authenticated API client bypasses conditional HTTP caching` expects `Cache-Control: no-store` |
+| `npm run check:migrations` | PASS | 16/16 migrations parse |
+| `node --check` | PASS | `server/src/routes/documents.js`, `server/src/services/documentOcr.js` |
+| `git diff --check` | PASS | Clean |
+| Document A and B DB state | PASS (read-only evidence) | Both `failed`, `OCR_FIELD_VALIDATION`; no stored message |
+| OCR usage | PASS (read-only evidence) | Two latest rows `ocr/invalid_response`; error code not in schema |
+| Exact provider response/error and log lines | UNVERIFIED | No provider status saved; live stdout unavailable as a file |
 
 ## KNOWN ISSUES AND RISKS
-- Full-suite failure is unrelated to login: API client response lacks expected `Cache-Control: no-store`; not changed in this task.
-- Browser sign-in with the existing user remains unverified.
+- A and B have the same local validation failure; exact rejected field is not persisted or logged in an accessible file. Do not relax schema/arithmetic checks to make these pass.
+- Full suite retains unrelated no-store failure.
+
+## LESSONS LEARNED
+- Never print `.env` values, keys, passwords, or JWTs; presence and approved numeric limits only.
+- OCR extracted output is untrusted; preserve strict validation and use sample documents only.
+- Failed document rows currently persist only an error code; usage rows persist `invalid_response` without provider/validation error code.
+
+## DO NOT
+- Do not push, create users, reprocess these documents, print secrets, or weaken validation.
