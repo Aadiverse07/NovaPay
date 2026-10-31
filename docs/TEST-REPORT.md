@@ -1275,3 +1275,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 | `npm run check:migrations` | PASS | 16/16.
 2026-11-01 | `node --check` six changed JS files; `git diff --check`; protected-file diff | PASS | Syntax and whitespace clean; protected diff empty.
 2026-11-01 | No-upload constraint | PASS | No upload/reprocess/API POST performed; no records changed.
+2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known authenticated API client test expects missing `Cache-Control: no-store`.
+2026-11-01 | `npm run check:migrations` | PASS | 16/16 migrations parse.
+2026-11-01 | `node --check` on every JS file changed from origin/main; `git diff --check`; protected-file diff | PASS | All syntax/whitespace checks clean; protected diff empty.
