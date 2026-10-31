@@ -72,3 +72,6 @@
 - `git log --oneline -5`
 - `npm test`
 - `npm run check:migrations`
+
+## Current fix checkpoint (2026-10-31)
+Branch `fix-main-no-store` is based on `origin/main`; local `main` untouched. Fixed authenticated API cache bypass by adding `cache: "no-store"` to the API client and adding global `Cache-Control: no-store` middleware to the Express API chain; the legacy root server also sets it for `/api`. Added an integration assertion for `/api/events`. The prior failure was `authenticated API client bypasses conditional HTTP caching`, 164/165. After fix: npm test 165/165 PASS, migrations 16/16 PASS, node --check 4 JS files PASS, git diff --check PASS, protected-file diff empty. Root `server.js` remains; npm start uses `server/index.js`.

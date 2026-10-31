@@ -38,6 +38,7 @@ const read=q=>new Promise((resolve,reject)=>{let body='',tooLarge=false;q.on('da
 const MIME={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.webm':'video/webm','.mp4':'video/mp4'};
 function staticPath(urlPath){let decoded;try{decoded=decodeURIComponent(urlPath)}catch(e){return null}decoded=decoded.replace(/^\/+/, '');if(!decoded||decoded.includes('\\')||decoded.split('/').some(x=>!x||x.startsWith('.')))return null;const parts=decoded.split('/');if(parts.length===1&&['preview.html','dashboard.html'].includes(decoded))return path.join(__dirname,decoded);if(parts.length===2&&(parts[0]==='src'||parts[0]==='assets')){const ext=path.extname(parts[1]);if((parts[0]==='src'&&['.js','.css','.svg'].includes(ext))||(parts[0]==='assets'&&['.png','.webm','.mp4'].includes(ext)))return path.join(__dirname,...parts)}return null}
 http.createServer(async(q,s)=>{
+  const apiPath=q.url.split('?')[0];if(apiPath==='/api'||apiPath.startsWith('/api/'))s.setHeader('Cache-Control','no-store');
   const send=(c,o)=>{s.writeHead(c,{'Content-Type':'application/json'});s.end(JSON.stringify(o))};
   const u=new URL(q.url,'http://x').pathname;
   try{

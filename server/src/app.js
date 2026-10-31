@@ -44,6 +44,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   const runAnomalyScan = createAnomalyService({ repos, config });
 
   app.disable('x-powered-by');
+  app.use('/api', (_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
   app.locals.startWebhookWorker = () => startWebhookWorker({ repos, paypal });
   app.locals.startAnomalyWorker = () => startAnomalyWorker({ repos, runAnomalyScan, intervalMs: config.ANOMALY_SCAN_INTERVAL_MS || 21600000 });
   app.use(requestId);

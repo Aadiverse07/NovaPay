@@ -1235,3 +1235,11 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `node --check server/src/routes/documents.js` and `node --check server/test/documents-upload.test.js` | PASS | Both changed JavaScript files parse.
 2026-10-28 | `git diff --check` | PASS | No whitespace errors.
 2026-10-28 | Prior post-delete HTTP 200 root cause | UNRESOLVED | It was not reproduced. Fresh direct authenticated Storage GET returned 400 JSON/88 bytes with CF cache BYPASS; no cache-control/age; Storage list count 0. Prior response metadata was not retained.
+
+2026-10-31 — `npm test` on fix-main-no-store — PASS — 165 passed, 0 failed.
+
+2026-10-31 — `npm test` on fix-main-no-store before fix — FAIL — 164/165; `authenticated API client bypasses conditional HTTP caching` expected fetch cache option `no-store` for `/api/events`, received undefined.
+2026-10-31 — `npm run check:migrations` — PASS — 16 migrations parsed.
+2026-10-31 — `node --check` on changed JS (`server.js`, `server/src/app.js`, `server/test/routes.test.js`, `src/api-client.js`) — PASS — 4 files.
+2026-10-31 — `git diff --check` — PASS — no whitespace errors.
+2026-10-31 — protected-file diff vs `origin/main` — PASS — empty.
