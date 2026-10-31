@@ -130,7 +130,9 @@ test('legacy API flow handles valid, invalid, unauthenticated, and repeated requ
     assert.deepEqual(await invalidWebhook.json(), { error: 'Webhook event type is missing or invalid.', code: 'LEGACY_POST_API_WEBHOOK_400' });
     const replayedWebhook = await fetch(`${base}/api/webhook`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: 'WEBHOOK-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' }) });
     assert.deepEqual(await replayedWebhook.json(), { ok: true, verification: 'UNVERIFIED' });
-    const events = await (await request(`${base}/api/events`)).json();
+    const eventsResponse = await request(`${base}/api/events`);
+    assert.equal(eventsResponse.headers.get('cache-control'), 'no-store');
+    const events = await eventsResponse.json();
     assert.deepEqual(events, { events: [], calls: [] });
     const status = await (await fetch(`${base}/api/status`)).json();
     assert.deepEqual(status.captures, []);

@@ -1,11 +1,10 @@
 ## RESUME POINTER
-- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`; latest local checkpoint `7b6ab23`, not pushed.
-- DONE: org-scoped GET added; focused tests 6/6; full npm test 165/165; migrations 16/16; node --check 2 changed JS files; git diff --check PASS.
-- Live checks: B retrieval 200/1 citation not referencing org A; B RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage 400 denied; A positive retrieval 200/1 citation.
-- Delete: API 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1; post-delete direct Storage GET 400 JSON/88 bytes, CF BYPASS, no cache-control/age.
-- Diagnosis: current object deletion works; previous HTTP 200 was not reproduced and its cause is undetermined. Storage objects SQL count UNVERIFIED (no local SQL client/CLI/connection). Storage code checks DELETE response.ok. No fix 2 applied.
-- Next: review staged paths; keep pre-existing `.env.example` unstaged; WIP-commit locally; never push.
-- Pending: optional user-provided SQL path if exact `storage.objects` SQL count is still needed.
+- Current task: restore API no-store behavior; branch `fix-main-no-store`, based on `origin/main`; local `main` untouched.
+- DONE: browser client API fetches use `cache: no-store`; Express app applies `Cache-Control: no-store` before API middleware/routes; legacy root server sets the same header for `/api` paths. Integration assertion covers `/api/events`.
+- DIAGNOSIS: failing test was `authenticated API client bypasses conditional HTTP caching`, calling `/api/events`. Root cause was no cache option on fetch and no central API response middleware. Document routes were mounted inside the shared `/api` chain. `npm start` uses `server/index.js`; root `server.js` is a separate legacy entrypoint and was not deleted.
+- CHECKS: npm test PASS 165/165; migrations PASS 16/16; node --check PASS for 4 changed JS files; git diff --check PASS; protected-file diff empty.
+- NEXT: commit locally, push only `fix-main-no-store`, open PR to main; do not start Phase 7.
+
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3425,3 +3424,21 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: update ignore rules and issue a no-op cached removal if applicable; WHY: prevent future .env variants from entering Git without excluding .env.example.
 2026-10-28 | RESULT: PASS; .env was already untracked and ignored; added .env.* ignore rule with !.env.example exception. NEXT: commit the ignore-rule hardening as requested.
 2026-10-28 | ABOUT TO: commit .gitignore and WORKLOG.md as Stop tracking .env; WHY: record and preserve the safe ignore rules.
+2026-10-31 | RESULT: PASS; fix-main-no-store is based on origin/main. Pending doc restore conflicts resolved by retaining origin/main versions; re-recording current task state here.
+2026-10-31 | ABOUT TO: run npm test on fix-main-no-store; WHY: reproduce and identify the remaining main test failure and its route.
+2026-10-31 | RESULT: reproduced `npm test` FAIL 164/165; failing test is authenticated API client bypasses conditional HTTP caching. NEXT: trace test URL and all API cache middleware/mount order, including root server.js.
+2026-10-31 | ABOUT TO: inspect API client test, API cache-control middleware, root server.js, and document route mounting; WHY: identify the precise bypass causing missing no-store.
+2026-10-31 | RESULT: diagnosis: client test calls `/api/events`; API client omitted fetch `cache` option; server `createApp` has no Cache-Control middleware. `/api/documents` is mounted inside the same `/api` chain, not outside it. `npm start` uses `server/index.js`; root `server.js` is a separate legacy HTTP server and is not the test entry. NEXT: add client no-store, central API response middleware, and an integration assertion.
+2026-10-31 | ABOUT TO: edit API client, central Express app, and route integration test; WHY: ensure browser requests bypass cache and every active Express API response emits Cache-Control: no-store.
+2026-10-31 | ABOUT TO: run full npm test after cache-control fix; WHY: verify existing API-client assertion and new server response-header assertion without weakening tests.
+2026-10-31 | RESULT: npm test PASS 165/165 after Express/client changes. Root `server.js` is a separate legacy entrypoint, not used by `npm start`; because it can still serve `/api`, the response-header requirement must cover it too. NEXT: add the same early no-store header to that entrypoint, then rerun all gates.
+2026-10-31 | ABOUT TO: add early Cache-Control: no-store in the legacy root server entrypoint; WHY: make the policy apply whichever supported server entrypoint handles an /api request.
+2026-10-31 | ABOUT TO: rerun npm test after extending no-store policy to the legacy server; WHY: validate the complete final change set.
+2026-10-31 | RESULT: npm test PASS 165/165, 0 failed after all changes. NEXT: record test and run migrations, changed-JS syntax, whitespace and protected-file checks.
+2026-10-31 | ABOUT TO: execute remaining requested verification gates; WHY: establish the branch is ready before commit and push.
+2026-10-31 | RESULT: requested test and static gates all pass. NEXT: stage intended code/docs (confirm no .env), WIP-commit, then push only fix-main-no-store and open PR.
+2026-10-31 | ABOUT TO: update CONTEXT, TEST-REPORT and DECISIONS with diagnosis/fix/results; WHY: preserve verified checkpoint before publishing.
+2026-10-31 | RESULT: updated CONTEXT/WORKLOG/TEST-REPORT/DECISIONS; status contains only those docs plus three code/test files; no .env tracked or staged. NEXT: local WIP commit.
+2026-10-31 | ABOUT TO: stage the eight intended files and make a local WIP commit; WHY: checkpoint the verified fix before the authorized push.
+2026-10-31 | RESULT: local WIP commit f611f5f created with code, tests, and docs. NEXT: commit this result/push-readiness record, verify clean status, then push only fix-main-no-store.
+2026-10-31 | ABOUT TO: create a local journal checkpoint before the authorized push; WHY: keep push readiness and the successful test state in the committed handoff.
