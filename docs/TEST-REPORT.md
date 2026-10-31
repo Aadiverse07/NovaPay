@@ -1258,3 +1258,12 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-31 | `npm test` | FAIL | 169 passed, 1 failed: existing API client test expects missing `Cache-Control: no-store`.
 2026-10-31 | `npm run check:migrations` | PASS | 16/16.
 2026-10-31 | `node --check server/src/routes/documents.js`, `node --check server/src/services/documentOcr.js`, `git diff --check` | PASS | Syntax and whitespace checks clean.
+
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | FAIL | 12/14; first diagnostic helper could not infer Zod v4 input type from the issue object.
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | FAIL | 14/17; a stale input variable caused ReferenceError in malformed amount/missing field cases.
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | FAIL | 0/2 test files loaded due syntax typo during mechanical correction.
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | PASS | 17 passed, 0 failed after repair.
+2026-10-31 | `npm test` | FAIL | 173 passed, 1 failed: known authenticated API client missing `Cache-Control: no-store`.
+2026-10-31 | `npm run check:migrations` | PASS | 16/16.
+2026-10-31 | `node --check` on six changed JS files; `git diff --check`; protected-file diff against origin/main | PASS | All syntax checks and whitespace clean; protected diff empty.
+2026-10-31 | API upload/reprocess of existing samples | UNVERIFIED | No retry endpoint; native file picker was denied before file selection; server log recorded zero document API requests. No sample uploaded.

@@ -1,12 +1,10 @@
 ## RESUME POINTER
-- Current task: diagnose two failed document OCR runs on `fix-login-errors`; no push, no new users.
-- Config: current dotenv values were checked by presence only: `GEMINI_API_KEY` present, `DOCUMENT_OCR_MODEL` present, `AI_DAILY_USER_LIMIT=100`, `AI_DAILY_ORG_LIMIT=300`. Running server started after `.env` modification; `/api/status` confirms server/Supabase but does not expose OCR settings.
-- Findings: both named rows in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678` are `failed`, code `OCR_FIELD_VALIDATION`; no failure message field is stored. Latest usage rows are `ocr/invalid_response` (2). The validator maps field failures to HTTP 422. No provider HTTP code was persisted.
-- Cause: OCR returned data that failed strict local field/schema validation (possibly required currency/date/shape); exact invalid field is unavailable. This is not evidence of invalid key, model 404, quota 429, local budget, or PDF size error. No validation was weakened and no fix applied.
-- Logs: server stdout is attached to `/dev/ttys001`; no captured log file was found/read, so individual request-log lines remain unavailable. Need sanitized 422 log detail to identify exact validator failure.
-- Checks: `npm test` FAIL 169/170 (known API no-store assertion); migrations PASS 16/16; `node --check` and `git diff --check` PASS.
-- NEXT: review sanitized server output for the two request IDs or add safe validation-code logging in a separately approved fix; do not retry uploads yet. No push.
-- PENDING: user can provide the two sanitized server log lines (HTTP status and safe error code only) if recoverable.
+- Current task: fix OCR validation on `fix-ocr-validation`, based on `fix-login-errors`; no push, no users created.
+- DONE: validator errors now identify safe field path/rule only; failed rows store errorMessage + validationIssues; 422 JSON returns sanitized fields. Normalization accepts fenced/wrapped JSON, numeric amounts, valid comma grouping, ₹ amounts (infers INR only if no explicit currency), and `DD Mon YYYY` dates. Strict required fields, ISO currency codes, symbol/currency match and arithmetic warnings remain.
+- TESTS: focused OCR/processing PASS 17/17. `npm test` FAIL 173/174 only known API no-store assertion. Migrations 16/16 PASS; syntax/diff checks PASS; protected-file diff empty.
+- LIVE SAMPLE: Aadi existing rows remain failed with generic OCR_FIELD_VALIDATION; old rows have no message. No retry route exists. Sample A upload was authorized but not performed: native Chrome control permission denied before file selection; sanitized new-server log has no document API requests. No A/B field names recovered.
+- NEXT: human selects only `/Users/aditya/Downloads/Invoice_A_TEST-001_correct.pdf` in the existing Aadi owner dashboard once, after confirming updated server is up; read only field/rule diagnostics. Do not upload either sample more than once.
+- PENDING: browser/OS file picker permission must be available for that one API upload; server stdout is captured in `/tmp/novapay-ocr-diagnostic.log`.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3494,3 +3492,79 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-31 | ABOUT TO: inspect pending paths, context length, and whitespace | WHY: ensure the diagnostic checkpoint contains only docs and no .env or secrets.
 2026-10-31 | RESULT: only four continuity documents are pending; CONTEXT is 53 lines; diff check PASS; `.env` is not tracked. NEXT: stage docs and create local WIP-BROKEN checkpoint.
 2026-10-31 | ABOUT TO: stage the diagnosis and continuity docs | WHY: preserve the read-only findings and test outcomes in a local checkpoint.
+2026-10-31 | RESULT: diagnostic handoff committed locally as 851576c on fix-login-errors; no push or data changes. NEXT: obtain safe 422 validator detail before proposing a targeted OCR correction.
+2026-10-31 | ABOUT TO: create fix-ocr-validation from fix-login-errors in the primary repo | WHY: isolate the requested OCR diagnostics/fix without creating a worktree or pushing.
+2026-10-31 | RESULT: created fix-ocr-validation from fix-login-errors in primary repo; existing uncommitted WORKLOG carried over. NEXT: inspect OCR parser/validation errors, route failure storage, tests, and sample PDF availability.
+2026-10-31 | ABOUT TO: inspect validator, route, related tests, retry path, and local sample filenames | WHY: identify a safe minimal cause/fix and whether the requested API retry/reproduction is possible.
+2026-10-31 | ABOUT TO: verify local sample PDF availability and current dashboard user without exposing credentials | WHY: determine whether the user-authorized one-time API reproduction can run with the existing owner session.
+2026-10-31 | RESULT: no sample PDF with either requested filename exists inside the repo; checking the approved project folder yielded the available matching paths only. NEXT: inspect the already-open dashboard session metadata without exposing tokens.
+2026-10-31 | ABOUT TO: read the current dashboard view in Chrome | WHY: see whether the existing browser session is the fixed owner and whether its UI provides a supported retry path.
+2026-10-31 | RESULT: existing Dashboard tab is signed in as Aadi owner, but UI shows no loaded rows and reports file selection without upload; still no server retry control visible. NEXT: locate the named sample file and verify the browser session metadata through a filtered API read.
+2026-10-31 | ABOUT TO: search the user project area for the exact sample PDF filename | WHY: the API repro is authorized only once per named file and should use that exact sample.
+2026-10-31 | RESULT: no named PDFs exist in workspace/home search; no process retry route exists (process accepts only uploaded state). Dashboard currently shows Aadi owner but no stable retry control. NEXT: inspect error response handling and provider API, then reprocess the existing stored sample objects once each through a metadata-only diagnostic harness.
+2026-10-31 | ABOUT TO: inspect API error serialization and OCR provider signature | WHY: implement field-only validation diagnostics without leaking extracted values or provider bodies.
+2026-10-31 | RESULT: dashboard is already logged in as Aadi owner; selected file shown is B, not A. No local matching PDFs were found, and app has no retry endpoint. NEXT: inspect document upload/download API shapes and exposed auth helpers before choosing the single authorized reproduction route.
+2026-10-31 | ABOUT TO: inspect document API upload/download handling and browser auth surface | WHY: reuse the existing stored A sample through the documented API without exposing the owner token or document bytes.
+2026-10-31 | RESULT: API error middleware currently emits only code/message; processing catch persists only errorCode. Validator has a single generic Zod failure message. NEXT: add value-free field/rule diagnostics end-to-end before the one authorized reproduction.
+2026-10-31 | ABOUT TO: edit OCR validator, processing failure storage, error JSON, and focused tests | WHY: expose only field paths and rule categories while keeping provider values/text private.
+2026-10-31 | RESULT: validator now builds value-free field/rule details; process failures persist those details; structured API errors return sanitized fields. NEXT: add tests proving useful diagnostics without raw values/provider text.
+2026-10-31 | ABOUT TO: extend OCR validator and route tests for field paths, rules, malformed JSON, and secret-value exclusion | WHY: prevent diagnostics from leaking document/provider values and keep validation failures actionable.
+2026-10-31 | RESULT: tests now assert field/rule only details for type, date, currency, unexpected field, malformed JSON; route persists details and returns safe 422 fields. NEXT: run focused OCR and processing tests before the authorized single-file reproduction.
+2026-10-31 | ABOUT TO: run focused document OCR and processing tests | WHY: validate field diagnostics and confirm error responses never include rejected values.
+2026-10-31 | RESULT: focused tests FAIL 12/14; Zod v4 omits input values from issues, so type diagnostics said got_undefined. Request test also fails for that reason. NEXT: derive input type from the parsed object in memory without including the value, then rerun focused tests.
+2026-10-31 | ABOUT TO: fix safe type reporting by looking up the rejected input type only | WHY: provide accurate field/rule diagnostics without returning the rejected data.
+2026-10-31 | RESULT: error type now derives from the in-memory input at the issue path and exposes only the type enum. NEXT: rerun focused validator/route tests.
+2026-10-31 | ABOUT TO: rerun focused OCR and document-processing tests | WHY: confirm accurate safe types and API/storage diagnostics.
+2026-10-31 | RESULT: focused OCR/processing tests PASS 14/14. No raw values occur in diagnostic assertions. NEXT: update source without loosening checks, then run one API upload of existing sample A after restarting the local server so the real 422 fields are surfaced.
+2026-10-31 | ABOUT TO: identify which page script owns the current selected-file preview message | WHY: confirm the file input will call the real API upload path rather than a nonfunctional demo handler.
+2026-10-31 | ABOUT TO: verify exact listener PID and startup command before restarting local API | WHY: ensure only the NovaPay port-3000 process is stopped so the diagnostic code can serve the authorized sample upload.
+2026-10-31 | RESULT: PID probe found two lines, but zsh treated them as one list and `ps` rejected the combined argument; no process was stopped. NEXT: read each PID line separately.
+2026-10-31 | ABOUT TO: recheck each port-3000 PID individually | WHY: verify the exact npm/node server processes before restart.
+2026-10-31 | ABOUT TO: stop the verified NovaPay node PID on port 3000 | WHY: load the new safe OCR diagnostics into the server before the one authorized API upload.
+2026-10-31 | RESULT: verified NovaPay node process received SIGTERM. NEXT: start server on port 3000 with output redirected to a temporary safe log for the diagnostic upload.
+2026-10-31 | ABOUT TO: start updated npm server with log capture | WHY: serve the current diagnostics code and retain only API request status lines for the authorized sample run.
+2026-10-31 | ABOUT TO: verify the updated local API responds and report only configured/up booleans | WHY: confirm current code is serving before using the existing owner browser session.
+2026-10-31 | RESULT: `/api/status` unavailable after restart attempt. NEXT: inspect temporary log through a sanitizer that emits only startup failure category and safe config field names.
+2026-10-31 | ABOUT TO: classify server startup log without displaying arbitrary lines | WHY: identify startup blocker while preventing any accidental env-value disclosure.
+2026-10-31 | ABOUT TO: check whether the background npm child is alive or holding port 3000 | WHY: determine why the current server endpoint did not respond after restart.
+2026-10-31 | RESULT: previous background start exited without a server; sanitized log shows no startup error and no start line. NEXT: run npm start in a persistent command session with output redirected, then verify status.
+2026-10-31 | ABOUT TO: start npm server in a persistent session with all stdout/stderr redirected | WHY: keep local server alive and avoid displaying startup environment details.
+2026-10-31 | ABOUT TO: verify the persistent server session responds | WHY: confirm the updated diagnostic implementation is live before the authorized sample API upload.
+2026-10-31 | RESULT: updated server `/api/status` PASS 200; browser shows existing Aadi owner session and both failed docs. No retry endpoint; local A sample exists in Downloads. NEXT: select that exact A sample once, which triggers the authenticated API upload/process once.
+2026-10-31 | ABOUT TO: choose `/Users/aditya/Downloads/Invoice_A_TEST-001_correct.pdf` in the existing owner dashboard | WHY: user authorized one new API upload only when no retry path exists; selecting this file triggers exactly one upload and OCR attempt.
+2026-10-31 | RESULT: `getApp` cannot access native Chrome controls because computer-use permissions are not granted; no upload occurred. NEXT: check whether a dedicated browser tool can submit the already-authorized sample through the local API.
+2026-10-31 | ABOUT TO: inspect enabled browser/Playwright tools | WHY: determine whether the requested one-time API upload can be performed without bypassing the denied native UI permission.
+2026-10-31 | RESULT: native UI upload is blocked by the computer-use permission gate; no upload occurred. No dedicated browser automation tool is enabled. NEXT: apply safe deterministic normalization covered by tests, then complete checks and report the real sample re-run as blocked rather than claim it.
+2026-10-31 | ABOUT TO: check the runtime currency-code support for strict ISO validation | WHY: normalize only recognized INR amount markers and continue rejecting invalid currency codes.
+2026-10-31 | RESULT: runtime provides Intl currency codes including USD and INR; native UI/API authentication unavailable, so no real sample was uploaded. NEXT: normalize only safe output formatting and add tests; leave real sample re-run UNVERIFIED.
+2026-10-31 | ABOUT TO: add strict-safe normalization for JSON wrappers, numeric/grouped/rupee amounts, common month dates, and ISO currencies | WHY: address likely provider formatting differences without hiding invalid currencies or arithmetic discrepancies.
+2026-10-31 | RESULT: normalization now handles JSON wrappers, numeric/grouped/₹ amounts, and `DD Mon YYYY` while retaining ISO currency and arithmetic checks; tests added for nulls, wrong currency, mismatch, malformed JSON, and required fields. NEXT: run focused OCR tests.
+2026-10-31 | ABOUT TO: run focused OCR validator tests after normalization changes | WHY: ensure formatting tolerance does not weaken currency or wrong-total detection.
+2026-10-31 | RESULT: focused suite exposed 3 additional failures after normalization: exceptions in several custom validations caused missing diagnostics and one route HTTP 500. NEXT: inspect only error class/code and field names from isolated synthetic inputs.
+2026-10-31 | ABOUT TO: isolate synthetic currency/date/required-field cases without printing rejected values | WHY: find the regression behind the test failures safely.
+2026-10-31 | RESULT: invalid currency/mismatched rupee diagnostics work; malformed amount and missing field throw ReferenceError. NEXT: inspect safe source location only.
+2026-10-31 | ABOUT TO: read validator ReferenceError stack location without printing data | WHY: fix the helper regression before rerunning tests.
+2026-10-31 | RESULT: ReferenceError is from a stale variable name at documentOcr.js:186 (`input` instead of `normalized.value`); no data was printed. NEXT: correct the variable reference.
+2026-10-31 | ABOUT TO: replace stale validation input variable | WHY: fix a mechanical regression introduced while threading safe input types into diagnostics.
+2026-10-31 | RESULT: safe diagnostics now read normalized.value. NEXT: rerun focused OCR and processing tests.
+2026-10-31 | ABOUT TO: rerun focused document OCR and processing tests | WHY: verify custom currency/amount/missing-field rules and route persistence.
+2026-10-31 | RESULT: focused tests could not load due a broad replacement changing the helper parameter to invalid syntax; no tests ran. NEXT: restore the helper parameter and retain normalized.value only at the call site.
+2026-10-31 | ABOUT TO: repair helper declaration after syntax failure | WHY: keep the safe-type helper signature valid.
+2026-10-31 | RESULT: helper signature restored and call passes normalized input. NEXT: rerun focused tests.
+2026-10-31 | ABOUT TO: rerun focused OCR/processing tests | WHY: verify diagnostics and normalization after syntax repair.
+2026-10-31 | RESULT: focused OCR and processing tests PASS 17/17, including safe field diagnostics, amount/date normalization, invalid currency, malformed JSON, and wrong-total warning. NEXT: attempt an in-tab screenshot to locate the file control without requesting or printing any credentials.
+2026-10-31 | ABOUT TO: inspect the existing browser tab screenshot | WHY: use visible page state to determine whether the authorized sample can be sent through the UI API path despite native app permission denial.
+2026-10-31 | RESULT: in-tab screenshot works; Choose a file button is visible; current selected file is B. NEXT: click the visible button and choose only sample A once.
+2026-10-31 | ABOUT TO: open the visible file picker for the already-authorized sample A | WHY: submit one PDF through the owner dashboard’s real API handler to surface field diagnostics.
+2026-10-31 | RESULT: native Chrome file picker was blocked by system computer-use permissions; no file was chosen. NEXT: verify via sanitized server access log that no upload occurred, then run final repository checks and commit.
+2026-10-31 | ABOUT TO: inspect only document API method/status entries from temporary server log | WHY: confirm the permission block caused no accidental upload or processing request.
+2026-10-31 | RESULT: sanitized server log contains zero document API requests after restart; no upload/process attempt occurred. NEXT: run full npm test on fix-ocr-validation.
+2026-10-31 | ABOUT TO: run npm test | WHY: verify OCR diagnostics and normalization against the full repository suite.
+2026-10-31 | RESULT: npm test FAIL 173/174; sole known API no-store failure, all new OCR tests pass. NEXT: run explicit migrations, syntax, whitespace, and protected-file checks.
+2026-10-31 | ABOUT TO: run migration check, syntax checks, whitespace and protected-file diff | WHY: complete requested final validation gates.
+2026-10-31 | RESULT: `npm test` FAIL 173/174 (known no-store test); migrations 16/16 PASS; 6 JavaScript files parse; diff whitespace PASS; protected-file diff empty. NEXT: document code fix, test history, and blocked live sample upload, then commit locally.
+2026-10-31 | ABOUT TO: update CONTEXT/RESUME POINTER, append-only test report and decisions | WHY: record exact source changes, checks, and the live upload permission blocker for the next agent.
+2026-10-31 | RESULT: docs now record normalization, strict checks, complete test outcomes, and the blocked real sample upload; RESUME POINTER names the exact next user action. NEXT: verify final branch/status, no `.env`, whitespace, protected paths, then WIP-commit.
+2026-10-31 | ABOUT TO: run final branch/secret-safe status and docs/protected-file checks | WHY: confirm only intended implementation/tests/continuity files are pending before checkpoint.
+2026-10-31 | RESULT: branch fix-ocr-validation; only intended 9 code/test/docs files pending; `.env` untracked; CONTEXT 54 lines; diff check PASS; protected-file diff empty. NEXT: stage exact files and commit with known suite failure documented.
+2026-10-31 | ABOUT TO: stage OCR diagnostic/normalization code, tests, and continuity docs | WHY: make a local checkpoint without secrets or protected files.

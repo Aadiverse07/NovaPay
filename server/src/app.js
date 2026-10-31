@@ -104,7 +104,11 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
     const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path.startsWith('/api/documents') || req.path === '/api/fx/convert' || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path.startsWith('/api/funds') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
     if (structuredRoute) {
       const code = /^[A-Z][A-Z0-9_]+$/.test(error.code || '') ? error.code : (status === 413 ? 'BODY_TOO_LARGE' : error.databaseCode ? ({ '22003': 'REFUND_AMOUNT_EXCEEDED', '22023': 'VALIDATION_ERROR', '23505': 'CONFLICT', '23514': 'LEDGER_UNBALANCED', P0002: 'NOT_FOUND' })[error.databaseCode] : status === 400 ? 'BAD_JSON' : 'INTERNAL_ERROR');
-      return res.status(status).json({ error: { code, message: status >= 500 ? 'The request could not be completed.' : message } });
+      const fields = Array.isArray(error.validationIssues) ? error.validationIssues.slice(0, 24).filter((item) =>
+        item && typeof item.path === 'string' && /^[a-z][a-z0-9_.\[\]]{0,120}$/.test(item.path) &&
+        typeof item.rule === 'string' && /^[a-z][a-z0-9_]{0,80}$/.test(item.rule)
+      ).map(({ path, rule }) => ({ path, rule })) : undefined;
+      return res.status(status).json({ error: { code, message: status >= 500 ? 'The request could not be completed.' : message, ...(fields?.length ? { fields } : {}) } });
     }
     return res.status(status).json({ error: message });
   });

@@ -156,7 +156,7 @@ test('same-org hash match marks a duplicate rejected and writes a rejection audi
   assert.equal(state.calls.some((call) => call.name === 'claim_document_processing'), false);
 });
 
-test('viewer cannot process documents and malformed provider output is stored only as a safe error code', async (t) => {
+test('viewer cannot process documents and malformed provider output stores safe validation diagnostics', async (t) => {
   const viewer = await setup(t);
   assert.equal((await viewer.send('viewer-token')).status, 403);
   assert.equal(viewer.providerCalls(), 0);
@@ -165,8 +165,20 @@ test('viewer cannot process documents and malformed provider output is stored on
   const response = await invalid.send();
   assert.equal(response.status, 502);
   assert.equal(invalid.doc.status, 'failed');
-  assert.deepEqual(invalid.doc.extraction, { errorCode: 'OCR_INVALID_RESPONSE' });
+  assert.equal(invalid.doc.extraction.errorCode, 'OCR_INVALID_RESPONSE');
+  assert.equal(invalid.doc.extraction.errorMessage, 'OCR fields failed validation: document: invalid_json');
+  assert.deepEqual(invalid.doc.extraction.validationIssues, [{ path: 'document', rule: 'invalid_json' }]);
+  assert.deepEqual((await response.json()).error.fields, [{ path: 'document', rule: 'invalid_json' }]);
   assert.equal(invalid.calls.find((call) => call.name === 'complete_ai_usage').args.p_status, 'invalid_response');
+
+  const invalidField = await setup(t, { ocrResult: { text: JSON.stringify({ ...extraction, vendorName: 987654321 }), model: 'gemini-3.5-flash-lite' } });
+  const fieldResponse = await invalidField.send();
+  assert.equal(fieldResponse.status, 422);
+  const fieldBody = await fieldResponse.json();
+  assert.deepEqual(fieldBody.error.fields, [{ path: 'vendor_name', rule: 'expected_string_got_number' }]);
+  assert.equal(JSON.stringify(fieldBody).includes('987654321'), false);
+  assert.deepEqual(invalidField.doc.extraction.validationIssues, fieldBody.error.fields);
+  assert.equal(invalidField.doc.extraction.errorMessage.includes('987654321'), false);
 });
 
 test('accountant confirmation and rejection are org-scoped, state-checked, and audited; viewer cannot review', async (t) => {

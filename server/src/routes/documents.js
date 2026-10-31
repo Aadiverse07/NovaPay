@@ -149,8 +149,13 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
           }).catch(() => {});
           usageFinalized = true;
         }
+        const failure = { errorCode: error?.code || 'OCR_FAILED' };
+        if (Array.isArray(error?.validationIssues)) {
+          failure.errorMessage = error.message;
+          failure.validationIssues = error.validationIssues;
+        }
         await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processing' }), {
-          status: 'failed', extraction: { errorCode: error?.code || 'OCR_FAILED' }, updated_at: new Date().toISOString(),
+          status: 'failed', extraction: failure, updated_at: new Date().toISOString(),
         }).catch(() => {});
         throw error;
       }
