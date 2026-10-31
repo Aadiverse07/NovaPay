@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: login repair on `fix-login-errors`, based on `origin/main` at branch creation; no push.
+- Current task: login repair on `fix-login-errors`, based on `origin/main` at branch creation; latest local checkpoint `2969413`; no push.
 - DONE: preview/dashboard load Supabase auth; login errors map to invalid credentials, unconfirmed email, rate limit, or network/config; saved sessions restore the existing workspace; Documents refreshes role after auth changes and before upload. Added `server/test/login-auth.test.js` (5/5 PASS).
 - Root cause: preview used only local demo auth and dashboard guarded only on `novapay-demo-auth`; real Supabase sessions were not used. A stale/late role could trigger the upload role banner.
 - CHECKS: `npm test` FAIL 169/170 on existing API no-store test; `npm run check:migrations` PASS 16/16; focused tests 5/5; changed JS syntax PASS; `git diff --check` PASS; protected diff empty.
@@ -3468,3 +3468,7 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-31 | ABOUT TO: recheck staged whitespace and .env exclusion | WHY: verify the exact index immediately before committing.
 2026-10-31 | RESULT: staged paths remain the intended 9 files; diff check PASS. NEXT: stage this result and commit the tested login fix with WIP-BROKEN marker for the unrelated no-store failure.
 2026-10-31 | ABOUT TO: stage final journal state for the login checkpoint | WHY: the current worklog result must be included in the local commit.
+2026-10-31 | RESULT: local checkpoint created as 2969413 on fix-login-errors; no push. NEXT: update RESUME POINTER with checkpoint hash and verify final status.
+2026-10-31 | ABOUT TO: record commit 2969413 in the resume pointer | WHY: make the handoff identify the exact local checkpoint.
+2026-10-31 | RESULT: resume pointer identifies checkpoint 2969413. NEXT: stage and commit the pointer update, then verify final branch and worktree.
+2026-10-31 | ABOUT TO: commit the final handoff pointer update locally | WHY: preserve the exact resume checkpoint in the repository.
