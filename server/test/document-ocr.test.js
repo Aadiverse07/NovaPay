@@ -27,9 +27,10 @@ test('document OCR rejects impossible dates, amounts without currency, extra ins
     assert.equal(error.code, 'OCR_FIELD_VALIDATION'); assert.equal(error.statusCode, 422);
     assert.deepEqual(error.validationIssues, [{ path: 'invoice_date', rule: 'not_calendar_date' }]); return true;
   });
-  assert.throws(() => validateDocumentExtraction({ ...valid, currency: null }), (error) => {
-    assert.deepEqual(error.validationIssues, [{ path: 'currency', rule: 'required_when_amounts_present' }]); return true;
-  });
+  const missingCurrency = validateDocumentExtraction({ ...valid, currency: null });
+  assert.equal(missingCurrency.fields.currency, null);
+  assert.deepEqual(missingCurrency.validation.warnings, ['currency_missing']);
+  assert.equal(missingCurrency.validation.arithmetic, 'passed');
   assert.throws(() => validateDocumentExtraction({ ...valid, hiddenInstruction: 'private extracted value' }), (error) => {
     assert.deepEqual(error.validationIssues, [{ path: 'hidden_instruction', rule: 'unexpected_field' }]);
     assert.equal(error.message.includes('private extracted value'), false); return true;

@@ -1,10 +1,11 @@
 ## RESUME POINTER
-- Current task: fix OCR validation on `fix-ocr-validation`, based on `fix-login-errors`; no push, no users created.
-- DONE: validator errors now identify safe field path/rule only; failed rows store errorMessage + validationIssues; 422 JSON returns sanitized fields. Normalization accepts fenced/wrapped JSON, numeric amounts, valid comma grouping, ₹ amounts (infers INR only if no explicit currency), and `DD Mon YYYY` dates. Strict required fields, ISO currency codes, symbol/currency match and arithmetic warnings remain.
-- TESTS: focused OCR/processing PASS 17/17. `npm test` FAIL 173/174 only known API no-store assertion. Migrations 16/16 PASS; syntax/diff checks PASS; protected-file diff empty.
-- LIVE SAMPLE: Aadi existing rows remain failed with generic OCR_FIELD_VALIDATION; old rows have no message. No retry route exists. Sample A upload was authorized but not performed: native Chrome control permission denied before file selection; sanitized new-server log has no document API requests. No A/B field names recovered.
-- NEXT: human selects only `/Users/aditya/Downloads/Invoice_A_TEST-001_correct.pdf` in the existing Aadi owner dashboard once, after confirming updated server is up; read only field/rule diagnostics. Do not upload either sample more than once.
-- PENDING: browser/OS file picker permission must be available for that one API upload; server stdout is captured in `/tmp/novapay-ocr-diagnostic.log`.
+- Current task: fix C’s OCR failure and failed-hash duplicate behavior on `fix-ocr-validation`; no push, no uploads/users.
+- ROOT CAUSE: latest C row in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678` is `failed`, code `OCR_FIELD_VALIDATION`, stored safe message `currency: required_when_amounts_present`. Latest usage: 3 rows `ocr/invalid_response`.
+- FIX: missing currency now processes with `currency_missing` review warning; no currency inferred unless explicit ₹ marker. Invalid ISO currency and symbol mismatch still fail. UI asks reviewer to choose currency before draft.
+- DUPLICATES: candidate lookup filters `status=neq.failed`; rejected/processed rows still count. Tests verify both paths.
+- CHECKS: focused 18/18 PASS; `npm test` FAIL 174/175 only known no-store assertion; migrations 16/16, syntax, whitespace PASS; protected-file diff empty.
+- NEXT: no upload was performed per instruction. Later, owner may re-upload same-hash C; failed row will not block it. Human review must enter currency before draft.
+- PENDING: none required now. No push.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3568,3 +3569,22 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-31 | ABOUT TO: run final branch/secret-safe status and docs/protected-file checks | WHY: confirm only intended implementation/tests/continuity files are pending before checkpoint.
 2026-10-31 | RESULT: branch fix-ocr-validation; only intended 9 code/test/docs files pending; `.env` untracked; CONTEXT 54 lines; diff check PASS; protected-file diff empty. NEXT: stage exact files and commit with known suite failure documented.
 2026-10-31 | ABOUT TO: stage OCR diagnostic/normalization code, tests, and continuity docs | WHY: make a local checkpoint without secrets or protected files.
+2026-10-31 | RESULT: local WIP-BROKEN commit 246a4a2 created on fix-ocr-validation; no push. Sample upload remains blocked by native browser permission, so original A/B failing fields remain unknown; next action is the single owner-authorized A sample upload after user restores picker access.
+2026-11-01 | ABOUT TO: inspect RESUME POINTER, current context and duplicate handling | WHY: resume OCR work safely on the named branch and identify exact query/filter behavior.
+2026-11-01 | ABOUT TO: read-only service-role lookup for latest C document and recent org usage | WHY: determine whether its failure message has safe field/rule details without reading or printing document content.
+2026-11-01 | RESULT: C is failed with sanitized field detail `currency: required_when_amounts_present`; three newest usage rows are `ocr/invalid_response`. This is absent currency, not invalid currency. NEXT: verify the Documents view surfaces warnings and confirm invoice draft still requires a currency.
+2026-11-01 | ABOUT TO: inspect warning rendering and invoice currency validation | WHY: choose a safe fix that allows human review without silently assigning or accepting an unknown currency.
+2026-11-01 | RESULT: C’s stored message is `currency: required_when_amounts_present`; review UI requires a currency before creating a draft. It can safely process with a missing-currency review warning; invalid codes stay rejected. NEXT: change missing currency from hard failure to warning and exclude failed hashes from duplicate candidates.
+2026-11-01 | ABOUT TO: edit validator, Documents warning copy, duplicate filter, and tests | WHY: fix C’s actual missing-currency case without inventing currency, preserve human review, and permit retry after failed state.
+2026-11-01 | RESULT: missing currency now yields a review warning instead of OCR failure; Documents copy asks the user to choose currency. Duplicate query excludes failed rows but still counts rejected rows; tests added for both. NEXT: run focused OCR and processing tests.
+2026-11-01 | ABOUT TO: run focused OCR and document-processing tests | WHY: verify C’s exact failure rule now completes with warning and failed same-hash docs no longer block retry.
+2026-11-01 | RESULT: focused OCR/document-processing tests PASS 18/18; missing currency warns and processes; failed duplicate ignored; rejected duplicate still flags. NEXT: log this run and run full npm test.
+2026-11-01 | ABOUT TO: append focused test result and start full npm test | WHY: preserve every real run and verify wrong-total, duplicate, injection, and all repository tests.
+2026-11-01 | RESULT: npm test FAIL 174/175; only known API no-store test failed. NEXT: append the result and run explicit migrations, syntax, whitespace, and protected-file checks.
+2026-11-01 | ABOUT TO: record full suite result, then execute requested static checks | WHY: preserve exact outcome and verify current code/docs before checkpoint.
+2026-11-01 | RESULT: migrations PASS 16/16; six changed JS files parse; diff check PASS; protected-file diff empty. NEXT: update RESUME POINTER, CONTEXT, TEST-REPORT and DECISIONS with C’s root cause and duplicate policy, then WIP-commit.
+2026-11-01 | ABOUT TO: update continuity docs with C’s stored field failure, safe currency warning, duplicate filter and checks | WHY: preserve the exact fix and note that the user prohibited uploads in this run.
+2026-11-01 | RESULT: CONTEXT/RESUME POINTER, TEST-REPORT and DECISIONS updated; C root cause and no-upload outcome recorded. NEXT: final diff/secret checks, then local WIP-BROKEN commit.
+2026-11-01 | ABOUT TO: inspect final branch/status, tracked `.env`, whitespace and protected-file diff | WHY: verify the exact files to checkpoint and ensure no secrets/protected paths are included.
+2026-11-01 | RESULT: branch fix-ocr-validation; intended 9 files pending; `.env` not tracked; whitespace clean; protected-file diff empty. NEXT: stage and locally commit with known suite failure documented.
+2026-11-01 | ABOUT TO: stage missing-currency warning, failed-hash duplicate filter, tests and continuity docs | WHY: checkpoint the tested fix without secrets or protected files.

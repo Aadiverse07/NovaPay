@@ -1267,3 +1267,11 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-31 | `npm run check:migrations` | PASS | 16/16.
 2026-10-31 | `node --check` on six changed JS files; `git diff --check`; protected-file diff against origin/main | PASS | All syntax checks and whitespace clean; protected diff empty.
 2026-10-31 | API upload/reprocess of existing samples | UNVERIFIED | No retry endpoint; native file picker was denied before file selection; server log recorded zero document API requests. No sample uploaded.
+2026-11-01 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | PASS | 18 passed, 0 failed; missing currency warning, error detail privacy, failed-hash retry and rejected duplicate coverage.
+2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known `authenticated API client bypasses conditional HTTP caching` expected `Cache-Control: no-store`.
+
+2026-11-01 | Read-only service-role lookup for `Invoice_C_TEST-003.pdf` and latest org ai_usage | PASS | C status `failed`, code `OCR_FIELD_VALIDATION`, message fields/rules only: `currency: required_when_amounts_present`; latest 3 rows `ocr/invalid_response`.
+2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known authenticated API-client no-store assertion.
+2026-11-01 | `npm run check:migrations` | PASS | 16/16.
+2026-11-01 | `node --check` six changed JS files; `git diff --check`; protected-file diff | PASS | Syntax and whitespace clean; protected diff empty.
+2026-11-01 | No-upload constraint | PASS | No upload/reprocess/API POST performed; no records changed.

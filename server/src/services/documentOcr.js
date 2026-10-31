@@ -193,10 +193,11 @@ export function validateDocumentExtraction(value) {
     throw makeValidationError([{ path: ['currency'], rule: 'currency_symbol_mismatch' }]);
   }
   const money = [fields.subtotal, fields.tax, fields.total, ...fields.lineItems.map((item) => item.amount)];
-  if (fields.currency === null && money.some((amount) => amount !== null)) throw makeValidationError([{ path: ['currency'], rule: 'required_when_amounts_present' }]);
+  const currencyMissing = fields.currency === null && money.some((amount) => amount !== null);
 
   const checks = [];
   const warnings = [];
+  if (currencyMissing) warnings.push('currency_missing');
   if (fields.subtotal !== null && fields.tax !== null && fields.total !== null) {
     const balanced = cents(fields.subtotal) + cents(fields.tax) === cents(fields.total);
     checks.push({ name: 'subtotal_plus_tax_equals_total', passed: balanced });
@@ -212,7 +213,7 @@ export function validateDocumentExtraction(value) {
     fields,
     validation: {
       fields: 'valid',
-      arithmetic: checks.length === 0 ? 'unverified' : warnings.length === 0 ? 'passed' : 'warning',
+      arithmetic: checks.length === 0 ? 'unverified' : checks.every((check) => check.passed) ? 'passed' : 'warning',
       checks,
       warnings,
     },

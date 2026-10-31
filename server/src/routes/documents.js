@@ -87,7 +87,7 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
       if (document.status === 'processed') return res.json({ document: { id: document.id, status: document.status, extraction: document.extraction }, cached: true });
       if (document.status !== 'uploaded') throw publicError(409, 'DOCUMENT_NOT_READY', 'Document is not available for processing.');
 
-      const matches = await db.select('documents', select({ select: 'id', org_id: `eq.${req.orgId}`, sha256: `eq.${document.sha256}`, id: `neq.${documentId}`, order: 'created_at.asc', limit: '1' }));
+      const matches = await db.select('documents', select({ select: 'id', org_id: `eq.${req.orgId}`, sha256: `eq.${document.sha256}`, id: `neq.${documentId}`, status: 'neq.failed', order: 'created_at.asc', limit: '1' }));
       const duplicate = Array.isArray(matches) ? matches[0] : null;
       if (duplicate) {
         await db.patch('documents', select({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.uploaded' }), {

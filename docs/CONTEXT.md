@@ -1,54 +1,54 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-10-31 (Asia/Kolkata)
+- Date/time: 2026-11-01 (Asia/Kolkata)
 - Branch: `fix-ocr-validation`, based on `fix-login-errors`; no push
-- Current task: diagnose/fix OCR validation for two existing sample invoices
+- Current task: resolve Invoice_C_TEST-003 OCR validation and duplicate retry behavior
 
 ## DONE
-- Added field/rule-only validation diagnostics in `server/src/services/documentOcr.js`; no rejected values or document text enter error messages.
-- Failed document extraction stores `errorCode`, safe `errorMessage`, and `validationIssues`. Structured API error responses expose sanitized `{path, rule}` fields.
-- Normalizes JSON code fences/wrappers, finite numeric amounts, valid thousands grouping, `₹` markers (infers INR only when currency absent), and `DD Mon YYYY` dates.
-- Invalid ISO currencies and mismatched currency symbols still fail; malformed JSON remains rejected; wrong totals remain arithmetic warnings, not corrected values.
-- Tests cover field type/path/rule, unexpected/missing fields, malformed JSON, wrappers, grouped/numeric/INR amounts, date normalization, invalid currency/symbol mismatch, and arithmetic warning.
+- Read-only lookup found C in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678`, status `failed`, code `OCR_FIELD_VALIDATION`, safe message `currency: required_when_amounts_present`.
+- Latest three ai_usage rows for org: route `ocr`, status `invalid_response`.
+- Root cause: validator treated absent currency as fatal whenever amounts existed. Missing currency is now a visible review warning; it is not inferred unless an explicit rupee marker indicates INR.
+- Invalid ISO currencies and currency-symbol mismatch still fail; wrong totals remain flagged as arithmetic warnings. Documents view asks reviewer to select currency before creating invoice draft.
+- Duplicate query excludes `failed` documents (`status=neq.failed`); rejected, processed and other nonfailed rows continue to block same-hash duplicates.
+- Added tests for missing-currency warning through service/route and failed-vs-rejected duplicate behavior.
 
 ## IN PROGRESS
-- The live sample upload was not performed because native Chrome/file-picker control was denied. Existing failed rows still have only `OCR_FIELD_VALIDATION`; exact original field names remain unknown.
+- No live upload/reprocess performed; user explicitly prohibited uploads. C remains failed until a later owner re-upload/retry.
 
 ## NEXT STEPS
-1. In the existing Aadi owner dashboard, select `/Users/aditya/Downloads/Invoice_A_TEST-001_correct.pdf` exactly once. The updated server is running on port 3000 and captures safe request logs in `/tmp/novapay-ocr-diagnostic.log`.
-2. Report only `error.fields` paths/rules; verify whether normalization resolves the sample. Do not upload any file more than once.
-3. Re-run `npm test` after the live observation; the known unrelated cache test expects `Cache-Control: no-store`.
+1. Do not upload in this turn. Later, owner can re-upload the same file; the failed row will not block its hash.
+2. Review the currency warning and enter the correct currency before invoice draft confirmation.
 
 ## USER ACTIONS PENDING
-- Allow/select the named sample file in Chrome’s native picker once (or provide the sanitized API result with field names/rules). No credentials or document text should be shared.
+- None required now.
 
 ## LIVE STATE
-- Existing Aadi owner org was read-only; no users/orgs/docs changed by this task.
-- No document API POST occurred after server restart; upload did not happen.
-- Server config was loaded from dotenv at startup; no secret values recorded. The new server is up on port 3000.
-- Key names only: `GEMINI_API_KEY`, `DOCUMENT_OCR_MODEL`, `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`.
+- Read-only DB inspection only. No users, docs, Storage objects, or rows changed.
+- No upload attempted. Existing A/B/C failures remain as recorded.
+- No secrets or key values recorded.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused OCR/document processing | PASS | 17/17 |
-| Full suite | FAIL | 173/174; known API client no-store assertion |
+| Focused OCR/document processing | PASS | 18/18 |
+| Full suite | FAIL | 174/175; known API-client `Cache-Control: no-store` assertion |
 | Migrations | PASS | 16/16 |
-| Changed JavaScript syntax | PASS | app, document route/service, and two tests parse |
+| Changed JS syntax | PASS | app, document route/service, Documents view and two tests |
 | `git diff --check` | PASS | Clean |
 | Protected-file diff | PASS | Empty against origin/main |
-| Actual A sample processing / failing fields | UNVERIFIED | Chrome file picker permission denied; no API request logged |
-| Existing A/B persisted failure detail | UNVERIFIED | Stored rows only have generic error code; no message before this change |
+| C failure reason | PASS | stored path/rule is `currency: required_when_amounts_present` |
+| Re-upload duplicate policy | PASS | failed excluded; rejected still duplicate |
+| Live reprocess | UNVERIFIED | no upload by explicit user instruction |
 
 ## KNOWN ISSUES AND RISKS
-- Exact original A/B provider field failures are unavailable. Do not claim formatting normalization fixed those rows until the one allowed A upload is processed.
+- C remains failed until a later owner retry/re-upload. The updated handler only affects new processing attempts.
 - Full suite retains unrelated no-store failure.
 
 ## LESSONS LEARNED
-- Never print `.env` values, keys, passwords, JWTs, or document content.
-- OCR output is untrusted; keep strict schema/currency/arithmetic checks. Report paths/rules only.
-- Existing failure rows store only errorCode; this change persists diagnostics for subsequent failures.
+- Never print `.env` values, credentials, JWTs or document content.
+- Missing currency should be reviewable; never assign a currency without an explicit marker or user review.
+- OCR errors expose field paths/rules only; never persist raw provider text.
 
 ## DO NOT
-- Never push, create users, upload either sample more than once, expose document text, or weaken validation.
+- Never push, create users, upload documents in this turn, expose document text, or weaken validation.

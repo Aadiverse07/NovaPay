@@ -74,7 +74,9 @@
     addText(panel, "p", (doc.status || "unknown").toUpperCase() + " · review extracted fields before confirming.", "module-status");
     if (doc.duplicate_of || extraction.duplicateOf) addText(panel, "p", "Possible duplicate detected. Review the matching document before proceeding.", "status warn");
     var warnings = extraction.validation && extraction.validation.warnings || [];
-    if (warnings.length) addText(panel, "p", "Arithmetic warning: " + warnings.join(", ") + ". Check the total before creating a draft.", "status warn");
+    if (warnings.includes("currency_missing")) addText(panel, "p", "Currency is missing. Choose the correct currency before creating an invoice draft.", "status warn");
+    var arithmeticWarnings = warnings.filter(function (warning) { return warning !== "currency_missing"; });
+    if (arithmeticWarnings.length) addText(panel, "p", "Arithmetic warning: " + arithmeticWarnings.join(", ") + ". Check the total before creating a draft.", "status warn");
     else if (extraction.validation && extraction.validation.arithmetic === "unverified") addText(panel, "p", "Arithmetic could not be verified from the extracted fields.", "status info");
     if (extraction.confirmation) {
       addText(panel, "p", "Confirmed · invoice draft created. Nothing was sent.", "status success");

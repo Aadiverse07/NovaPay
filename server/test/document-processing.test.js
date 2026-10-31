@@ -33,7 +33,10 @@ async function setup(t, overrides = {}) {
     async select(table, query) {
       calls.push({ type: 'select', table, query });
       if (table !== 'documents') return [];
-      if (query.includes('sha256=eq.') && overrides.duplicate) return [{ id: duplicateId }];
+      if (query.includes('sha256=eq.') && overrides.duplicate) {
+        if (overrides.duplicateStatus === 'failed' && query.includes('status=neq.failed')) return [];
+        return [{ id: duplicateId, status: overrides.duplicateStatus || 'processed' }];
+      }
       if (query.includes('&id=eq.')) return doc.status === 'deleted' ? [] : [{ ...doc }];
       return [];
     },
@@ -145,7 +148,7 @@ test('organization concurrency cap blocks OCR before usage reservation', async (
 });
 
 test('same-org hash match marks a duplicate rejected and writes a rejection audit without calling OCR', async (t) => {
-  const state = await setup(t, { duplicate: true });
+  const state = await setup(t, { duplicate: true, duplicateStatus: 'rejected' });
   const response = await state.send();
   assert.equal(response.status, 409);
   assert.equal((await response.json()).error.code, 'DUPLICATE_DOCUMENT');
@@ -154,6 +157,19 @@ test('same-org hash match marks a duplicate rejected and writes a rejection audi
   assert.equal(state.audit[0].action, 'document.rejected');
   assert.equal(state.providerCalls(), 0);
   assert.equal(state.calls.some((call) => call.name === 'claim_document_processing'), false);
+  const duplicateQuery = state.calls.find((call) => call.type === 'select' && call.query.includes('sha256=eq.'));
+  assert.match(duplicateQuery.query, /status=neq\.failed/);
+});
+
+test('a failed same-hash document does not block a fresh upload from processing', async (t) => {
+  const state = await setup(t, { duplicate: true, duplicateStatus: 'failed' });
+  const response = await state.send();
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).document.status, 'processed');
+  assert.equal(state.providerCalls(), 1);
+  assert.equal(state.doc.status, 'processed');
+  const duplicateQuery = state.calls.find((call) => call.type === 'select' && call.query.includes('sha256=eq.'));
+  assert.match(duplicateQuery.query, /status=neq\.failed/);
 });
 
 test('viewer cannot process documents and malformed provider output stores safe validation diagnostics', async (t) => {
@@ -179,6 +195,14 @@ test('viewer cannot process documents and malformed provider output stores safe 
   assert.equal(JSON.stringify(fieldBody).includes('987654321'), false);
   assert.deepEqual(invalidField.doc.extraction.validationIssues, fieldBody.error.fields);
   assert.equal(invalidField.doc.extraction.errorMessage.includes('987654321'), false);
+
+  const missingCurrency = await setup(t, { ocrResult: { text: JSON.stringify({ ...extraction, currency: null }), model: 'gemini-3.5-flash-lite' } });
+  const currencyResponse = await missingCurrency.send();
+  assert.equal(currencyResponse.status, 200);
+  const currencyBody = await currencyResponse.json();
+  assert.equal(currencyBody.document.extraction.fields.currency, null);
+  assert.deepEqual(currencyBody.document.extraction.validation.warnings, ['currency_missing']);
+  assert.equal(currencyBody.document.extraction.validation.arithmetic, 'passed');
 });
 
 test('accountant confirmation and rejection are org-scoped, state-checked, and audited; viewer cannot review', async (t) => {
