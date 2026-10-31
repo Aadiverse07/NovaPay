@@ -3588,3 +3588,5 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-11-01 | ABOUT TO: inspect final branch/status, tracked `.env`, whitespace and protected-file diff | WHY: verify the exact files to checkpoint and ensure no secrets/protected paths are included.
 2026-11-01 | RESULT: branch fix-ocr-validation; intended 9 files pending; `.env` not tracked; whitespace clean; protected-file diff empty. NEXT: stage and locally commit with known suite failure documented.
 2026-11-01 | ABOUT TO: stage missing-currency warning, failed-hash duplicate filter, tests and continuity docs | WHY: checkpoint the tested fix without secrets or protected files.
+2026-11-01 | RESULT: local checkpoint b8930b9 created on fix-ocr-validation; no push. C remains failed because uploads were prohibited; subsequent retry will now process with a visible currency warning.
+2026-11-01 | ABOUT TO: commit only docs/WORKLOG.md before push preflight | WHY: it is the sole working-tree change; `.env` is untracked and no files are staged.
