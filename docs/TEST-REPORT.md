@@ -1235,3 +1235,46 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-10-28 | `node --check server/src/routes/documents.js` and `node --check server/test/documents-upload.test.js` | PASS | Both changed JavaScript files parse.
 2026-10-28 | `git diff --check` | PASS | No whitespace errors.
 2026-10-28 | Prior post-delete HTTP 200 root cause | UNRESOLVED | It was not reproduced. Fresh direct authenticated Storage GET returned 400 JSON/88 bytes with CF cache BYPASS; no cache-control/age; Storage list count 0. Prior response metadata was not retained.
+
+2026-10-31 — `node --test server/test/login-auth.test.js` — FAIL — unknown passed, unknown failed.
+
+2026-10-31 — `node --test server/test/login-auth.test.js` — FAIL — unknown passed, unknown failed.
+
+2026-10-31 — `node --test server/test/login-auth.test.js` — FAIL — unknown passed, unknown failed.
+
+2026-10-31 — `npm test` on fix-login-errors — FAIL — 169 passed, 1 failed. ✖ authenticated API client bypasses conditional HTTP caching (19.456292ms)
+
+2026-10-31 — `npm run check:migrations` on fix-login-errors — PASS — 16/16 migrations parsed (exit 0).
+
+2026-10-31 | `node --test server/test/login-auth.test.js` | PASS | 5 passed, 0 failed; supersedes earlier entries whose helper output count was unavailable.
+2026-10-31 | `npm test` | FAIL | 169 passed, 1 failed: API client did not set expected `Cache-Control: no-store`; unrelated to login changes.
+2026-10-31 | `npm run check:migrations` | PASS | 16/16 migration files parse.
+2026-10-31 | `node --check` on `src/auth.js`, `src/landing.js`, `src/documents.js`, `server/test/login-auth.test.js`; `git diff --check`; protected-file diff | PASS | All four JS files parse, whitespace clean, protected diff empty.
+2026-10-31 | Real browser login and Documents owner role | UNVERIFIED | No existing-user credentials/JWT used; no new user created.
+
+2026-10-31 | Read-only service-role metadata query for aadi.owner org, two named documents, latest ai_usage | PASS | Owner org identified; both docs `failed` with `OCR_FIELD_VALIDATION` and no stored message; latest two routes `ocr`, statuses `invalid_response`; no content read or printed.
+2026-10-31 | Running config probe | PASS | Server up; startup predates neither .env change (process started later); current dotenv reports Gemini key/model present and limits 100/300; `/api/status` itself omits OCR settings.
+2026-10-31 | Server log lines for the two processing attempts | UNVERIFIED | stdout is attached to terminal `/dev/ttys001`; no captured log file found/read. Route/code evidence maps `OCR_FIELD_VALIDATION` to HTTP 422.
+2026-10-31 | `npm test` | FAIL | 169 passed, 1 failed: existing API client test expects missing `Cache-Control: no-store`.
+2026-10-31 | `npm run check:migrations` | PASS | 16/16.
+2026-10-31 | `node --check server/src/routes/documents.js`, `node --check server/src/services/documentOcr.js`, `git diff --check` | PASS | Syntax and whitespace checks clean.
+
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | FAIL | 12/14; first diagnostic helper could not infer Zod v4 input type from the issue object.
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | FAIL | 14/17; a stale input variable caused ReferenceError in malformed amount/missing field cases.
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | FAIL | 0/2 test files loaded due syntax typo during mechanical correction.
+2026-10-31 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | PASS | 17 passed, 0 failed after repair.
+2026-10-31 | `npm test` | FAIL | 173 passed, 1 failed: known authenticated API client missing `Cache-Control: no-store`.
+2026-10-31 | `npm run check:migrations` | PASS | 16/16.
+2026-10-31 | `node --check` on six changed JS files; `git diff --check`; protected-file diff against origin/main | PASS | All syntax checks and whitespace clean; protected diff empty.
+2026-10-31 | API upload/reprocess of existing samples | UNVERIFIED | No retry endpoint; native file picker was denied before file selection; server log recorded zero document API requests. No sample uploaded.
+2026-11-01 | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js` | PASS | 18 passed, 0 failed; missing currency warning, error detail privacy, failed-hash retry and rejected duplicate coverage.
+2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known `authenticated API client bypasses conditional HTTP caching` expected `Cache-Control: no-store`.
+
+2026-11-01 | Read-only service-role lookup for `Invoice_C_TEST-003.pdf` and latest org ai_usage | PASS | C status `failed`, code `OCR_FIELD_VALIDATION`, message fields/rules only: `currency: required_when_amounts_present`; latest 3 rows `ocr/invalid_response`.
+2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known authenticated API-client no-store assertion.
+2026-11-01 | `npm run check:migrations` | PASS | 16/16.
+2026-11-01 | `node --check` six changed JS files; `git diff --check`; protected-file diff | PASS | Syntax and whitespace clean; protected diff empty.
+2026-11-01 | No-upload constraint | PASS | No upload/reprocess/API POST performed; no records changed.
+2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known authenticated API client test expects missing `Cache-Control: no-store`.
+2026-11-01 | `npm run check:migrations` | PASS | 16/16 migrations parse.
+2026-11-01 | `node --check` on every JS file changed from origin/main; `git diff --check`; protected-file diff | PASS | All syntax/whitespace checks clean; protected diff empty.

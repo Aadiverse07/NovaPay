@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: Phase 5 GET-by-ID fix plus cross-tenant/deletion diagnosis; branch `phase5-backend`; latest local checkpoint `7b6ab23`, not pushed.
-- DONE: org-scoped GET added; focused tests 6/6; full npm test 165/165; migrations 16/16; node --check 2 changed JS files; git diff --check PASS.
-- Live checks: B retrieval 200/1 citation not referencing org A; B RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage 400 denied; A positive retrieval 200/1 citation.
-- Delete: API 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1; post-delete direct Storage GET 400 JSON/88 bytes, CF BYPASS, no cache-control/age.
-- Diagnosis: current object deletion works; previous HTTP 200 was not reproduced and its cause is undetermined. Storage objects SQL count UNVERIFIED (no local SQL client/CLI/connection). Storage code checks DELETE response.ok. No fix 2 applied.
-- Next: review staged paths; keep pre-existing `.env.example` unstaged; WIP-commit locally; never push.
-- Pending: optional user-provided SQL path if exact `storage.objects` SQL count is still needed.
+- Current task: fix C’s OCR failure and failed-hash duplicate behavior on `fix-ocr-validation`; no push, no uploads/users.
+- ROOT CAUSE: latest C row in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678` is `failed`, code `OCR_FIELD_VALIDATION`, stored safe message `currency: required_when_amounts_present`. Latest usage: 3 rows `ocr/invalid_response`.
+- FIX: missing currency now processes with `currency_missing` review warning; no currency inferred unless explicit ₹ marker. Invalid ISO currency and symbol mismatch still fail. UI asks reviewer to choose currency before draft.
+- DUPLICATES: candidate lookup filters `status=neq.failed`; rejected/processed rows still count. Tests verify both paths.
+- CHECKS: focused 18/18 PASS; `npm test` FAIL 174/175 only known no-store assertion; migrations 16/16, syntax, whitespace PASS; protected-file diff empty.
+- NEXT: no upload was performed per instruction. Later, owner may re-upload same-hash C; failed row will not block it. Human review must enter currency before draft.
+- PENDING: none required now. No push.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3425,3 +3425,186 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-28 | ABOUT TO: update ignore rules and issue a no-op cached removal if applicable; WHY: prevent future .env variants from entering Git without excluding .env.example.
 2026-10-28 | RESULT: PASS; .env was already untracked and ignored; added .env.* ignore rule with !.env.example exception. NEXT: commit the ignore-rule hardening as requested.
 2026-10-28 | ABOUT TO: commit .gitignore and WORKLOG.md as Stop tracking .env; WHY: record and preserve the safe ignore rules.
+2026-10-31 | RESULT: created fix-login-errors from origin/main; WORKLOG restore conflicted, kept origin/main version and re-recorded current diagnosis here.
+2026-10-31 | ABOUT TO: inspect browser script loading and prepare Supabase login wiring/tests; WHY: address the confirmed root cause on the correct branch.
+2026-10-31 | ABOUT TO: wire the existing Supabase auth module into both pages, categorize login errors, restore workspaces for saved sessions, and refresh document role after auth changes; WHY: close the diagnosed login/session gap without redesign.
+2026-10-31 | RESULT: wired Supabase auth into preview/dashboard, categorized auth errors, restored workspaces for saved sessions, and made Documents role reload on auth changes. NEXT: add tests for categories, owner workspace restoration, script loading, and fresh role before upload.
+2026-10-31 | ABOUT TO: add browser-auth tests using mocked Supabase sessions/API only; WHY: verify login behavior without creating auth users or exposing credentials.
+2026-10-31 | RESULT: added tests for auth error categories, login/restore workspace, fresh Documents role, and script order. NEXT: run focused browser-auth tests and correct any defects they expose.
+2026-10-31 | ABOUT TO: run `node --test server/test/login-auth.test.js`; WHY: validate the new login and role-refresh behaviors before the full suite.
+2026-10-31 | RESULT: focused auth tests FAIL; passed=unknown; failed=unknown. NEXT: fix any failure or run full npm test.
+2026-10-31 | RESULT: focused test exposed an incorrect assertion: browser sends only organizationName; server derives user id from verified JWT. Corrected test to assert the name. NEXT: rerun focused auth tests.
+2026-10-31 | ABOUT TO: rerun focused auth test file; WHY: confirm all new coverage passes after correcting the test expectation.
+2026-10-31 | RESULT: focused auth tests FAIL; passed=unknown; failed=unknown. NEXT: run full suite and requested static checks.
+2026-10-31 | ABOUT TO: strengthen the script integration test to assert login invokes Supabase and demo login is gated by absent config; WHY: ensure the root cause cannot regress while retaining demo fallback.
+2026-10-31 | RESULT: script wiring test now asserts Supabase signIn is selected and demo fallback is behind the demo-mode branch. NEXT: rerun focused tests, then run full suite.
+2026-10-31 | ABOUT TO: rerun focused login/auth test file; WHY: verify stronger integration assertions.
+2026-10-31 | RESULT: focused auth suite FAIL; passed=unknown; failed=unknown. NEXT: run full npm test.
+2026-10-31 | ABOUT TO: run full npm test after login/auth changes; WHY: verify integration with the repository suite and detect any pre-existing failures.
+2026-10-31 | RESULT: npm test FAIL; passed=169; failed=1; first failure=✖ authenticated API client bypasses conditional HTTP caching (19.456292ms). NEXT: run migrations, syntax checks, and diff checks.
+2026-10-31 | ABOUT TO: run migration syntax, changed-JS syntax, whitespace, and protected-file diff checks; WHY: complete all requested validation gates.
+2026-10-31 | RESULT: migration/parser, node syntax, whitespace, and protected-file diff gate results printed above; npm test remains 169/170 due existing cache test. NEXT: update CONTEXT/resume/DECISIONS and checkpoint WIP-BROKEN.
+2026-10-31 | RESULT: migration, syntax, whitespace, protected-file checks all PASS (16 migrations, 4 JS, empty protected diff); a report helper referenced a shell variable in Python and failed after checks, recording verified migration result now. NEXT: finalize context/resume and local WIP-BROKEN checkpoint.
+2026-10-31 | ABOUT TO: append verified migration PASS to TEST-REPORT; WHY: log the real check outcome despite the helper error.
+2026-10-31 | RESULT: TEST-REPORT records migration PASS 16/16. NEXT: refresh handoff docs and commit locally.
+2026-10-31 | ABOUT TO: make landing auth navigation wait for initialized Supabase mode and avoid stale demo markers; WHY: prevent a cached demo flag from masking a Supabase login state.
+2026-10-31 00:00 UTC | About to inspect login/auth/doc diffs and current handoff sections | Verify navigation patch and determine final documentation edits.
+2026-10-31 | RESULT: navigation inspection confirms Supabase/demo auth split and async hash handling; one new WORKLOG pre-action line added. NEXT: rerun focused tests and capture exact outcomes.
+2026-10-31 | ABOUT TO: rerun login/auth tests and inspect current handoff/decision tails | WHY: validate latest navigation code and prepare accurate checkpoint metadata.
+2026-10-31 | ABOUT TO: run full npm test on fix-login-errors | WHY: verify the complete suite after login, session restoration, and fresh document-role changes.
+2026-10-31 | RESULT: focused login/auth tests PASS 5/5; full suite FAIL 169/170 on existing api-client no-store assertion. NEXT: finish required migration, syntax, whitespace, and protected-file checks.
+2026-10-31 | ABOUT TO: run migration check, syntax checks for changed JS, whitespace check, and protected-file diff | WHY: complete the requested validation gates and ensure protected UI assets stayed untouched.
+2026-10-31 | RESULT: migration syntax PASS 16/16; four changed JS files parse; git diff --check passes; protected-file diff is empty. NEXT: replace stale CONTEXT/resume pointer and append accurate test/decision entries.
+2026-10-31 | ABOUT TO: inspect only the top of WORKLOG and current context file boundaries | WHY: safely rewrite the RESUME POINTER without disturbing the append-only journal.
+2026-10-31 | ABOUT TO: rewrite CONTEXT and WORKLOG RESUME POINTER, append test corrections and login decision | WHY: the checked-out main ancestry contains stale Phase 5 handoff state; make the new branch resumable and report exact outcomes.
+2026-10-31 | RESULT: CONTEXT and resume pointer now identify fix-login-errors, root cause, exact test status, and live/browser limits; TEST-REPORT and DECISIONS append corrections and scope decision. NEXT: verify secret-safe status, report whitespace, and stage paths for local checkpoint.
+2026-10-31 | ABOUT TO: inspect branch, tracked .env state, diff summary, and whitespace after handoff edits | WHY: ensure only intended login/docs changes are committed and no environment file enters Git.
+2026-10-31 | ABOUT TO: stage only login implementation, focused tests, and continuity docs | WHY: prepare an exact local checkpoint while excluding environment files and unrelated paths.
+2026-10-31 | RESULT: staged exactly 10 intended files; .env is not tracked or staged. NEXT: validate staged names/whitespace, then create local WIP-BROKEN commit.
+2026-10-31 | ABOUT TO: inspect staged paths and whitespace before local commit | WHY: ensure the checkpoint contains only the intended login fix and handoff records.
+2026-10-31 | RESULT: staged path list contains only intended HTML, JS, tests, and docs; staged whitespace check PASS; no .env entry. NEXT: include the post-stage journal result, then commit.
+2026-10-31 | ABOUT TO: stage the latest WORKLOG result line | WHY: keep the append-only journal synchronized with the exact checkpoint.
+2026-10-31 | RESULT: latest WORKLOG line staged. NEXT: final staged whitespace/path check, then local WIP-BROKEN commit.
+2026-10-31 | ABOUT TO: recheck staged whitespace and .env exclusion | WHY: verify the exact index immediately before committing.
+2026-10-31 | RESULT: staged paths remain the intended 9 files; diff check PASS. NEXT: stage this result and commit the tested login fix with WIP-BROKEN marker for the unrelated no-store failure.
+2026-10-31 | ABOUT TO: stage final journal state for the login checkpoint | WHY: the current worklog result must be included in the local commit.
+2026-10-31 | RESULT: local checkpoint created as 2969413 on fix-login-errors; no push. NEXT: update RESUME POINTER with checkpoint hash and verify final status.
+2026-10-31 | ABOUT TO: record commit 2969413 in the resume pointer | WHY: make the handoff identify the exact local checkpoint.
+2026-10-31 | RESULT: resume pointer identifies checkpoint 2969413. NEXT: stage and commit the pointer update, then verify final branch and worktree.
+2026-10-31 | ABOUT TO: commit the final handoff pointer update locally | WHY: preserve the exact resume checkpoint in the repository.
+2026-10-31 | RESULT: handoff pointer checkpoint committed as 666fddc; no push. NEXT: final branch/status check and report.
+2026-10-31 | ABOUT TO: verify final branch, worktree and .env tracking | WHY: confirm the login work remains on the requested local branch and no environment file is tracked.
+2026-10-31 | RESULT: final state is fix-login-errors; .env untracked; WORKLOG has the final status-check entry unstaged. NEXT: clarify separate code and handoff checkpoint hashes in the resume pointer.
+2026-10-31 | ABOUT TO: clarify checkpoint hashes in RESUME POINTER and commit the final journal state | WHY: distinguish the code checkpoint from the later docs-only checkpoint.
+2026-10-31 | ABOUT TO: inspect the resume pointer, config/status implementation, and server process/log locations | WHY: establish which running process/config and safe read-only diagnostic sources are available.
+2026-10-31 | ABOUT TO: inspect status route and running server output descriptors | WHY: determine which requested config metadata and processing-attempt log records can be verified without reading or printing secrets.
+2026-10-31 | ABOUT TO: query running server status and safely filter its process environment | WHY: report only presence and numeric daily limits without exposing key/model values.
+2026-10-31 | ABOUT TO: inspect dotenv startup path, Supabase read helper, schema fields, and available log files | WHY: distinguish missing runtime config from process-environment visibility and prepare metadata-only reads.
+2026-10-31 | RESULT: `/api/status` exposes Supabase but not OCR/model/budgets; dotenv is loaded only at server startup. Stdout is a terminal, with no accessible log file identified. NEXT: verify current dotenv config without printing values, compare file/process timestamps, and inspect metadata schema.
+2026-10-31 | ABOUT TO: read migration column definitions and safe current-config metadata | WHY: prepare targeted service-role selects and distinguish current .env from the already-running server.
+2026-10-31 | ABOUT TO: perform service-role read-only lookup for the existing owner, org, two document failure codes, and recent OCR usage statuses | WHY: identify actual persisted failure metadata without reading or printing OCR text or secret values.
+2026-10-31 | RESULT: Existing owner/org found; both named documents are failed with stored code OCR_FIELD_VALIDATION; no message is stored. Two recent ai_usage rows are ocr/invalid_response, with no error-code column. Current dotenv snapshot has Gemini key/model and limits 100/300; server started after .env mtime, but /api/status omits these settings. NEXT: run requested full test suite.
+2026-10-31 | ABOUT TO: run npm test for the requested diagnostic checkpoint | WHY: verify the existing suite and confirm the known no-store failure remains the only failure.
+2026-10-31 | RESULT: npm test FAIL 169/170; sole failure remains authenticated API client no-store assertion. NEXT: run explicit migration, JS syntax, and whitespace checks.
+2026-10-31 | ABOUT TO: run required migration check and JS syntax/whitespace checks | WHY: complete requested verification after diagnosing stored OCR failures.
+2026-10-31 | RESULT: migrations PASS 16/16; server document route and OCR service syntax PASS; git diff --check PASS. NEXT: write the failure diagnosis and explicit log limitation into continuity docs, then make a local WIP-BROKEN checkpoint.
+2026-10-31 | ABOUT TO: update CONTEXT, WORKLOG RESUME POINTER, TEST-REPORT, and DECISIONS with the OCR validation diagnosis | WHY: preserve row metadata, config evidence, missing log detail, and the known unrelated test failure for continuation.
+2026-10-31 | RESULT: CONTEXT/RESUME POINTER, TEST-REPORT, DECISIONS updated with validation diagnosis and unavailable-log limitation. NEXT: check docs/whitespace and ensure only continuity files are pending before WIP commit.
+2026-10-31 | ABOUT TO: inspect pending paths, context length, and whitespace | WHY: ensure the diagnostic checkpoint contains only docs and no .env or secrets.
+2026-10-31 | RESULT: only four continuity documents are pending; CONTEXT is 53 lines; diff check PASS; `.env` is not tracked. NEXT: stage docs and create local WIP-BROKEN checkpoint.
+2026-10-31 | ABOUT TO: stage the diagnosis and continuity docs | WHY: preserve the read-only findings and test outcomes in a local checkpoint.
+2026-10-31 | RESULT: diagnostic handoff committed locally as 851576c on fix-login-errors; no push or data changes. NEXT: obtain safe 422 validator detail before proposing a targeted OCR correction.
+2026-10-31 | ABOUT TO: create fix-ocr-validation from fix-login-errors in the primary repo | WHY: isolate the requested OCR diagnostics/fix without creating a worktree or pushing.
+2026-10-31 | RESULT: created fix-ocr-validation from fix-login-errors in primary repo; existing uncommitted WORKLOG carried over. NEXT: inspect OCR parser/validation errors, route failure storage, tests, and sample PDF availability.
+2026-10-31 | ABOUT TO: inspect validator, route, related tests, retry path, and local sample filenames | WHY: identify a safe minimal cause/fix and whether the requested API retry/reproduction is possible.
+2026-10-31 | ABOUT TO: verify local sample PDF availability and current dashboard user without exposing credentials | WHY: determine whether the user-authorized one-time API reproduction can run with the existing owner session.
+2026-10-31 | RESULT: no sample PDF with either requested filename exists inside the repo; checking the approved project folder yielded the available matching paths only. NEXT: inspect the already-open dashboard session metadata without exposing tokens.
+2026-10-31 | ABOUT TO: read the current dashboard view in Chrome | WHY: see whether the existing browser session is the fixed owner and whether its UI provides a supported retry path.
+2026-10-31 | RESULT: existing Dashboard tab is signed in as Aadi owner, but UI shows no loaded rows and reports file selection without upload; still no server retry control visible. NEXT: locate the named sample file and verify the browser session metadata through a filtered API read.
+2026-10-31 | ABOUT TO: search the user project area for the exact sample PDF filename | WHY: the API repro is authorized only once per named file and should use that exact sample.
+2026-10-31 | RESULT: no named PDFs exist in workspace/home search; no process retry route exists (process accepts only uploaded state). Dashboard currently shows Aadi owner but no stable retry control. NEXT: inspect error response handling and provider API, then reprocess the existing stored sample objects once each through a metadata-only diagnostic harness.
+2026-10-31 | ABOUT TO: inspect API error serialization and OCR provider signature | WHY: implement field-only validation diagnostics without leaking extracted values or provider bodies.
+2026-10-31 | RESULT: dashboard is already logged in as Aadi owner; selected file shown is B, not A. No local matching PDFs were found, and app has no retry endpoint. NEXT: inspect document upload/download API shapes and exposed auth helpers before choosing the single authorized reproduction route.
+2026-10-31 | ABOUT TO: inspect document API upload/download handling and browser auth surface | WHY: reuse the existing stored A sample through the documented API without exposing the owner token or document bytes.
+2026-10-31 | RESULT: API error middleware currently emits only code/message; processing catch persists only errorCode. Validator has a single generic Zod failure message. NEXT: add value-free field/rule diagnostics end-to-end before the one authorized reproduction.
+2026-10-31 | ABOUT TO: edit OCR validator, processing failure storage, error JSON, and focused tests | WHY: expose only field paths and rule categories while keeping provider values/text private.
+2026-10-31 | RESULT: validator now builds value-free field/rule details; process failures persist those details; structured API errors return sanitized fields. NEXT: add tests proving useful diagnostics without raw values/provider text.
+2026-10-31 | ABOUT TO: extend OCR validator and route tests for field paths, rules, malformed JSON, and secret-value exclusion | WHY: prevent diagnostics from leaking document/provider values and keep validation failures actionable.
+2026-10-31 | RESULT: tests now assert field/rule only details for type, date, currency, unexpected field, malformed JSON; route persists details and returns safe 422 fields. NEXT: run focused OCR and processing tests before the authorized single-file reproduction.
+2026-10-31 | ABOUT TO: run focused document OCR and processing tests | WHY: validate field diagnostics and confirm error responses never include rejected values.
+2026-10-31 | RESULT: focused tests FAIL 12/14; Zod v4 omits input values from issues, so type diagnostics said got_undefined. Request test also fails for that reason. NEXT: derive input type from the parsed object in memory without including the value, then rerun focused tests.
+2026-10-31 | ABOUT TO: fix safe type reporting by looking up the rejected input type only | WHY: provide accurate field/rule diagnostics without returning the rejected data.
+2026-10-31 | RESULT: error type now derives from the in-memory input at the issue path and exposes only the type enum. NEXT: rerun focused validator/route tests.
+2026-10-31 | ABOUT TO: rerun focused OCR and document-processing tests | WHY: confirm accurate safe types and API/storage diagnostics.
+2026-10-31 | RESULT: focused OCR/processing tests PASS 14/14. No raw values occur in diagnostic assertions. NEXT: update source without loosening checks, then run one API upload of existing sample A after restarting the local server so the real 422 fields are surfaced.
+2026-10-31 | ABOUT TO: identify which page script owns the current selected-file preview message | WHY: confirm the file input will call the real API upload path rather than a nonfunctional demo handler.
+2026-10-31 | ABOUT TO: verify exact listener PID and startup command before restarting local API | WHY: ensure only the NovaPay port-3000 process is stopped so the diagnostic code can serve the authorized sample upload.
+2026-10-31 | RESULT: PID probe found two lines, but zsh treated them as one list and `ps` rejected the combined argument; no process was stopped. NEXT: read each PID line separately.
+2026-10-31 | ABOUT TO: recheck each port-3000 PID individually | WHY: verify the exact npm/node server processes before restart.
+2026-10-31 | ABOUT TO: stop the verified NovaPay node PID on port 3000 | WHY: load the new safe OCR diagnostics into the server before the one authorized API upload.
+2026-10-31 | RESULT: verified NovaPay node process received SIGTERM. NEXT: start server on port 3000 with output redirected to a temporary safe log for the diagnostic upload.
+2026-10-31 | ABOUT TO: start updated npm server with log capture | WHY: serve the current diagnostics code and retain only API request status lines for the authorized sample run.
+2026-10-31 | ABOUT TO: verify the updated local API responds and report only configured/up booleans | WHY: confirm current code is serving before using the existing owner browser session.
+2026-10-31 | RESULT: `/api/status` unavailable after restart attempt. NEXT: inspect temporary log through a sanitizer that emits only startup failure category and safe config field names.
+2026-10-31 | ABOUT TO: classify server startup log without displaying arbitrary lines | WHY: identify startup blocker while preventing any accidental env-value disclosure.
+2026-10-31 | ABOUT TO: check whether the background npm child is alive or holding port 3000 | WHY: determine why the current server endpoint did not respond after restart.
+2026-10-31 | RESULT: previous background start exited without a server; sanitized log shows no startup error and no start line. NEXT: run npm start in a persistent command session with output redirected, then verify status.
+2026-10-31 | ABOUT TO: start npm server in a persistent session with all stdout/stderr redirected | WHY: keep local server alive and avoid displaying startup environment details.
+2026-10-31 | ABOUT TO: verify the persistent server session responds | WHY: confirm the updated diagnostic implementation is live before the authorized sample API upload.
+2026-10-31 | RESULT: updated server `/api/status` PASS 200; browser shows existing Aadi owner session and both failed docs. No retry endpoint; local A sample exists in Downloads. NEXT: select that exact A sample once, which triggers the authenticated API upload/process once.
+2026-10-31 | ABOUT TO: choose `/Users/aditya/Downloads/Invoice_A_TEST-001_correct.pdf` in the existing owner dashboard | WHY: user authorized one new API upload only when no retry path exists; selecting this file triggers exactly one upload and OCR attempt.
+2026-10-31 | RESULT: `getApp` cannot access native Chrome controls because computer-use permissions are not granted; no upload occurred. NEXT: check whether a dedicated browser tool can submit the already-authorized sample through the local API.
+2026-10-31 | ABOUT TO: inspect enabled browser/Playwright tools | WHY: determine whether the requested one-time API upload can be performed without bypassing the denied native UI permission.
+2026-10-31 | RESULT: native UI upload is blocked by the computer-use permission gate; no upload occurred. No dedicated browser automation tool is enabled. NEXT: apply safe deterministic normalization covered by tests, then complete checks and report the real sample re-run as blocked rather than claim it.
+2026-10-31 | ABOUT TO: check the runtime currency-code support for strict ISO validation | WHY: normalize only recognized INR amount markers and continue rejecting invalid currency codes.
+2026-10-31 | RESULT: runtime provides Intl currency codes including USD and INR; native UI/API authentication unavailable, so no real sample was uploaded. NEXT: normalize only safe output formatting and add tests; leave real sample re-run UNVERIFIED.
+2026-10-31 | ABOUT TO: add strict-safe normalization for JSON wrappers, numeric/grouped/rupee amounts, common month dates, and ISO currencies | WHY: address likely provider formatting differences without hiding invalid currencies or arithmetic discrepancies.
+2026-10-31 | RESULT: normalization now handles JSON wrappers, numeric/grouped/₹ amounts, and `DD Mon YYYY` while retaining ISO currency and arithmetic checks; tests added for nulls, wrong currency, mismatch, malformed JSON, and required fields. NEXT: run focused OCR tests.
+2026-10-31 | ABOUT TO: run focused OCR validator tests after normalization changes | WHY: ensure formatting tolerance does not weaken currency or wrong-total detection.
+2026-10-31 | RESULT: focused suite exposed 3 additional failures after normalization: exceptions in several custom validations caused missing diagnostics and one route HTTP 500. NEXT: inspect only error class/code and field names from isolated synthetic inputs.
+2026-10-31 | ABOUT TO: isolate synthetic currency/date/required-field cases without printing rejected values | WHY: find the regression behind the test failures safely.
+2026-10-31 | RESULT: invalid currency/mismatched rupee diagnostics work; malformed amount and missing field throw ReferenceError. NEXT: inspect safe source location only.
+2026-10-31 | ABOUT TO: read validator ReferenceError stack location without printing data | WHY: fix the helper regression before rerunning tests.
+2026-10-31 | RESULT: ReferenceError is from a stale variable name at documentOcr.js:186 (`input` instead of `normalized.value`); no data was printed. NEXT: correct the variable reference.
+2026-10-31 | ABOUT TO: replace stale validation input variable | WHY: fix a mechanical regression introduced while threading safe input types into diagnostics.
+2026-10-31 | RESULT: safe diagnostics now read normalized.value. NEXT: rerun focused OCR and processing tests.
+2026-10-31 | ABOUT TO: rerun focused document OCR and processing tests | WHY: verify custom currency/amount/missing-field rules and route persistence.
+2026-10-31 | RESULT: focused tests could not load due a broad replacement changing the helper parameter to invalid syntax; no tests ran. NEXT: restore the helper parameter and retain normalized.value only at the call site.
+2026-10-31 | ABOUT TO: repair helper declaration after syntax failure | WHY: keep the safe-type helper signature valid.
+2026-10-31 | RESULT: helper signature restored and call passes normalized input. NEXT: rerun focused tests.
+2026-10-31 | ABOUT TO: rerun focused OCR/processing tests | WHY: verify diagnostics and normalization after syntax repair.
+2026-10-31 | RESULT: focused OCR and processing tests PASS 17/17, including safe field diagnostics, amount/date normalization, invalid currency, malformed JSON, and wrong-total warning. NEXT: attempt an in-tab screenshot to locate the file control without requesting or printing any credentials.
+2026-10-31 | ABOUT TO: inspect the existing browser tab screenshot | WHY: use visible page state to determine whether the authorized sample can be sent through the UI API path despite native app permission denial.
+2026-10-31 | RESULT: in-tab screenshot works; Choose a file button is visible; current selected file is B. NEXT: click the visible button and choose only sample A once.
+2026-10-31 | ABOUT TO: open the visible file picker for the already-authorized sample A | WHY: submit one PDF through the owner dashboard’s real API handler to surface field diagnostics.
+2026-10-31 | RESULT: native Chrome file picker was blocked by system computer-use permissions; no file was chosen. NEXT: verify via sanitized server access log that no upload occurred, then run final repository checks and commit.
+2026-10-31 | ABOUT TO: inspect only document API method/status entries from temporary server log | WHY: confirm the permission block caused no accidental upload or processing request.
+2026-10-31 | RESULT: sanitized server log contains zero document API requests after restart; no upload/process attempt occurred. NEXT: run full npm test on fix-ocr-validation.
+2026-10-31 | ABOUT TO: run npm test | WHY: verify OCR diagnostics and normalization against the full repository suite.
+2026-10-31 | RESULT: npm test FAIL 173/174; sole known API no-store failure, all new OCR tests pass. NEXT: run explicit migrations, syntax, whitespace, and protected-file checks.
+2026-10-31 | ABOUT TO: run migration check, syntax checks, whitespace and protected-file diff | WHY: complete requested final validation gates.
+2026-10-31 | RESULT: `npm test` FAIL 173/174 (known no-store test); migrations 16/16 PASS; 6 JavaScript files parse; diff whitespace PASS; protected-file diff empty. NEXT: document code fix, test history, and blocked live sample upload, then commit locally.
+2026-10-31 | ABOUT TO: update CONTEXT/RESUME POINTER, append-only test report and decisions | WHY: record exact source changes, checks, and the live upload permission blocker for the next agent.
+2026-10-31 | RESULT: docs now record normalization, strict checks, complete test outcomes, and the blocked real sample upload; RESUME POINTER names the exact next user action. NEXT: verify final branch/status, no `.env`, whitespace, protected paths, then WIP-commit.
+2026-10-31 | ABOUT TO: run final branch/secret-safe status and docs/protected-file checks | WHY: confirm only intended implementation/tests/continuity files are pending before checkpoint.
+2026-10-31 | RESULT: branch fix-ocr-validation; only intended 9 code/test/docs files pending; `.env` untracked; CONTEXT 54 lines; diff check PASS; protected-file diff empty. NEXT: stage exact files and commit with known suite failure documented.
+2026-10-31 | ABOUT TO: stage OCR diagnostic/normalization code, tests, and continuity docs | WHY: make a local checkpoint without secrets or protected files.
+2026-10-31 | RESULT: local WIP-BROKEN commit 246a4a2 created on fix-ocr-validation; no push. Sample upload remains blocked by native browser permission, so original A/B failing fields remain unknown; next action is the single owner-authorized A sample upload after user restores picker access.
+2026-11-01 | ABOUT TO: inspect RESUME POINTER, current context and duplicate handling | WHY: resume OCR work safely on the named branch and identify exact query/filter behavior.
+2026-11-01 | ABOUT TO: read-only service-role lookup for latest C document and recent org usage | WHY: determine whether its failure message has safe field/rule details without reading or printing document content.
+2026-11-01 | RESULT: C is failed with sanitized field detail `currency: required_when_amounts_present`; three newest usage rows are `ocr/invalid_response`. This is absent currency, not invalid currency. NEXT: verify the Documents view surfaces warnings and confirm invoice draft still requires a currency.
+2026-11-01 | ABOUT TO: inspect warning rendering and invoice currency validation | WHY: choose a safe fix that allows human review without silently assigning or accepting an unknown currency.
+2026-11-01 | RESULT: C’s stored message is `currency: required_when_amounts_present`; review UI requires a currency before creating a draft. It can safely process with a missing-currency review warning; invalid codes stay rejected. NEXT: change missing currency from hard failure to warning and exclude failed hashes from duplicate candidates.
+2026-11-01 | ABOUT TO: edit validator, Documents warning copy, duplicate filter, and tests | WHY: fix C’s actual missing-currency case without inventing currency, preserve human review, and permit retry after failed state.
+2026-11-01 | RESULT: missing currency now yields a review warning instead of OCR failure; Documents copy asks the user to choose currency. Duplicate query excludes failed rows but still counts rejected rows; tests added for both. NEXT: run focused OCR and processing tests.
+2026-11-01 | ABOUT TO: run focused OCR and document-processing tests | WHY: verify C’s exact failure rule now completes with warning and failed same-hash docs no longer block retry.
+2026-11-01 | RESULT: focused OCR/document-processing tests PASS 18/18; missing currency warns and processes; failed duplicate ignored; rejected duplicate still flags. NEXT: log this run and run full npm test.
+2026-11-01 | ABOUT TO: append focused test result and start full npm test | WHY: preserve every real run and verify wrong-total, duplicate, injection, and all repository tests.
+2026-11-01 | RESULT: npm test FAIL 174/175; only known API no-store test failed. NEXT: append the result and run explicit migrations, syntax, whitespace, and protected-file checks.
+2026-11-01 | ABOUT TO: record full suite result, then execute requested static checks | WHY: preserve exact outcome and verify current code/docs before checkpoint.
+2026-11-01 | RESULT: migrations PASS 16/16; six changed JS files parse; diff check PASS; protected-file diff empty. NEXT: update RESUME POINTER, CONTEXT, TEST-REPORT and DECISIONS with C’s root cause and duplicate policy, then WIP-commit.
+2026-11-01 | ABOUT TO: update continuity docs with C’s stored field failure, safe currency warning, duplicate filter and checks | WHY: preserve the exact fix and note that the user prohibited uploads in this run.
+2026-11-01 | RESULT: CONTEXT/RESUME POINTER, TEST-REPORT and DECISIONS updated; C root cause and no-upload outcome recorded. NEXT: final diff/secret checks, then local WIP-BROKEN commit.
+2026-11-01 | ABOUT TO: inspect final branch/status, tracked `.env`, whitespace and protected-file diff | WHY: verify the exact files to checkpoint and ensure no secrets/protected paths are included.
+2026-11-01 | RESULT: branch fix-ocr-validation; intended 9 files pending; `.env` not tracked; whitespace clean; protected-file diff empty. NEXT: stage and locally commit with known suite failure documented.
+2026-11-01 | ABOUT TO: stage missing-currency warning, failed-hash duplicate filter, tests and continuity docs | WHY: checkpoint the tested fix without secrets or protected files.
+2026-11-01 | RESULT: local checkpoint b8930b9 created on fix-ocr-validation; no push. C remains failed because uploads were prohibited; subsequent retry will now process with a visible currency warning.
+2026-11-01 | ABOUT TO: commit only docs/WORKLOG.md before push preflight | WHY: it is the sole working-tree change; `.env` is untracked and no files are staged.
+2026-11-01 | RESULT: sole change WORKLOG committed as 3fd9c9d; no .env tracked/staged. NEXT: fetch origin refs and scan the exact branch diff for secret patterns without printing matches.
+2026-11-01 | ABOUT TO: fetch origin refs for an accurate push diff | WHY: scan `origin/main..HEAD` against the current remote main before authorized push.
+2026-11-01 | ABOUT TO: scan added branch diff for key patterns and non-empty target-key assignments | WHY: confirm no credentials are present in the exact diff intended for push; print only filenames/counts.
+2026-11-01 | RESULT: secret scan of origin/main..HEAD found zero matching files/lines; no credential values were printed. NEXT: run the full test suite before push.
+2026-11-01 | ABOUT TO: run npm test on the complete push candidate | WHY: verify all branch tests; known API no-store failure is expected.
+2026-11-01 | RESULT: npm test FAIL 174/175; the only failure is the known API client no-store assertion. NEXT: run explicit migrations, changed-JS syntax, whitespace and protected-file checks.
+2026-11-01 | ABOUT TO: run check:migrations, node --check for every changed JS file, diff check and protected-file diff | WHY: satisfy the remaining pre-push verification gates.
+2026-11-01 | RESULT: migrations PASS 16/16; every changed JS file parses; diff check PASS; protected-file diff empty. NEXT: append exact test report and commit these results locally before final secret scan.
+2026-11-01 | ABOUT TO: record push-candidate validation results in TEST-REPORT and commit docs | WHY: preserve actual test outcomes before scanning and pushing the branch.
+2026-11-01 | RESULT: validation docs committed as 2b3a985; no source files changed after tests. NEXT: verify clean/secret-safe branch and rescan the final committed diff before authorized push.
+2026-11-01 | ABOUT TO: check final branch/status/.env and scan origin/main..HEAD for key patterns | WHY: ensure the exact push candidate contains no staged secret or credential-like value.
+2026-11-01 | RESULT: branch is fix-ocr-validation; `.env` untracked and no staged paths; final secret scan found zero files/lines. NEXT: commit the sole WORKLOG.md change, then rerun the scan against updated HEAD.
+2026-11-01 | ABOUT TO: stage/commit only docs/WORKLOG.md | WHY: it is the sole remaining change before the exact push scan and user-authorized push.
+2026-11-01 | RESULT: sole WORKLOG change committed as cf01582; no source changes after tests. NEXT: final scan the complete committed diff and check gh availability.
+2026-11-01 | ABOUT TO: commit scan result/pre-scan journal lines | WHY: record the prior scan and exact next step before final push-candidate scan.
+2026-11-01 | ABOUT TO: perform final committed-diff secret scan and check gh availability | WHY: scan includes every committed preflight note and is the last gate before the one authorized branch push.
+2026-11-01 | RESULT: final scan found zero credential-like lines; gh CLI is authenticated; `.env` untracked; only WORKLOG.md modified; protected diff empty. NEXT: commit this sole journal change, rerun final scan, then push only this branch.
+2026-11-01 | ABOUT TO: commit only docs/WORKLOG.md | WHY: it is the sole pending path and must be included in the branch before final scan.

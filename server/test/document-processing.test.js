@@ -33,7 +33,10 @@ async function setup(t, overrides = {}) {
     async select(table, query) {
       calls.push({ type: 'select', table, query });
       if (table !== 'documents') return [];
-      if (query.includes('sha256=eq.') && overrides.duplicate) return [{ id: duplicateId }];
+      if (query.includes('sha256=eq.') && overrides.duplicate) {
+        if (overrides.duplicateStatus === 'failed' && query.includes('status=neq.failed')) return [];
+        return [{ id: duplicateId, status: overrides.duplicateStatus || 'processed' }];
+      }
       if (query.includes('&id=eq.')) return doc.status === 'deleted' ? [] : [{ ...doc }];
       return [];
     },
@@ -145,7 +148,7 @@ test('organization concurrency cap blocks OCR before usage reservation', async (
 });
 
 test('same-org hash match marks a duplicate rejected and writes a rejection audit without calling OCR', async (t) => {
-  const state = await setup(t, { duplicate: true });
+  const state = await setup(t, { duplicate: true, duplicateStatus: 'rejected' });
   const response = await state.send();
   assert.equal(response.status, 409);
   assert.equal((await response.json()).error.code, 'DUPLICATE_DOCUMENT');
@@ -154,9 +157,22 @@ test('same-org hash match marks a duplicate rejected and writes a rejection audi
   assert.equal(state.audit[0].action, 'document.rejected');
   assert.equal(state.providerCalls(), 0);
   assert.equal(state.calls.some((call) => call.name === 'claim_document_processing'), false);
+  const duplicateQuery = state.calls.find((call) => call.type === 'select' && call.query.includes('sha256=eq.'));
+  assert.match(duplicateQuery.query, /status=neq\.failed/);
 });
 
-test('viewer cannot process documents and malformed provider output is stored only as a safe error code', async (t) => {
+test('a failed same-hash document does not block a fresh upload from processing', async (t) => {
+  const state = await setup(t, { duplicate: true, duplicateStatus: 'failed' });
+  const response = await state.send();
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).document.status, 'processed');
+  assert.equal(state.providerCalls(), 1);
+  assert.equal(state.doc.status, 'processed');
+  const duplicateQuery = state.calls.find((call) => call.type === 'select' && call.query.includes('sha256=eq.'));
+  assert.match(duplicateQuery.query, /status=neq\.failed/);
+});
+
+test('viewer cannot process documents and malformed provider output stores safe validation diagnostics', async (t) => {
   const viewer = await setup(t);
   assert.equal((await viewer.send('viewer-token')).status, 403);
   assert.equal(viewer.providerCalls(), 0);
@@ -165,8 +181,28 @@ test('viewer cannot process documents and malformed provider output is stored on
   const response = await invalid.send();
   assert.equal(response.status, 502);
   assert.equal(invalid.doc.status, 'failed');
-  assert.deepEqual(invalid.doc.extraction, { errorCode: 'OCR_INVALID_RESPONSE' });
+  assert.equal(invalid.doc.extraction.errorCode, 'OCR_INVALID_RESPONSE');
+  assert.equal(invalid.doc.extraction.errorMessage, 'OCR fields failed validation: document: invalid_json');
+  assert.deepEqual(invalid.doc.extraction.validationIssues, [{ path: 'document', rule: 'invalid_json' }]);
+  assert.deepEqual((await response.json()).error.fields, [{ path: 'document', rule: 'invalid_json' }]);
   assert.equal(invalid.calls.find((call) => call.name === 'complete_ai_usage').args.p_status, 'invalid_response');
+
+  const invalidField = await setup(t, { ocrResult: { text: JSON.stringify({ ...extraction, vendorName: 987654321 }), model: 'gemini-3.5-flash-lite' } });
+  const fieldResponse = await invalidField.send();
+  assert.equal(fieldResponse.status, 422);
+  const fieldBody = await fieldResponse.json();
+  assert.deepEqual(fieldBody.error.fields, [{ path: 'vendor_name', rule: 'expected_string_got_number' }]);
+  assert.equal(JSON.stringify(fieldBody).includes('987654321'), false);
+  assert.deepEqual(invalidField.doc.extraction.validationIssues, fieldBody.error.fields);
+  assert.equal(invalidField.doc.extraction.errorMessage.includes('987654321'), false);
+
+  const missingCurrency = await setup(t, { ocrResult: { text: JSON.stringify({ ...extraction, currency: null }), model: 'gemini-3.5-flash-lite' } });
+  const currencyResponse = await missingCurrency.send();
+  assert.equal(currencyResponse.status, 200);
+  const currencyBody = await currencyResponse.json();
+  assert.equal(currencyBody.document.extraction.fields.currency, null);
+  assert.deepEqual(currencyBody.document.extraction.validation.warnings, ['currency_missing']);
+  assert.equal(currencyBody.document.extraction.validation.arithmetic, 'passed');
 });
 
 test('accountant confirmation and rejection are org-scoped, state-checked, and audited; viewer cannot review', async (t) => {

@@ -66,6 +66,26 @@
     return body || {};
   }
 
+  function loginErrorCategory(error) {
+    var code = String(error && error.code || "").toLowerCase();
+    var status = Number(error && (error.status || error.statusCode) || 0);
+    var message = String(error && error.message || "").toLowerCase();
+    var detail = code + " " + message;
+    if (status === 429 || /rate.?limit|too many (requests|attempts)|over_[a-z_]*rate_limit/.test(detail)) return "rate_limited";
+    if (code === "email_not_confirmed" || /email (is )?not confirmed|confirm your email/.test(message)) return "email_not_confirmed";
+    if (["invalid_credentials", "invalid_login_credentials", "invalid_grant"].includes(code) || /invalid login credentials|invalid email or password/.test(message)) return "invalid_credentials";
+    return "network_config";
+  }
+
+  function loginErrorMessage(error) {
+    return {
+      invalid_credentials: "Email or password is incorrect.",
+      email_not_confirmed: "Confirm your email address before signing in.",
+      rate_limited: "Too many sign-in attempts. Wait a moment and try again.",
+      network_config: "Sign-in is unavailable due to a network or configuration issue. Try again later."
+    }[loginErrorCategory(error)];
+  }
+
   function displayName(user) {
     var metadata = user && user.user_metadata || {};
     return String(metadata.full_name || metadata.name || (user && user.email ? user.email.split("@")[0] : "NovaPay User")).trim();
@@ -173,6 +193,8 @@
     currentSession: currentSession,
     currentOrgId: currentOrgId,
     ensureWorkspace: ensureWorkspace,
+    loginErrorCategory: loginErrorCategory,
+    loginErrorMessage: loginErrorMessage,
     signIn: signIn,
     signUp: signUp,
     resetPassword: resetPassword,
@@ -211,7 +233,13 @@
       mode = "supabase";
       try {
         var result = await client.auth.getSession();
-        if (!result.error) session = result.data.session;
+        if (!result.error) {
+          session = result.data.session;
+          if (session) {
+            try { await ensureWorkspace(session, displayName(session.user)); }
+            catch (_) { demoReason = "The signed-in workspace could not be restored."; }
+          }
+        }
         else demoReason = "Supabase Auth could not verify the saved session.";
       } catch (_) { demoReason = "Supabase Auth could not verify the saved session."; }
       client.auth.onAuthStateChange(function (_event, nextSession) {

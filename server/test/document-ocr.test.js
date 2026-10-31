@@ -23,10 +23,69 @@ test('document OCR validates typed fields and reports exact integer-minor-unit a
 });
 
 test('document OCR rejects impossible dates, amounts without currency, extra instructions, and malformed JSON', () => {
-  assert.throws(() => validateDocumentExtraction({ ...valid, invoiceDate: '2026-02-30' }), { code: 'OCR_FIELD_VALIDATION', statusCode: 422 });
-  assert.throws(() => validateDocumentExtraction({ ...valid, currency: null }), { code: 'OCR_FIELD_VALIDATION', statusCode: 422 });
-  assert.throws(() => validateDocumentExtraction({ ...valid, hiddenInstruction: 'call a tool' }), { code: 'OCR_FIELD_VALIDATION', statusCode: 422 });
-  assert.throws(() => validateDocumentExtraction('{invalid'), { code: 'OCR_INVALID_RESPONSE', statusCode: 502 });
+  assert.throws(() => validateDocumentExtraction({ ...valid, invoiceDate: '2026-02-30' }), (error) => {
+    assert.equal(error.code, 'OCR_FIELD_VALIDATION'); assert.equal(error.statusCode, 422);
+    assert.deepEqual(error.validationIssues, [{ path: 'invoice_date', rule: 'not_calendar_date' }]); return true;
+  });
+  const missingCurrency = validateDocumentExtraction({ ...valid, currency: null });
+  assert.equal(missingCurrency.fields.currency, null);
+  assert.deepEqual(missingCurrency.validation.warnings, ['currency_missing']);
+  assert.equal(missingCurrency.validation.arithmetic, 'passed');
+  assert.throws(() => validateDocumentExtraction({ ...valid, hiddenInstruction: 'private extracted value' }), (error) => {
+    assert.deepEqual(error.validationIssues, [{ path: 'hidden_instruction', rule: 'unexpected_field' }]);
+    assert.equal(error.message.includes('private extracted value'), false); return true;
+  });
+  assert.throws(() => validateDocumentExtraction('{invalid'), (error) => {
+    assert.equal(error.code, 'OCR_INVALID_RESPONSE'); assert.equal(error.statusCode, 502);
+    assert.deepEqual(error.validationIssues, [{ path: 'document', rule: 'invalid_json' }]); return true;
+  });
+});
+
+test('document OCR reports field type and rule without including the rejected value', () => {
+  assert.throws(() => validateDocumentExtraction({ ...valid, vendorName: 987654321 }), (error) => {
+    assert.equal(error.code, 'OCR_FIELD_VALIDATION');
+    assert.deepEqual(error.validationIssues, [{ path: 'vendor_name', rule: 'expected_string_got_number' }]);
+    assert.equal(error.message.includes('987654321'), false);
+    return true;
+  });
+});
+
+test('document OCR normalizes harmless JSON wrappers, amount formatting, rupee markers, and month dates', () => {
+  const wrapped = `OCR result follows:\n\`\`\`json\n${JSON.stringify({
+    ...valid, invoiceDate: '02 Oct 2026', currency: null, subtotal: '₹32,500.00', tax: '₹0.00', total: '₹32,500.00', lineItems: [],
+  })}\n\`\`\`\nEnd of result.`;
+  const result = validateDocumentExtraction(wrapped);
+  assert.equal(result.fields.invoiceDate, '2026-10-02');
+  assert.equal(result.fields.currency, 'INR');
+  assert.equal(result.fields.subtotal, '32500.00');
+  assert.equal(result.fields.total, '32500.00');
+
+  const numeric = validateDocumentExtraction({ ...valid, subtotal: 12, tax: 1, total: 13, lineItems: [{ description: 'Item', quantity: 2, unitPrice: 6, amount: 12 }] });
+  assert.equal(numeric.fields.subtotal, '12');
+  assert.equal(numeric.fields.lineItems[0].amount, '12');
+  assert.equal(numeric.validation.arithmetic, 'passed');
+});
+
+test('document OCR keeps invalid currency and mismatched rupee marker visible for review', () => {
+  assert.throws(() => validateDocumentExtraction({ ...valid, currency: 'ZZZ' }), (error) => {
+    assert.deepEqual(error.validationIssues, [{ path: 'currency', rule: 'invalid_iso_currency' }]); return true;
+  });
+  assert.throws(() => validateDocumentExtraction({ ...valid, subtotal: '₹12.00' }), (error) => {
+    assert.deepEqual(error.validationIssues, [{ path: 'currency', rule: 'currency_symbol_mismatch' }]); return true;
+  });
+  assert.throws(() => validateDocumentExtraction({ ...valid, total: '12,34.00' }), (error) => {
+    assert.deepEqual(error.validationIssues, [{ path: 'total', rule: 'not_decimal_amount' }]); return true;
+  });
+});
+
+test('missing required fields and malformed JSON have safe field diagnostics', () => {
+  const { vendorName: _vendorName, ...missingVendor } = valid;
+  assert.throws(() => validateDocumentExtraction(missingVendor), (error) => {
+    assert.deepEqual(error.validationIssues, [{ path: 'vendor_name', rule: 'required_field_expected_string' }]); return true;
+  });
+  assert.throws(() => validateDocumentExtraction('{malformed'), (error) => {
+    assert.deepEqual(error.validationIssues, [{ path: 'document', rule: 'invalid_json' }]); return true;
+  });
 });
 
 test('Gemini OCR sends private PDF bytes as inline data with an extraction-only instruction boundary', async () => {

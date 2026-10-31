@@ -29,6 +29,10 @@ const extractionSchema = z.object({
     total: z.number().min(0).max(1),
   }).strict(),
 }).strict();
+const supportedCurrencies = new Set(typeof Intl.supportedValuesOf === 'function'
+  ? Intl.supportedValuesOf('currency')
+  : ['AUD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'INR', 'JPY', 'NZD', 'SGD', 'USD']);
+const monthNumbers = new Map(['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].map((month, i) => [month, i + 1]));
 
 function cents(value) {
   if (value === null) return null;
@@ -46,21 +50,154 @@ function isCalendarDate(value) {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
+function safeFieldPath(path) {
+  if (!Array.isArray(path) || !path.length) return 'document';
+  return path.map((part) => {
+    if (typeof part === 'number') return `[${part}]`;
+    const field = String(part);
+    if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(field)) return 'unknown_field';
+    return field.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`).replace(/^_/, '');
+  }).join('.').replace(/\.\[/g, '[');
+}
+
+function safeInputAtPath(input, path) {
+  let value = input;
+  for (const part of path || []) value = value == null ? undefined : value[part];
+  return value;
+}
+
+function safeIssueRule(issue, input) {
+  if (issue.code === 'invalid_type') {
+    const expected = String(issue.expected || 'valid_type').replace(/[^a-z_]/gi, '').toLowerCase();
+    const receivedValue = safeInputAtPath(input, issue.path);
+    if (receivedValue === undefined) return `required_field_expected_${expected}`;
+    const received = receivedValue === null ? 'null' : Array.isArray(receivedValue) ? 'array' : typeof receivedValue;
+    return `expected_${expected}_got_${received}`;
+  }
+  if (issue.code === 'invalid_format') {
+    const path = safeFieldPath(issue.path);
+    if (path === 'invoice_date') return 'not_iso_date';
+    if (path === 'currency') return 'not_iso_4217_currency';
+    if (/(^|\.)(subtotal|tax|total|amount|quantity|unit_price)$/.test(path)) return 'not_decimal_amount';
+    return 'invalid_format';
+  }
+  if (issue.code === 'invalid_value') return 'not_allowed_value';
+  if (issue.code === 'too_big') return 'exceeds_limit';
+  if (issue.code === 'too_small') return 'below_minimum';
+  if (issue.code === 'unrecognized_keys') return 'unexpected_field';
+  return 'invalid_value';
+}
+
+function makeValidationError(issues, code = 'OCR_FIELD_VALIDATION', statusCode = 422) {
+  const validationIssues = issues.slice(0, 24).map((issue) => ({ path: safeFieldPath(issue.path), rule: issue.rule || safeIssueRule(issue) }));
+  const message = `OCR fields failed validation: ${validationIssues.map(({ path, rule }) => `${path}: ${rule}`).join('; ')}`;
+  return Object.assign(new Error(message), { code, statusCode, validationIssues });
+}
+
 function safeJson(text) {
-  const source = String(text || '').replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-  try { return JSON.parse(source); } catch { throw Object.assign(new Error('OCR returned invalid structured data.'), { code: 'OCR_INVALID_RESPONSE', statusCode: 502 }); }
+  const source = String(text || '').replace(/^\uFEFF/, '').trim();
+  const fenced = source.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced) {
+    try { return JSON.parse(fenced[1]); } catch { throw makeValidationError([{ path: ['document'], rule: 'invalid_json' }], 'OCR_INVALID_RESPONSE', 502); }
+  }
+  try { return JSON.parse(source); } catch {}
+  const start = source.indexOf('{');
+  if (start >= 0) {
+    let depth = 0, quoted = false, escaped = false;
+    for (let i = start; i < source.length; i += 1) {
+      const char = source[i];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (char === '\\') escaped = true;
+        else if (char === '"') quoted = false;
+        continue;
+      }
+      if (char === '"') quoted = true;
+      else if (char === '{') depth += 1;
+      else if (char === '}' && --depth === 0) {
+        try { return JSON.parse(source.slice(start, i + 1)); } catch { break; }
+      }
+    }
+  }
+  throw makeValidationError([{ path: ['document'], rule: 'invalid_json' }], 'OCR_INVALID_RESPONSE', 502);
+}
+
+function normalizeDate(value) {
+  if (typeof value !== 'string') return value;
+  const match = value.trim().match(/^(\d{1,2})\s+([A-Za-z]{3,9})\.?[,]?\s+(\d{4})$/);
+  if (!match) return value;
+  const month = monthNumbers.get(match[2].slice(0, 3).toLowerCase());
+  if (!month) return value;
+  return `${match[3]}-${String(month).padStart(2, '0')}-${String(match[1]).padStart(2, '0')}`;
+}
+
+function normalizeMoney(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return { value: String(value), currency: null };
+  if (typeof value !== 'string') return { value, currency: null };
+  let text = value.trim();
+  let currency = null;
+  if (/^₹\s*/u.test(text)) { currency = 'INR'; text = text.replace(/^₹\s*/u, ''); }
+  else if (/^INR\s+/i.test(text)) { currency = 'INR'; text = text.replace(/^INR\s+/i, ''); }
+  const grouped = /^-?\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?$/;
+  const plain = /^-?\d+(?:\.\d{1,2})?$/;
+  if (grouped.test(text)) text = text.replace(/,/g, '');
+  else if (!plain.test(text)) return { value, currency };
+  return { value: text, currency };
+}
+
+function normalizeExtractionInput(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return { value: input, detectedCurrencies: new Set() };
+  const value = { ...input };
+  const detectedCurrencies = new Set();
+  value.invoiceDate = normalizeDate(value.invoiceDate);
+  const moneyFields = ['subtotal', 'tax', 'total'];
+  for (const field of moneyFields) {
+    const normalized = normalizeMoney(value[field]);
+    value[field] = normalized.value;
+    if (normalized.currency) detectedCurrencies.add(normalized.currency);
+  }
+  if (Array.isArray(value.lineItems)) {
+    value.lineItems = value.lineItems.map((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+      const line = { ...item };
+      for (const field of ['quantity', 'unitPrice', 'amount']) {
+        const normalized = normalizeMoney(line[field]);
+        line[field] = normalized.value;
+        if (normalized.currency) detectedCurrencies.add(normalized.currency);
+      }
+      return line;
+    });
+  }
+  if (typeof value.currency === 'string') {
+    const currency = value.currency.trim().toUpperCase();
+    value.currency = currency === '₹' ? 'INR' : currency;
+  }
+  if ((value.currency === null || value.currency === undefined) && detectedCurrencies.size === 1) value.currency = [...detectedCurrencies][0];
+  return { value, detectedCurrencies };
 }
 
 export function validateDocumentExtraction(value) {
-  const parsed = extractionSchema.safeParse(typeof value === 'string' ? safeJson(value) : value);
-  if (!parsed.success) throw Object.assign(new Error('OCR fields failed validation.'), { code: 'OCR_FIELD_VALIDATION', statusCode: 422 });
+  const rawInput = typeof value === 'string' ? safeJson(value) : value;
+  const normalized = normalizeExtractionInput(rawInput);
+  const parsed = extractionSchema.safeParse(normalized.value);
+  if (!parsed.success) {
+    const issues = parsed.error.issues.flatMap((issue) => issue.code === 'unrecognized_keys'
+      ? issue.keys.map((key) => ({ path: [...issue.path, key], rule: 'unexpected_field' }))
+      : [{ ...issue, rule: safeIssueRule(issue, normalized.value) }]);
+    throw makeValidationError(issues);
+  }
   const fields = parsed.data;
-  if (!isCalendarDate(fields.invoiceDate)) throw Object.assign(new Error('OCR date is invalid.'), { code: 'OCR_FIELD_VALIDATION', statusCode: 422 });
+  if (!isCalendarDate(fields.invoiceDate)) throw makeValidationError([{ path: ['invoiceDate'], rule: 'not_calendar_date' }]);
+  if (fields.currency !== null && !supportedCurrencies.has(fields.currency)) throw makeValidationError([{ path: ['currency'], rule: 'invalid_iso_currency' }]);
+  if (normalized.detectedCurrencies.size > 0 && [...normalized.detectedCurrencies].some((currency) => currency !== fields.currency)) {
+    throw makeValidationError([{ path: ['currency'], rule: 'currency_symbol_mismatch' }]);
+  }
   const money = [fields.subtotal, fields.tax, fields.total, ...fields.lineItems.map((item) => item.amount)];
-  if (fields.currency === null && money.some((amount) => amount !== null)) throw Object.assign(new Error('OCR currency is required when monetary amounts are present.'), { code: 'OCR_FIELD_VALIDATION', statusCode: 422 });
+  const currencyMissing = fields.currency === null && money.some((amount) => amount !== null);
 
   const checks = [];
   const warnings = [];
+  if (currencyMissing) warnings.push('currency_missing');
   if (fields.subtotal !== null && fields.tax !== null && fields.total !== null) {
     const balanced = cents(fields.subtotal) + cents(fields.tax) === cents(fields.total);
     checks.push({ name: 'subtotal_plus_tax_equals_total', passed: balanced });
@@ -76,7 +213,7 @@ export function validateDocumentExtraction(value) {
     fields,
     validation: {
       fields: 'valid',
-      arithmetic: checks.length === 0 ? 'unverified' : warnings.length === 0 ? 'passed' : 'warning',
+      arithmetic: checks.length === 0 ? 'unverified' : checks.every((check) => check.passed) ? 'passed' : 'warning',
       checks,
       warnings,
     },
