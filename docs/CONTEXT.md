@@ -2,53 +2,52 @@
 
 ## HEADER
 - Date/time: 2026-11-01 (Asia/Kolkata)
-- Branch: `fix-ocr-validation`, based on `fix-login-errors`; no push
-- Current task: resolve Invoice_C_TEST-003 OCR validation and duplicate retry behavior
+- Branch: `fix-ocr-validation`, based on `fix-login-errors`
+- Pushed head: `3e0ff49`; PR #9 OPEN into `main`; no merge or second push
 
 ## DONE
-- Read-only lookup found C in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678`, status `failed`, code `OCR_FIELD_VALIDATION`, safe message `currency: required_when_amounts_present`.
-- Latest three ai_usage rows for org: route `ocr`, status `invalid_response`.
-- Root cause: validator treated absent currency as fatal whenever amounts existed. Missing currency is now a visible review warning; it is not inferred unless an explicit rupee marker indicates INR.
-- Invalid ISO currencies and currency-symbol mismatch still fail; wrong totals remain flagged as arithmetic warnings. Documents view asks reviewer to select currency before creating invoice draft.
-- Duplicate query excludes `failed` documents (`status=neq.failed`); rejected, processed and other nonfailed rows continue to block same-hash duplicates.
-- Added tests for missing-currency warning through service/route and failed-vs-rejected duplicate behavior.
+- Login uses Supabase on preview; saved sessions restore existing workspace; dashboard waits for auth; Documents reloads role fresh.
+- OCR failure diagnostics store/return safe field paths and rules, never rejected values or document text.
+- OCR normalizes JSON wrappers, numeric/grouped/₹ amounts and `DD Mon YYYY` dates; invalid ISO currencies, symbol mismatch, malformed JSON and wrong totals remain visible.
+- C’s stored root cause: missing currency with monetary amounts (`currency: required_when_amounts_present`). It now processes with `currency_missing` review warning; the Documents view requires reviewer to select currency before draft creation.
+- Duplicate lookup excludes `failed` rows but continues to count `rejected` rows.
 
 ## IN PROGRESS
-- No live upload/reprocess performed; user explicitly prohibited uploads. C remains failed until a later owner re-upload/retry.
+- PR #9 open for team review. Live re-upload was not performed because user explicitly prohibited uploads.
 
 ## NEXT STEPS
-1. Do not upload in this turn. Later, owner can re-upload the same file; the failed row will not block its hash.
-2. Review the currency warning and enter the correct currency before invoice draft confirmation.
+1. Review PR #9: https://github.com/Aadiverse07/NovaPay/pull/9
+2. If approved later, re-upload existing Invoice_C_TEST-003.pdf once; verify it processes and shows currency_missing, then choose correct currency before drafting.
+3. Keep `npm test` no-store failure tracked separately; do not weaken its assertion.
 
 ## USER ACTIONS PENDING
-- None required now.
+- Review PR #9. Optional later: authorize/perform the existing sample re-upload and browser review; no upload occurred in this task.
 
 ## LIVE STATE
-- Read-only DB inspection only. No users, docs, Storage objects, or rows changed.
-- No upload attempted. Existing A/B/C failures remain as recorded.
-- No secrets or key values recorded.
+- Read-only metadata query only; no users or database rows changed. No upload/reprocess performed.
+- `.env` is untracked; no secret values are recorded.
+- Pushed branch head is `3e0ff49`; PR #9 OPEN; local handoff docs will be committed after this update without another push.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused OCR/document processing | PASS | 18/18 |
-| Full suite | FAIL | 174/175; known API-client `Cache-Control: no-store` assertion |
+| Focused OCR/document tests | PASS | 18/18 |
+| Full suite | FAIL | 174/175; known API client no-store assertion |
 | Migrations | PASS | 16/16 |
-| Changed JS syntax | PASS | app, document route/service, Documents view and two tests |
+| Changed JavaScript syntax | PASS | All changed JS files parse |
 | `git diff --check` | PASS | Clean |
-| Protected-file diff | PASS | Empty against origin/main |
-| C failure reason | PASS | stored path/rule is `currency: required_when_amounts_present` |
-| Re-upload duplicate policy | PASS | failed excluded; rejected still duplicate |
-| Live reprocess | UNVERIFIED | no upload by explicit user instruction |
+| Protected-file diff | PASS | Empty |
+| Secret scan | PASS | Zero files/lines matched |
+| Live C reprocess | UNVERIFIED | User prohibited uploads; row remains failed |
 
 ## KNOWN ISSUES AND RISKS
-- C remains failed until a later owner retry/re-upload. The updated handler only affects new processing attempts.
-- Full suite retains unrelated no-store failure.
+- C still has failed state until a later re-upload; this task did not mutate it.
+- Full suite has one known unrelated no-store failure.
 
 ## LESSONS LEARNED
-- Never print `.env` values, credentials, JWTs or document content.
-- Missing currency should be reviewable; never assign a currency without an explicit marker or user review.
-- OCR errors expose field paths/rules only; never persist raw provider text.
+- Never print `.env` values, passwords, JWTs, keys or document content.
+- Missing currency can be reviewed without inventing it; require human selection before draft.
+- Failed OCR attempts should not permanently block same-hash re-uploads; rejected docs still count.
 
 ## DO NOT
-- Never push, create users, upload documents in this turn, expose document text, or weaken validation.
+- Do not push again, merge PR #9, create users, or upload documents without later instruction.

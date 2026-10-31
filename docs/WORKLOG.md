@@ -1,11 +1,10 @@
 ## RESUME POINTER
-- Current task: fix C’s OCR failure and failed-hash duplicate behavior on `fix-ocr-validation`; no push, no uploads/users.
-- ROOT CAUSE: latest C row in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678` is `failed`, code `OCR_FIELD_VALIDATION`, stored safe message `currency: required_when_amounts_present`. Latest usage: 3 rows `ocr/invalid_response`.
-- FIX: missing currency now processes with `currency_missing` review warning; no currency inferred unless explicit ₹ marker. Invalid ISO currency and symbol mismatch still fail. UI asks reviewer to choose currency before draft.
-- DUPLICATES: candidate lookup filters `status=neq.failed`; rejected/processed rows still count. Tests verify both paths.
-- CHECKS: focused 18/18 PASS; `npm test` FAIL 174/175 only known no-store assertion; migrations 16/16, syntax, whitespace PASS; protected-file diff empty.
-- NEXT: no upload was performed per instruction. Later, owner may re-upload same-hash C; failed row will not block it. Human review must enter currency before draft.
-- PENDING: none required now. No push.
+- Current task: pushed login/OCR fix on `fix-ocr-validation`; PR #9 is OPEN into `main`. Pushed head `3e0ff49`; no merge and no further push authorized/performed.
+- DONE: Supabase login/session workspace restore/fresh Documents role; OCR field/rule diagnostics; safe JSON/amount/date normalization; missing currency is review warning; invalid currency and wrong totals remain flagged; failed same-hash rows no longer block upload, rejected rows still count.
+- TESTS: focused OCR/document suite 18/18 PASS; `npm test` 174/175 with known API no-store failure; migrations 16/16 and JS/diff/protected checks PASS.
+- LIVE C: read-only finding was `currency: required_when_amounts_present`; row remains failed because user prohibited uploads. No upload or reprocess was performed. Re-upload after PR review should process with currency warning; reviewer must choose currency before invoice draft.
+- NEXT: review PR #9. Later, if desired, re-upload existing C once and verify warning. Keep no-push instruction until separately authorized.
+- PENDING: human review of PR; optional browser verification/re-upload after review.
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3608,3 +3607,15 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-11-01 | ABOUT TO: perform final committed-diff secret scan and check gh availability | WHY: scan includes every committed preflight note and is the last gate before the one authorized branch push.
 2026-11-01 | RESULT: final scan found zero credential-like lines; gh CLI is authenticated; `.env` untracked; only WORKLOG.md modified; protected diff empty. NEXT: commit this sole journal change, rerun final scan, then push only this branch.
 2026-11-01 | ABOUT TO: commit only docs/WORKLOG.md | WHY: it is the sole pending path and must be included in the branch before final scan.
+2026-11-01 | RESULT: final committed diff scan found zero secret matches; branch fix-ocr-validation; `.env` untracked; worktree clean before this journal entry. Remote topic ref absent; push will create it. NEXT: perform the explicitly authorized `git push -u origin fix-ocr-validation` only.
+2026-11-01 | ABOUT TO: push fix-ocr-validation to origin | WHY: user granted push permission for this branch only after a clean secret scan and required checks.
+2026-11-01 | RESULT: authorized push succeeded; origin/fix-ocr-validation created and set upstream. NEXT: check whether this head already has a PR before creating one.
+2026-11-01 | ABOUT TO: query GitHub for an existing PR from fix-ocr-validation | WHY: avoid creating a duplicate PR after the branch push.
+2026-11-01 | RESULT: no existing PR found for fix-ocr-validation. NEXT: create PR # using requested title and accurate body, including known test failure and no live reprocess.
+2026-11-01 | ABOUT TO: write the PR description to a temporary file | WHY: preserve a readable multiline body without placing secrets in arguments.
+2026-11-01 | RESULT: PR #9 created at https://github.com/Aadiverse07/NovaPay/pull/9. NEXT: verify PR state and branch head, then update CONTEXT/RESUME POINTER and commit docs locally without another push.
+2026-11-01 | ABOUT TO: verify PR #9 metadata and current local/remote branch hashes | WHY: record the exact open PR, pushed commit, and post-push divergence accurately.
+2026-11-01 | RESULT: PR #9 is OPEN into main; local and remote branch heads both 3e0ff49. NEXT: update handoff docs with pushed hash/PR and pending live sample check, then local-only commit; do not push again.
+2026-11-01 | ABOUT TO: rewrite CONTEXT and RESUME POINTER for PR #9 handoff | WHY: make the repository continuation state reflect the successful push, open PR, test failure, and no-upload constraint.
+2026-11-01 | RESULT: CONTEXT and RESUME POINTER now show pushed head 3e0ff49, PR #9 open, no upload performed, and exact pending steps. NEXT: whitespace-check and locally commit these docs without pushing.
+2026-11-01 | ABOUT TO: validate and commit CONTEXT/WORKLOG handoff locally | WHY: preserve post-push PR state while honoring the no-second-push limit.
