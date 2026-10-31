@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: login repair on `fix-login-errors`, based on `origin/main` at branch creation; latest local checkpoint `2969413`; no push.
+- Current task: login repair on `fix-login-errors`, based on `origin/main` at branch creation; latest code checkpoint `2969413`, handoff checkpoint `666fddc`; no push.
 - DONE: preview/dashboard load Supabase auth; login errors map to invalid credentials, unconfirmed email, rate limit, or network/config; saved sessions restore the existing workspace; Documents refreshes role after auth changes and before upload. Added `server/test/login-auth.test.js` (5/5 PASS).
 - Root cause: preview used only local demo auth and dashboard guarded only on `novapay-demo-auth`; real Supabase sessions were not used. A stale/late role could trigger the upload role banner.
 - CHECKS: `npm test` FAIL 169/170 on existing API no-store test; `npm run check:migrations` PASS 16/16; focused tests 5/5; changed JS syntax PASS; `git diff --check` PASS; protected diff empty.
@@ -3472,3 +3472,7 @@ RESULT — 2026-10-27 23:34:44 Asia/Kolkata: PASS: Clean up this run’s mainten
 2026-10-31 | ABOUT TO: record commit 2969413 in the resume pointer | WHY: make the handoff identify the exact local checkpoint.
 2026-10-31 | RESULT: resume pointer identifies checkpoint 2969413. NEXT: stage and commit the pointer update, then verify final branch and worktree.
 2026-10-31 | ABOUT TO: commit the final handoff pointer update locally | WHY: preserve the exact resume checkpoint in the repository.
+2026-10-31 | RESULT: handoff pointer checkpoint committed as 666fddc; no push. NEXT: final branch/status check and report.
+2026-10-31 | ABOUT TO: verify final branch, worktree and .env tracking | WHY: confirm the login work remains on the requested local branch and no environment file is tracked.
+2026-10-31 | RESULT: final state is fix-login-errors; .env untracked; WORKLOG has the final status-check entry unstaged. NEXT: clarify separate code and handoff checkpoint hashes in the resume pointer.
+2026-10-31 | ABOUT TO: clarify checkpoint hashes in RESUME POINTER and commit the final journal state | WHY: distinguish the code checkpoint from the later docs-only checkpoint.
