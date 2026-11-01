@@ -30,12 +30,13 @@ test('Gemini adapter falls back to the configured model after a primary failure'
   const result = await adapter.generate({ system: 'system', prompt: 'question' });
   assert.equal(result.model, 'fallback-model');
   assert.equal(result.text, '{"reply":"fallback"}');
-  assert.equal(requested.length, 2);
+  assert.equal(requested.length, 3);
   assert.match(requested[0], /primary-model:generateContent/);
-  assert.match(requested[1], /fallback-model:generateContent/);
+  assert.match(requested[1], /primary-model:generateContent/);
+  assert.match(requested[2], /fallback-model:generateContent/);
 });
 
-test('Gemini adapter retries throttling once with bounded backoff, then uses one fallback', async () => {
+test('Gemini adapter rotates on quota exhaustion without sleeping, then uses model fallback', async () => {
   const requested = [];
   const waits = [];
   const adapter = createGeminiAdapter({
@@ -48,8 +49,8 @@ test('Gemini adapter retries throttling once with bounded backoff, then uses one
   });
   const result = await adapter.generate({ system: 'system', prompt: 'question' });
   assert.equal(result.model, 'free-fallback');
-  assert.equal(requested.length, 3);
-  assert.deepEqual(waits, [120]);
+  assert.equal(requested.length, 2);
+  assert.deepEqual(waits, []);
 });
 
 test('Gemini adapter bounds timeouts, retries once, and never logs response bodies or API keys', async () => {
@@ -77,7 +78,7 @@ test('Gemini adapter uses the fallback once for malformed and empty provider res
     },
   });
   await assert.rejects(adapter.generate({ system: 'system', prompt: 'question' }), /LLM provider/);
-  assert.equal(requested.length, 2);
+  assert.equal(requested.length, 4);
 });
 
 test('default provider is Gemini and Anthropic is selected only by explicit configuration', async () => {

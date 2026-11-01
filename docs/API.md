@@ -2,6 +2,20 @@
 
 All protected routes require `Authorization: Bearer <Supabase access token>` and `X-Org-Id`. The server resolves role and tenant from that JWT membership. Provider secrets and the service-role key remain server-only. New route errors use `{ "error": { "code": "...", "message": "..." } }`.
 
+## Email signup and workspace onboarding
+
+### `GET /api/auth/preflight?flow=signup|resend|verify|recovery&email=<address>`
+
+Unauthenticated preflight for Supabase Auth actions. Emails are trimmed and lowercased before checking. Signup rejects configured disposable domains with HTTP 422 `DISPOSABLE_EMAIL_BLOCKED`. Limits are signup 5/email/hour and 10/IP/hour; resend 3/email/hour and 10/IP/hour; verify 10/email/15 minutes and 30/IP/15 minutes; recovery 3/email/hour and 10/IP/hour. The email is hashed for the per-email bucket and query strings are excluded from request logs. This route does not send or verify OTPs.
+
+### `GET /api/onboarding`
+
+Requires a confirmed Supabase bearer JWT but no `X-Org-Id`; returns that account's workspace memberships as `{ "organizations": [{ "organizationId": "<uuid>", "role": "owner" }] }`. It allows a returning user to restore a workspace before organization-scoped API calls.
+
+### `POST /api/onboarding`
+
+Requires a confirmed Supabase bearer JWT and no `X-Org-Id`. Unconfirmed users receive HTTP 403 `EMAIL_NOT_CONFIRMED`. The existing create-organization RPC is repeat-safe; clients should first use `GET /api/onboarding` to restore an existing membership.
+
 ## AI assistant
 
 ### `POST /api/ai/chat`
@@ -37,11 +51,20 @@ Migration `supabase/migrations/0005_ai.sql` defines `ai_usage`, `ai_cache`, `ano
 
 All `/api/funds/*` endpoints require the Supabase bearer JWT and `X-Org-Id`. Campaign, pledge, PayPal-order, maintenance-request, contractor, quotation, approval, and payment-request operations are described with request/response examples and minimum roles in [FRONTEND-CONTRACT.md](./FRONTEND-CONTRACT.md#phase-6-campaigns-and-maintenance-operations-t1t4). Mutations call tenant-scoped service-only RPCs and append audit records. Pledges remain intent only until a verified posted capture. Payment requests enter the existing Approvals queue and are labelled `SIMULATED`; no payout or ledger entry occurs.
 
-The Community Funds view reads live organization campaigns in authenticated mode and shows “No campaigns yet” when empty. Creation is limited to `owner`, `admin`, and `accountant`; the form accepts major-unit USD and converts with the ISO currency exponent. A synchronous submit lock prevents duplicate campaign POSTs from a double-click. Campaigns remain USD for the supported Sandbox seller flow; the create RPC records the audit row. The campaign list includes the caller membership `role` for UI control visibility, while server RBAC remains authoritative. `GET /api/funds/transparency?campaignId=<uuid>` supplies the campaign contribution list. Illustrative content appears only in explicit demo mode.
+
+The Maintenance view reads the org-scoped operational request list/detail APIs and shows an honest empty state in authenticated mode. The form maps description/location/category/priority into labeled lines in the existing `scope` column, converts USD major-unit estimates to minor units with the ISO currency exponent, and posts through the existing audited create RPC. Its submit lock prevents double-click duplicate posts. Only owner/admin/accountant see the create button; the pre-existing API role policy is unchanged. Payouts remain SIMULATED. No direct browser fund-table reads occur. The existing request schema has no linked invoice field, so UI payment queueing stays blocked until an invoice link is available.
 
 The application enforces 300 requests per IP per 15 minutes and 240 requests per authenticated user per 15 minutes across API routes, including payment and approval actions. HTTP 429 uses `{ "error": { "code": "RATE_LIMITED" | "USER_RATE_LIMITED", "message": "..." } }`. Invalid inputs and business transition failures use structured errors.
 
 ## Fund maintenance payments (Phase 6 T4)
+
+### `GET /api/funds/maintenance`
+
+Returns all persisted maintenance requests for the authenticated organization, including quotations/contractors, approval records, simulated payment metadata, evidence metadata and audit activity. Any org member may read. The response includes the authenticated membership role and the Sandbox payout caution. Empty result: `{ "requests": [], "role": "viewer", "legalCaution": "..." }`. Reads are performed server-side with an explicit organization filter. Migration `0020_fund_maintenance_activity_read.sql` is required for activity because service_role intentionally has no direct SELECT on audit_log. Current schema has no maintenance-to-invoice link; the UI keeps payment queueing blocked until such a linked invoice is available.
+
+### `GET /api/funds/maintenance/:requestId`
+
+Returns one request and the same workflow detail shape. A malformed UUID returns 400 `VALIDATION_ERROR`; unknown and cross-organization IDs return 404 `NOT_FOUND`.
 
 ### `POST /api/funds/maintenance/:requestId/payment`
 
@@ -129,3 +152,10 @@ Available to every authenticated member role, including viewer. The route fetche
 The browser fetches the PDF with JWT and `X-Org-Id` headers, then saves the blob as `invoice-<number>.pdf`. Errors are categorized as expired session (401), not found (404), rate limited (429), or server error (5xx). Internal 5xx details are hidden; the route logs request ID, status and safe error code only.
 
 `GET /api/invoices/:invoiceId` also includes the organization-scoped `events` status history when available. The read-only detail view includes invoice identity/status, customer, dates, currency, line items, totals, notes and source document link.
+
+
+## Currency conversion
+
+- `GET /api/fx/currencies` (authenticated, organization-scoped): merged code/name/minor-unit exponent/provider coverage from Frankfurter and open.er-api.com; server cache TTL 6 hours.
+- `GET /api/fx/convert?amount=10.00&base=USD&quote=INR` (authenticated): decimal arithmetic with ISO exponents; primary Frankfurter, fallback open.er-api.com and USD cross rates where needed. Rates are stored in `fx_rates` with source and fetch timestamp; requests are rate-limited and provider calls time out/retry once.
+- Responses include `rate`, `source`, `timestamp`, and `indicative, not a guaranteed settlement rate`. These sources update about once per working day, not tick-by-tick. open.er-api.com requires attribution; the Reports converter links to ExchangeRate-API.

@@ -43,9 +43,9 @@ async function pageCount(mime, bytes) {
   }
 }
 
-export function documentRoutes({ config, identity, provider, rag, events }) {
+export function documentRoutes({ config, identity, provider, keyPool, rag, events }) {
   const router = express.Router();
-  const ocrProvider = provider || createGeminiDocumentOCRProvider({ apiKey: config.GEMINI_API_KEY, model: config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite', timeoutMs: config.DOCUMENT_OCR_TIMEOUT_MS || 25000, events });
+  const ocrProvider = provider || createGeminiDocumentOCRProvider({ apiKey: config.GEMINI_API_KEY, keyPool, model: config.DOCUMENT_OCR_MODEL || 'gemini-3.5-flash-lite', timeoutMs: config.DOCUMENT_OCR_TIMEOUT_MS || 25000, events });
   const maxFileMb = config.DOCUMENT_MAX_FILE_MB || 10;
   const maxPages = config.DOCUMENT_MAX_PAGES || 10;
   const maxBytes = maxFileMb * 1024 * 1024;

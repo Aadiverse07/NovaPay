@@ -1,3 +1,4 @@
+import { createGeminiKeyPool, resolveGeminiKeySlots } from './geminiKeyPool.js';
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const REQUEST_TIMEOUT_MS = 8_000;
 const RETRY_BACKOFF_MS = 120;
@@ -41,54 +42,49 @@ async function fetchWithTimeout(fetchImpl, url, options, timeoutMs) {
   }
 }
 
-export function createGeminiAdapter({ apiKey, model, fallbackModel, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS, sleep = delay, maxOutputTokens = 400 }) {
-  async function generateForModel(selectedModel, system, prompt) {
-    if (!apiKey) throw providerError('LLM_API_KEY not set');
-    const url = `${GEMINI_ENDPOINT}/${encodeURIComponent(selectedModel)}:generateContent`;
-    let response;
-    try {
-      response = await fetchWithTimeout(fetchImpl, url, {
-        method: 'POST',
-        headers: { 'x-goog-api-key': apiKey, 'content-type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: system }] },
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', maxOutputTokens },
-        }),
-      }, timeoutMs);
-    } catch (error) {
-      const timedOut = error?.code === 'LLM_TIMEOUT';
-      logCall(events, `POST gemini ${selectedModel}:generateContent · ${timedOut ? 'timeout' : 'network error'}`, false);
-      throw providerError('LLM provider is temporarily unavailable.', { retryable: true });
-    }
-    logCall(events, `POST gemini ${selectedModel}:generateContent → ${response.status}`, response.ok);
-    if (!response.ok) {
-      // Provider response bodies may contain account details; never expose or log them.
-      throw providerError('LLM provider returned an error.', { retryable: response.status === 429 });
-    }
-    let data;
-    try { data = await readJson(response); } catch { throw providerError('LLM provider returned an invalid response.'); }
-    const text = extractGeminiText(data);
-    if (!text.trim()) throw providerError('LLM provider returned an empty response.');
-    return { text, model: selectedModel, usage: { inputTokens: Number(data.usageMetadata?.promptTokenCount || 0), outputTokens: Number(data.usageMetadata?.candidatesTokenCount || 0) } };
-  }
-
-  async function generateBounded(selectedModel, system, prompt) {
-    try { return await generateForModel(selectedModel, system, prompt); }
-    catch (error) {
-      if (!error?.retryable) throw error;
-      await sleep(RETRY_BACKOFF_MS);
-      return generateForModel(selectedModel, system, prompt);
-    }
-  }
-
+export function createGeminiAdapter({ apiKey, keyPool, model, fallbackModel, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS, sleep = delay, maxOutputTokens = 400 }) {
+  const pool = keyPool || createGeminiKeyPool({ keys: apiKey ? [{ slot: 1, key: apiKey }] : [], events, sleep });
   return {
     async generate({ system, prompt }) {
-      try { return await generateBounded(model, system, prompt); }
-      catch (primaryError) {
-        if (!fallbackModel || fallbackModel === model) throw providerError();
-        try { return await generateBounded(fallbackModel, system, prompt); }
-        catch { throw providerError('LLM provider is temporarily unavailable.'); }
+      if (!pool.configured) throw providerError('LLM_API_KEY not set');
+      try {
+        const result = await pool.generate({
+          models: fallbackModel && fallbackModel !== model ? [model, fallbackModel] : [model],
+          timeoutMs,
+          deadlineMs: 20_000,
+          endpoint: 'generateContent',
+          request: async ({ apiKey: selectedKey, model: selectedModel, timeoutMs: attemptTimeout }) => {
+            const url = `${GEMINI_ENDPOINT}/${encodeURIComponent(selectedModel)}:generateContent`;
+            try {
+              return await fetchWithTimeout(fetchImpl, url, {
+                method: 'POST',
+                headers: { 'x-goog-api-key': selectedKey, 'content-type': 'application/json' },
+                body: JSON.stringify({
+                  system_instruction: { parts: [{ text: system }] },
+                  contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: 'application/json', maxOutputTokens },
+                }),
+              }, attemptTimeout);
+            } catch (error) {
+              const timedOut = error?.code === 'LLM_TIMEOUT';
+              logCall(events, `POST gemini ${selectedModel}:generateContent · ${timedOut ? 'timeout' : 'network error'}`, false);
+              throw Object.assign(new Error('LLM provider is temporarily unavailable.'), { code: timedOut ? 'LLM_TIMEOUT' : 'LLM_NETWORK_ERROR' });
+            }
+          },
+          parse: async ({ response, model: selectedModel }) => {
+            logCall(events, `POST gemini ${selectedModel}:generateContent → ${response.status}`, response.ok);
+            if (!response.ok) throw providerError('LLM provider returned an error.', { retryable: response.status >= 500 || response.status === 408 });
+            let data;
+            try { data = await readJson(response); } catch { throw providerError('LLM provider returned an invalid response.', { retryable: true }); }
+            const text = extractGeminiText(data);
+            if (!text.trim()) throw providerError('LLM provider returned an empty response.', { retryable: true });
+            return { text, model: selectedModel, usage: { inputTokens: Number(data.usageMetadata?.promptTokenCount || 0), outputTokens: Number(data.usageMetadata?.candidatesTokenCount || 0) } };
+          },
+        });
+        return result.value;
+      } catch (error) {
+        if (error?.code?.startsWith('GEMINI_') || error?.code === 'LLM_TIMEOUT' || error?.name === 'AbortError' || error?.name === 'TimeoutError') throw providerError('LLM provider is temporarily unavailable.');
+        throw error;
       }
     },
   };
@@ -133,7 +129,7 @@ export function createFakeLLMAdapter({ response = '', error, onGenerate } = {}) 
   };
 }
 
-export function createLLMAdapter({ config, events, fetchImpl = fetch }) {
+export function createLLMAdapter({ config, events, fetchImpl = fetch, keyPool }) {
   const maxOutputTokens = config.AI_MAX_OUTPUT_TOKENS || 400;
   const apiKey = config.resolvedLLMApiKey || config.LLM_API_KEY || (config.LLM_PROVIDER === 'anthropic' ? config.ANTHROPIC_API_KEY : '');
   const model = config.resolvedLLMModel || config.LLM_MODEL || (config.LLM_PROVIDER === 'anthropic' ? config.ANTHROPIC_MODEL : 'gemini-3.5-flash-lite');
@@ -142,5 +138,6 @@ export function createLLMAdapter({ config, events, fetchImpl = fetch }) {
   if (!FREE_GEMINI_MODELS.includes(model) || (fallbackModel && !FREE_GEMINI_MODELS.includes(fallbackModel))) {
     throw new Error('Configured Gemini models are not in the verified free-tier allow-list.');
   }
-  return createGeminiAdapter({ apiKey, model, fallbackModel, events, fetchImpl, maxOutputTokens });
+  const pool = keyPool || createGeminiKeyPool({ keys: resolveGeminiKeySlots(config), events });
+  return createGeminiAdapter({ apiKey, keyPool: pool, model, fallbackModel, events, fetchImpl, maxOutputTokens });
 }

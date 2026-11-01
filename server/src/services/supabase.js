@@ -127,7 +127,13 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       const { response, data, error } = await request('/auth/v1/user', { token, publicKey: true });
       if (error && [401, 403].includes(response.status)) return null;
       if (error || !data?.id) throw new Error('Supabase Auth could not verify the token.');
-      return { id: data.id, email: typeof data.email === 'string' ? data.email : null };
+      return { id: data.id, email: typeof data.email === 'string' ? data.email : null, emailConfirmedAt: data.email_confirmed_at || data.confirmed_at || null };
+    },
+    async organizationsForUser(userId) {
+      const query = new URLSearchParams({ select: 'org_id,role', user_id: `eq.${userId}`, order: 'created_at.asc' });
+      const { data, error } = await request(`/rest/v1/memberships?${query}`);
+      if (error) throw new Error('Workspace lookup failed.');
+      return Array.isArray(data) ? data : [];
     },
     async membership(userId, orgId) {
       const query = new URLSearchParams({ select: 'org_id,user_id,role', user_id: `eq.${userId}`, org_id: `eq.${orgId}`, limit: '1' });

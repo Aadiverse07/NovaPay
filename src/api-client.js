@@ -77,8 +77,11 @@
       var error = apiError(response, payload);
       dispatchError(error);
       if (response.status === 401) {
-        auth.signOut().catch(function () {});
-        window.setTimeout(function () { window.location.replace("preview.html#login"); }, 0);
+        var toLogin = function () {
+          try { sessionStorage.setItem("novapay-auth-bounce", String(Date.now())); } catch (_) {}
+          window.location.replace("preview.html#login");
+        };
+        auth.signOut().then(toLogin, toLogin);   // end the session first, otherwise the landing page re-opens the dashboard
       }
       throw error;
     }

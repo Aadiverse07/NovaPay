@@ -218,6 +218,7 @@
       <div class="form-box Login">
         <h2 class="animation" id="modal-title" style="--out:0;--in:21">Login</h2>
         <form id="login-form">
+          <div class="auth-demo" hidden><b>SECURE SIGN-IN</b></div>
           <div class="input-box animation" style="--out:1;--in:22">
             <input id="login-email" type="email" autocomplete="email" required><label for="login-email">Email</label>
             <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l217.6 163.2c11.4 8.5 27 8.5 38.4 0l217.6-163.2c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 176v208c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V176L294.4 339.2a64 64 0 0 1-76.8 0z"/></svg>
@@ -229,6 +230,9 @@
           <div class="auth-forgot animation" style="--out:2;--in:23">
             <button type="button" class="text-button" id="forgot-password">Forgot Password?</button>
           </div>
+          <p class="auth-hint" id="login-error" role="alert" aria-live="polite" hidden></p>
+          <button type="button" class="text-button" id="login-verify" hidden>Verify email</button>
+          <button type="button" class="text-button" id="workspace-retry" hidden>Create your workspace</button>
           <div class="input-box animation" style="--out:3;--in:24;margin-top:16px;height:auto">
             <button class="auth-btn" type="submit">Login</button>
           </div>
@@ -248,6 +252,7 @@
       <div class="form-box Register">
         <h2 class="animation" style="--out:0;--in:17">Sign Up</h2>
         <form id="signup-form">
+          <div class="auth-demo" hidden><b>SECURE SIGN-IN</b></div>
           <div class="input-box animation" style="--out:1;--in:18">
             <input id="signup-name" type="text" autocomplete="name"><label for="signup-name">Name</label>
             <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M224 256a128 128 0 1 0 0-256 128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3 0 498.7 13.3 512 29.7 512h388.6c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304z"/></svg>
@@ -257,9 +262,13 @@
             <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l217.6 163.2c11.4 8.5 27 8.5 38.4 0l217.6-163.2c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 176v208c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V176L294.4 339.2a64 64 0 0 1-76.8 0z"/></svg>
           </div>
           <div class="input-box animation" style="--out:3;--in:20">
-            <input id="signup-password" type="password" autocomplete="new-password" required><label for="signup-password">Password</label>
+            <input id="signup-password" type="password" autocomplete="new-password" minlength="8" required><label for="signup-password">Password · 8+ characters</label>
             <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M144 144v48h160v-48a80 80 0 1 0-160 0zm-64 48v-48a144 144 0 1 1 288 0v48h16c35.3 0 64 28.7 64 64v192c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V256c0-35.3 28.7-64 64-64z"/></svg><button type="button" class="pw-toggle" data-pw-toggle="signup-password" aria-label="Show password" aria-pressed="false" title="Show password"><svg class="pw-eye" viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="pw-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.5 0 10.5 7 10.5 7a17 17 0 0 1-3.2 4M6.6 6.7A16.6 16.6 0 0 0 1.5 12S5.5 19 12 19c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
           </div>
+          <div class="input-box animation" style="--out:4;--in:21">
+            <input id="signup-confirm-password" type="password" autocomplete="new-password" minlength="8" required><label for="signup-confirm-password">Confirm password</label>
+          </div>
+          <p class="auth-hint" id="signup-error" role="alert" aria-live="polite" hidden></p>
           <div class="input-box animation" style="--out:4;--in:21;margin-top:16px;height:auto">
             <button class="auth-btn" type="submit">Create Account</button>
           </div>
@@ -273,6 +282,34 @@
         <span class="auth-mark animation" style="--out:0;--in:15"><novapay-logo size="26" variant="mark"></novapay-logo></span>
         <h2 class="animation" style="--out:0;--in:16">Welcome!</h2>
         <p class="animation" style="--out:1;--in:17">Everything that makes your sales easy</p>
+      </div>
+
+      <!-- EMAIL OTP / RECOVERY: same auth-stage and form component classes as Login/Register -->
+      <div class="form-box OTP" id="otp-panel" inert aria-hidden="true">
+        <h2 class="animation" id="otp-title">Verify your email</h2>
+        <p class="auth-otp-description" id="otp-description" aria-live="polite">We sent a 6-digit code to your email.</p>
+        <form id="otp-form" novalidate>
+          <div class="input-box animation">
+            <input id="otp-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" aria-label="6-digit verification code" required>
+            <label for="otp-code">6-digit code</label>
+            <svg viewBox="0 0 448 512" aria-hidden="true"><path d="M64 0C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h320c35.3 0 64-28.7 64-64V64c0-35.3-28.7-64-64-64H64zm80 128h160a32 32 0 1 1 0 64H144a32 32 0 1 1 0-64zm0 96h160a32 32 0 1 1 0 64H144a32 32 0 1 1 0-64zm0 96h96a32 32 0 1 1 0 64h-96a32 32 0 1 1 0-64z"/></svg>
+          </div>
+          <div class="input-box animation" id="recovery-password-box" hidden>
+            <input id="recovery-password" type="password" autocomplete="new-password" minlength="8"><label for="recovery-password">New password · 8+ characters</label>
+          </div>
+          <div class="input-box animation" id="recovery-confirm-box" hidden>
+            <input id="recovery-confirm-password" type="password" autocomplete="new-password" minlength="8"><label for="recovery-confirm-password">Confirm new password</label>
+          </div>
+          <p class="auth-hint" id="otp-error" role="alert" aria-live="polite" hidden></p>
+          <div class="input-box animation" style="height:auto;margin-top:16px"><button class="auth-btn" id="otp-submit" type="submit">Verify</button></div>
+          <div class="regi-link"><button class="text-button" id="otp-resend" type="button">Resend code</button></div>
+          <div class="regi-link"><button class="text-button" id="otp-change-email" type="button">Change email</button></div>
+        </form>
+      </div>
+      <div class="info-content OTP">
+        <span class="auth-mark"><novapay-logo size="26" variant="mark"></novapay-logo></span>
+        <h2 id="otp-welcome-title">Welcome!</h2>
+        <p id="otp-welcome-copy">Verify your email to secure your NovaPay workspace.</p>
       </div>
     </div>
   </section>

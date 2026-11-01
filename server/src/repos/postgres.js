@@ -345,6 +345,41 @@ export function createPostgresRepositories(database) {
     async createMaintenanceRequest({ orgId, actorId, campaignId, title, scope, estimateMinor, requestId }) {
       return database.rpc('create_fund_maintenance_request', { p_org: orgId, p_actor: actorId, p_campaign_id: campaignId || null, p_title: title, p_scope: scope, p_estimate_minor: estimateMinor ?? null, p_request_id: requestId });
     },
+    async listMaintenance(orgId, actorId) {
+      const scoped = (table, fields = '*') => database.select(table, q({ select: fields, org_id: `eq.${orgId}`, order: 'created_at.desc', limit: '500' }));
+      const [requests, contractors, quotations, chain, payments, evidence, approvals] = await Promise.all([
+        database.select('maintenance_requests', q({ select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: '100' })),
+        scoped('fund_contractors'),
+        database.select('fund_quotations', q({ select: '*', org_id: `eq.${orgId}`, order: 'submitted_at.desc', limit: '500' })),
+        database.select('fund_approvals_chain', q({ select: '*', org_id: `eq.${orgId}`, order: 'decided_at.desc', limit: '500' })),
+        scoped('fund_maintenance_payments'),
+        database.select('fund_completion_evidence', q({ select: '*', org_id: `eq.${orgId}`, order: 'submitted_at.desc', limit: '500' })),
+        database.select('approvals', q({ select: '*', org_id: `eq.${orgId}`, proposal_type: 'eq.maintenance-payment', order: 'created_at.desc', limit: '500' })),
+      ]);
+      const audit = await database.rpc('get_fund_maintenance_activity', { p_org: orgId, p_actor: actorId, p_request: null });
+      const byId = (rows, id) => rows.find((row) => row.id === id) || null;
+      const safeContractor = (row) => row && ({ id: row.id, name: row.name, verificationStatus: row.verification_status, verifiedBy: row.verified_by, verifiedAt: row.verified_at });
+      return requests.map((row) => {
+        const requestQuotes = quotations.filter((item) => item.maintenance_request_id === row.id).map((item) => ({ id: item.id, contractorId: item.contractor_id, contractor: safeContractor(byId(contractors, item.contractor_id)), amountMinor: Number(item.amount_minor), currency: item.currency, documentRef: item.document_ref, submittedAt: item.submitted_at }));
+        const requestPayments = payments.filter((item) => item.maintenance_request_id === row.id);
+        const payment = requestPayments[0] || null;
+        const requestEvidence = evidence.filter((item) => item.maintenance_request_id === row.id);
+        return {
+          id: row.id, orgId: row.org_id, campaignId: row.campaign_id, title: row.title, scope: row.scope,
+          status: row.status, amountMinor: row.estimate_minor == null ? null : Number(row.estimate_minor), currency: 'USD',
+          createdAt: row.created_at, updatedAt: row.updated_at, createdBy: row.requested_by,
+          contractor: safeContractor(byId(contractors, row.contractor_id)), quotations: requestQuotes,
+          quotation: byId(requestQuotes, row.chosen_quotation_id) || requestQuotes[0] || null,
+          approvals: chain.filter((item) => item.maintenance_request_id === row.id).map((item) => ({ id: item.id, step: item.step, approverId: item.approver_id, decision: item.decision, note: item.note, decidedAt: item.decided_at })),
+          paymentApproval: (() => { const item = approvals.find((entry) => entry.fund_maintenance_request_id === row.id); return item ? { approvalId: item.id, status: item.status, createdAt: item.created_at, createdBy: item.created_by } : null; })(),
+          invoice: null,
+          payment: payment ? { id: payment.id, mode: payment.mode || 'SIMULATED', status: payment.status, amountMinor: Number(payment.amount_minor), paypalPayoutRef: payment.paypal_payout_ref, ledgerEntryId: payment.ledger_entry_id } : null,
+          paymentReference: payment && payment.paypal_payout_ref || null, ledgerEntryId: payment && payment.ledger_entry_id || null,
+          evidence: requestEvidence, completionEvidence: requestEvidence,
+          activity: (audit || []).filter((item) => item.entityId === row.id).map((item) => ({ id: item.id, actorId: item.actorId, action: item.action, at: item.at })),
+        };
+      });
+    },
     async createContractor({ orgId, actorId, name, paymentDestinationRef, requestId }) {
       return database.rpc('create_fund_contractor', { p_org: orgId, p_actor: actorId, p_name: name, p_payment_destination_ref: paymentDestinationRef || null, p_request_id: requestId });
     },

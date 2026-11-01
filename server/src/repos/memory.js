@@ -161,7 +161,15 @@ export function createRepositories() {
     async createMaintenanceRequest(input) {
       if (input.campaignId && !campaignRows.has(this.key(input.orgId,input.campaignId))) throw maintenanceError('CAMPAIGN_NOT_FOUND',404,'Campaign was not found.');
       const row={id:randomUUID(),org_id:input.orgId,campaign_id:input.campaignId||null,title:input.title,scope:input.scope,status:'requested',estimate_minor:input.estimateMinor||null,requested_by:input.actorId,created_at:new Date().toISOString()};
-      maintenanceRows.set(this.key(input.orgId,row.id),row);return row;
+      maintenanceRows.set(this.key(input.orgId,row.id),row);fundAuditRows.push({org_id:input.orgId,actorId:input.actorId,action:'fund.maintenance.requested',entity:'maintenance_request',entityId:row.id,createdAt:row.created_at,metadata:{status:'requested'}});return row;
+    },
+    async listMaintenance(orgId) {
+      return [...maintenanceRows.values()].filter((row) => row.org_id === orgId).map((row) => {
+        const quotations = [...quotationRows.values()].filter((item) => item.org_id === orgId && item.maintenance_request_id === row.id).map((item) => ({ ...item, contractor: contractorRows.get(this.key(orgId, item.contractor_id)) || null }));
+        const evidence = [...completionEvidenceRows.values()].filter((item) => item.org_id === orgId && item.maintenance_request_id === row.id);
+        const payment = maintenancePaymentRows.get(this.key(orgId, row.id)) || null;
+        return { id: row.id, orgId, campaignId: row.campaign_id, title: row.title, scope: row.scope, status: row.status, amountMinor: row.estimate_minor, currency: 'USD', createdAt: row.created_at, createdBy: row.requested_by, contractor: contractorRows.get(this.key(orgId, row.contractor_id)) || null, quotations, quotation: quotations.find((item) => item.id === row.chosen_quotation_id) || quotations[0] || null, approvals: [...maintenanceApprovalRows.values()].filter((item) => item.org_id === orgId && item.maintenance_request_id === row.id), paymentApproval: [...approvalRepo.items.values()].find((item) => item.orgId === orgId && item.fundMaintenanceRequestId === row.id) || null, payment, invoice: null, paymentReference: payment && payment.paypal_payout_ref || null, ledgerEntryId: payment && payment.ledger_entry_id || null, evidence, completionEvidence: evidence, activity: fundAuditRows.filter((item) => item.org_id === orgId && (item.requestId === row.id || item.entityId === row.id)) };
+      });
     },
     async createContractor(input) {
       const row={id:randomUUID(),org_id:input.orgId,name:input.name,verification_status:'unverified',verified_by:null,verified_at:null,payment_destination_ref:input.paymentDestinationRef||null};

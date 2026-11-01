@@ -47,3 +47,18 @@ All protected API routes inherit 300 requests/IP/15 minutes and 240 requests/aut
 ## Phase 5 document intake
 
 Use synthetic sample documents only. Do not upload real customer, payment-card, bank, or sensitive personal data to the free-tier OCR/embedding provider; provider terms may permit use of submitted data. Configure `GEMINI_API_KEY` server-side for document OCR/embeddings, plus optional `DOCUMENT_OCR_MODEL`, `DOCUMENT_MAX_FILE_MB` (default 10), `DOCUMENT_MAX_PAGES` (default 10), `DOCUMENT_MAX_CONCURRENT_JOBS_PER_ORG` (default 2), and `DOCUMENT_MAX_UPLOADS_PER_ORG_PER_HOUR` (default 20). The browser receives no provider credentials. Use the Documents view to upload a synthetic PDF/image, wait for processing, inspect confidence/arithmetic/duplicate warnings, enter supplier email, and create a draft. Confirmation does not send the invoice. See the API and role contract in `docs/API.md` and `docs/FRONTEND-CONTRACT.md`.
+
+
+## Email OTP signup and account cleanup
+
+Configure Supabase **Authentication → Providers → Email** with Confirm email enabled, 6-digit codes, 10-minute expiry, and the Confirm signup / Reset password templates using `{{ .Token }}`. Existing custom SMTP remains operator-managed. Full steps and route limits are in [AUTH-OTP-SETUP.md](./AUTH-OTP-SETUP.md). Test only with an inbox you control; automated tests use fake Supabase clients and send no mail.
+
+To inspect stale unconfirmed Auth accounts, run `npm run cleanup:unconfirmed` (dry run). Review aggregate counts before the explicit `npm run cleanup:unconfirmed -- --apply`. The script deletes only unconfirmed accounts older than 24 hours that have no membership or audit references; Auth Admin cascades their profile rows. Confirm the intended Supabase project before running.
+
+## Gemini key pool
+
+The backend accepts optional server-only `GEMINI_API_KEY_1` through `GEMINI_API_KEY_8`. Use different Google AI Studio projects when possible; keys from one project share quota. The pool is shared by chat, document OCR and document embeddings, is in memory, and resets on server restart. It always uses the lowest numbered key that is not cooling down; it never round-robins. A key is moved to cooldown for that model after HTTP 429: daily quota waits until midnight America/Los_Angeles, otherwise Google's `retryDelay` is used (60 seconds when absent). Invalid/revoked or permission-denied keys are disabled for 30 minutes. Transient network errors, timeouts, server errors and empty/safety responses retry on the same key; they do not rotate keys.
+
+A switch appears in the server/API activity log as a safe slot-only message, such as `POST gemini gemini-3.5-flash-lite:generateContent -> 429 · key #1 exhausted, switching to key #2`; no key material is logged. When every configured key is cooling down or disabled, the provider returns the existing safe unavailable response immediately; it does not wait for a reset. Existing `LLM_API_KEY` (for Gemini) and `GEMINI_API_KEY` configurations continue to work without numbered variables.
+
+`AI_DAILY_USER_LIMIT` and `AI_DAILY_ORG_LIMIT` still apply before a model call (including document embeddings); therefore those application budgets can block judging traffic before a provider key is exhausted. Increase them only through server environment configuration when the demo requires it.

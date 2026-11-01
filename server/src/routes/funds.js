@@ -85,6 +85,19 @@ export function fundRoutes({ config, paypal, repos }) {
     } catch (error) { return next(error); }
   });
 
+  router.get('/funds/maintenance', async (req, res, next) => {
+    try { return res.json({ requests: await repos.funds.listMaintenance(req.orgId, req.user.id), role: req.orgRole, legalCaution: 'PayPal Payouts are unavailable; queued maintenance payment is SIMULATED and does not move money.' }); }
+    catch (error) { return sendFundError(error, res, next); }
+  });
+
+  router.get('/funds/maintenance/:requestId', async (req, res, next) => {
+    if (!uuid.safeParse(req.params.requestId).success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR', 'Maintenance request ID is invalid.'));
+    try {
+      const request = (await repos.funds.listMaintenance(req.orgId, req.user.id)).find((item) => item.id === req.params.requestId);
+      return request ? res.json({ request, role: req.orgRole }) : res.status(404).json(structuredErrorBody('NOT_FOUND', 'Maintenance request was not found.'));
+    } catch (error) { return sendFundError(error, res, next); }
+  });
+
   router.post('/funds/campaigns', rbac(['owner','admin','accountant']), async (req, res, next) => {
     const parsed = campaignBody.safeParse(req.body);
     if (!parsed.success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Campaign fields are invalid.'));

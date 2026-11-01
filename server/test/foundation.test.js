@@ -104,8 +104,9 @@ test('viewer cannot register an approval and new routes use structured error env
 test('public config contains only Supabase URL and anon key, and onboarding is authenticated and repeat-safe', async () => {
   let calls = 0;
   const identity = {
-    async verifyToken(token) { return token === 'valid-token' ? { id: 'user-a' } : null; },
+    async verifyToken(token) { return token === 'valid-token' ? { id: 'user-a', emailConfirmedAt: '2026-01-01T00:00:00Z' } : null; },
     async membership() { return { role: 'owner' }; },
+    async organizationsForUser() { return [{ org_id: orgA, role: 'owner' }]; },
     async onboard() { calls += 1; return { organizationId: orgA, created: calls === 1 }; },
   };
   const app = createApp({ config, identity });
@@ -114,6 +115,8 @@ test('public config contains only Supabase URL and anon key, and onboarding is a
     const publicConfigText = await publicConfigResponse.text();
     assert.deepEqual(JSON.parse(publicConfigText), { supabaseUrl: config.SUPABASE_URL, supabaseAnonKey: config.SUPABASE_ANON_KEY });
     assert.equal(publicConfigText.includes(config.SUPABASE_SERVICE_ROLE_KEY), false);
+    const workspaces = await authFetch(base, '/api/onboarding', { orgId: null, method: 'GET' });
+    assert.deepEqual(await workspaces.json(), { organizations: [{ organizationId: orgA, role: 'owner' }] });
     const invalid = await authFetch(base, '/api/onboarding', { orgId: null, method: 'POST', body: JSON.stringify({ organizationName: 'x' }) });
     assert.equal(invalid.status, 400);
     assert.deepEqual((await invalid.json()).error.code, 'VALIDATION_ERROR');
@@ -128,6 +131,43 @@ test('public config contains only Supabase URL and anon key, and onboarding is a
     assert.equal(repeated.status, 200);
     assert.deepEqual(await repeated.json(), { organizationId: orgA, role: 'owner', created: false });
     assert.equal(calls, 2);
+  });
+});
+
+test('unconfirmed users cannot create or enumerate workspaces', async () => {
+  const identity = { async verifyToken() { return { id: 'unconfirmed-user', emailConfirmedAt: null }; }, async organizationsForUser() { throw new Error('must not query'); }, async onboard() { throw new Error('must not create'); } };
+  const app = createApp({ config, identity });
+  await withServer(app, async (base) => {
+    for (const options of [{ method: 'GET' }, { method: 'POST', body: JSON.stringify({ organizationName: 'Example org' }) }]) {
+      const response = await authFetch(base, '/api/onboarding', { ...options, orgId: null });
+      assert.equal(response.status, 403);
+      assert.equal((await response.json()).error.code, 'EMAIL_NOT_CONFIRMED');
+    }
+  });
+});
+
+test('auth preflight rejects disposable signup domains and rate limits by normalized email', async () => {
+  const app = createApp({ config, identity: { async verifyToken() { return null; } } });
+  await withServer(app, async (base) => {
+    const blocked = await fetch(`${base}/api/auth/preflight?flow=signup&email=person%40mailinator.com`);
+    assert.equal(blocked.status, 422);
+    assert.equal((await blocked.json()).error.code, 'DISPOSABLE_EMAIL_BLOCKED');
+    for (let i = 0; i < 5; i += 1) assert.equal((await fetch(`${base}/api/auth/preflight?flow=signup&email=Person%40example.test`)).status, 200);
+    const limited = await fetch(`${base}/api/auth/preflight?flow=signup&email=person%40example.test`);
+    assert.equal(limited.status, 429);
+    assert.equal((await limited.json()).error.code, 'AUTH_RATE_LIMITED');
+  });
+});
+
+test('auth preflight rate limits signup traffic per IP across distinct addresses', async () => {
+  const app = createApp({ config, identity: { async verifyToken() { return null; } } });
+  await withServer(app, async (base) => {
+    for (let i = 0; i < 10; i += 1) {
+      const response = await fetch(`${base}/api/auth/preflight?flow=signup&email=user${i}%40example.test`);
+      assert.equal(response.status, 200);
+    }
+    const limited = await fetch(`${base}/api/auth/preflight?flow=signup&email=another%40example.test`);
+    assert.equal(limited.status, 429);
   });
 });
 

@@ -40,7 +40,7 @@
   function labelSampleViews() {
     var fundsPanel = $("#view-community-funds");
     if (fundsPanel) { fundsPanel.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = false; node.style.display = ""; }); var copy = $(".page-intro p", fundsPanel); if (copy) copy.textContent = "Manage campaign goals and review community progress. All amounts shown are illustrative sample data."; }
-    ["community-funds"].forEach(function (name) {
+    ["community-funds", "maintenance"].forEach(function (name) {
       var intro = $("#view-" + name + " .page-intro");
       if (!intro || $("[data-sample-view-label]", intro)) return;
       var badge = make("span", "status warn", "Sample data · Demo workspace");
@@ -232,12 +232,12 @@
   function startMaintenance() {
     var panel = $("#view-maintenance");
     if (!panel) return;
-    panel.querySelectorAll(":scope > .empty-state").forEach(function (node) { node.remove(); });
+    panel.querySelectorAll(":scope > :not(.page-intro)" ).forEach(function (node) { node.hidden = true; node.style.display = "none"; });
     var root = make("div", "fund-live-view");
     root.setAttribute("data-maintenance-live-root", "");
     panel.appendChild(root);
-    var sessionRequests = [], currentExpenses = [], campaigns = [], currentRole = "", currentUserId = "";
-    var managerRoles = ["owner", "admin", "accountant", "approver"];
+    var requests = [], campaigns = [], currentRole = "", currentUserId = "", statusFilter = "all", searchText = "", maintenanceSubmitting = false;
+    var managerRoles = ["owner", "admin", "accountant"];
     var reviewerRoles = ["owner", "admin", "approver"];
     var textField = function (form, labelText, name, options) {
       var label = make("label", "", labelText);
@@ -261,7 +261,7 @@
       return button;
     };
 
-    function openDetails(item) {
+    function openDetails(item, trigger) {
       var modal = make("div", "action-modal maintenance-detail-modal");
       modal.setAttribute("role", "presentation");
       var backdrop = make("div", "action-modal-backdrop");
@@ -269,19 +269,34 @@
       dialog.setAttribute("role", "dialog"); dialog.setAttribute("aria-modal", "true");
       dialog.setAttribute("aria-labelledby", "maintenance-detail-title");
       var close = make("button", "modal-close", "×"); close.type = "button"; close.setAttribute("aria-label", "Close request details");
-      close.addEventListener("click", function () { modal.remove(); });
+      function dismiss() { modal.remove(); if (trigger && trigger.isConnected) trigger.focus(); }
+      close.addEventListener("click", dismiss);
       dialog.appendChild(close);
       dialog.appendChild(make("span", "status info", "Maintenance request"));
       var title = make("h2", "", item.title || "Maintenance request"); title.id = "maintenance-detail-title"; dialog.appendChild(title);
       var fields = make("dl", "maintenance-detail-fields");
-      var details = [["Request ID", item.id || "Unavailable"], ["Status", String(item.status || "unknown").replaceAll("_", " ")], ["Scope", item.scope || "Unavailable"], ["Amount", item.amountMinor == null ? "Unavailable" : amount(item.amountMinor)], ["Contractor", item.contractor && item.contractor.name || "Unavailable"], ["Quotation", item.quotation ? amount(item.quotation.amountMinor) + " · " + (item.quotation.id || "") : "Unavailable"], ["Payment", item.payment ? (item.payment.mode || "Unavailable") + (item.paymentReference ? " · " + item.paymentReference : "") : "Unavailable"], ["Evidence", (item.evidence || []).length ? item.evidence.map(function (entry) { return (entry.kind || "item") + " · " + (entry.reviewStatus || entry.review_status || "pending"); }).join(", ") : "Unavailable"]];
+      var details = [["Request ID", item.id || "Unavailable"], ["Status", String(item.status || "unknown").replaceAll("_", " ")], ["Scope", item.scope || "Unavailable"], ["Amount", item.amountMinor == null ? "Unavailable" : amount(item.amountMinor, item.currency)], ["Contractor", item.contractor && item.contractor.name || "Unavailable"], ["Payment", item.payment ? "SIMULATED · " + (item.paymentReference || "no payment reference; no money sent") : "Not requested"]];
       details.forEach(function (pair) { var wrap = make("div"), dt = make("dt", "", pair[0]), dd = make("dd", "", String(pair[1])); wrap.appendChild(dt); wrap.appendChild(dd); fields.appendChild(wrap); });
       dialog.appendChild(fields);
+      dialog.appendChild(make("h3", "", "Workflow")); stages(dialog, item.status);
+      dialog.appendChild(make("h3", "", "Quotations"));
+      (item.quotations || (item.quotation ? [item.quotation] : [])).forEach(function (quote) { dialog.appendChild(make("p", "", (quote.contractor && quote.contractor.name || "Contractor") + " · " + amount(quote.amount_minor || quote.amountMinor, quote.currency) + " · " + (quote.id || "quotation"))); });
+      if (!(item.quotations || []).length && !item.quotation) dialog.appendChild(make("p", "empty-state", "No quotations yet."));
+      dialog.appendChild(make("h3", "", "Approvals"));
+      (item.approvals || []).forEach(function (approval) { dialog.appendChild(make("p", "", (approval.step || "Approval") + " · " + (approval.decision || approval.status || "pending") + " · " + date(approval.decided_at || approval.createdAt))); });
+      if (!(item.approvals || []).length && !item.paymentApproval) dialog.appendChild(make("p", "empty-state", "No approvals yet."));
+      if (item.paymentApproval) dialog.appendChild(make("p", "module-foot", "Payment approval · " + (item.paymentApproval.status || "pending") + " · " + (item.paymentApproval.approvalId || item.paymentApproval.id || "")));
+      dialog.appendChild(make("h3", "", "Completion evidence"));
+      (item.evidence || []).forEach(function (entry) { dialog.appendChild(make("p", "", (entry.kind || "Evidence") + " · " + (entry.reviewStatus || entry.review_status || "pending") + " · " + (entry.description || "Metadata only"))); });
+      if (!(item.evidence || []).length) dialog.appendChild(make("p", "empty-state", "No completion evidence."));
+      dialog.appendChild(make("h3", "", "Activity"));
+      (item.activity || []).forEach(function (entry) { dialog.appendChild(make("p", "module-foot", (entry.action || "Maintenance update") + " · actor " + (entry.actorId || entry.actor_id || "unknown") + " · " + date(entry.at || entry.created_at))); });
+      if (!(item.activity || []).length) dialog.appendChild(make("p", "empty-state", "No activity history is available yet."));
       if (item.gap) dialog.appendChild(make("p", "module-foot", item.gap));
       if (item.mode === "SIMULATED" || item.payment && item.payment.mode === "SIMULATED") dialog.appendChild(make("p", "module-foot", "SIMULATED · no money sent"));
       modal.appendChild(backdrop); modal.appendChild(dialog); document.body.appendChild(modal);
-      backdrop.addEventListener("click", function () { modal.remove(); });
-      modal.addEventListener("keydown", function (event) { if (event.key === "Escape") modal.remove(); });
+      backdrop.addEventListener("click", dismiss);
+      modal.addEventListener("keydown", function (event) { if (event.key === "Escape") dismiss(); });
       close.focus();
     }
 
@@ -320,7 +335,7 @@
       try {
         var result = await window.NovaPayApi.request(path, { method: "POST", body: body || {} });
         replaceRequest(item, result);
-        render();
+        await refresh();
       } catch (error) {
         button.disabled = false;
         var alert = make("p", "module-foot", error.message || "The maintenance action could not be completed.");
@@ -348,62 +363,34 @@
       var header = make("article", "dash-card module-card");
       header.appendChild(make("h3", "", "Maintenance workflow"));
       header.appendChild(make("p", "", "PayPal Payouts are unavailable. A queued payment is SIMULATED and does not move money or post to the ledger."));
-      addAction(header, "Refresh transparency data", refresh, false);
+      header.appendChild(make("p", "status warn", "Sandbox demonstration only · no real payout will be sent."));
+      addAction(header, "Refresh maintenance requests", refresh, false);
+      if (managerRoles.indexOf(currentRole) >= 0) { var newRequest = addAction(header, "＋ New request", function () { var form = $("#maintenance-create-form"); if (form) { form.reset(); var status = $("#maintenance-form-status"); if (status) status.textContent = ""; var select = form.elements.campaignId; if (select) { select.textContent = ""; var none = make("option", "", "No campaign"); none.value = ""; select.appendChild(none); campaigns.forEach(function (item) { var option = make("option", "", item.title); option.value = item.id; select.appendChild(option); }); } var modal = $("#maintenance-create-modal"); if (modal) { modal.hidden = false; modal.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); form.elements.title.focus(); } } }, false); newRequest.dataset.uiAction = "maintenance-new-live"; }
       root.appendChild(header);
       if (!currentRole) root.appendChild(make("p", "module-foot", "Organization role is unavailable in trusted browser metadata; maintenance write controls are hidden."));
       else if (currentRole === "donor" || currentRole === "resident") root.appendChild(make("p", "module-foot", "Read-only access for your organization role."));
 
-      if (managerRoles.indexOf(currentRole) >= 0) {
-        var createCard = make("article", "dash-card campaign-create");
-        createCard.appendChild(make("h3", "", "New maintenance request"));
-        var form = make("form", "module-toolbar");
-        var campaignLabel = make("label", "", "Campaign (optional)");
-        var campaignSelect = make("select");
-        campaignSelect.name = "campaignId";
-        var none = make("option", "", "No campaign"); none.value = ""; campaignSelect.appendChild(none);
-        campaigns.forEach(function (campaign) { var option = make("option", "", campaign.title); option.value = campaign.id; campaignSelect.appendChild(option); });
-        campaignLabel.appendChild(campaignSelect); form.appendChild(campaignLabel);
-        textField(form, "Request title", "title", { required: true, maxLength: 160 });
-        textField(form, "Scope", "scope", { required: true, maxLength: 4000 });
-        textField(form, "Estimate (USD)", "estimate", { type: "number", min: "0.01", step: "0.01" });
-        var create = make("button", "btn btn--primary", "Submit request"); create.type = "submit"; form.appendChild(create);
-        form.addEventListener("submit", async function (event) {
-          event.preventDefault(); create.disabled = true;
-          var values = new FormData(form), estimate = Number(values.get("estimate"));
-          var estimateMinor = estimate > 0 ? Math.round(estimate * 100) : null;
-          var body = { campaignId: values.get("campaignId") || null, title: String(values.get("title")).trim(), scope: String(values.get("scope")).trim(), estimateMinor: estimateMinor };
-          try {
-            var result = await window.NovaPayApi.request("/api/funds/maintenance", { method: "POST", body: body });
-            var request = result.request || {};
-            sessionRequests.unshift({ id: request.id, title: request.title || body.title, scope: body.scope, status: request.status || "requested", amountMinor: estimateMinor, createdBy: currentUserId, evidence: [] });
-            render();
-          } catch (error) { create.disabled = false; message("Request not created", error.message || "The maintenance request failed.", true); }
-        });
-        createCard.appendChild(form); root.appendChild(createCard);
-      }
+      var controls = make("div", "module-toolbar");
+      var filterLabel = make("label", "", "Status"); var filter = make("select"); filter.className = "maintenance-status-filter"; filter.value = statusFilter;
+      [["all", "All statuses"], ["requested", "Requested"], ["quoting", "Quoting"], ["scope_approved", "Scope approved"], ["contractor_verified", "Contractor verified"], ["payment_approved", "Payment approved"], ["paid", "Paid"], ["evidence_submitted", "Evidence submitted"], ["reviewed", "Reviewed"], ["closed", "Closed"]].forEach(function (pair) { var option = make("option", "", pair[1]); option.value = pair[0]; filter.appendChild(option); }); filter.value = statusFilter; filterLabel.appendChild(filter); controls.appendChild(filterLabel);
+      var searchLabel = make("label", "", "Search requests"); var searchBox = make("input"); searchBox.type = "search"; searchBox.className = "maintenance-search"; searchBox.value = searchText; searchBox.placeholder = "Title or scope"; searchLabel.appendChild(searchBox); controls.appendChild(searchLabel); root.appendChild(controls);
+      filter.addEventListener("change", function () { statusFilter = filter.value; render(); });
+      searchBox.addEventListener("input", function () { searchText = searchBox.value; render(); var next = $(".maintenance-search", root); if (next) { next.focus(); next.setSelectionRange(searchText.length, searchText.length); } });
 
-      var rows = sessionRequests.slice();
-      currentExpenses.forEach(function (expense) {
-        if (!rows.some(function (item) { return item.id === expense.requestId; })) rows.push({
-          id: expense.requestId, title: expense.title, status: expense.status, amountMinor: expense.amountMinor,
-          quotation: expense.quotation, paymentApproval: expense.paymentApproval, payment: expense.payment,
-          paymentReference: expense.paymentReference, ledgerEntryId: expense.ledgerEntryId,
-          evidence: expense.completionEvidence || [], approvals: expense.approvals || [], gaps: expense.gaps || [], persisted: true
-        });
-      });
+      var rows = requests.filter(function (item) { return (statusFilter === "all" || item.status === statusFilter) && (!searchText || (String(item.title || "") + " " + String(item.scope || "")).toLowerCase().includes(searchText.toLowerCase())); });
       if (!rows.length) {
-        var empty = make("div", "empty-state"); empty.appendChild(make("h3", "", "No maintenance records available"));
-        empty.appendChild(make("p", "", "Transparency currently lists requests after a payment row exists. Pre-payment request and quotation list routes are not available; newly created requests stay visible in this open dashboard session."));
+        var empty = make("div", "empty-state"); empty.appendChild(make("h3", "", requests.length ? "No requests match your filters" : "No maintenance requests yet"));
+        empty.appendChild(make("p", "", searchText || statusFilter !== "all" ? "No requests match these filters." : "This organization has no maintenance requests."));
         root.appendChild(empty);
       }
       rows.forEach(function (item) {
         var card = make("article", "dash-card module-card");
         card.tabIndex = 0; card.setAttribute("aria-label", "Open details for " + (item.title || "maintenance request"));
-        card.addEventListener("click", function (event) { if (!event.target.closest("button,a,input,select,textarea,form")) openDetails(item); });
-        card.addEventListener("keydown", function (event) { if ((event.key === "Enter" || event.key === " ") && event.target === card) { event.preventDefault(); openDetails(item); } });
+        card.addEventListener("click", function (event) { if (!event.target.closest("button,a,input,select,textarea,form")) openDetails(item, card); });
+        card.addEventListener("keydown", function (event) { if ((event.key === "Enter" || event.key === " ") && event.target === card) { event.preventDefault(); openDetails(item, card); } });
         card.appendChild(make("h3", "", item.title || "Maintenance request"));
-        card.appendChild(make("p", "", "Request " + String(item.id || "Unavailable") + " · " + (item.scope || "Scope details are not exposed by the transparency read.")));
-        card.appendChild(make("p", "", "Amount " + (item.amountMinor == null ? "Unavailable" : amount(item.amountMinor))));
+        card.appendChild(make("p", "", "Request " + String(item.id || "Unavailable") + " · " + (item.scope || "No scope details")));
+        card.appendChild(make("p", "", "Estimated budget " + (item.amountMinor == null ? "Not provided" : amount(item.amountMinor, item.currency))));
         stages(card, item.status);
         if (item.contractor) card.appendChild(make("p", "", "Contractor · " + (item.contractor.name || "Created")));
         if (item.quotation) card.appendChild(make("p", "", "Quotation · " + amount(item.quotation.amountMinor) + " · " + item.quotation.id));
@@ -435,7 +422,8 @@
         if (item.status === "quoting" && item.quotation && reviewerRoles.indexOf(currentRole) >= 0) addAction(card, "Approve scope", function (event) { submit(item, event.currentTarget, base + "/scope-approval", { quotationId: item.quotation.id, note: "Scope and quote reviewed." }); }, isRequester);
         if (item.status === "scope_approved" && reviewerRoles.indexOf(currentRole) >= 0) addAction(card, "Verify contractor", function (event) { submit(item, event.currentTarget, base + "/contractor-verification", {}); }, isRequester);
         if (item.status === "contractor_verified" && reviewerRoles.indexOf(currentRole) >= 0) addAction(card, "Approve payment step", function (event) { submit(item, event.currentTarget, base + "/payment-approval", { note: "Payment reviewed." }); }, isRequester || (item.paymentApprovalCount !== undefined && item.paymentApprovalCount < item.paymentRequired && item.lastPaymentApproverId === currentUserId));
-        if (item.status === "payment_approved" && itemRole && !item.approval) addAction(card, "Queue SIMULATED payment", function (event) { submit(item, event.currentTarget, base + "/payment", {}); }, false);
+        if (item.status === "payment_approved" && itemRole && !item.approval && item.invoice && item.invoice.id) addAction(card, "Queue SIMULATED payment", function (event) { submit(item, event.currentTarget, base + "/payment", {}); }, false);
+        else if (item.status === "payment_approved" && !item.invoice) card.appendChild(make("p", "module-foot", "Payment request blocked: link the required invoice first."));
         if (item.status === "paid" && ["owner", "admin", "accountant"].indexOf(currentRole) >= 0) {
           var evidenceForm = make("form", "module-toolbar");
           var kindLabel = make("label", "", "Evidence type"); var kind = make("select"); kind.name = "kind"; ["inspection", "photo", "invoice", "other"].forEach(function (value) { var option = make("option", "", value); option.value = value; kind.appendChild(option); }); kindLabel.appendChild(kind); evidenceForm.appendChild(kindLabel);
@@ -450,6 +438,7 @@
           (item.evidence || []).filter(function (entry) { return (entry.reviewStatus || entry.review_status) === "pending"; }).forEach(function (entry) {
             var submitterKnown = Boolean(item.evidenceSubmitterId);
             addAction(card, "Accept evidence " + String(entry.id).slice(0, 8), function (event) { submit(item, event.currentTarget, base + "/evidence/" + encodeURIComponent(entry.id) + "/review", { decision: "accept", note: "Completion evidence reviewed." }); }, !submitterKnown || item.evidenceSubmitterId === currentUserId || Boolean(item.createdBy && item.createdBy === currentUserId));
+            addAction(card, "Reject evidence " + String(entry.id).slice(0, 8), function (event) { submit(item, event.currentTarget, base + "/evidence/" + encodeURIComponent(entry.id) + "/review", { decision: "reject", note: "Additional completion evidence is required." }); }, !submitterKnown || item.evidenceSubmitterId === currentUserId || Boolean(item.createdBy && item.createdBy === currentUserId));
             if (!submitterKnown) card.appendChild(make("small", "", "Review disabled because submitter identity is withheld by the read API."));
           });
         }
@@ -465,15 +454,36 @@
     async function refresh() {
       root.textContent = ""; root.appendChild(make("p", "empty-state", "Loading maintenance records…"));
       try {
-        var session = await auth.currentSession(); currentUserId = session && session.user && session.user.id || ""; currentRole = trustedRole(session);
-        var results = await Promise.all([window.NovaPayApi.request("/api/funds/transparency"), window.NovaPayApi.request("/api/funds/campaigns")]);
-        currentExpenses = Array.isArray(results[0].expenses) ? results[0].expenses : [];
+      var session = await auth.currentSession(); currentUserId = session && session.user && session.user.id || ""; currentRole = trustedRole(session);
+        var results = await Promise.all([window.NovaPayApi.request("/api/funds/maintenance"), window.NovaPayApi.request("/api/funds/campaigns")]);
+        requests = Array.isArray(results[0].requests) ? results[0].requests : [];
+        currentRole = String(results[0].role || currentRole || "").toLowerCase();
         campaigns = Array.isArray(results[1].campaigns) ? results[1].campaigns : [];
         render();
       } catch (error) { message("Maintenance data unavailable", error.message || "Maintenance records could not be loaded.", true); }
     }
     window.NovaPayFundViews = window.NovaPayFundViews || {};
     window.NovaPayFundViews.refreshMaintenance = refresh;
+    window.NovaPayFundViews.submitMaintenance = async function (form, closeForm) {
+      if (maintenanceSubmitting) return;
+      var status = $("#maintenance-form-status"), fieldNames = ["title", "description", "location", "category", "priority"];
+      form.querySelectorAll("[aria-invalid=true]").forEach(function (field) { field.removeAttribute("aria-invalid"); });
+      form.querySelectorAll("[data-maintenance-field-error]").forEach(function (node) { node.remove(); });
+      if (!auth || auth.mode !== "supabase") { if (status) status.textContent = "Sign in to create a live maintenance request. Demo samples are not saved."; return; }
+      for (var index = 0; index < fieldNames.length; index++) { var name = fieldNames[index], field = form.elements[name]; if (!String(field && field.value || "").trim()) { if (field) { field.setAttribute("aria-invalid", "true"); var error = make("small", "module-foot", name + " is required."); error.setAttribute("data-maintenance-field-error", name); field.parentNode.appendChild(error); field.focus(); } if (status) status.textContent = name + " is required."; var toast = $("#dashboard-toast"); if (toast) { toast.textContent = "Maintenance " + name + " is required."; toast.classList.add("show"); } return; } }
+      var estimateRaw = String(form.elements.estimate.value || "").trim(), currency = form.elements.currency.value || "USD", digits;
+      try { digits = new Intl.NumberFormat("en", { style: "currency", currency: currency }).resolvedOptions().maximumFractionDigits; } catch (_) { digits = null; }
+      var estimateMinor = null;
+      if (estimateRaw) { try { estimateMinor = window.NovaPayCurrency.majorToMinor(estimateRaw, currency); } catch (_) { estimateMinor = NaN; } if (!Number.isSafeInteger(estimateMinor) || estimateMinor < 1) { var budget = form.elements.estimate; budget.setAttribute("aria-invalid", "true"); var budgetError = make("small", "module-foot", "Estimated budget must be a positive amount in " + currency + "."); budgetError.setAttribute("data-maintenance-field-error", "estimate"); budget.parentNode.appendChild(budgetError); budget.focus(); if (status) status.textContent = "estimate: enter a positive amount in " + currency + "."; var budgetToast = $("#dashboard-toast"); if (budgetToast) { budgetToast.textContent = "Maintenance estimate: enter a positive amount in " + currency + "."; budgetToast.classList.add("show"); } return; } }
+      var submitButton = form.querySelector('button[type="submit"]'); maintenanceSubmitting = true; if (submitButton) { submitButton.disabled = true; submitButton.textContent = "Saving request…"; }
+      if (status) status.textContent = "Saving maintenance request…";
+      var scope = ["Description: " + form.elements.description.value.trim(), "Location: " + form.elements.location.value.trim(), "Category: " + form.elements.category.value, "Priority: " + form.elements.priority.value].join("\n");
+      try {
+        await window.NovaPayApi.request("/api/funds/maintenance", { method: "POST", body: { title: form.elements.title.value.trim(), scope: scope, estimateMinor: estimateMinor, campaignId: form.elements.campaignId.value || null } });
+        if (closeForm) closeForm(); form.reset(); await refresh(); var toast = $("#dashboard-toast"); if (toast) { toast.textContent = "Maintenance request created."; toast.classList.add("show"); }
+      } catch (error) { if (status) status.textContent = error.message || "Maintenance request could not be created."; var toast = $("#dashboard-toast"); if (toast) { toast.textContent = "Maintenance request failed: " + (error.message || "request error"); toast.classList.add("show"); } }
+      finally { maintenanceSubmitting = false; if (submitButton) { submitButton.disabled = false; submitButton.textContent = "Continue"; } }
+    };
     refresh();
   }
 
@@ -591,7 +601,7 @@
   auth.ready.then(async function () {
     if (auth.mode === "demo") { labelSampleViews(); return; }
     if (auth.mode !== "supabase") return;
-    try { await waitForDashboard(); startFundraising(); }
+    try { await waitForDashboard(); startFundraising(); startMaintenance(); }
     catch (error) {
       var panel = $("#view-community-funds");
       if (panel) {

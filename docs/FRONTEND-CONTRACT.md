@@ -8,15 +8,23 @@ The frontend signs up and logs in directly with `supabase-js` using the public v
 
 Unauthenticated protected route: HTTP 401 `{ "error": { "code": "AUTH_REQUIRED", "message": "A valid Supabase bearer token is required." } }`. Invalid/expired token: HTTP 401 `{ "error": { "code": "AUTH_INVALID", "message": "The Supabase bearer token is invalid or expired." } }`. Missing/malformed `X-Org-Id`: HTTP 400 code `ORG_HEADER_REQUIRED`, message `A valid X-Org-Id UUID is required.` A valid user who is not a member receives HTTP 403 code `ORG_FORBIDDEN`, message `You are not a member of the requested organization.` A member whose role is insufficient receives HTTP 403 code `ROLE_FORBIDDEN`, message `Your organization role cannot perform this action.`
 
-Public API routes are `GET /api/status`, `GET /api/public-config`, and `POST /api/webhook`. All remaining `/api` routes require a bearer token; all except onboarding also require `X-Org-Id`. `GET /api/status` reports `mode: "degraded"` and `supabaseConfigured: false` when Supabase is absent. Protected routes return HTTP 503 `{ "error": { "code": "SUPABASE_NOT_CONFIGURED", "message": "Authentication is unavailable until Supabase is configured." } }` in that mode. Auth verification outages return HTTP 503 code `AUTH_UNAVAILABLE`, message `Authentication could not be verified.`
+Public API routes include `GET /api/status`, `GET /api/public-config`, `GET /api/auth/preflight`, and `POST /api/webhook`. Protected routes require a bearer token; organization-scoped routes require `X-Org-Id`, while onboarding does not. `GET /api/status` reports `mode: "degraded"` and `supabaseConfigured: false` when Supabase is absent. Protected routes return HTTP 503 `{ "error": { "code": "SUPABASE_NOT_CONFIGURED", "message": "Authentication is unavailable until Supabase is configured." } }` in that mode. Auth verification outages return HTTP 503 code `AUTH_UNAVAILABLE`, message `Authentication could not be verified.`
 
 ## `GET /api/public-config`
 
 Public. Returns HTTP 200 `{ "supabaseUrl": "https://<project>.supabase.co", "supabaseAnonKey": "<public anon key>" }`. When absent, either/both values are `null`. No service-role key or other server secret is returned.
 
+## `GET /api/onboarding`
+
+Requires a confirmed bearer token and no organization header. Returns existing workspace memberships for session restoration; it does not create an organization.
+
+## `GET /api/auth/preflight`
+
+Unauthenticated signup/resend/verification/recovery preflight. The browser sends only the normalized email and flow. Signup rejects configured disposable domains; per-email and per-IP limits are documented in [AUTH-OTP-SETUP.md](./AUTH-OTP-SETUP.md). This route never sends OTPs.
+
 ## `POST /api/onboarding`
 
-Requires a valid bearer token, but not `X-Org-Id`. Request: `{ "organizationName": "Example organization" }` (trimmed, 2–120 characters; extra fields rejected). Creates the organization, owner membership, and audit entry in one database transaction. First success is HTTP 201 `{ "organizationId": "<uuid>", "role": "owner", "created": true }`; repeating for the same account with its sole owner membership returns HTTP 200 with the same organization ID and `created: false`. Invalid body is HTTP 400 `VALIDATION_ERROR`; already-member account without a sole owner membership is HTTP 409 `ONBOARDING_ALREADY_COMPLETED`; provider/database failure is HTTP 503 `ONBOARDING_FAILED`.
+Requires a confirmed bearer token, but not `X-Org-Id`. Request: `{ "organizationName": "Example organization" }` (trimmed, 2–120 characters; extra fields rejected). Creates the organization, owner membership, and audit entry in one database transaction. First success is HTTP 201 `{ "organizationId": "<uuid>", "role": "owner", "created": true }`; repeating for the same account with its sole owner membership returns HTTP 200 with the same organization ID and `created: false`. Unconfirmed users receive HTTP 403 `EMAIL_NOT_CONFIRMED`; invalid body is HTTP 400 `VALIDATION_ERROR`; already-member account without a sole owner membership is HTTP 409 `ONBOARDING_ALREADY_COMPLETED`; provider/database failure is HTTP 503 `ONBOARDING_FAILED`.
 
 `GET /` serves `preview.html` from `STATIC_DIR`. Other static paths, including `/preview.html` and `/dashboard.html`, are served from `STATIC_DIR` with Express static middleware.
 
@@ -148,15 +156,19 @@ After required authentication and organization checks, malformed JSON returns HT
 
 All routes below require `Authorization: Bearer <Supabase access token>` and `X-Org-Id`. Reads are available to all organization roles. Invoice creation and approval use the role rules listed per route. New errors use `{ "error": { "code": "...", "message": "..." } }`.
 
+### `GET /api/fx/currencies`
+
+Returns `{ currencies: [{ code, name, exponent, providers: { frankfurter, openErApi } }], cachedForSeconds: 21600 }`. The dashboard obtains both currency menus from this organization-authenticated API; no provider list is hard-coded in authenticated mode. Currency names and exponent come from the server's ISO/Intl catalog and provider coverage is merged from Frankfurter and open.er-api.com.
+
 ### `GET /api/fx/convert`
 
-Query: `amount` (positive decimal string with up to two fractional digits), `base` and `quote` (three-letter ISO currency codes). The server uses a tenant-cached rate from PayPal capture conversion data when available, otherwise Frankfurter. Response:
+Query: `amount` (positive decimal string, no more fractional digits than the base currency exponent), `base` and `quote` (supported three-letter ISO codes). Server decimal arithmetic computes the result in the quote currency's minor units. Frankfurter is tried first, then open.er-api.com (including a USD cross rate if the direct pair is unavailable); pair rates are stored in tenant-scoped `fx_rates` with source and `fetched_at`, cached for six hours and provider calls are spaced, timed out and retried once. Same-currency conversion uses rate 1. Response:
 
 ```json
-{"amount":"10.00","baseCurrency":"USD","convertedAmount":"9.20","quoteCurrency":"EUR","rate":"0.92","source":"Frankfurter","timestamp":"2026-10-24T12:00:00.000Z","label":"indicative, not a guaranteed settlement rate","fees":[]}
+{"amount":"10.00 USD","baseCurrency":"USD","convertedAmount":"9.20 EUR","quoteCurrency":"EUR","rate":"0.92","source":"Frankfurter (ECB reference)","timestamp":"2026-11-02T12:00:00.000Z","label":"indicative, not a guaranteed settlement rate","fees":[]}
 ```
 
-The FX rate is indicative; it is not the PayPal settlement quote. Fees are separate in `fees` and are currently an empty array. Invalid input returns HTTP 400 `VALIDATION_ERROR` or `FX_AMOUNT_INVALID`. Provider outages return HTTP 503 `FX_PROVIDER_UNAVAILABLE`.
+All rates are indicative, not guaranteed settlement rates. Both sources generally update once per working day; these are not tick-by-tick rates. The UI attributes fallback rates to ExchangeRate-API. Invalid inputs return HTTP 400; provider outages return HTTP 503.
 
 ### `GET /api/reports/:report`
 
@@ -221,6 +233,8 @@ All routes require `Authorization: Bearer <Supabase JWT>` and `X-Org-Id`. New fu
 | Method and route | Minimum roles |
 |---|---|
 | `GET /api/funds/campaigns` | Any org member |
+| `GET /api/funds/maintenance` | Any org member |
+| `GET /api/funds/maintenance/:requestId` | Any org member |
 | `POST /api/funds/campaigns` | owner, admin, accountant |
 | `GET /api/funds/campaigns/:campaignId/summary` | Any org member |
 | `POST /api/funds/campaigns/:campaignId/pledges` | owner, admin, accountant, approver |
@@ -240,6 +254,14 @@ Lists up to 100 campaigns for the selected org and includes the caller role for 
 ```json
 {"campaigns":[{"id":"<uuid>","title":"Community Roof Project","purpose":"Replace common-area roofing.","targetMinor":50000,"currency":"USD","deadline":null,"organiser":"Community","status":"active","createdAt":"<timestamp>"}],"role":"owner"}
 ```
+
+### `GET /api/funds/maintenance`
+
+Returns the selected organization's persisted maintenance requests, quotations and contractors, approval decisions, simulated payment metadata, completion evidence metadata, and request audit activity. Authenticated members may read; server-side reads are scoped to the verified organization. Success is `{ "requests": [...], "role": "owner", "legalCaution": "..." }`; an empty organization returns `requests: []`. This route includes pre-payment requests; transparency remains the public expense view. Requires migration `0020_fund_maintenance_activity_read.sql` so activity can be read through the service-only scoped RPC without granting table SELECT on audit_log.
+
+### `GET /api/funds/maintenance/:requestId`
+
+Returns one persisted request and its workflow details for the selected organization. A malformed ID returns 400 `VALIDATION_ERROR`; a missing or other-organization ID returns 404 `NOT_FOUND`.
 
 ### `POST /api/funds/campaigns`
 
@@ -277,6 +299,8 @@ No request body. Creates or reuses an idempotent PayPal Sandbox order linked to 
 
 Allowed roles include resident requesters. Request `{ "campaignId":"<uuid>","title":"Roof repair","scope":"Replace damaged shingles.","estimateMinor":9999 }`; `campaignId` and `estimateMinor` may be null/omitted. Returns HTTP 201 `{ "request": { "id":"<uuid>","status":"requested", "title":"Roof repair" } }`. The request is audited.
 
+The authenticated Maintenance UI exposes request creation only to owner/admin/accountant. Its form collects description, location, category and priority and stores those values as labeled lines in the existing `scope` field; the current maintenance schema supports USD estimates, converted from major units to minor units using the currency exponent. The frontend submit lock prevents double-click duplicate POSTs. No migration is required. The pre-existing API role policy also permits approver/resident; it was intentionally left unchanged for this frontend-only wiring.
+
 ### `POST /api/funds/contractors`
 
 Allowed roles: owner, admin, accountant. Request `{ "name":"Northside Roofing","paymentDestinationRef":null }`; the destination reference is optional and must remain server-side. Returns HTTP 201 `{ "contractor": { "id":"<uuid>","name":"Northside Roofing","verification_status":"unverified" } }`. A contractor must be verified by an authorized reviewer before payment approval.
@@ -301,7 +325,7 @@ Request `{ "note":"Payment reviewed." }` (optional). Requires a verified contrac
 
 No request body. Checks the workflow gate and queues the payment in the existing Approvals queue; it does not execute a payout. Returns HTTP 202 `{ "approval": <approval>, "mode":"SIMULATED", "simulated":true,"gap":"simulated, no ledger entry","message":"Payment request is queued for approval. PayPal Payouts are unavailable; no money will be sent and no ledger entry will be posted." }`. Payment decision is completed through the existing `POST /api/approvals/:approvalId/decision` route. SIMULATED means no money movement and no ledger posting; always display the label and gap.
 
-The canonical read-only view for maintenance, quotations, approvals, payment and evidence links is `GET /api/funds/transparency`; there are no direct fund-table reads or standalone contractor/request list routes. Evidence submit/review/close and transparency/export are documented below.
+`GET /api/funds/maintenance` and `GET /api/funds/maintenance/:requestId` provide the org-scoped operational request list and detail; `GET /api/funds/transparency` remains the read-only public expense view. Browser code never reads fund tables directly. Evidence submit/review/close and transparency/export are documented below. The existing maintenance schema has no invoice link; the UI blocks payment queueing until one is returned, and the existing server payment rules were not changed.
 
 ## Phase 6 maintenance completion evidence (T5)
 

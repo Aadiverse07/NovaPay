@@ -1,3 +1,4 @@
+import { resolveGeminiCapabilities, resolveGeminiKeySlots } from './services/geminiKeyPool.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
@@ -13,6 +14,14 @@ const schema = z.object({
   LLM_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
   LLM_FALLBACK_MODEL: z.string().min(1).default('gemini-3.1-flash-lite'),
   GEMINI_API_KEY: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_1: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_2: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_3: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_4: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_5: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_6: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_7: z.string().trim().optional().default(''),
+  GEMINI_API_KEY_8: z.string().trim().optional().default(''),
   DOCUMENT_OCR_MODEL: z.enum(['gemini-3.5-flash-lite']).default('gemini-3.5-flash-lite'),
   DOCUMENT_OCR_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(25000),
   DOCUMENT_EMBEDDING_MODEL: z.enum(['gemini-embedding-001']).default('gemini-embedding-001'),
@@ -52,13 +61,16 @@ if (supabaseValues.some(Boolean) && !supabaseValues.every(Boolean)) {
   throw new Error('Invalid NovaPay configuration: SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY must be set together.');
 }
 
+const geminiKeySlots = resolveGeminiKeySlots(parsed.data);
+const providerFlags = resolveGeminiCapabilities(parsed.data);
+
 export const config = Object.freeze({
   ...parsed.data,
+  geminiKeySlots,
   STATIC_DIR: path.resolve(root, parsed.data.STATIC_DIR),
   hasPayPal: Boolean(parsed.data.PAYPAL_CLIENT_ID && parsed.data.PAYPAL_CLIENT_SECRET),
   hasSupabase: supabaseValues.every(Boolean),
   resolvedLLMApiKey: parsed.data.LLM_API_KEY || (parsed.data.LLM_PROVIDER === 'anthropic' ? parsed.data.ANTHROPIC_API_KEY : ''),
   resolvedLLMModel: parsed.data.LLM_PROVIDER === 'anthropic' && !process.env.LLM_MODEL ? parsed.data.ANTHROPIC_MODEL : parsed.data.LLM_MODEL,
-  hasAI: Boolean(parsed.data.LLM_API_KEY || (parsed.data.LLM_PROVIDER === 'anthropic' && parsed.data.ANTHROPIC_API_KEY)),
-  hasDocumentOCR: Boolean(parsed.data.GEMINI_API_KEY),
+  ...providerFlags,
 });

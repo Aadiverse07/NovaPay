@@ -1369,3 +1369,50 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-02 | `npm run check:migrations` on isolated publish branch | PASS | All 20 present numbered migrations parse; includes local migration 0021 (migration 0020 is not part of origin/main and is intentionally excluded).
 2026-11-02 | `node --check` on changed JS; `git diff --check`; protected-file diff | PASS | Changed files parse; no whitespace errors; protected diff is empty.
 2026-11-02 | Secret scan of staged publish diff | PASS | 0 files and 0 matched lines; includes migration 0021; values were not printed.
+
+2026-11-02 | `node --test server/test/maintenance-live-wiring.test.js server/test/postgres-repos.test.js server/test/phase6-migration.test.js server/test/phase6-contract.test.js` | PASS 32/32; scoped maintenance list/detail, migration RPC grants, activity repository and USD/JPY/KWD conversion passed.
+2026-11-02 | `npm test` | FAIL 210/211; only known `authenticated API client bypasses conditional HTTP caching` no-store assertion (undefined vs expected `no-store`).
+2026-11-02 | `npm run check:migrations` | PASS 20/20, including local unapplied `0020_fund_maintenance_activity_read.sql` syntax validation.
+2026-11-02 | `node --check` changed JS/tests; `git diff --check`; protected-file diff | PASS; all changed JS and new test syntax valid; whitespace clean; protected diff empty.
+2026-11-02 | Live fixed Phase 3 maintenance fixture | UNVERIFIED overall: API status 200 and owner POST create 201; GET list returned 403 because migration 0019 revokes service_role SELECT on audit_log. This run's one request and contractor were cleaned (request row count removed: 1; contractor rows removed: 0); audit history retained. Viewer denial, org-B isolation, quotation and scope approval were not reached. Migration 0020 is the scoped RPC fix and was not applied.
+2026-11-02 | Authenticated live `GET /api/funds/maintenance` using existing fixed owner after restarting current source | PASS: HTTP 200, 2 rows; no document/user/content created; no Gemini or PayPal calls. The maintenance activity RPC is available in the connected project.
+2026-11-02 | `GET /api/status` after restart | PASS: HTTP 200.
+2026-11-02 | `node --test server/test/invoice-download.test.js server/test/postgres-repos.test.js` | FAIL | 22/23 passed; pagination assertion used 15 short rows that correctly fit one page; adjusting fixture to wrap each description.
+2026-11-02 | Direct real invoice PDF generation/text extraction | UNVERIFIED | First file generated; `pdftotext` unavailable (`ENOENT`), so content assertion interrupted and second file was not yet written. Will check for another local extractor and verify both byte headers/EOF/sizes.
+2026-11-02 | `npm test` | FAIL | Migration syntax 21/21; unit tests 211/212. Only failure: known `authenticated API client bypasses conditional HTTP caching` no-store header assertion; invoice PDF/repository regressions pass.
+2026-11-02 | `npm run check:migrations` | PASS | All 21 numbered migrations parse as PostgreSQL 17 SQL/PLpgSQL, including unapplied 0021.
+2026-11-02 | `node --check` on changed JS; `git diff --check` | PASS | All listed files parse; no whitespace errors.
+2026-11-02 | Protected-file diff | UNVERIFIED | Shell glob expansion prevented the check command; rerunning with quoted pathspecs.
+2026-11-02 | Focused invoice/PDF/repository tests after final changes | PASS | 23/23; PDF money strings use ISO exponent and currency prefix; audit RPC failure remains fail-closed with requestId.
+2026-11-02 | Live direct PDF generation for existing invoices | PASS | 1722 and 1689 bytes; `%PDF-`, `%%EOF`, size >1 KB; pypdf confirms invoice number, formatted total and DRAFT in both files.
+2026-11-02 | Authenticated live `/api/invoices/:id/download` before migration 0021 | FAIL | Both existing rows returned HTTP 503 `INVOICE_AUDIT_WRITE_FAILED`; server log supplied by user reports SQLSTATE 42501 on audit_log. After switching code to RPC, live verification is UNVERIFIED until 0021 is applied.
+2026-11-02 | Protected-file diff | PASS | Empty using quoted Git glob pathspecs.
+2026-11-02 | `node --test server/test/maintenance-live-wiring.test.js` | PASS | 3/3; existing authenticated POST/reload/idempotency/demo isolation contract remains wired; regression asserts close/reset/refresh and live-only path.
+2026-11-02 | FX provider/service/route tests | PASS | 20/20; includes INR both ways, JPY/KWD exponents, same currency, unknown/huge values, fallback, cache, currencies API and authenticated UI wiring.
+2026-11-02 | One live provider read each | PASS | Frankfurter USD-INR 94.95; open.er-api.com USD-INR 95.050072; no credentials or requests logged to repo.
+2026-11-02 | Changed FX JS syntax and `git diff --check` | PASS | service, route, UI script and tests parse; whitespace clean.
+
+- 2026-11-01 — `node --test server/test/foundation.test.js server/test/supabase.test.js` — PASS, 14/14. Covered existing workspace lookup, onboarding rejection without email confirmation, disposable signup domain, and normalized email/IP preflight rate limits. Fake services only; no users/emails created.
+
+- 2026-11-01 — `npm test` — FAIL, 228/230 passed. Known `server/test/api-client.test.js` no-store header assertion failed; `server/test/phase6-contract.test.js` request 121 received 429 rather than expected 404. No tests were changed to mask the result.
+- 2026-11-01 — `node --test server/test/phase6-contract.test.js server/test/login-auth.test.js server/test/unconfirmed-cleanup.test.js server/test/foundation.test.js server/test/supabase.test.js server/test/maintenance-live-wiring.test.js server/test/fx-providers.test.js server/test/phase3-services.test.js` — PASS, 54/54. This includes the repaired Phase 6 240-request test and auth/OTP fakes; no mail or user created.
+- 2026-11-01 — `npm test` — FAIL, 229/230 passed. The sole remaining failure is `server/test/api-client.test.js` asserting `Cache-Control: no-store`; this known unrelated mainline issue remains. Phase 6 rate-limit regression now passes.
+- 2026-11-01 — `npm run check:migrations` — PASS, all 21 migrations parsed. `node --check` on changed JavaScript and tests — PASS. `git diff --check` — PASS.
+- 2026-11-01 — `npm test` — FAIL, 230/231 passed. Sole failure remains the known `server/test/api-client.test.js` no-store header assertion (undefined vs expected `no-store`). The Phase 6 request-121 limiter failure is fixed and its test passes.
+- 2026-11-01 — Browser/live auth checks — UNVERIFIED: Codex Work settings disabled local browser access. No signup, email delivery, cleanup, fixed-owner maintenance UI or authenticated Reports UI call was made. See `docs/BROWSER-CHECKLIST.md`.
+- 2026-11-01 — Protected-file diff from `fix-maintenance-wiring` — PASS, empty; no protected design file changed.
+- 2026-11-01 — `node --test server/test/login-auth.test.js server/test/access-log.test.js` — PASS, 15/15. Covers workspace freshness avoiding duplicate lookup, login/OTP flows, and quiet static 304 logging while API/error logs remain visible.
+- 2026-11-01 — `npm test` — FAIL, 232/233 passed. Sole failure: `server/test/api-client.test.js` expects `Cache-Control: no-store`, received undefined; unrelated to OTP latency/log change.
+- 2026-11-01 — `npm run check:migrations` — PASS, migrations through 0021 parsed. `node --check` on changed JS and `git diff --check` — PASS.
+- 2026-11-01 — OTP browser recording inspection — UNVERIFIED: local video decoder/UI access unavailable. Terminal report inspection: 957 static 304s (routine), 11 missing-font 404s, 7 successful onboarding GETs (536–1889 ms), 0 API 4xx/5xx. `assets/fonts/Montserrat-Variable.woff2` is absent; protected font/assets were not edited.
+- 2026-11-01 — `node --test server/test/auth-redirect-loop.test.js` — PASS, 5/5. Regressions cover demo-only dashboard gate removal, bounce marker, landing loop break, sign-out before logout/inactivity/delete redirects, and demo-only storage redirect.
+- 2026-11-01 — `npm test` — FAIL, 237/238 passed. Sole failure remains `server/test/api-client.test.js` expecting `Cache-Control: no-store` but receiving undefined.
+- 2026-11-01 — `npm run check:migrations`, `node --check src/dashboard.js src/landing.js src/api-client.js`, `git diff --check` — PASS; migrations through 0021.
+- 2026-11-01 — Real-browser OTP loop, URL settling, network request counts and logout behavior — UNVERIFIED: local browser use is disabled by Work settings; no OTP or user account used.
+
+- 2026-11-01 — `node --test server/test/gemini-key-pool.test.js server/test/llm.test.js server/test/document-ocr.test.js server/test/document-rag.test.js server/test/auth-redirect-loop.test.js` — PASS, 38/38. Fake fetch only; covers sequential fallback, cooldowns, invalid keys, same-key retries, shared chat/OCR/embedding pool, and secret-free logs.
+- 2026-11-01 — `npm test` — FAIL, 249/250 passed. Sole failure is the known `server/test/api-client.test.js` assertion expecting `Cache-Control: no-store`; actual value was undefined.
+- 2026-11-01 — `npm run check:migrations` — PASS, 21/21 migrations parse. Changed server JS/tests `node --check` and `git diff --check` — PASS. No migrations applied.
+- 2026-11-01 — Live Gemini/PayPal/Supabase calls — UNVERIFIED by design; no provider or external service was called.
+2026-11-01 — Integrated publication tree: `npm test` FAIL 249/250; only `server/test/api-client.test.js` failed because expected `Cache-Control: no-store` was undefined. Migration parser embedded in the run accepted 21 SQL files; standalone checks pending.
+2026-11-01 — Integrated publication checks: `npm run check:migrations` PASS 21/21; `node --check` PASS for all staged JS/MJS; `git diff --cached --check` PASS; protected-file diff empty; no conflict markers; `.env` untracked; secret scan found no credential-shaped tokens (empty placeholders/environment references/synthetic fixtures only).

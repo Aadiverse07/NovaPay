@@ -1,3 +1,4 @@
+import { createGeminiKeyPool } from './geminiKeyPool.js';
 import { createHash } from 'node:crypto';
 
 export const DOCUMENT_EMBEDDING_MODEL = 'gemini-embedding-001';
@@ -42,45 +43,50 @@ export function documentIndexText(fields) {
   return [String(data.documentText || ''), JSON.stringify(structured)].filter(Boolean).join('\n\n');
 }
 
-export function createGeminiDocumentEmbeddingProvider({ apiKey, model = DOCUMENT_EMBEDDING_MODEL, dimensions = DOCUMENT_EMBEDDING_DIMENSIONS, fetchImpl = fetch, timeoutMs = 25000, events } = {}) {
+export function createGeminiDocumentEmbeddingProvider({ apiKey, keyPool, model = DOCUMENT_EMBEDDING_MODEL, dimensions = DOCUMENT_EMBEDDING_DIMENSIONS, fetchImpl = fetch, timeoutMs = 25000, events } = {}) {
+  const pool = keyPool || createGeminiKeyPool({ keys: apiKey ? [{ slot: 1, key: apiKey }] : [], events });
   return {
     async embed(texts, taskType = 'RETRIEVAL_DOCUMENT') {
-      if (!apiKey) throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_NOT_CONFIGURED', statusCode: 503 });
+      if (!pool.configured) throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_NOT_CONFIGURED', statusCode: 503 });
       const inputs = (Array.isArray(texts) ? texts : [texts]).map((text) => String(text).slice(0, 12000));
       if (!inputs.length || inputs.some((text) => !text.trim())) throw Object.assign(new Error('Document search input is invalid.'), { code: 'EMBEDDING_INPUT_INVALID', statusCode: 400 });
-      const requests = inputs.map((text) => ({
-        model: `models/${model}`,
-        content: { parts: [{ text }] },
-        taskType,
-        outputDimensionality: dimensions,
-      }));
-      let response;
+      const requests = inputs.map((text) => ({ model: `models/${model}`, content: { parts: [{ text }] }, taskType, outputDimensionality: dimensions }));
       try {
-        response = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:batchEmbedContents`, {
-          method: 'POST',
-          headers: { 'x-goog-api-key': apiKey, 'content-type': 'application/json' },
-          body: JSON.stringify({ requests }),
-          signal: AbortSignal.timeout(timeoutMs),
+        const result = await pool.generate({
+          models: [model], timeoutMs, endpoint: 'batchEmbedContents',
+          request: async ({ apiKey: selectedKey, model: selectedModel, timeoutMs: attemptTimeout }) => {
+            try { return await fetchImpl(
+            `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:batchEmbedContents`,
+            { method: 'POST', headers: { 'x-goog-api-key': selectedKey, 'content-type': 'application/json' }, body: JSON.stringify({ requests }), signal: AbortSignal.timeout(attemptTimeout) },
+            ); } catch (error) {
+              events?.addCall({ t: new Date().toISOString(), m: `POST Gemini embeddings ${selectedModel} · network error`, ok: false });
+              throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: error?.name === 'TimeoutError' ? 'EMBEDDING_TIMEOUT' : 'EMBEDDING_NETWORK_ERROR' });
+            }
+          },
+          parse: async ({ response, model: selectedModel }) => {
+            events?.addCall({ t: new Date().toISOString(), m: `POST Gemini embeddings ${selectedModel} → ${response.status}`, ok: response.ok });
+            if (!response.ok) throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_PROVIDER_UNAVAILABLE', statusCode: response.status >= 500 || response.status === 408 ? 503 : response.status });
+            let body;
+            try { body = await response.json(); } catch { throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_INVALID_RESPONSE', statusCode: 503, retryable: true }); }
+            const embeddings = body.embeddings?.map((entry) => entry.values);
+            if (!Array.isArray(embeddings) || embeddings.length !== inputs.length || embeddings.some((values) => !Array.isArray(values) || values.length !== dimensions || values.some((number) => !Number.isFinite(number)))) {
+              throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_INVALID_RESPONSE', statusCode: 503, retryable: true });
+            }
+            return { embeddings, model: selectedModel, inputTokens: inputs.reduce((sum, text) => sum + approximateTokens(text), 0) };
+          },
         });
-      } catch {
-        events?.addCall({ t: new Date().toISOString(), m: `POST Gemini embeddings ${model} · network error`, ok: false });
+        return result.value;
+      } catch (error) {
+        if (error?.code === 'GEMINI_KEYS_EXHAUSTED') throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_PROVIDER_RATE_LIMITED', statusCode: 429 });
+        if (error?.code === 'EMBEDDING_INVALID_RESPONSE' || error?.code === 'EMBEDDING_PROVIDER_UNAVAILABLE') throw error;
         throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_PROVIDER_UNAVAILABLE', statusCode: 503 });
       }
-      events?.addCall({ t: new Date().toISOString(), m: `POST Gemini embeddings ${model} → ${response.status}`, ok: response.ok });
-      if (!response.ok) throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: response.status === 429 ? 'EMBEDDING_PROVIDER_RATE_LIMITED' : 'EMBEDDING_PROVIDER_UNAVAILABLE', statusCode: response.status === 429 ? 429 : 503 });
-      let body;
-      try { body = await response.json(); } catch { throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_INVALID_RESPONSE', statusCode: 503 }); }
-      const embeddings = body.embeddings?.map((entry) => entry.values);
-      if (!Array.isArray(embeddings) || embeddings.length !== inputs.length || embeddings.some((values) => !Array.isArray(values) || values.length !== dimensions || values.some((number) => !Number.isFinite(number)))) {
-        throw Object.assign(new Error('Document search is temporarily unavailable.'), { code: 'EMBEDDING_INVALID_RESPONSE', statusCode: 503 });
-      }
-      return { embeddings, model, inputTokens: inputs.reduce((sum, text) => sum + approximateTokens(text), 0) };
     },
   };
 }
 
-export function createDocumentRag({ config, database, embeddingProvider, events } = {}) {
-  const provider = embeddingProvider || createGeminiDocumentEmbeddingProvider({ apiKey: config?.GEMINI_API_KEY, model: config?.DOCUMENT_EMBEDDING_MODEL || DOCUMENT_EMBEDDING_MODEL, dimensions: DOCUMENT_EMBEDDING_DIMENSIONS, timeoutMs: config?.DOCUMENT_EMBEDDING_TIMEOUT_MS || 25000, events });
+export function createDocumentRag({ config, database, embeddingProvider, keyPool, events } = {}) {
+  const provider = embeddingProvider || createGeminiDocumentEmbeddingProvider({ apiKey: config?.GEMINI_API_KEY, keyPool, model: config?.DOCUMENT_EMBEDDING_MODEL || DOCUMENT_EMBEDDING_MODEL, dimensions: DOCUMENT_EMBEDDING_DIMENSIONS, timeoutMs: config?.DOCUMENT_EMBEDDING_TIMEOUT_MS || 25000, events });
   const model = config?.DOCUMENT_EMBEDDING_MODEL || DOCUMENT_EMBEDDING_MODEL;
   const reserve = async ({ orgId, userId, text }) => {
     const reservation = await database.rpc('reserve_ai_usage', {

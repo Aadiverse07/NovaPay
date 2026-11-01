@@ -48,7 +48,7 @@
   function openMaintenanceForm(trigger){if(!maintenanceModal||!maintenanceForm)return;maintenanceLastFocus=trigger;maintenanceForm.reset();maintenanceModal.hidden=false;maintenanceModal.setAttribute("aria-hidden","false");document.body.classList.add("modal-open");maintenanceForm.elements.title.focus();}
   function closeMaintenanceForm(){if(!maintenanceModal||maintenanceModal.hidden)return;maintenanceModal.hidden=true;maintenanceModal.setAttribute("aria-hidden","true");document.body.classList.remove("modal-open");if(maintenanceLastFocus&&maintenanceLastFocus.isConnected)maintenanceLastFocus.focus();}
   if(maintenanceModal)maintenanceModal.addEventListener("click",function(e){if(e.target.closest("[data-maintenance-close]"))closeMaintenanceForm();});
-  if(maintenanceForm)maintenanceForm.addEventListener("submit",function(e){e.preventDefault();if(!maintenanceForm.reportValidity())return;var title=maintenanceForm.elements.title.value.trim();if(!title)return;closeMaintenanceForm();toast("Request details are ready for “"+title+"”. Submission is not connected in this preview.");});
+  if(maintenanceForm)maintenanceForm.addEventListener("submit",function(e){e.preventDefault();if(window.NovaPayFundViews&&typeof window.NovaPayFundViews.submitMaintenance==="function"){window.NovaPayFundViews.submitMaintenance(maintenanceForm,closeMaintenanceForm);return;}if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"){toast("Demo mode · this sample request is not saved.");return;}toast("Maintenance is still loading. Please try again.");});
   var reportModal=$("report-detail-modal"),reportLastFocus=null;
   var reportDefinitions={
     "profit-loss":{title:"Profit & loss",description:"Income, fees, refunds, and net activity",headers:["Line item","Amount (INR)"],rows:[["Gross receipts","₹8,45,000"],["Processing fees","− ₹23,500"],["Refunds","− ₹12,000"]],totals:["Net activity","₹8,09,500"]},
@@ -75,7 +75,23 @@
   if(query)query.addEventListener("input",filterInvoices);if(filter)filter.addEventListener("change",filterInvoices);
   var upload=$("document-upload");if(upload)upload.addEventListener("change",function(){var file=upload.files&&upload.files[0];$("document-upload-name").textContent=file?file.name+" · ready for review":"No file selected";if(file)toast("File selected in this browser. Upload and OCR are not connected in this preview.");});
   var demo=$("document-demo-upload");if(demo)demo.addEventListener("click",function(){$("document-upload-name").textContent="sample-invoice.pdf · sample extraction available";toast("Sample document loaded for review. No file was uploaded.");});
-  var fxAmount=$("fx-amount"),fxFrom=$("fx-from"),fxTo=$("fx-to"),fxResult=$("fx-result-value"),fxRate=$("fx-rate-note");
-  function updateFx(){if(!fxAmount||!fxFrom||!fxTo)return;var amount=Number(fxAmount.value),from=fxFrom.value,to=fxTo.value,rate=from===to?1:(from==="INR"?0.012:1/0.012),symbol=to==="INR"?"₹":"$";if(!Number.isFinite(amount)||amount<0){fxResult.textContent="Enter a valid amount";return;}fxResult.textContent=to+" "+symbol+(amount*rate).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});fxRate.textContent=from===to?"No conversion · same currency":"Illustrative reference rate · 1 "+from+" = "+rate.toFixed(6)+" "+to;}
-  [fxAmount,fxFrom,fxTo].forEach(function(control){if(control)control.addEventListener("input",updateFx);if(control&&control.tagName==="SELECT")control.addEventListener("change",updateFx);});
+  var fxAmount=$("fx-amount"),fxFrom=$("fx-from"),fxTo=$("fx-to"),fxResult=$("fx-result-value"),fxRate=$("fx-rate-note"),fxMeta=$("fx-source-note"),fxSwap=$("fx-swap");
+  var fxTimer=null,fxCurrencyMap={};
+  function fxMessage(text,error){if(fxResult)fxResult.textContent=text;if(fxRate)fxRate.textContent="";if(fxMeta){fxMeta.textContent="";fxMeta.setAttribute("role",error?"alert":"status");}}
+  function fxSymbol(code){try{return new Intl.NumberFormat(undefined,{style:"currency",currency:code,currencyDisplay:"narrowSymbol"}).formatToParts(1).find(function(part){return part.type==="currency";}).value;}catch(_){return code;}}
+  function fillFxCurrencies(list){[fxFrom,fxTo].forEach(function(select){var selected=select.value;select.textContent="";list.forEach(function(item){fxCurrencyMap[item.code]=item;var option=document.createElement("option");option.value=item.code;option.textContent=item.code+" · "+fxSymbol(item.code)+" · "+item.name;select.appendChild(option);});if(list.some(function(item){return item.code===selected;}))select.value=selected;});}
+  async function updateFxLive(){if(!fxAmount||!fxFrom||!fxTo)return;var auth=window.NovaPayAuth;if(!auth)return;await auth.ready;
+    if(auth.mode==="demo") { var demoRate=fxFrom.value==="INR"&&fxTo.value==="USD"?0.012:fxFrom.value==="USD"&&fxTo.value==="INR"?83.333333:1;var n=Number(fxAmount.value);if(!Number.isFinite(n)||n<=0){fxMessage("Enter a positive amount",true);return;}fxResult.textContent=fxTo.value+" "+(n*demoRate).toFixed(2);fxRate.textContent="Illustrative demo sample · 1 "+fxFrom.value+" = "+demoRate+" "+fxTo.value;fxMeta.textContent="DEMO MODE · sample rate only";return;}
+    fxResult.textContent="Loading rate…";fxRate.textContent="";fxMeta.textContent="";
+    try { if(!Object.keys(fxCurrencyMap).length){fxFrom.textContent="";fxTo.textContent="";var currencyData=await window.NovaPayApi.request("/api/fx/currencies");fillFxCurrencies(currencyData.currencies||[]);}
+      var amount=String(fxAmount.value||"").trim();if(!/^\d+(?:\.\d+)?$/.test(amount)||Number(amount)<=0)throw new Error("Enter a positive amount.");
+      var query=new URLSearchParams({amount:amount,base:fxFrom.value,quote:fxTo.value});var result=await window.NovaPayApi.request("/api/fx/convert?"+query.toString());
+      fxResult.textContent=result.convertedAmount;fxRate.textContent="1 "+result.baseCurrency+" = "+result.rate+" "+result.quoteCurrency;
+      fxMeta.textContent=result.source+" · "+new Date(result.timestamp).toLocaleString()+" · "+result.label+". Providers update about once per working day.";
+    } catch(error){fxMessage(error.message||"Exchange rate unavailable. Try again later.",true);}
+  }
+  function scheduleFx(){clearTimeout(fxTimer);fxTimer=setTimeout(updateFxLive,300);}
+  [fxAmount,fxFrom,fxTo].forEach(function(control){if(control)control.addEventListener("input",scheduleFx);if(control&&control.tagName==="SELECT")control.addEventListener("change",scheduleFx);});
+  if(fxSwap)fxSwap.addEventListener("click",function(){var old=fxFrom.value;fxFrom.value=fxTo.value;fxTo.value=old;scheduleFx();});
+  if(fxAmount)updateFxLive();
 })();

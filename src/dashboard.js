@@ -11,10 +11,14 @@
     return {name:"NovaPay User",email:"user@novapay.app"};
   }
   var user=getUser();
-  try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login");return;}}catch(e){location.replace("preview.html#login");return;}
+  /* Auth gating lives in dashboard.html (waits for NovaPayAuth.ready, works in supabase AND demo mode).
+     Never redirect here from the demo-only localStorage flag: it is never set in supabase mode and caused a
+     dashboard <-> preview.html#login redirect loop right after OTP sign-in. */
+  function endSession(){var a=window.NovaPayAuth;if(!a||typeof a.signOut!=="function")return Promise.resolve();return Promise.race([Promise.resolve(a.ready).then(function(){return a.signOut()}),new Promise(function(r){setTimeout(r,1500)})]).catch(function(){});}
   $("user-name").textContent=user.name||"NovaPay User";
   $("user-email").textContent=user.email||"user@novapay.app";
   $("user-avatar").textContent=(user.name||"F").trim().charAt(0).toUpperCase();
+  if(window.NovaPayAuth){Promise.resolve(NovaPayAuth.ready).then(function(){if(NovaPayAuth.mode!=="supabase")return;return NovaPayAuth.currentSession().then(function(s){if(!s||!s.user)return;var m=s.user.user_metadata||{},n=m.full_name||m.name||(s.user.email||"").split("@")[0]||"NovaPay User";$("user-name").textContent=n;$("user-email").textContent=s.user.email||"";$("user-avatar").textContent=n.trim().charAt(0).toUpperCase();});}).catch(function(){});}
 
   var THEME_KEY="novapay-theme", root=document.documentElement;
   function savedTheme(){try{var t=localStorage.getItem(THEME_KEY);return t==="light"||t==="dark"?t:null}catch(e){return null}}
@@ -60,7 +64,7 @@
 
   $("logout").addEventListener("click",function(){
     try{localStorage.removeItem("novapay-demo-auth")}catch(e){}
-    window.location.href="preview.html";
+    endSession().then(function(){window.location.href="preview.html";});
   });
 
   document.querySelectorAll(".table-action,.report-card .table-action").forEach(function(b){
@@ -232,7 +236,7 @@
   var idleTimer=0,lastActive=Date.now(),lastWrite=0;
   function bumpActivity(){var n=Date.now();lastActive=n;if(n-lastWrite>10000){lastWrite=n;try{localStorage.setItem(ACTIVITY_KEY,String(n))}catch(e){}}}
   ["mousemove","mousedown","keydown","scroll","touchstart"].forEach(function(ev){document.addEventListener(ev,bumpActivity,{passive:true,capture:true});});
-  function signOutInactive(){try{localStorage.setItem("novapay-signout-reason","inactive");localStorage.removeItem("novapay-demo-auth")}catch(e){}location.replace("preview.html#login");}
+  function signOutInactive(){try{localStorage.setItem("novapay-signout-reason","inactive");localStorage.removeItem("novapay-demo-auth")}catch(e){}endSession().then(function(){location.replace("preview.html#login");});}
   function checkIdle(){
     var mins=Number(prefs.autoLogout)||0;if(!mins)return;
     var last=lastActive;try{last=Math.max(last,parseInt(localStorage.getItem(ACTIVITY_KEY)||"0",10)||0)}catch(e){}
@@ -411,7 +415,7 @@
         keys=[];for(i=0;i<sessionStorage.length;i++){k=sessionStorage.key(i);if(k&&k.indexOf("novapay-")===0)keys.push(k);}
         keys.forEach(function(key){sessionStorage.removeItem(key)});
       }catch(e){}
-      window.location.href="preview.html";
+      endSession().then(function(){window.location.href="preview.html";});
     });
   });
 
@@ -419,7 +423,7 @@
   window.addEventListener("storage",function(e){
     if(e.key===SET_KEY){prefs=loadSet();syncControls();applyPrefs();}
     else if(e.key===THEME_KEY){applyTheme(currentTheme());syncControls();}
-    else if(e.key==="novapay-demo-auth"&&e.newValue!=="true"){location.replace("preview.html");}
+    else if(e.key==="novapay-demo-auth"&&e.newValue!=="true"&&window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"){location.replace("preview.html");}
   });
   /* Profile details dialog (sidebar user chip) */
   var pm=$("profile-modal"),pmOpener=null;

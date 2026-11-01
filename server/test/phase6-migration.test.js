@@ -20,6 +20,8 @@ const transparencyRepairUrl = new URL('../../supabase/migrations/0013_fix_transp
 const transparencyRepairSql = await readFile(transparencyRepairUrl, 'utf8');
 const transparencyOrderRepairUrl = new URL('../../supabase/migrations/0014_fix_transparency_approval_order.sql', import.meta.url);
 const transparencyOrderRepairSql = await readFile(transparencyOrderRepairUrl, 'utf8');
+const maintenanceActivityUrl = new URL('../../supabase/migrations/0020_fund_maintenance_activity_read.sql', import.meta.url);
+const maintenanceActivitySql = await readFile(maintenanceActivityUrl, 'utf8');
 const tables = [
   'fund_campaigns','fund_contributions','fund_receipts','fund_allocations','fund_contractors',
   'maintenance_requests','fund_quotations','fund_approvals_chain','fund_completion_evidence',
@@ -81,6 +83,16 @@ test('T3 maintenance RPCs enforce the state graph and are service_role-only', ()
   assert.match(maintenanceSql,/count\(distinct approver_id\)/i);
   assert.match(maintenanceSql,/v_quote\.amount_minor>=v_threshold/);
   assert.match(maintenanceSql,/maintenance_request_id\s*=\s*p_request/i);
+});
+
+test('maintenance activity RPC reads only the selected org and is service_role-only without audit_log SELECT grant', () => {
+  assert.match(maintenanceActivitySql, /create or replace function public\.get_fund_maintenance_activity/i);
+  assert.match(maintenanceActivitySql, /security definer[\s\S]*set search_path = ''/i);
+  assert.match(maintenanceActivitySql, /where org_id = p_org and user_id = p_actor/i);
+  assert.match(maintenanceActivitySql, /where a\.org_id = p_org[\s\S]*a\.entity = 'maintenance_request'/i);
+  assert.match(maintenanceActivitySql, /revoke all on function public\.get_fund_maintenance_activity\(uuid, uuid, uuid\)[\s\S]*from public, anon, authenticated, service_role/i);
+  assert.match(maintenanceActivitySql, /grant execute on function public\.get_fund_maintenance_activity\(uuid, uuid, uuid\)[\s\S]*to service_role/i);
+  assert.doesNotMatch(maintenanceActivitySql, /grant\s+select\s+on\s+public\.audit_log/i);
 });
 
 test('T4 payment queue RPCs are service_role-only and simulated payments never post to the ledger', () => {

@@ -1,0 +1,11 @@
+# Maintained signup denylist; mailbox ownership is additionally proven by email OTP.
+10minutemail.com
+fakeinbox.com
+guerrillamail.com
+mailinator.com
+yopmail.com
+dispostable.com
+temp-mail.org
+tempmail.com
+throwawaymail.com
+trashmail.com

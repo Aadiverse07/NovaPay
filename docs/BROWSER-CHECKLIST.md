@@ -1,16 +1,13 @@
-# Documents view browser checklist
+# Browser checklist: maintenance, live FX and email OTP
 
-Use the fixed named owner test account and a synthetic sample document only. Do not upload real customer, payment-card, bank, or sensitive personal data. Mark each item PASS or FAIL and add a short observation.
+Status column is intentionally left for manual results. Use only the fixed existing owner for dashboard checks. For signup/recovery delivery, use an inbox you control, not a customer address; that manual test creates/sends an email and is not included in automated results.
 
-| # | Steps | PASS / FAIL | Observation |
-|---|---|---|---|
-| 1 | Start the server with `npm start`; open `http://localhost:3000/preview.html`; sign in as the fixed named owner test user; open Dashboard. |  |  |
-| 2 | Open **Documents** in the left navigation. Verify the live list loads, shows a clear empty state for an empty org, and contains no illustrative sample rows. |  |  |
-| 3 | In DevTools Network, inspect `GET /api/documents`; verify 200, tenant header present, and response contains no Storage path or provider credential. |  |  |
-| 4 | Click **Choose a file** and select a synthetic PDF/image (10 MB max, 10 pages max). Verify raw upload returns 201, then processing status appears and the document reaches processed or a clear error state. |  |  |
-| 5 | Select the processed document. Verify supplier, invoice number/date, currency, subtotal, tax, total, confidence values, and any duplicate/arithmetic warnings are visible. |  |  |
-| 6 | Enter a synthetic supplier email; edit any incorrect review fields; click **Confirm and create invoice draft** once. Verify a draft is created and UI says nothing was sent. Check Network: invoice draft request and document confirm only; no send or PayPal request. |  |  |
-| 7 | Refresh the Documents list and reopen the confirmed document. Verify it shows confirmed/draft-created and does not offer another draft action. |  |  |
-| 8 | Select another processed synthetic document and click **Reject document**. Verify rejected status appears after refresh. |  |  |
-| 9 | Sign in as a fixed named viewer. Open Documents and verify list/read works while upload, confirm, reject, and delete controls are unavailable. |  |  |
-| 10 | Check browser console and Network for failed requests; record any error and its route here. |  |  |
+| Check | Exact steps | Result |
+| --- | --- | --- |
+| Maintenance live session | Start with `npm start`; sign in as the existing owner (not Google/demo); click **Maintenance** in the left navigation; verify live requests or **No maintenance requests yet**. If an approved test org is available, click **New request**, fill a sample request, click **Continue** once, and confirm the new `requested` card appears without reload. | UNVERIFIED |
+| FX light theme | Click **Reports**; find **Currency converter**; choose INR and USD; enter `5000`; wait for conversion; confirm rate, source, fetched timestamp and indicative/working-day note. Click swap and confirm direction and amount update. | UNVERIFIED |
+| OTP panel, light comparison | On `preview.html`, click **Get Started**. Compare the **Sign Up** input underline, labels, primary button, diagonal Welcome panel, rounded frame and close X. Use a test inbox you control and submit a valid name/email, password of at least 8 characters, and matching confirmation; click **Create Account**. Confirm the OTP panel is inside the same modal and matches the existing field/button/split layout. Paste a 6-digit code; verify auto-submit and dashboard arrival. | UNVERIFIED |
+| OTP validation/resend | In a controlled test signup, enter an incorrect/expired code and confirm inline error plus toast. Before 60 seconds, confirm **Resend in Ns** is disabled; after countdown, click **Resend code**. Type digits and paste mixed text; only six digits should remain and auto-submit. Click **Change email** and confirm Sign Up returns. | UNVERIFIED |
+| OTP panel, dark comparison | Click the theme toggle to dark before opening **Get Started**. Compare the same controls/panel against Login and Sign Up; confirm labels/errors remain readable and the transition works. Switch back to light. | UNVERIFIED |
+| Recovery | On the preview modal, select **Login → Forgot Password?** and enter the controlled test inbox. Open the recovery OTP panel, enter the emailed code, set matching 8+ character passwords, click **Update password**, then sign in with the new password. | UNVERIFIED |
+| Narrow window | Resize browser to about 375 px wide; open Login, Sign Up and OTP/recovery panels. Verify only the active form is visible, no horizontal scrolling/clipping, code input can be focused, close X and Escape work, and focus returns to the opener. | UNVERIFIED |

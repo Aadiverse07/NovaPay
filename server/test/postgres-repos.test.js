@@ -65,6 +65,20 @@ test('Postgres funds repository calls T5 completion evidence and close RPCs', as
   assert.equal(calls[2].args.p_actor,'reviewer-a');
 });
 
+test('maintenance list keeps table reads org-scoped and obtains activity from the scoped service-only RPC', async () => {
+  const calls=[];
+  const database={
+    async select(table,query){calls.push({kind:'select',table,query});if(table==='maintenance_requests')return [{id:'request-a',org_id:'org-a',title:'Repair',scope:'Pump',status:'requested',estimate_minor:12500,requested_by:'owner-a'}];if(table==='fund_contractors')return [{id:'contractor-a',org_id:'org-a',name:'Fixture',payment_destination_ref:'must-not-leak'}];return [];},
+    async rpc(name,args){calls.push({kind:'rpc',name,args});return [{id:'audit-a',entityId:'request-a',actorId:'owner-a',action:'fund.maintenance.requested',at:'2026-11-01T00:00:00Z'}];},
+  };
+  const repos=createPostgresRepositories(database);const rows=await repos.funds.listMaintenance('org-a','owner-a');
+  assert.equal(rows.length,1);assert.equal(rows[0].activity.length,1);assert.equal(rows[0].currency,'USD');
+  assert.equal(rows[0].contractor,null);assert.ok(!JSON.stringify(rows).includes('must-not-leak'));
+  const rpc=calls.find((call)=>call.kind==='rpc');assert.deepEqual(rpc,{kind:'rpc',name:'get_fund_maintenance_activity',args:{p_org:'org-a',p_actor:'owner-a',p_request:null}});
+  assert.ok(calls.filter((call)=>call.kind==='select').every((call)=>new URLSearchParams(call.query).get('org_id')==='eq.org-a'));
+  assert.ok(calls.every((call)=>call.table!=='audit_log'));
+});
+
 test('Postgres funds repository calls tenant-scoped T6 transparency and audit export RPCs', async () => {
   const calls=[];const database={async rpc(name,args){calls.push({name,args});return name==='get_fund_transparency'?{expenses:[]}:[{action:'fund.test'}];}};
   const repos=createPostgresRepositories(database);

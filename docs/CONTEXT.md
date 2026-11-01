@@ -1,77 +1,59 @@
-# NovaPay Continuity Context
+# NovaPay Context
 
 ## HEADER
-- Date/time: 2026-11-02 Asia/Kolkata
-- Branch: `fix-download-campaigns`; based on `origin/main` invoice work; no push.
-- Latest local implementation commit: `2441c95` (migration 0019 pending); subsequent local handoff commits are present. User has authorized publishing `fix-download-campaigns` and opening a PR; do not push main or merge.
-- Task: diagnose/fix TEST-001 PDF HTTP 503.
+- Date: 2026-11-01; branch `publish-main-sync`, based on fetched `origin/main`; task: publish accumulated local NovaPay changes to `main` with explicit user authorization.
+- Source checkpoint: `fix-fx-otp-maintenance` at `af21d01`; publication branch is a squash integration on top of current `origin/main`.
 
 ## DONE
-- Reproduced GET `/api/invoices/:id/download` as the fixed existing owner on the existing TEST-001 draft; no users created.
-- Exact sanitized log: `Error`, `INVOICE_AUDIT_WRITE_FAILED`, status 503, SQLSTATE 42501, `permission denied for table audit_log`. Invoice reads and PDF construction reach the audit insert; route previously hid this behind a generic 5xx body.
-- Added a specific audit error wrapper and safe logging of error name/code/status/SQLSTATE plus allowlisted privilege/RLS message. Audit failure still prevents returning a PDF.
-- Added migration `supabase/migrations/0019_restore_audit_log_service_insert.sql`: revoke table privileges, then grant INSERT to service_role only. NOT applied.
-- Added regression tests for SQLSTATE 42501 failure and PDF builder output with INR 137.50, INR 13,440.00, long names and multiple lines.
-- A synthetic PDF is saved at `/tmp/novapay-invoice-fixture.pdf` (1,755 bytes; `%PDF-`; `%%EOF`). The real TEST-001 download is still UNVERIFIED because the audit insert is denied.
+- Preserved `origin/main` changes, including invoice PDF audit repair (migration 0021) and its mainline history.
+- Integrated the accumulated source-branch changes: authenticated OTP/login redirect handling, Gemini multi-key fallback, FX provider and currency conversion, Maintenance live wiring/activity read, campaign wiring, API/auth updates, tests, and migration 0020.
+- `.env` is untracked and ignored; no credential values were printed.
 
 ## IN PROGRESS
-- Full suite 205/206 (known no-store test only); migration check 19/19; changed JS syntax 10/10; diff check passes; protected-file diff empty.
-- Need human to apply migration 0019 before repeating live download.
+- Squash integration is staged on `publish-main-sync`; documentation conflicts were resolved preserving both histories. Checks are complete; commit and authorized fast-forward push remain.
+- Relevant new migration from the source branch: `supabase/migrations/0020_fund_maintenance_activity_read.sql`; migration 0021 is already part of current main. Neither migration application state is verified by this local publish task.
 
 ## NEXT STEPS
-1. In Supabase Dashboard → SQL Editor → New query, paste the contents of `supabase/migrations/0019_restore_audit_log_service_insert.sql` and Run. Verify with `select has_table_privilege('service_role','public.audit_log','INSERT');` (expect true).
-2. Restart the local server and repeat fixed-owner TEST-001 download; confirm HTTP 200, `application/pdf`, size, `%PDF-` and `%%EOF`, and an audit row.
-3. Run `npm test`, `npm run check:migrations`, `node --check`, `git diff --check`, and protected diff; WIP-commit locally; never push.
+1. Review staged diff and verify no conflict markers or secrets.
+2. Run `npm test`, `npm run check:migrations`, JS syntax checks, and `git diff --check`; record exact outcomes.
+3. Commit the integrated delta locally on `publish-main-sync`.
+4. Confirm `.env` is untracked, branch is based on `origin/main`, and worktree is clean; then use the user's explicit authorization to fast-forward push to `origin/main` without force.
+5. Verify remote `main` points to the published commit and update the handoff.
 
 ## USER ACTIONS PENDING
-- Apply migration 0019 exactly as above. The live permission is missing despite older migration definitions; no code path should bypass the audit requirement.
-- After applying, rerun the real API download. No new users/documents are needed.
+- No action before local checks. If migration 0020 or 0021 is not applied in the target Supabase project, apply it through the documented SQL Editor steps before relying on its feature.
 
 ## LIVE STATE
-- TEST-001 exists as a draft in the fixed owner's org. Last live download returned 503; no invoice row was changed and no PDF was returned. No PayPal/Gemini calls.
-- Migration 0019 is local and unapplied.
+- No live provider call or migration application was performed during this publication checkpoint. No credentials or JWTs are recorded.
+- Migrations 0020 and 0021 application status: UNVERIFIED here.
 
 ## TEST STATE
-| Check | Status | Evidence |
-|---|---|---|
-| Live TEST-001 download before migration | FAIL | 503; SQLSTATE 42501 permission denied on audit_log |
-| PDF fixtures | PASS | Four shapes produce PDF bytes; synthetic temp file 1,755 bytes with header/EOF |
-| `npm test` | FAIL | 205/206; known no-store assertion only |
-| `npm run check:migrations` | PASS | 19/19 |
-| JS syntax | PASS | 10/10 changed files |
-| Diff/protected-file checks | PASS | clean / empty |
-| Real API PDF saved file | UNVERIFIED | blocked until migration 0019 is applied |
+| Check | Result | Date | Command/details |
+|---|---|---|---|
+| Full tests | FAIL 249/250 | 2026-11-01 | `npm test`; sole failure is known no-store assertion (`Cache-Control` undefined). |
+| Migration parser | PASS 21/21 | 2026-11-01 | `npm run check:migrations` |
+| JS syntax and whitespace | PASS | 2026-11-01 | `node --check` staged JS/MJS; `git diff --check` |
+| Secret scan | PASS | 2026-11-01 | PASS; no credential-shaped tokens, `.env` untracked, protected-file diff empty, no conflict markers. |
 
-## KNOWN ISSUES
-- Real PDF response is fail-closed until the service_role INSERT grant exists on the live audit_log table.
-- Full test suite retains the known no-store assertion failure.
+## KNOWN ISSUES AND RISKS
+- Previous source baseline had one known no-store assertion failure; do not weaken it.
+- Live Supabase migration state and live provider behavior are not verified by this task.
+- Main has newer changes than the source branch; preserve them during final diff review.
 
 ## LESSONS LEARNED
-- SQL Editor executes one transaction; errors roll it back. Never edit an applied migration.
-- SECURITY DEFINER/posting RPCs revoke from public/anon/authenticated and grant service_role only.
-- PostgREST embeds need explicit FK names when multiple relationships exist.
-- audit_log is insert-only and ON DELETE RESTRICT; test cleanup removes journals first.
-- PayPal webhooks require `/api/webhook` and raw body for signature verification.
-- Never print `.env` values, keys or JWTs.
+- Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant it only to service_role; prove it with an ordinary JWT (expect 403).
+- PostgREST embeds need explicit foreign-key names when two relationships exist.
+- audit_log is insert-only and ON DELETE RESTRICT; cleanup deletes journal_entries first, then audit_log, organizations, auth.users, via `scripts/cleanup-phase2-test-data.sql`. Reuse fixed named test users/orgs.
+- PayPal Sandbox buyer must be a US Personal account; seller USD only; use Visa; webhook URL ends `/api/webhook`; PAYPAL_WEBHOOK_ID must match.
+- Raw body is needed for PayPal signature verification.
+- Never print `.env` values; use key names only.
+- Gemini fallback uses per-key/model cooldowns; do not rotate for transient or safety failures.
 
 ## DO NOT
-- Never push, create users, call Gemini/PayPal, weaken tests, edit protected files, or commit `.env`.
+- Do not force-push, print secrets/JWTs, call Gemini/PayPal/Supabase, run migrations, weaken tests, edit protected visual files, or commit `.env`. Push is authorized only for this requested main publication.
 
 ## RESUME COMMANDS
 - `git status --short`
 - `npm test`
 - `npm run check:migrations`
-
-## PR publication checkpoint (2026-11-02)
-- `npm test`: 205/206; the known no-store assertion remains. Migration check 19/19, JS syntax and diff checks pass; protected diff empty. Secret scan clean and `.env` untracked.
-- Migration 0019 remains unapplied, so live invoice PDF download is still blocked pending its service_role audit INSERT grant.
-
-- Published branch head: `14fab0f`; PR #13: https://github.com/Aadiverse07/NovaPay/pull/13.
-
-
-## Invoice PDF audit repair (2026-11-02)
-- Isolated publishing branch `codex/publish-invoice-pdf-fix` starts at `origin/main` commit `1ec11fd`; excludes unrelated Maintenance work and migration 0020.
-- Adds migration 0021 for a membership/invoice-scoped SECURITY DEFINER audit RPC granted only to service_role. Repository uses the RPC; download stays fail-closed and includes request ID in error JSON/UI toast.
-- Real-row direct PDF output verified at 1722 and 1689 bytes; invoice number, formatted amount and DRAFT extracted. Live endpoint still needs migration 0021 applied before it can succeed.
-- `npm test`: 206/207; only the known no-store header assertion fails. Migration parser (20 files), syntax, whitespace and protected-file checks pass.
-- User authorized pushing this isolated repair into main. Never force-push. Do not publish Maintenance wiring or migration 0020 from the source branch.

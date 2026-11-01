@@ -10,6 +10,8 @@ import { createRepositories } from './repos/memory.js';
 import { createPostgresRepositories } from './repos/postgres.js';
 import { createPayPalService } from './services/paypal.js';
 import { createAIService } from './services/ai.js';
+import { createLLMAdapter } from './services/llm.js';
+import { createGeminiKeyPool, resolveGeminiKeySlots } from './services/geminiKeyPool.js';
 import { createSupabaseServices } from './services/supabase.js';
 import { authMiddleware } from './middleware/auth.js';
 import { rateLimit } from 'express-rate-limit';
@@ -30,17 +32,23 @@ import { createAnomalyService, startAnomalyWorker } from './services/anomalies.j
 import { fundRoutes } from './routes/funds.js';
 import { documentRoutes } from './routes/documents.js';
 import { createDocumentRag } from './services/documentRag.js';
+import { authPreflightRoutes } from './routes/authPreflight.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
+
+export function shouldLogAccess(path, status) {
+  return status !== 304 || String(path || '').startsWith('/api/');
+}
 
 export function createApp({ config = defaultConfig, repos, paypal, askAI, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider } = {}) {
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
   const fx = createFxService({ rates: repos.fxRates });
-  const documentRag = createDocumentRag({ config, database: identity?.database, embeddingProvider: documentEmbeddingProvider, events: repos.events });
-  askAI ||= createAIService({ config, events: repos.events, repos, fx, documentSearch: documentRag });
+  const geminiKeyPool = createGeminiKeyPool({ keys: config.geminiKeySlots || resolveGeminiKeySlots(config), events: repos.events });
+  const documentRag = createDocumentRag({ config, database: identity?.database, embeddingProvider: documentEmbeddingProvider, keyPool: geminiKeyPool, events: repos.events });
+  askAI ||= createAIService({ config, events: repos.events, repos, fx, provider: createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool }), documentSearch: documentRag });
   const runAnomalyScan = createAnomalyService({ repos, config });
 
   app.disable('x-powered-by');
@@ -52,18 +60,24 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use((req, res, next) => {
     const started = Date.now();
-    res.on('finish', () => console.log(JSON.stringify({ level: 'info', requestId: req.id, method: req.method, path: String(req.originalUrl || req.path).split('?')[0], status: res.statusCode, durationMs: Date.now() - started })));
+    res.on('finish', () => {
+      const path = String(req.originalUrl || req.path).split('?')[0];
+      // Static asset 304s are routine browser cache revalidation and can dominate local dev logs.
+      if (!shouldLogAccess(path, res.statusCode)) return;
+      console.log(JSON.stringify({ level: 'info', requestId: req.id, method: req.method, path, status: res.statusCode, durationMs: Date.now() - started }));
+    });
     next();
   });
-  const publicPaths = ['/status', '/public-config', '/webhook'];
+  const publicPaths = ['/status', '/public-config', '/webhook', '/auth/preflight'];
   const generalIpLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) });
   app.use('/api', generalIpLimit);
+  app.use('/api', authPreflightRoutes());
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_IP_RATE_LIMITED', message: 'Too many onboarding attempts from this network. Try again later.' } } }));
   app.use('/api', authMiddleware({ config, identity }));
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 240, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many requests for this account. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) }));
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => `onboarding:${req.user.id}`, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_RATE_LIMITED', message: 'Too many onboarding attempts for this account. Try again later.' } } }));
   app.use('/api', webhookRoutes({ paypal, repos }));
-  app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, rag: documentRag, events: repos.events }));
+  app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, keyPool: geminiKeyPool, rag: documentRag, events: repos.events }));
   app.use(express.json({ limit: '64kb' }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
@@ -101,7 +115,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
     const status = databaseStatus || error.statusCode || error.status || (error.type === 'entity.too.large' ? 413 : 500);
     const message = error.type === 'entity.too.large' ? 'Request body is too large.' : error.type === 'entity.parse.failed' ? 'Request body must be valid JSON.' : error.message || 'The request could not be completed.';
     if (status >= 500) Promise.resolve(repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed`, ok: false }, req.orgId)).catch(() => {});
-    const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path.startsWith('/api/documents') || req.path === '/api/fx/convert' || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path.startsWith('/api/funds') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
+    const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path.startsWith('/api/documents') || req.path.startsWith('/api/fx/') || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path.startsWith('/api/funds') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
     if (structuredRoute) {
       const code = /^[A-Z][A-Z0-9_]+$/.test(error.code || '') ? error.code : (status === 413 ? 'BODY_TOO_LARGE' : error.databaseCode ? ({ '22003': 'REFUND_AMOUNT_EXCEEDED', '22023': 'VALIDATION_ERROR', '23505': 'CONFLICT', '23514': 'LEDGER_UNBALANCED', P0002: 'NOT_FOUND' })[error.databaseCode] : status === 400 ? 'BAD_JSON' : 'INTERNAL_ERROR');
       const fields = Array.isArray(error.validationIssues) ? error.validationIssues.slice(0, 24).filter((item) =>

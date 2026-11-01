@@ -8,22 +8,23 @@ test('Supabase service verifies bearer tokens with anon key and uses service rol
   const calls = [];
   const fetchImpl = async (url, options) => {
     calls.push({ url: String(url), options });
-    if (String(url).endsWith('/auth/v1/user')) return new Response(JSON.stringify({ id: 'user-a', email: 'a@example.test' }), { status: 200 });
+    if (String(url).endsWith('/auth/v1/user')) return new Response(JSON.stringify({ id: 'user-a', email: 'a@example.test', email_confirmed_at: '2026-01-01T00:00:00Z' }), { status: 200 });
     if (String(url).includes('/rest/v1/memberships?')) return new Response(JSON.stringify([{ org_id: 'org-a', user_id: 'user-a', role: 'owner' }]), { status: 200 });
     if (String(url).endsWith('/rest/v1/rpc/create_organization_for_user')) return new Response(JSON.stringify({ organizationId: 'org-a', created: true }), { status: 200 });
     if (String(url).endsWith('/rest/v1/audit_log')) return new Response(null, { status: 201 });
     throw new Error('unexpected request');
   };
   const services = createSupabaseServices(config, fetchImpl);
-  assert.deepEqual(await services.verifyToken('jwt-token'), { id: 'user-a', email: 'a@example.test' });
+  assert.deepEqual(await services.verifyToken('jwt-token'), { id: 'user-a', email: 'a@example.test', emailConfirmedAt: '2026-01-01T00:00:00Z' });
   assert.equal((await services.membership('user-a', 'org-a')).role, 'owner');
+  assert.deepEqual(await services.organizationsForUser('user-a'), [{ org_id: 'org-a', user_id: 'user-a', role: 'owner' }]);
   assert.deepEqual(await services.onboard('user-a', 'Org A', 'request-1'), { organizationId: 'org-a', created: true });
   await services.audit({ orgId: 'org-a', actorId: 'user-a', action: 'test', entity: 'test', requestId: 'request-1' });
   assert.equal(calls[0].options.headers.apikey, config.SUPABASE_ANON_KEY);
   assert.equal(calls[0].options.headers.Authorization, 'Bearer jwt-token');
   assert.equal(calls[0].options.headers.Authorization.includes(config.SUPABASE_SERVICE_ROLE_KEY), false);
   assert.equal(calls[1].options.headers.apikey, config.SUPABASE_SERVICE_ROLE_KEY);
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 5);
 });
 
 test('invalid JWT is rejected; Supabase service outages fail closed', async () => {

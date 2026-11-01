@@ -31,10 +31,10 @@ test('document invoice draft computes totals on the server and rejects a mismatc
 
 test('FX service caches provider rates and returns source, timestamp, label, and separate fees',async()=>{
   let calls=0;const rows=new Map();const now=()=>Date.parse('2026-10-24T00:00:00.000Z');
-  const service=createFxService({now,rates:{async get(_org,base,quote){return rows.get(`${base}:${quote}`)||null;},async put(row){rows.set(`${row.base_currency}:${row.quote_currency}`,row);}},fetchImpl:async(url)=>{calls++;assert.equal(new URL(url).hostname,'api.frankfurter.dev');return {ok:true,json:async()=>({date:'2026-10-23',rates:{EUR:1.2345}})};}});
+  const service=createFxService({now,sleep:async()=>{},rates:{async get(_org,base,quote){return rows.get(`${base}:${quote}`)||null;},async put(row){rows.set(`${row.base_currency}:${row.quote_currency}`,row);}},fetchImpl:async(url)=>{calls++;assert.equal(new URL(url).hostname,'api.frankfurter.dev');return {ok:true,json:async()=>String(url).endsWith('/currencies')?{USD:'US dollar',EUR:'Euro'}:{date:'2026-10-23',rates:{EUR:1.2345}}};}});
   const first=await service.convert({orgId:'org',amount:'10.01',base:'USD',quote:'EUR'});
   const second=await service.convert({orgId:'org',amount:'1.00',base:'USD',quote:'EUR'});
-  assert.equal(first.convertedAmount,'12.36 EUR');assert.equal(first.rate,'1.2345');assert.equal(first.source,'Frankfurter');
+  assert.equal(first.convertedAmount,'12.36 EUR');assert.equal(first.rate,'1.2345');assert.equal(first.source,'Frankfurter (ECB reference)');
   assert.equal(first.label,'indicative, not a guaranteed settlement rate');assert.deepEqual(first.fees,[]);assert.ok(first.timestamp);assert.equal(second.convertedAmount,'1.23 EUR');assert.equal(calls,1);
 });
 

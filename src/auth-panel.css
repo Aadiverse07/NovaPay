@@ -76,6 +76,21 @@
 :root .modal.auth-split .info-content { position: absolute; top: 0; width: 50%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: center; color: var(--auth-on-shape); }
 :root .modal.auth-split .info-content.Login    { right: 0; text-align: right; padding: 0 40px 40px 120px; }
 :root .modal.auth-split .info-content.Register { left: 0;  text-align: left;  padding: 0 130px 40px 38px; }
+:root .modal.auth-split .form-box.OTP { left: 0; padding: 0 38px; opacity: 0; pointer-events: none; transform: translateX(-120%); transition: transform .7s ease, opacity .7s ease; }
+:root .modal.auth-split .info-content.OTP { right: 0; text-align: right; padding: 0 40px 40px 120px; opacity: 0; transform: translateX(120%); transition: transform .7s ease, opacity .7s ease; }
+:root .modal.auth-split .auth-stage.otp-active .form-box.Login,
+:root .modal.auth-split .auth-stage.otp-active .form-box.Register,
+:root .modal.auth-split .auth-stage.otp-active .info-content.Login,
+:root .modal.auth-split .auth-stage.otp-active .info-content.Register { opacity: 0; pointer-events: none; }
+:root .modal.auth-split .auth-stage.otp-active .form-box.OTP,
+:root .modal.auth-split .auth-stage.otp-active .info-content.OTP { opacity: 1; pointer-events: auto; transform: translateX(0); }
+:root .modal.auth-split .form-box.OTP h2 { font-size: 28px; }
+:root .modal.auth-split .auth-otp-description { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: var(--text-muted); text-align: center; }
+:root .modal.auth-split .form-box.OTP .input-box { margin-top: 12px; }
+:root .modal.auth-split .form-box.OTP .auth-hint { margin: 6px 0 0 !important; min-height: 14px; color: var(--danger-text); }
+:root .modal.auth-split .form-box.OTP .regi-link { margin-top: 6px; }
+:root .modal.auth-split .form-box.OTP .text-button { font-size: 12px; }
+:root .modal.auth-split .form-box.OTP .text-button:disabled { opacity: .65; cursor: default; }
 :root .modal.auth-split .info-content h2 { margin: 0; font-size: 32px; line-height: 1.25; text-transform: uppercase; color: inherit; }
 :root .modal.auth-split .info-content p  { margin: 8px 0 0; font-size: 15px; line-height: 1.45; color: inherit; }
 :root .modal.auth-split .info-content .auth-mark { display: block; margin-bottom: 12px; }
@@ -186,7 +201,8 @@
 :root .modal.auth-split .regi-link a { color: var(--auth-link); font-weight: 700; text-decoration: none; }
 :root .modal.auth-split .regi-link a:hover { text-decoration: underline; }
 
-:root .modal.auth-split .auth-demo { display: none; }
+:root .modal.auth-split .auth-demo { display: block; margin: 0 0 5px; text-align: center; font-size: 11px; color: var(--text-muted); }
+:root .modal.auth-split .auth-demo[hidden] { display: none; }
 
 /* ---- small screens: the diagonal layout doesn't fit, so show one form at a time ---- */
 @media (max-width: 760px) {
@@ -197,6 +213,10 @@
   :root .modal.auth-split .form-box.Login { display: flex; }
   :root .modal.auth-split .auth-stage.active .form-box.Login { display: none; }
   :root .modal.auth-split .auth-stage.active .form-box.Register { display: flex; }
+  :root .modal.auth-split .auth-stage.otp-active .form-box.Login,
+  :root .modal.auth-split .auth-stage.otp-active .form-box.Register { display: none; }
+  :root .modal.auth-split .auth-stage.otp-active .form-box.OTP { display: flex; }
+  :root .modal.auth-split .auth-stage.otp-active .form-box.OTP .animation { transform: none !important; opacity: 1 !important; filter: none !important; }
   :root .modal.auth-split .animation, :root .modal.auth-split .auth-stage .form-box .animation {
     transform: none !important; opacity: 1 !important; filter: none !important; transition: none !important;
   }
@@ -207,7 +227,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root .modal.auth-split .curved-shape, :root .modal.auth-split .curved-shape2, :root .modal.auth-split .animation { transition-duration: .01s !important; transition-delay: 0s !important; }
+  :root .modal.auth-split .curved-shape, :root .modal.auth-split .curved-shape2, :root .modal.auth-split .animation,
+  :root .modal.auth-split .form-box.OTP, :root .modal.auth-split .info-content.OTP { transition-duration: .01s !important; transition-delay: 0s !important; }
 }
 
 /* Login / Sign Up side-panel logo: use the transparent artwork (no square backdrop) and brighten it. */
