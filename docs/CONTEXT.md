@@ -10,7 +10,7 @@
 - `.env` is untracked and ignored; no credential values were printed.
 
 ## IN PROGRESS
-- Integrated publication commit `59c2046` plus journal checkpoint `8c5ae7f` were fast-forward pushed to `origin/main`; remote ref verified against `8c5ae7f58a2696b39fcf8a418c83cb3e73529a5f`. This final handoff checkpoint is being committed.
+- Integrated publication commit `59c2046` plus journal checkpoint `8c5ae7f` were fast-forward pushed to `origin/main`; remote ref verified against `8c5ae7f58a2696b39fcf8a418c83cb3e73529a5f`. The full update is published; remote main was verified at `c3b5a75ec9988e45fb69715156dc60ce51d79964`, with a final journal-only checkpoint following.
 - Relevant new migration from the source branch: `supabase/migrations/0020_fund_maintenance_activity_read.sql`; migration 0021 is already part of current main. Neither migration application state is verified by this local publish task.
 
 ## NEXT STEPS
