@@ -4098,3 +4098,8 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: verify final branch/status and confirm `.env` is not tracked; why: ensure the local task checkpoint is clean and safe.
 2026-11-01 | Result: PASS, branch is `fix-invoice-view`; `.env` is not tracked; only this journal has an expected handoff update; NEXT: commit the final verification record.
 2026-11-01 | Before: commit the final WORKLOG verification record locally; why: preserve the clean-state confirmation with the task handoff.
+2026-11-01 | Before: compare fix-invoices-crud ancestry with origin/main and scan outgoing diff for secrets; why: determine PR scope and prevent secret exposure before publish.
+2026-11-01 | Result: PASS, fix-invoices-crud base commit is not merged into origin/main; outgoing diff scan found 0 secret-like added lines; NEXT: run full test and static checks.
+2026-11-01 | Before: run npm test, migration check, JS syntax checks, whitespace check and protected-file diff; why: validate the exact outgoing branch before push.
+2026-11-01 | Result: PASS with known failure, npm test 200/201 (no-store assertion only); migrations 18/18, JS syntax 16/16, diff check clean, protected-file diff empty; NEXT: commit the sole WORKLOG preflight change before pushing.
+2026-11-01 | Before: commit only docs/WORKLOG.md; why: keep the authorized outgoing branch checkpointed and ensure there are no unrelated edits.
