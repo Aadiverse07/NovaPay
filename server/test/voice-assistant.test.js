@@ -64,10 +64,23 @@ test('final spoken transcript reaches the same handler text and actions as typed
 });
 
 test('a deterministic fast-path module reply is spoken', async () => {
-  const state = setup({ onQuery: async () => ({ reply: 'Opening the ledger.', speak: 'Opening the ledger.', route: 'code', actions: [{ id: 'nav.open', args: { view: 'ledger' } }] }) });
+  const spoken = [], cancellations = [];
+  const state = setup({
+    speechOutput: { speak(text) { assert.equal(FakeRecognition.instances[0].stops, 1, 'recognizer stops before TTS starts'); spoken.push(text); return Promise.resolve({ ok: true }); }, cancel() { cancellations.push(true); } },
+    onQuery: async () => ({ reply: 'Opening the ledger.', speak: 'Opening the ledger.', route: 'code', actions: [{ id: 'nav.open', args: { view: 'ledger' } }] }),
+  });
   state.controller.start(); state.recognition().onresult(event('open ledger'));
   await settle(); await settle();
-  assert.deepEqual(state.spoken, ['Opening the ledger.']);
+  assert.deepEqual(spoken, ['Opening the ledger.']); assert.equal(cancellations.length, 0);
+  assert.equal(state.controller.getState(), 'idle');
+});
+
+test('an empty response.speak falls back to a short plain-text reply exactly once', async () => {
+  const speechCalls = [];
+  const state = setup({ speechOutput: { speak(text) { speechCalls.push(text); return Promise.resolve({ ok: true }); }, cancel() {} }, onQuery: async () => ({ reply: 'The organization received 125.00 INR today. Evidence: record 123.', speak: '', route: 'sql' }) });
+  state.controller.start(); state.recognition().onresult(event('how much did I receive today?'));
+  await settle(); await settle();
+  assert.deepEqual(speechCalls, ['The organization received 125.00 INR today.']);
   assert.equal(state.controller.getState(), 'idle');
 });
 
@@ -93,18 +106,19 @@ test('interim result followed by silence submits exactly one query and shows the
   assert.equal(state.controller.getState(), 'idle');
 });
 
-test('tap while speaking cancels speech and starts listening again', async () => {
+test('mic tap while speaking does not cancel the active reply or start a competing recognizer', async () => {
   let resolveSpeech; const cancellation = [];
   const state = setup({ speechOutput: { speak() { return new Promise((resolve) => { resolveSpeech = resolve; }); }, cancel() { cancellation.push(true); } } });
   state.controller.start(); state.recognition().onresult(event('open ledger')); await settle();
   assert.equal(state.controller.getState(), 'speaking');
-  state.controller.start();
-  assert.equal(cancellation.length, 1);
+  assert.equal(state.controller.start(), false);
+  assert.equal(cancellation.length, 0);
   assert.equal(FakeRecognition.instances.length, 1);
-  assert.equal(state.recognition().starts, 2);
-  assert.equal(state.controller.getState(), 'listening');
+  assert.equal(state.recognition().starts, 1);
+  assert.equal(state.controller.getState(), 'speaking');
   resolveSpeech?.({ ok: false, error: 'interrupted' });
-  state.controller.stop();
+  await settle();
+  assert.equal(state.controller.getState(), 'idle');
 });
 
 test('network speech-service error stops immediately and exposes the fallback status', () => {

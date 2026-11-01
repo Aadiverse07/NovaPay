@@ -58,6 +58,31 @@ test('empty or markup-only speech becomes a short plain-language sentence', asyn
   assert.equal(utterances[0].lang, 'en-US');
 });
 
+test('local voice is preferred, then one playback error retries with the default voice', async () => {
+  const voices = [
+    { name: 'Remote India', lang: 'en-IN', localService: false },
+    { name: 'Local India', lang: 'en-IN', localService: true },
+    { name: 'Default US', lang: 'en-US', localService: false, default: true },
+  ];
+  const used = [], logs = []; let calls = 0, cancels = 0;
+  const synthesis = { getVoices: () => voices, cancel() { cancels += 1; }, speak(utterance) { used.push(utterance.voice.name); calls += 1; setImmediate(() => calls === 1 ? utterance.onerror({ error: 'network' }) : utterance.onend()); } };
+  class Utterance { constructor(text) { this.text = text; } }
+  const oldDebug = console.debug; console.debug = (...args) => logs.push(args);
+  const output = speech.create({ synthesis, Utterance, debug: true, storage: { getItem: () => null } }); output.markGesture();
+  const result = await output.speak('Opening the ledger.'); console.debug = oldDebug;
+  assert.equal(result.ok, true); assert.deepEqual(used, ['Local India', 'Default US']); assert.equal(cancels, 0);
+  assert.ok(logs.some(([, step, data]) => step === 'speech retry' && data.code === 'network'));
+});
+
+test('only the shared speech module calls synthesis methods and the dashboard exposes voice diagnostics', async () => {
+  const files = await Promise.all(['../../src/assistant-speech.js', '../../src/voice-greeting.js', '../../src/voice-assistant.js', '../../src/voice-indicator.js', '../../src/dashboard.js', '../../src/ai-fullscreen.js', '../../dashboard.html'].map((path) => readFile(new URL(path, import.meta.url), 'utf8')));
+  assert.match(files[0], /synthesis\.speak\(utterance\)/);
+  for (const file of files.slice(1, 6)) assert.doesNotMatch(file, /(?:speechSynthesis|synthesis)\.(?:speak|cancel|pause)\s*\(/);
+  assert.match(files[6], /id="ai-test-voice"/);
+  assert.match(files[6], /id="ai-speech-status"/);
+  assert.match(files[4], /ai-test-voice.*speechOutput\.speak\("Hello\. NovaPay voice is working\."\)/);
+});
+
 test('speech synthesis errors always resolve with an error category', async () => {
   const doc = fakeDocument();
   const synthesis = { getVoices: () => [{ lang: 'en-IN' }], speak(utterance) { setImmediate(() => utterance.onerror({ error: 'network' })); } };
@@ -76,14 +101,13 @@ test('cancel resolves queued speech without waiting for a gesture', async () => 
   assert.equal(output.pending(), 0);
 });
 
-test('not-allowed TTS resolves the turn and retries once after a later gesture', async () => {
+test('not-allowed TTS resolves after one retry with the browser default voice', async () => {
   const doc = fakeDocument(), attempts = [];
   const synthesis = { getVoices: () => [{ lang: 'en-IN' }], speak(utterance) { attempts.push(utterance); setImmediate(() => attempts.length === 1 ? utterance.onerror({ error: 'not-allowed' }) : utterance.onend()); } };
   class Utterance { constructor(text) { this.text = text; } }
   const output = speech.create({ synthesis, Utterance, document: doc, storage: { getItem: () => null } });
   output.markGesture();
   const result = await output.speak('retry answer');
-  assert.equal(result.ok, false); assert.equal(result.error, 'not-allowed'); assert.equal(attempts.length, 1);
-  output.markGesture(); await new Promise((resolve) => setTimeout(resolve, 0));
-  assert.equal(attempts.length, 2); assert.equal(output.pending(), 0);
+  assert.equal(result.ok, true); assert.equal(attempts.length, 2);
+  assert.equal(attempts[1].voice, undefined); assert.equal(output.pending(), 0);
 });

@@ -1,4 +1,10 @@
 const UNSUPPORTED_SPEECH_MESSAGE = "Voice recognition isn't available in this browser (Brave blocks it). Use Chrome/Edge, or type or hold the mic button.";
+function plainSpeech(text) {
+  const safe = String(text || "").replace(/\b(?:evidence|citations?)\s*:\s*.*$/i, " ")
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, " ")
+    .replace(/[*_~#>`]/g, " ").replace(/\s+/g, " ").trim();
+  return safe.split(/(?<=[.!?])\s+/).slice(0, 2).join(" ") || "Done. I completed that request.";
+}
 
 export function createVoiceController(options = {}) {
   const Recognition = options.Recognition, speechOutput = options.speechOutput;
@@ -85,7 +91,9 @@ export function createVoiceController(options = {}) {
       debug("response received", { route: response?.route || "unknown", error: Boolean(response?.error) });
       if (response?.actions?.length) debug("actions parsed", response.actions.map((item) => item.id));
       const answer = String(response?.reply || response?.answer || "").trim() || "I could not complete that request. Please try again or type your question.";
-      lastReply = answer; speak(String(response?.speak || answer).slice(0, 1000), request);
+      const spoken = plainSpeech(response?.speak || answer).slice(0, 500);
+      debug("speak requested", { text: spoken, textLength: spoken.length, route: response?.route || "unknown" });
+      lastReply = answer; speak(spoken, request);
     }).catch((error) => {
       if (request !== turnId || destroyed) return;
       clearThinking();
@@ -112,9 +120,7 @@ export function createVoiceController(options = {}) {
   }
   function start() {
     if (destroyed || state === "listening") return false;
-    if (state === "speaking" || state === "thinking") {
-      ++turnId; clearThinking(); speechOutput?.cancel?.(); enabled = false; releaseRecognizer();
-    }
+    if (state === "speaking" || state === "thinking") { setState(state, state === "speaking" ? "Wait for the answer to finish before speaking again." : "The assistant is still working."); return false; }
     clearThinking(); clearSilence();
     if (!Recognition) { enabled = false; setState("idle", UNSUPPORTED_SPEECH_MESSAGE, true); return false; }
     enabled = true; pendingText = ""; ++turnId; setState("listening", "Listening…");
@@ -127,7 +133,7 @@ export function createVoiceController(options = {}) {
   function toggle() { if (state === "listening") { stop(); return false; } return start(); }
   function stop() {
     ++turnId; clearThinking(); clearSilence(); enabled = false; pendingText = "";
-    speechOutput?.cancel?.(); releaseRecognizer(); setState("idle", "Tap the mic to speak.");
+    if (state === "speaking") speechOutput?.cancel?.(); releaseRecognizer(); setState("idle", "Tap the mic to speak.");
   }
   function stopSpeaking() { speechOutput?.cancel?.(); if (state === "speaking") finishTurn("Tap the mic to speak."); }
   function confirmPending() {

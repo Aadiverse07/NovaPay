@@ -2,7 +2,8 @@
   "use strict";
   var $=function(id){return document.getElementById(id);};
   var toast=$("dashboard-toast"), toastTimer;
-  var speechOutput=window.NovaPaySpeechOutput&&window.NovaPaySpeechOutput.create({synthesis:window.speechSynthesis,Utterance:window.SpeechSynthesisUtterance,document:document,storage:window.localStorage});
+  var speechOutput=window.NovaPaySpeechOutput&&window.NovaPaySpeechOutput.create({synthesis:window.speechSynthesis,Utterance:window.SpeechSynthesisUtterance,document:document,storage:window.localStorage,onStatus:function(value){var status=$("ai-speech-status");if(status)status.textContent=value}});
+  window.NovaPaySpeechOutputInstance=speechOutput;
   function voiceDebug(step,detail){try{if(localStorage.getItem("novapay:voiceDebug")==="1")console.debug("[NovaPay voice]",step,detail||"")}catch(e){}}
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},3000);}
   function getUser(){
@@ -81,7 +82,7 @@
   async function executeAssistantAction(action){
     var args=action.args||{},id=action.id;
     if(id==="nav.open"||id==="report.open"){activate(id==="report.open"?"reports":args.view,true);return}
-    if(id==="assistant.stopSpeaking"){if(window.NovaPayVoiceAssistantController)window.NovaPayVoiceAssistantController.stopSpeaking();if(window.speechSynthesis)window.speechSynthesis.cancel();return}
+    if(id==="assistant.stopSpeaking"){if(window.NovaPayVoiceAssistantController)window.NovaPayVoiceAssistantController.stopSpeaking();else if(speechOutput)speechOutput.cancel();return}
     if(id==="assistant.repeat"){var repeatText=previousAssistantReply||"There is no answer to repeat yet.";if(speechOutput)speechOutput.speak(repeatText);return}
     if(id==="assistant.help"){var list=(window.NovaPayAssistantActions.registry||[]).map(function(item){return item.speakableName}).filter(Boolean);showToast("I can " + [...new Set(list)].slice(0,8).join(", ") + ".");return}
     if(id==="documents.promptUpload"){activate("documents",true);var file=$("document-upload"),label=document.querySelector('label[for="document-upload"]');if(label){label.tabIndex=-1;label.focus();label.scrollIntoView({block:"center"})}else if(file){file.focus();file.scrollIntoView({block:"center"})}return}
@@ -195,6 +196,7 @@
   window.NovaPayAssistant.getLastReply=function(){return lastAssistantReply};
   function askFromComposer(){var input=$("ai-input"),q=input.value.trim();if(q&&!aiBusy){if(speechOutput)speechOutput.markGesture();handleQuery(q,{source:"typed",speak:true});input.value=""}}
   $("ai-send").addEventListener("click",askFromComposer);
+  $("ai-test-voice")?.addEventListener("click",function(){if(!speechOutput)return;speechOutput.markGesture();speechOutput.speak("Hello. NovaPay voice is working.")});
   $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();askFromComposer()}});
   (function setupAssistantTools(){
     var upload=$("ai-upload"),mic=$("ai-mic"),loading=false,skipFallbackClick=false;

@@ -119,3 +119,18 @@ test('typed and PTT queries use the same handler and both speak the returned ans
   assert.deepEqual(spoken, ['NovaPay answered open ledger', 'NovaPay answered show refunds this month']);
   assert.equal(ptt.options.source, 'push-to-talk');
 });
+
+test('an authenticated chat response after the fake API fetch triggers exactly one shared speak', async () => {
+  const calls = [], utterances = [], events = [];
+  const output = speechOutputModule.create({
+    synthesis: { getVoices: () => [{ lang: 'en-IN', localService: true }], resume() {}, speak(utterance) { utterances.push(utterance.text); setImmediate(() => { utterance.onstart(); utterance.onend(); }); } },
+    Utterance: class { constructor(text) { this.text = text; } },
+    document: { addEventListener(name, fn) { events.push(name); } }, storage: { getItem: () => null },
+  });
+  output.markGesture();
+  const response = await client.send({ async request(path, options) { calls.push({ path, options }); return { answer: 'The organization received funds today.', speak: '', route: 'sql' }; } }, 'how much did I receive today?');
+  const result = await output.speak(response.speak || response.reply);
+  assert.equal(calls.length, 1); assert.equal(calls[0].path, '/api/ai/chat');
+  assert.equal(result.ok, true); assert.deepEqual(utterances, ['The organization received funds today.']);
+  assert.ok(events.includes('pointerdown'));
+});
