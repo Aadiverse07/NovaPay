@@ -2,59 +2,63 @@
 
 ## HEADER
 - Date/time: 2026-11-01 Asia/Kolkata
-- Branch: `fix-invoice-view`, based on `fix-invoices-crud` at `f113f54`; no push.
-- Phase/task: invoice detail View and authenticated PDF download.
+- Branch: `fix-download-campaigns`, created from `origin/main` after invoice PR #12 merged (`5d6ff72`). No push.
+- Last base commit: `5d6ff72`.
+- Phase/task: invoice download error handling and Community Funds campaign-create wiring.
 
 ## DONE
-- Diagnosed View: its handler fetched `/api/invoices/:id` then showed a toast; an existing modal opener ignored buttons. Rewired View to open detail from the org-scoped API response.
-- Added accessible detail view for invoice status, customer, dates, currency, lines, minor-unit totals, notes, linked document and scoped `invoice_events` history. Uses text nodes, loading/error states, close/Escape and focus restoration.
-- Added server-generated PDF from stored invoice values using the existing pinned pdf-lib. Includes status/DRAFT mark, line items, totals, notes, footer, and page breaks for long invoices.
-- Added org-scoped authenticated download endpoint with `application/pdf`, safe filename, 20/user/hour route limit and invoice-ID-only audit row. Viewer can download; foreign org receives 404.
-- Added authenticated blob handling and downloads in each row and the detail view. No migration or package change.
-- Files: `dashboard.html`; `src/api-client.js`, `src/invoice-detail.js`, `src/invoices-live.js`; `server/src/routes/invoices.js`, `server/src/repos/memory.js`, `server/src/repos/postgres.js`, `server/src/services/invoicePdf.js`; `server/test/api-client.test.js`, `server/test/invoice-download.test.js`, `server/test/postgres-repos.test.js`; `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
+- Invoice table now has one row action, View. Download PDF remains in the detail dialog and uses authenticated blob fetch/save.
+- Download failures map 401/404/429/5xx to session-expired/not-found/rate-limited/server-error toasts. Added safe server log fields (request ID, HTTP status, code only); regression covers a 503 audit failure.
+- Live fundraising renderer is loaded and targets the actual `#view-community-funds` element. Authenticated mode hides static illustrative campaign content and reads org-scoped campaigns/summaries; demo mode retains labeled illustrative content.
+- Campaign create modal now validates title, purpose, USD target, deadline and organiser; converts major to minor using the ISO exponent; locks submit during the request; posts to `/api/funds/campaigns`, closes on success and reloads live campaigns.
+- Server campaign list includes membership role for UI controls; server RBAC still enforces owner/admin/accountant writes. Campaign-specific contributions load through the read-only transparency route.
+- Maintenance and Transparency activation was left unchanged. No migration or dependency change.
+- Edited: `src/invoices-live.js`, `src/modules.js`, `src/fund-views.js`, `dashboard.html`, `server/src/routes/invoices.js`, `server/src/routes/funds.js`, `server/test/invoice-download.test.js`, `server/test/fund-campaign-live-view.test.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`.
 
 ## IN PROGRESS
-- Implementation and local checks are complete in commit `da8e4a7` (plus this handoff update); no push. Browser verification remains pending.
+- Focused tests passed 10/10, and strengthened campaign assertions 2/2. Full suite 203/204 (known no-store failure only); migration check 18/18; syntax 6/6; diff check PASS; protected-file diff empty. Local WIP commit remains.
+- Fixed-owner live checks and the original server request log are unavailable: no browser automation or fixed owner credentials are available. Do not create users. Actual live PDF response status/bytes and campaign create/list/cleanup remain UNVERIFIED.
 
 ## NEXT STEPS
-1. Complete the browser checklist below by hand.
-2. Never push.
+1. Run `npm test`, `npm run check:migrations`, `node --check` on changed JS, `git diff --check`, and protected-file diff.
+2. Append every test result to `docs/TEST-REPORT.md` and update this handoff and WORKLOG RESUME POINTER.
+3. Commit locally on `fix-download-campaigns`; never push.
+4. Human browser checks: owner sign in → Invoices → View → Download PDF; check file opens and is named `invoice-<number>.pdf`. Then Community Funds → Start a campaign → submit valid details → verify one new live card and amounts; open View contributions. Repeat read-only as viewer/donor/resident.
 
 ## USER ACTIONS PENDING
-- Browser: sign in as owner; open Invoices; click View and verify customer, dates, lines, INR 134.40 formatting, notes, linked document/history where present; close with × and Escape; confirm focus returns to View.
-- Click row Download and detail Download; verify `invoice-<number>.pdf`, DRAFT mark for draft/reviewed, page breaks with many lines, footer, and viewer can download. Verify sent invoice says SIMULATED, not delivered.
-- Repeat View/download as viewer; verify foreign-organization invoice IDs return 404.
+- Run the browser checks above with existing users and sample campaign data only. No fixed owner API credentials were available for live verification in this run.
 
 ## LIVE STATE
-- No new users or live invoice records created. No Gemini or PayPal calls made. No migration is required.
-- Live owner/browser verification: UNVERIFIED; only local tests have been run.
+- No live invoice download or campaign mutation was attempted; no rows created or cleaned up. No Gemini or PayPal calls made.
+- No migration needed.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Invoice download and Postgres repository tests | PASS | 18/18; PDF bytes, auth, tenant scope, audit, status events and pagination |
-| Invoice status-history repo assertions | PASS | org and invoice filters tested |
-| `npm test` | FAIL | 200/201; one known `Cache-Control: no-store` assertion only |
+| Focused invoice/campaign suite | PASS | 10/10 local tests; includes PDF 200, simulated audit 503, campaign owner 201, viewer 403 and org scoping |
+| Campaign scope and amount assertions | PASS | 2/2, including cross-org ID exclusion and currency exponent conversion |
+| Fixed-owner live PDF bytes | UNVERIFIED | No browser session or fixed owner credentials |
+| Fixed-owner campaign create/list/cleanup | UNVERIFIED | No browser session or fixed owner credentials |
+| `npm test` | FAIL | 203/204; known no-store assertion only |
 | `npm run check:migrations` | PASS | 18/18 |
-| `node --check` | PASS | 10 changed JS files |
+| `node --check` changed JS | PASS | 6/6 |
 | `git diff --check` | PASS | clean |
-| Protected-file diff | PASS | empty vs `origin/main` |
-| Live/browser checks | UNVERIFIED | human actions listed above |
+| Protected-file diff | PASS | empty |
 
 ## KNOWN ISSUES AND RISKS
-- Full suite has a known unrelated API no-store assertion failure from the prior task; this task does not change cache policy (200/201).
-- Download depends on stored invoice data and service-role audit insert; verify after local tests. No schema change expected.
+- The original live invoice download request log is unavailable. Code confirms the generic API error handler replaces all 5xx messages with “The request could not be completed”; added route logging records safe status/code for future diagnosis. A simulated audit write failure returns HTTP 503 `DATABASE_UNAVAILABLE`; this does not prove that was the original live failure.
+- Campaigns remain USD because the existing audited RPC and supported Sandbox flow are USD-only.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll everything back. Never edit an applied migration; add a numbered file.
-- SECURITY DEFINER/posting RPCs revoke public/anon/authenticated and grant only service_role; verify ordinary JWT access is denied.
-- PostgREST embeds need explicit FK names when multiple relationships exist.
-- `audit_log` is insert-only with ON DELETE RESTRICT; test cleanup removes journal rows first.
-- PayPal Sandbox webhook URL ends `/api/webhook`; raw body is required for signature verification.
-- Never print `.env` values; use key names only.
+- Supabase SQL Editor runs in one transaction; never edit applied migrations.
+- SECURITY DEFINER/posting RPCs must revoke execution from public/anon/authenticated and grant service_role only.
+- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
+- audit_log is insert-only with ON DELETE RESTRICT; test cleanup removes journal rows first.
+- PayPal Sandbox webhook URL ends `/api/webhook`; raw body is needed for signature verification.
+- Never print `.env` values; record key names only.
 
 ## DO NOT
-- Never push, force-push, create users, call Gemini/PayPal, edit protected design files, weaken tests, or commit `.env`.
+- Never push, create users, call Gemini/PayPal, edit protected design files, weaken tests, or commit `.env`.
 
 ## RESUME COMMANDS
 - `git status --short`

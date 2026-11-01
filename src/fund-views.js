@@ -11,9 +11,11 @@
     if (text !== undefined) node.textContent = text;
     return node;
   };
-  var amount = function (minor) {
-    var value = Number(minor || 0) / 100;
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+  var amount = function (minor, currency) {
+    currency = String(currency || "USD").toUpperCase();
+    var digits = new Intl.NumberFormat("en", { style: "currency", currency: currency }).resolvedOptions().maximumFractionDigits;
+    var value = Number(minor || 0) / Math.pow(10, digits);
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: currency, minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
   };
   var date = function (value) {
     if (!value) return "Date unavailable";
@@ -36,7 +38,9 @@
   };
 
   function labelSampleViews() {
-    ["fundraising", "maintenance", "transparency"].forEach(function (name) {
+    var fundsPanel = $("#view-community-funds");
+    if (fundsPanel) { fundsPanel.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = false; node.style.display = ""; }); var copy = $(".page-intro p", fundsPanel); if (copy) copy.textContent = "Manage campaign goals and review community progress. All amounts shown are illustrative sample data."; }
+    ["community-funds"].forEach(function (name) {
       var intro = $("#view-" + name + " .page-intro");
       if (!intro || $("[data-sample-view-label]", intro)) return;
       var badge = make("span", "status warn", "Sample data · Demo workspace");
@@ -46,8 +50,11 @@
   }
 
   function startFundraising() {
-    var panel = $("#view-fundraising");
+    var panel = $("#view-community-funds");
     if (!panel) return;
+    panel.querySelectorAll(":scope > :not(.page-intro)").forEach(function (node) { node.hidden = true; node.style.display = "none"; });
+    var intro = $(".page-intro p", panel);
+    if (intro) intro.textContent = "Manage your organization's live campaigns and review contributions. Amounts use the campaign currency; PayPal activity uses Sandbox only.";
     panel.querySelectorAll(":scope > .empty-state").forEach(function (node) { node.remove(); });
     var root = make("div", "fund-live-view");
     root.setAttribute("data-fund-live-root", "");
@@ -73,43 +80,18 @@
       headingCopy.appendChild(make("h3", "", "Fundraising campaigns"));
       headingCopy.appendChild(make("p", "", "Amounts are USD. A pledge is intent only; only a verified capture counts as received."));
       heading.appendChild(headingCopy);
+      if (["owner", "admin", "accountant"].indexOf(role) >= 0) {
+        var createCampaign = make("button", "btn btn--primary", "Start a campaign"); createCampaign.type = "button"; createCampaign.dataset.uiAction = "campaign-create"; header.appendChild(createCampaign);
+      }
       header.appendChild(make("p", "", "PayPal Sandbox only. Sandbox demonstrates the workflow; eligibility, local rules, and product availability apply. Do not treat this as real-money fundraising."));
       root.appendChild(header);
 
       if (roleNote) root.appendChild(make("p", "module-foot", roleNote));
       if (!campaigns.length) {
         var empty = make("div", "empty-state");
-        empty.appendChild(make("h3", "", "No live campaigns yet"));
+        empty.appendChild(make("h3", "", "No campaigns yet"));
         empty.appendChild(make("p", "", "This organization has no campaign records."));
         root.appendChild(empty);
-      }
-
-      if (["owner", "admin", "accountant"].indexOf(role) >= 0) {
-        var createCard = make("article", "dash-card campaign-create");
-        createCard.appendChild(make("h3", "", "Create campaign"));
-        var createForm = make("form", "module-toolbar");
-        createForm.innerHTML = '<label>Campaign title<input name="title" required maxlength="140" autocomplete="off"></label><label>Purpose<input name="purpose" required maxlength="2000" autocomplete="off"></label><label>Target (USD)<input name="target" type="number" required min="0.01" step="0.01" inputmode="decimal"></label><label>Deadline<input name="deadline" type="date"></label>';
-        var createButton = make("button", "btn btn--primary", "Create campaign");
-        createButton.type = "submit";
-        createForm.appendChild(createButton);
-        createForm.addEventListener("submit", async function (event) {
-          event.preventDefault();
-          var form = new FormData(createForm);
-          var targetMinor = Math.round(Number(form.get("target")) * 100);
-          if (!Number.isSafeInteger(targetMinor) || targetMinor <= 0) return showMessage("error", "Enter a valid positive USD target.");
-          createButton.disabled = true;
-          try {
-            await window.NovaPayApi.request("/api/funds/campaigns", { method: "POST", body: {
-              title: String(form.get("title")).trim(), purpose: String(form.get("purpose")).trim(), targetMinor: targetMinor,
-              deadline: form.get("deadline") || null, organiser: "Organization", status: "active"
-            } });
-            createForm.reset();
-            await load();
-          } catch (error) { showMessage("error", error.message || "Campaign could not be created."); }
-          finally { createButton.disabled = false; }
-        });
-        createCard.appendChild(createForm);
-        root.appendChild(createCard);
       }
 
       var grid = make("div", "campaign-grid");
@@ -135,12 +117,34 @@
           var item = make("span");
           item.setAttribute("data-fund-metric", entry[0].toLowerCase());
           item.appendChild(make("small", "", entry[0]));
-          item.appendChild(make("b", "", amount(entry[1])));
+          item.appendChild(make("b", "", amount(entry[1], campaign.currency)));
           numbers.appendChild(item);
         });
         card.appendChild(numbers);
         card.appendChild(make("small", "", "Updated " + date(summary.asOf)));
         if (summary.legalCaution) card.appendChild(make("small", "", summary.legalCaution));
+
+        var contributionButton = make("button", "btn btn--ghost", "View contributions"); contributionButton.type = "button";
+        var contributionList = make("div", "campaign-contributions-live"); contributionList.hidden = true;
+        contributionButton.addEventListener("click", async function () {
+          if (!contributionList.hidden) { contributionList.hidden = true; return; }
+          contributionList.hidden = false; contributionList.textContent = "Loading contributions…"; contributionButton.disabled = true;
+          try {
+            var response = await window.NovaPayApi.request("/api/funds/transparency?campaignId=" + encodeURIComponent(campaign.id));
+            contributionList.textContent = "";
+            var rows = Array.isArray(response.contributions) ? response.contributions : [];
+            if (!rows.length) contributionList.appendChild(make("p", "empty-state", "No contributions for this campaign yet."));
+            rows.forEach(function (item) {
+              var row = make("div", "transparency-row");
+              row.appendChild(make("span", "", String(item.status || "Contribution")));
+              row.appendChild(make("b", "", amount(item.amountMinor, campaign.currency)));
+              row.appendChild(make("small", "", date(item.receivedAt || item.createdAt)));
+              contributionList.appendChild(row);
+            });
+          } catch (error) { contributionList.textContent = "Contributions could not be loaded. " + (error.message || "Try again."); }
+          finally { contributionButton.disabled = false; }
+        });
+        card.appendChild(contributionButton); card.appendChild(contributionList);
 
         if (["owner", "admin", "accountant", "approver"].indexOf(role) >= 0) {
           var pledgeForm = make("form", "module-toolbar");
@@ -211,7 +215,7 @@
           window.NovaPayApi.request("/api/funds/transparency").then(function (data) { return { data: data, error: "" }; }, function (error) { return { data: { contributions: [] }, error: error.message || "Receipt list unavailable." }; })
         ]);
         var session = await auth.currentSession();
-        var role = trustedRole(session);
+        var role = String(result.role || trustedRole(session) || "").toLowerCase();
         roleNote = role === "donor" || role === "resident"
           ? "Read-only access for your organization role."
           : role ? "Organization role: " + role + ". API permissions are enforced by the server."
@@ -221,6 +225,7 @@
         showMessage("error", error.message || "Live fundraising data could not be loaded.");
       }
     }
+    document.addEventListener("novapay:funds-campaign-created", load);
     load();
   }
 
@@ -586,9 +591,9 @@
   auth.ready.then(async function () {
     if (auth.mode === "demo") { labelSampleViews(); return; }
     if (auth.mode !== "supabase") return;
-    try { await waitForDashboard(); startFundraising(); startMaintenance(); startTransparency(); }
+    try { await waitForDashboard(); startFundraising(); }
     catch (error) {
-      var panel = $("#view-fundraising");
+      var panel = $("#view-community-funds");
       if (panel) {
         var intro = $(".page-intro", panel);
         var state = make("div", "empty-state", error.message || "Dashboard initialization failed.");

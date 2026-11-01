@@ -56,6 +56,22 @@ test('viewer can fetch an org-scoped PDF; response is audited and auth/tenant bo
   } finally { await new Promise((resolve) => server.close(resolve)); }
 });
 
+test('download audit failure returns a categorized server error instead of pretending a file was saved', async () => {
+  const repos = createRepositories();
+  repos.invoices.get = async (scope, id) => scope === orgA && id === invoiceId ? fixture : null;
+  repos.invoices.auditDownload = async () => { throw Object.assign(new Error('private database detail'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' }); };
+  const app = createApp({ config, repos, identity, paypal: { async pp() { throw new Error('unexpected PayPal'); } }, askAI: async () => ({}) });
+  const server = app.listen(0, '127.0.0.1'); await new Promise((resolve) => server.once('listening', resolve));
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/invoices/${invoiceId}/download`, { headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA } });
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).error.code, 'DATABASE_UNAVAILABLE');
+  } finally { await new Promise((resolve) => server.close(resolve)); }
+  const client = await readFile(new URL('../../src/invoices-live.js', import.meta.url), 'utf8');
+  assert.match(client, /error\.status >= 500 \? "Invoice PDF server error/);
+  assert.doesNotMatch(client, /downloadButton\(actions, invoice\)/);
+});
+
 test('long and special invoice text plus many lines produce paginated PDF without treating text as HTML', async () => {
   const longInvoice = {
     ...fixture,

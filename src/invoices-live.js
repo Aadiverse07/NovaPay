@@ -13,12 +13,6 @@
   function dateText(value) { if (!value) return "—"; var date = new Date(value + "T00:00:00"); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(); }
   function newKey() { return window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16); }); }
   function actionButton(cell, text, action, className) { var button = document.createElement("button"); button.type = "button"; button.className = className || "table-action"; button.textContent = text; button.dataset.invoiceAction = action; cell.appendChild(button); return button; }
-  function downloadButton(cell, invoice) {
-    var button = document.createElement("button"); button.type = "button"; button.className = "btn btn--ghost invoice-download-button";
-    button.dataset.invoiceAction = "download"; button.dataset.invoiceId = invoice.id; button.setAttribute("aria-label", "Download invoice " + invoice.invoiceNumber + " PDF"); button.title = "Download PDF";
-    button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>';
-    cell.appendChild(button); return button;
-  }
   function render() {
     if (!tbody) return;
     tbody.replaceChildren();
@@ -30,7 +24,7 @@
       row.setAttribute("aria-label", "Open invoice " + invoice.invoiceNumber + " details");
       [invoice.invoiceNumber, invoice.customerName, dateText(invoice.issueDate || invoice.createdAt), dateText(invoice.dueDate), money(invoice)].forEach(function (value) { row.insertCell().textContent = value || "—"; });
       var state = row.insertCell(), badge = document.createElement("span"); badge.className = "status " + (invoice.state === "paid" ? "ok" : invoice.state === "draft" ? "info" : invoice.state === "void" ? "warn" : "info"); badge.textContent = label(invoice.state); state.appendChild(badge);
-      var actions = row.insertCell(); actionButton(actions, "View", "view"); downloadButton(actions, invoice);
+      var actions = row.insertCell(); actionButton(actions, "View", "view");
       if (canWrite()) {
         if (invoice.state === "draft") { actionButton(actions, "Edit", "edit"); actionButton(actions, "Review", "review"); actionButton(actions, "Delete", "delete"); }
         else if (invoice.state === "reviewed") { actionButton(actions, "Move to draft", "reopen"); actionButton(actions, "Send · SIMULATED", "send"); actionButton(actions, "Void", "void"); }
@@ -151,14 +145,18 @@
       var number = String(invoice && invoice.invoiceNumber || id).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 50), url = URL.createObjectURL(blob), link = document.createElement("a");
       link.href = url; link.download = "invoice-" + number + ".pdf"; document.body.appendChild(link); link.click(); link.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
       toast("Invoice PDF downloaded.");
-    } catch (error) { toast(error.message || "Invoice PDF could not be prepared."); }
+    } catch (error) {
+      var message = error.status === 401 ? "Session expired. Sign in again to download this invoice."
+        : error.status === 404 ? "Invoice not found in this organization."
+          : error.status === 429 ? "Invoice downloads are rate limited. Try again later."
+            : error.status >= 500 ? "Invoice PDF server error. Try again later."
+              : error.message || "Invoice PDF could not be prepared.";
+      toast(message);
+    }
     finally { if (button) { button.disabled = false; button.removeAttribute("aria-busy"); button.setAttribute("aria-label", oldLabel || "Download invoice PDF"); button.title = oldTitle || "Download PDF"; if (button.hasAttribute("data-invoice-detail-download")) button.textContent = oldText || "⇩ Download PDF"; } }
   }
   async function performAction(button) {
     var row = button.closest("tr"), invoice = row && invoices.find(function (item) { return item.id === row.dataset.invoiceId; });
-    if (button.dataset.invoiceAction === "download" && !invoice) invoice = invoices.find(function (item) { return item.id === button.dataset.invoiceId; });
-    if (button.dataset.invoiceAction === "download" && !row) invoice = invoices.find(function (item) { return item.id === button.dataset.invoiceId; });
-    if (button.dataset.invoiceAction === "download") { await downloadInvoice(button.dataset.invoiceId || invoice && invoice.id, invoice, button); return; }
     if (!invoice) return;
     var action = button.dataset.invoiceAction; button.disabled = true;
     try {

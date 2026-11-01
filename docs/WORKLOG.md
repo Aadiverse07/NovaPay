@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: invoice detail View and PDF download on `fix-invoice-view`, based on `fix-invoices-crud` at `f113f54`; local commit `da8e4a7`; no push.
-- Last finished: org-scoped read-only invoice detail, server-generated PDF download, status history, invoice-ID-only audit, per-user rate limit and authenticated blob save; no migration or dependency change.
-- Checks: focused PDF/repository tests 18/18 PASS; `npm test` 200/201 (sole known no-store assertion failure); migrations 18/18, changed JS syntax 10/10, `git diff --check` PASS, protected-file diff empty.
-- Human pending: run the browser checks below for View, keyboard close/focus, PDF contents/download and viewer access.
-- NEXT: commit this handoff update locally; then stop. Never push.
+- Current task: invoice PDF download errors and Community Funds create wiring on `fix-download-campaigns`, based on merged `origin/main` commit `5d6ff72`; no push.
+- Last finished: single View row action and detail-only authenticated PDF download; live campaign renderer/create form, role gating, truthful empty state, campaign summary and filtered contributions.
+- Checks: focused tests 10/10; campaign scope/exponent assertions 2/2; npm test 203/204 (known no-store assertion only); migrations 18/18; JS syntax 6/6; diff check PASS; protected-file diff empty.
+- Live fixed-owner PDF and campaign create/list/cleanup: UNVERIFIED because browser automation and fixed owner credentials are unavailable; no live data changed.
+- NEXT: verify no `.env` is staged, commit locally using `WIP-BROKEN` because npm test has one known failure, then stop. Never push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4105,3 +4105,72 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: commit only docs/WORKLOG.md; why: keep the authorized outgoing branch checkpointed and ensure there are no unrelated edits.
 2026-11-01 | Result: PASS, only WORKLOG.md had been modified and it is committed as `a1cd9ba`; NEXT: push `fix-invoice-view` to origin as explicitly authorized.
 2026-11-01 | Before: push `fix-invoice-view` to origin; why: publish the verified branch for its requested PR, without pushing another branch.
+- Current task: invoice View and PDF download; branch `fix-invoice-view`; based on `fix-invoices-crud` commit `f113f54`.
+- Last finished: branch pushed through `cfc2bf7`; PR #12 opened: https://github.com/Aadiverse07/NovaPay/pull/12. Local docs handoff commit is pending; no second push.
+- Checks: `npm test` 200/201 (known no-store assertion only); migrations 18/18; JS syntax 16/16; `git diff --check` PASS; protected-file diff empty; outgoing secret scan 0 findings.
+- Human pending: browser checks for invoice detail, keyboard close/focus, PDF downloads and viewer access.
+- NEXT: commit CONTEXT/WORKLOG handoff locally; then wait for PR review and browser verification. Never push without authorization.
+2026-11-01 | Result: PASS, pushed branch `fix-invoice-view` through `cfc2bf7`; NEXT: open the requested PR into main.
+2026-11-01 | Before: create PR for `fix-invoice-view` with the requested title and summary; why: make the pushed invoice CRUD/detail/download work reviewable.
+2026-11-01 | Result: PASS, PR #12 opened at https://github.com/Aadiverse07/NovaPay/pull/12; NEXT: update CONTEXT.md and RESUME POINTER with pushed hash, PR and test status.
+2026-11-01 | Before: update handoff docs for PR #12 and pushed commit `cfc2bf7`; why: preserve the review link and pending browser checks without another push.
+2026-11-01 | Result: PASS, CONTEXT and RESUME POINTER record pushed hash `cfc2bf7`, PR #12, test results and pending browser checks; NEXT: commit handoff locally without pushing.
+2026-11-01 | Before: commit CONTEXT.md and WORKLOG.md handoff locally; why: preserve PR and verification status after push, with no additional push.
+2026-11-01 | Before: fetch origin and inspect invoice branch merge state; why: choose the correct base for download and campaign wiring.
+2026-11-01 | Result: PASS, PR #12 is merged into origin/main at `5d6ff72`; only WORKLOG.md has local edits; NEXT: preserve the journal and create fix-download-campaigns from origin/main.
+2026-11-01 | Before: preserve current WORKLOG.md to a temporary file, branch from origin/main and restore it; why: retain handoff notes while starting from the merged invoice work.
+2026-11-01 | Result: FAIL, branch switch refused because WORKLOG.md was modified; current journal copy was saved under /tmp; NEXT: stash that file, branch from origin/main and restore it.
+2026-11-01 | Before: stash only docs/WORKLOG.md, create fix-download-campaigns from origin/main, and restore the journal; why: preserve local notes without carrying unrelated branch state.
+2026-11-01 | Result: PASS, fix-download-campaigns is based on origin/main; WORKLOG versions merged and conflict markers cleared; NEXT: trace invoice download call chain and Community Funds view/routes.
+2026-11-01 | Before: locate invoice detail download, API client blob handling, funds UI submit handlers and API routes; why: identify the live download failure and campaign placeholder source before edits.
+2026-11-01 | Result: PASS, download button calls `/api/invoices/:id/download` through authenticated blob API; campaign API and `src/fund-views.js` exist, but dashboard loads only `src/modules.js` and contains illustrative campaign markup; NEXT: inspect exact script wiring, form fields, fund view behavior and server logs.
+2026-11-01 | Before: read focused campaign markup/handlers and check running server process/log location; why: pinpoint the override and reproduce invoice download failure safely.
+2026-11-01 | Result: UNVERIFIED, browser automation unavailable in Work settings; current server writes stdout to a terminal and no accessible log file was found; NEXT: locate fixed owner login mechanism and safe live API verification path.
+2026-11-01 | Before: inspect environment variable names and existing live verification helpers only; why: identify the fixed-owner path without exposing config values.
+2026-11-01 | Result: UNVERIFIED, `.env` exposes no fixed owner credentials (names only) and no browser is available for a normal signed-in session; NEXT: inspect fund module activation, download error reporting and repo tests before implementation.
+2026-11-01 | Before: read startup/session activation, invoice PDF error tests, campaign routes and audit behavior; why: choose fixes that preserve auth and existing tests without live secrets.
+2026-11-01 | Before: remove row downloads, improve PDF error categories/logging, load and wire live campaign UI over existing APIs, hide authenticated sample content, and add regression tests; why: fix both task symptoms while preserving tenant and role controls.
+2026-11-01 | Result: PASS, found dashboard's real Community Funds id is `view-community-funds`; Phase 6 renderer expected `view-fundraising` and was neither loaded nor rendering; NEXT: complete the auth-scoped campaign renderer and route role response.
+2026-11-01 | Before: wire authenticated campaign rendering, API role and contributions panel; why: remove sample content and make live campaigns accessible only with server-authorized roles.
+2026-11-01 | Result: PASS, authenticated live campaign UI now targets the actual section, uses server role, hides sample cards, launches the existing validated modal and reads contribution details; invoice errors are categorized and logged without request content; NEXT: run focused invoice and campaign route/UI tests.
+2026-11-01 | Before: run focused invoice PDF and campaign API/UI tests; why: catch regressions in role scope, create flow and PDF error behavior before broader checks.
+2026-11-01 | Result: PASS, focused suite 10/10; exercised PDF success, auth/tenant scope and a simulated 503 audit failure; campaign GET/POST owner, viewer denial and org isolation pass; NEXT: finish validation tests and update contracts.
+2026-11-01 | Before: strengthen campaign ownership/isolation UI assertions and document endpoint/error behavior; why: keep browser contract explicit and catch regression in form handling.
+2026-11-01 | Result: PASS, live campaign UI uses only existing reader/campaign routes and `fund-views.js` activation is limited to Community Funds; Maintenance/Transparency remain unchanged; NEXT: rerun focused tests after the final auth/demo guard.
+2026-11-01 | Before: rerun invoice and fundraising focused tests after final script, role, sample-hiding and campaign-form changes; why: verify exact implementation prior to docs and full suite.
+2026-11-01 | Result: PASS, focused regression suite 10/10; fake logged API calls show PDF 200, simulated audit failure 503, campaign owner POST 201, viewer POST 403, and org-filtered campaign lists; NEXT: append the run to TEST-REPORT and update API contracts.
+2026-11-01 | Before: append the focused test result and live verification limitation to TEST-REPORT.md; why: record observed checks without marking unavailable owner checks as passed.
+2026-11-01 | Result: PASS, focused run logged 10/10 and live Supabase owner checks marked UNVERIFIED; NEXT: update API.md and FRONTEND-CONTRACT.md.
+2026-11-01 | Before: document campaign API/UI behavior and invoice download error categories in both contracts; why: align the integration instructions with the wired frontend and route responses.
+2026-11-01 | Result: FAIL, contract patch context did not match API.md heading format; no docs changed; NEXT: inspect exact paragraph boundaries and retry smaller patches.
+2026-11-01 | Before: read the precise API and frontend contract lines for campaigns and invoice downloads; why: apply documentation updates without disturbing adjacent contract sections.
+2026-11-01 | Result: FAIL, doc patch expected invoice download section in FRONTEND-CONTRACT at wrong location; no docs were modified; NEXT: update smaller campaign and invoice paragraphs using actual section anchors.
+2026-11-01 | Before: apply concise targeted contract edits for campaign list/create, invoice downloads and associated UI behavior; why: avoid stale API instructions.
+2026-11-01 | Result: PASS, API and frontend contracts now document live campaign auth/roles, USD minor-unit conversion, contribution reads, and detail-only authenticated PDF download/error handling; NEXT: record implementation decisions and update CONTEXT/RESUME.
+2026-11-01 | Before: record the currency/single-submit implementation choice and refresh task handoff docs; why: explain why no migration was added and preserve the live-check limitation.
+2026-11-01 | Result: PASS, DECISIONS and CONTEXT updated; includes accurate note that actual owner live status is unverified and no migration was added; NEXT: replace WORKLOG RESUME POINTER and run full checks.
+2026-11-01 | Before: rewrite the RESUME POINTER for the unfinished full checks and local commit; why: keep continuation instructions current before the final validation run.
+2026-11-01 | Result: PASS, pointer now names the exact full checks, unresolved human live checks and local-only commit; NEXT: run npm test, migration check, syntax, whitespace and protected-file checks.
+2026-11-01 | Before: append full-suite and static-check results to TEST-REPORT.md; why: record exact counts and the known failure before final handoff.
+2026-11-01 | Result: PASS, TEST-REPORT includes 203/204, migration 18/18, syntax 6/6, diff and protected checks; NEXT: finalize CONTEXT and RESUME POINTER, inspect diff and commit locally.
+2026-11-01 | Before: finalize CONTEXT and RESUME POINTER with exact validation and live UNVERIFIED status; why: make the final checkpoint actionable and accurate.
+2026-11-01 | Result: PASS, CONTEXT now reports full local checks and keeps live tests UNVERIFIED; NEXT: review final diff and API script/status details before checkpoint commit.
+2026-11-01 | Before: review the concise diff, confirm exactly one detail download control and correct live campaign selectors/role gating; why: catch missed wiring or collateral edits before committing.
+2026-11-01 | Result: PASS, review found no protected edits and exactly one detail download button; campaign selector and live script are correct; NEXT: strengthen the tenant and minor-unit submission assertions before final checkpoint.
+2026-11-01 | Before: add precise assertions for foreign-org campaign IDs and exponent-based target conversion; why: make the regression coverage explicit rather than relying only on counts/source presence.
+2026-11-01 | Result: PASS, campaign scoping/conversion assertions 2/2; NEXT: append this focused run and prepare final local checkpoint.
+2026-11-01 | Before: append the focused campaign assertion run to TEST-REPORT.md; why: keep the append-only test ledger current after every run.
+2026-11-01 | Result: PASS, latest 2/2 campaign tests logged; NEXT: refresh pointer, final diff/status and locally commit all task files.
+2026-11-01 | Before: harden empty-state wording and prevent sample campaign markup from flashing before auth mode is known; why: authenticated users must never see illustrative campaigns, even during startup.
+2026-11-01 | Result: PASS, static campaign sample blocks are hidden by default and only revealed/labeled in explicit demo mode; authenticated render force-hides them; empty label is “No campaigns yet”; NEXT: rerun all required tests/checks after this final code edit.
+2026-11-01 | Before: rerun npm test, migrations, syntax, diff and protected-file checks after sample-flash prevention; why: validate the final code and docs state.
+2026-11-01 | Result: PASS with known test failure, final npm test 203/204 (only no-store assertion); migrations 18/18, changed JS syntax 6/6, whitespace clean, protected-file diff empty; NEXT: append the final run to TEST-REPORT and synchronize context.
+2026-11-01 | Before: append final full-suite/static run to TEST-REPORT.md; why: preserve the exact latest results before committing.
+2026-11-01 | Result: PASS, final results appended; NEXT: refresh CONTEXT and RESUME POINTER and stage only task files.
+2026-11-01 | Before: finalize CONTEXT/WORKLOG pointer with final focused/full test counts and exact live-verification gaps; why: make the local checkpoint ready for handoff.
+2026-11-01 | Result: PASS, CONTEXT and RESUME POINTER reflect final run and unverified live checks; NEXT: verify no `.env`, stage only intended task files, and make local WIP-BROKEN commit.
+2026-11-01 | Before: verify branch, pending paths, `.env` tracking and whitespace before staging; why: ensure the local commit contains only requested source/docs/tests.
+2026-11-01 | Result: PASS, branch `fix-download-campaigns`; `.env` is not tracked; pending changes are task files only; `git diff --check` clean; NEXT: stage explicit files and verify staged paths.
+2026-11-01 | Before: stage only invoice/campaign source, tests and required docs; why: avoid including any environment or unrelated files in the local checkpoint.
+2026-11-01 | Result: PASS, 14 intended files staged; no `.env` path in the index; staged whitespace check clean; NEXT: create local WIP-BROKEN checkpoint.
+2026-11-01 | Before: commit the validated invoice download and campaign wiring on fix-download-campaigns; why: preserve work locally while truthfully recording the known full-suite failure.

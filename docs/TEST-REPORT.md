@@ -1344,3 +1344,13 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 | Final `git diff --check` | PASS | Clean.
 2026-11-01 | Final protected-file diff vs `origin/main` | PASS | Empty.
 2026-11-01 | Additional `npm test` run during final documentation inspection | FAIL | 200 passed, 1 failed of 201; same pre-existing no-store assertion only. Shell substitution made the search expression invalid after the test completed; no repository source files were changed by that command.
+2026-11-01 | `node --test server/test/invoice-download.test.js server/test/fund-campaign-live-view.test.js server/test/phase6-contributions.test.js` | PASS | 10/10; includes authenticated PDF route 200/%PDF, simulated audit failure 503, viewer denial 403, org-scoped campaign reads and create 201. These are local API tests, not live Supabase data.
+2026-11-01 | Fixed-owner live PDF download and campaign create/list/cleanup | UNVERIFIED | No browser session or fixed-owner credentials are available in this workspace; no live rows were created.
+2026-11-01 | `npm test` | FAIL | 203/204; only failure is the pre-existing `authenticated API client bypasses conditional HTTP caching` assertion (`Cache-Control` expected `no-store`, actual undefined); no test was weakened.
+2026-11-01 | `npm run check:migrations` | PASS | migrations 0001–0018 syntax-valid; no migration added.
+2026-11-01 | `node --check` on changed JS | PASS | 6 changed JavaScript files.
+2026-11-01 | `git diff --check` | PASS | no whitespace errors.
+2026-11-01 | `git diff --stat origin/main -- <protected files>` | PASS | empty.
+2026-11-01 | `node --test server/test/fund-campaign-live-view.test.js` | PASS | 2/2; confirms org B campaign IDs differ from org A and major-unit conversion uses the currency exponent.
+2026-11-01 | Final `npm test` after authenticated sample-hiding changes | FAIL | 203/204; only failure remains the known `Cache-Control: no-store` assertion in `server/test/api-client.test.js`; all new invoice and campaign tests pass.
+2026-11-01 | Final migrations / JS syntax / whitespace / protected diff | PASS | 18 migrations valid; 6 changed JS files pass `node --check`; `git diff --check` clean; protected-file diff empty.
