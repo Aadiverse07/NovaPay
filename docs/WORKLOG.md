@@ -3923,3 +3923,4 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 11:44 IST | Before: stage and locally commit the money-unit evidence fix; why: checkpoint completed work while recording the known no-store test failure; never push.
 2026-11-01 11:45 IST | Result: PASS, commit `5e11456` created locally on fix-ai-assistant; no push; NEXT: refresh RESUME POINTER and CONTEXT to record checkpoint and known test state.
 2026-11-01 11:45 IST | Before: update handoff pointer with commit `5e11456`; why: leave a fresh continuation point after the code checkpoint.
+2026-11-01 11:50 IST | Before: verify repository path, requested branch, current status, and tracked `.env`; why: establish the authorized push preconditions.
