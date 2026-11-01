@@ -13,7 +13,7 @@ export function formatInvoiceMinor(minor, currency) {
   const amount = Number(minor);
   if (!Number.isSafeInteger(amount)) throw new TypeError('Invoice amount is invalid.');
   const major = amount / (10 ** exponent);
-  return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: exponent, maximumFractionDigits: exponent }).format(major)} ${code}`;
+  return `${code} ${new Intl.NumberFormat('en-US', { minimumFractionDigits: exponent, maximumFractionDigits: exponent }).format(major)}`;
 }
 
 function pdfText(value) {

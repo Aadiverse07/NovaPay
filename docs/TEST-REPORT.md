@@ -1365,3 +1365,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-02 | `git diff --check` / protected-file diff | PASS | clean / empty.
 2026-11-02 | `npm test` | FAIL (205/206): known `authenticated API client bypasses conditional HTTP caching` no-store assertion; `npm run check:migrations` PASS (19/19); changed-JS `node --check` PASS; `git diff --check` PASS; protected-file diff empty.
 2026-11-02 | Secret scan `git diff origin/main..HEAD` and `git ls-files .env` | PASS: no credential-like values found; `.env` is untracked.
+2026-11-02 | `npm test` on isolated branch from origin/main | FAIL | 206/207; migration parser accepts 20 numbered files; only known no-store assertion fails (`Cache-Control` undefined instead of `no-store`). PDF tests pass.
+2026-11-02 | `npm run check:migrations` on isolated publish branch | PASS | All 20 present numbered migrations parse; includes local migration 0021 (migration 0020 is not part of origin/main and is intentionally excluded).
+2026-11-02 | `node --check` on changed JS; `git diff --check`; protected-file diff | PASS | Changed files parse; no whitespace errors; protected diff is empty.
+2026-11-02 | Secret scan of staged publish diff | PASS | 0 files and 0 matched lines; includes migration 0021; values were not printed.

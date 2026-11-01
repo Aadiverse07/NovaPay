@@ -76,7 +76,8 @@ export function invoiceRoutes({ repos }) {
     } catch (error) {
       const auditFailure = error?.code === 'INVOICE_AUDIT_WRITE_FAILED';
       console.error(JSON.stringify({ level: 'error', event: 'invoice_pdf_download_failed', requestId: req.id, status: error?.statusCode || 500, errorName: error?.name || 'Error', code: error?.code || error?.databaseCode || 'INTERNAL_ERROR', databaseCode: error?.databaseCode || null, databaseMessage: error?.databaseMessage || null, message: auditFailure ? 'Invoice download audit insert failed.' : 'Invoice PDF generation failed.' }));
-      return next(error);
+      const status = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
+      return res.status(status).json({ error: { code: error?.code || 'INVOICE_PDF_FAILED', message: auditFailure ? 'Invoice audit could not be recorded; no PDF was sent.' : status >= 500 ? 'Invoice PDF generation failed.' : error.message, requestId: req.id } });
     }
   });
   router.post('/invoices', rbac(writers), validateInvoiceBody, async (req, res, next) => {

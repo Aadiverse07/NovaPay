@@ -149,7 +149,7 @@
       var message = error.status === 401 ? "Session expired. Sign in again to download this invoice."
         : error.status === 404 ? "Invoice not found in this organization."
           : error.status === 429 ? "Invoice downloads are rate limited. Try again later."
-            : error.status >= 500 ? "Invoice PDF server error. Try again later."
+            : error.status >= 500 ? "Invoice PDF failed (" + (error.code === "INVOICE_AUDIT_WRITE_FAILED" ? "audit unavailable" : "server error") + (error.requestId ? ", id " + error.requestId : "") + ")."
               : error.message || "Invoice PDF could not be prepared.";
       toast(message);
     }

@@ -24,25 +24,27 @@ const identity = {
 const config = { PORT: 3000, STATIC_DIR: process.cwd(), hasPayPal: false, hasSupabase: true, hasAI: false };
 
 test('invoice money formatter uses the ISO currency exponent', () => {
-  assert.equal(formatInvoiceMinor(13440, 'INR'), '134.40 INR');
-  assert.equal(formatInvoiceMinor(13440, 'JPY'), '13,440 JPY');
-  assert.equal(formatInvoiceMinor(13440, 'KWD'), '13.440 KWD');
+  assert.equal(formatInvoiceMinor(13440, 'INR'), 'INR 134.40');
+  assert.equal(formatInvoiceMinor(13440, 'JPY'), 'JPY 13,440');
+  assert.equal(formatInvoiceMinor(13440, 'KWD'), 'KWD 13.440');
 });
 
 test('invoice PDF builder supports documented INR amounts, long names, and multiple lines', async () => {
-  assert.equal(formatInvoiceMinor(13750, 'INR'), '137.50 INR');
-  assert.equal(formatInvoiceMinor(1344000, 'INR'), '13,440.00 INR');
+  assert.equal(formatInvoiceMinor(13750, 'INR'), 'INR 137.50');
+  assert.equal(formatInvoiceMinor(1344000, 'INR'), 'INR 13,440.00');
   const cases = [
     { name: 'minor amount', invoice: { ...fixture, subtotalMinor: 13750, totalMinor: 13750, lines: [{ description: 'Service', quantity: '1', unitPriceMinor: 13750, totalMinor: 13750 }] } },
     { name: 'large INR amount', invoice: { ...fixture, subtotalMinor: 1344000, totalMinor: 1344000, lines: [{ description: 'Service', quantity: '1', unitPriceMinor: 1344000, totalMinor: 1344000 }] } },
-    { name: 'long names', invoice: { ...fixture, customerName: 'Example '.repeat(80), notes: 'Long note '.repeat(100) } },
-    { name: 'several lines', invoice: { ...fixture, lines: Array.from({ length: 12 }, (_, i) => ({ description: `Service item ${i + 1}`, quantity: '1', unitPriceMinor: 13750, totalMinor: 13750 })) } },
+    { name: 'long and accented names plus rupee sign', invoice: { ...fixture, customerName: 'Zoë ' + 'Example '.repeat(80), notes: '₹ ' + 'Long note '.repeat(100) } },
+    { name: '15 line items and page break', invoice: { ...fixture, lines: Array.from({ length: 15 }, (_, i) => ({ description: `Service item ${i + 1} ${'long description detail '.repeat(24)}`, quantity: '1', unitPriceMinor: 13750, totalMinor: 13750 })) } },
+    { name: 'empty notes, zero tax and null due date', invoice: { ...fixture, notes: '', dueDate: null, taxMinor: 0 } },
   ];
   for (const scenario of cases) {
     const bytes = await createInvoicePdf(scenario.invoice);
     assert.equal(bytes.subarray(0, 5).toString('ascii'), '%PDF-', scenario.name);
     assert.ok(bytes.subarray(-1024).toString('latin1').includes('%%EOF'), scenario.name);
     assert.ok(bytes.length > 1000, scenario.name);
+    if (scenario.name.includes('15 line')) assert.ok((await PDFDocument.load(bytes)).getPageCount() > 1, scenario.name);
   }
 });
 
@@ -82,10 +84,14 @@ test('download audit failure returns a categorized server error instead of prete
   try {
     const response = await fetch(`http://127.0.0.1:${server.address().port}/api/invoices/${invoiceId}/download`, { headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA } });
     assert.equal(response.status, 503);
-    assert.equal((await response.json()).error.code, 'INVOICE_AUDIT_WRITE_FAILED');
+    const body = await response.json();
+    assert.equal(body.error.code, 'INVOICE_AUDIT_WRITE_FAILED');
+    assert.ok(body.error.requestId);
   } finally { await new Promise((resolve) => server.close(resolve)); }
   const client = await readFile(new URL('../../src/invoices-live.js', import.meta.url), 'utf8');
-  assert.match(client, /error\.status >= 500 \? "Invoice PDF server error/);
+  assert.match(client, /error\.status >= 500 \? "Invoice PDF failed/);
+  const apiClient = await readFile(new URL('../../src/api-client.js', import.meta.url), 'utf8');
+  assert.match(apiClient, /error\.requestId = detail[\s\S]*?detail\.requestId/);
   assert.doesNotMatch(client, /downloadButton\(actions, invoice\)/);
 });
 
@@ -114,4 +120,14 @@ test('View action is connected to the live detail loader and download action', a
   assert.match(detail, /event\.key === "Escape"/);
   assert.match(detail, /returnFocus\.focus\(\)/);
   assert.match(detail, /detail\.textContent = value == null[\s\S]+String\(value\)/);
+});
+
+test('invoice download audit RPC is service-role-only, tenant-checked, and inserts a fixed audit event', async () => {
+  const migration = await readFile(new URL('../../supabase/migrations/0021_invoice_download_audit_rpc.sql', import.meta.url), 'utf8');
+  assert.match(migration, /create or replace function public\.record_invoice_download_audit\([\s\S]*?security definer[\s\S]*?set search_path = ''/i);
+  assert.match(migration, /memberships[\s\S]*?org_id = p_org and user_id = p_actor/i);
+  assert.match(migration, /invoices[\s\S]*?org_id = p_org and id = p_invoice/i);
+  assert.match(migration, /values \(p_org, p_actor, 'invoice\.downloaded', 'invoice', p_invoice::text, '\{\}'::jsonb, p_request_id\)/i);
+  assert.match(migration, /revoke all on function public\.record_invoice_download_audit\([^;]+ from public, anon, authenticated, service_role/i);
+  assert.match(migration, /grant execute on function public\.record_invoice_download_audit\([^;]+ to service_role/i);
 });

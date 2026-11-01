@@ -218,7 +218,7 @@ export function createPostgresRepositories(database) {
     },
     async auditDownload(orgId,actorId,invoiceId,requestId) {
       try {
-        await database.insert('audit_log',{org_id:orgId,actor_id:actorId,action:'invoice.downloaded',entity:'invoice',entity_id:invoiceId,metadata:{},request_id:requestId});
+        await database.rpc('record_invoice_download_audit',{p_org:orgId,p_actor:actorId,p_invoice:invoiceId,p_request_id:requestId});
       } catch (error) {
         throw Object.assign(new Error('Invoice download audit insert failed.'), { statusCode: 503, code: 'INVOICE_AUDIT_WRITE_FAILED', databaseCode: error?.databaseCode || null, databaseMessage: error?.databaseMessage || null });
       }

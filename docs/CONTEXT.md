@@ -67,3 +67,11 @@
 - Migration 0019 remains unapplied, so live invoice PDF download is still blocked pending its service_role audit INSERT grant.
 
 - Published branch head: `14fab0f`; PR #13: https://github.com/Aadiverse07/NovaPay/pull/13.
+
+
+## Invoice PDF audit repair (2026-11-02)
+- Isolated publishing branch `codex/publish-invoice-pdf-fix` starts at `origin/main` commit `1ec11fd`; excludes unrelated Maintenance work and migration 0020.
+- Adds migration 0021 for a membership/invoice-scoped SECURITY DEFINER audit RPC granted only to service_role. Repository uses the RPC; download stays fail-closed and includes request ID in error JSON/UI toast.
+- Real-row direct PDF output verified at 1722 and 1689 bytes; invoice number, formatted amount and DRAFT extracted. Live endpoint still needs migration 0021 applied before it can succeed.
+- `npm test`: 206/207; only the known no-store header assertion fails. Migration parser (20 files), syntax, whitespace and protected-file checks pass.
+- User authorized pushing this isolated repair into main. Never force-push. Do not publish Maintenance wiring or migration 0020 from the source branch.

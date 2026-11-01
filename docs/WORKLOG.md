@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: `fix-download-campaigns` was pushed and PR #13 is open: https://github.com/Aadiverse07/NovaPay/pull/13. Never push main or merge.
-- Published implementation/preflight head before this documentation checkpoint: `14fab0f`; `.env` is not tracked, outgoing secret scan was clean.
-- Includes campaign-create wiring and invoice PDF audit failure repair. Migration `0019_restore_audit_log_service_insert.sql` is not applied; live download needs the service_role audit INSERT grant.
-- Checks: npm test 205/206 (known no-store assertion); migration parser 19/19; changed-JS syntax and diff checks pass; protected diff empty.
-- NEXT: review PR #13; apply migration 0019 in Supabase before retesting the real invoice PDF download. No more product code requested.
+- Current task: publish only the invoice PDF audit repair into `main`; isolated branch `codex/publish-invoice-pdf-fix`, based on `origin/main` `1ec11fd`.
+- User explicitly authorized pushing these fixes into `main`; do not force-push.
+- Staged files contain only PDF audit repair code, tests, migration 0021 and handoff docs; Maintenance changes/migration 0020 are excluded.
+- Verification: npm test 206/207 (known no-store assertion only); migrations 20 files PASS; changed-JS syntax/diff/protected checks PASS; staged secret scan PASS, 0 files/0 matches; `.env` not tracked/staged.
+- NEXT: commit the staged patch locally, push this fast-forward-only branch to `origin/main`, then report pushed commit. Live downloads remain pending migration 0021 application and owner retest.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4230,3 +4230,26 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: scan outgoing diff for credentials and verify `.env` remains untracked; why: prepare a safe feature-branch publication and PR.
 2026-11-02 | Before: record release preflight results and pending migration in continuity docs, then checkpoint locally; why: user authorized feature-branch push and PR, and the live PDF grant remains unapplied.
 2026-11-02 | Before: record successful feature-branch push and PR #13 in handoff docs; why: preserve the published commit and review URL in the repo.
+2026-11-02 | Result: PASS; created clean local branch `codex/publish-invoice-pdf-fix` from latest `origin/main` (`1ec11fd`); no unrelated branch files carried over. NEXT: inspect only the PDF repair hunks against teammate-updated main files before applying.
+2026-11-02 | Before: review the exact invoice repair patch for conflicts with current main UI/server changes; why: preserve the newer teammate UI styling while carrying only the audit fix.
+2026-11-02 | Result: PASS; comparison confirms c0592d1's repo delta itself is minimal (RPC call) while unrelated maintenance additions are from earlier branch commits; main's newer UI edits remain untouched. NEXT: apply only c0592d1's invoice-specific patch files and append current handoff records.
+2026-11-02 | Before: apply only the invoice-specific code/test/migration delta from `c0592d1`, then record decision and validation state; why: keep the main publish branch limited to the requested PDF repair.
+2026-11-02 | Result: PASS; applied only invoice-specific repair files from c0592d1; no Maintenance route/UI or migration 0020 added. NEXT: inspect main's current handoff headings and patch list, then append verified task records.
+2026-11-02 | Before: inspect top WORKLOG pointer and changed paths on isolated publish branch; why: update the correct continuity sections and verify no unrelated files entered.
+2026-11-02 | Result: PASS; main branch pointer was stale and explicitly disallowed main push; current user now authorizes publication. Isolated diff contains only PDF repair code/tests/migration plus this journal. NEXT: run full test suite on the publish branch before committing.
+2026-11-02 | Before: run `npm test` on the isolated origin/main-based branch; why: verify current main plus only the PDF audit repair and record any known failure honestly.
+2026-11-02 | Result: FAIL (known); isolated `npm test` migration syntax parser succeeds for 20 files; unit suite 206/207. Only failure is existing `authenticated API client bypasses conditional HTTP caching` no-store assertion; PDF tests pass. NEXT: run explicit migrations, syntax, whitespace, protected-file and secret checks before commit/push.
+2026-11-02 | Before: run required migration, changed-JS syntax, diff, protected-path and secret checks on the isolated branch; why: ensure only the requested PDF repair is pushed and no credentials are included.
+2026-11-02 | Result: PASS; standalone migration parser passes 20 files; all changed JavaScript syntax checks, `git diff --check`, and protected-file diff pass; `.env` has no tracked paths. NEXT: append decision/context and final check records, then scan the complete publish diff for secrets.
+2026-11-02 | Before: update decision, test report, context and resume pointer to describe the isolated main publish; why: keep handoff and audit trail accurate before committing the change.
+2026-11-02 | Result: PASS; decision and report entries added; resume pointer now scopes the push to the PDF repair and notes migration 0021 is pending. NEXT: scan the full outgoing diff for secret-like material and recheck status/diff before staging.
+2026-11-02 | Before: scan all added diff lines for credentials/private-key patterns without printing matched values, then verify paths and .env state; why: confirm the push contains no secrets and only authorized files.
+2026-11-02 | Result: PARTIAL; tracked outgoing diff secret scan PASS (0 files, 0 matching lines), but the new untracked migration is not included in `git diff`; status shows only intended files and `.env` is untracked. NEXT: stage explicit publish files, then repeat secret scan against the staged diff including migration 0021.
+2026-11-02 | Before: stage only the intended PDF repair, migration and continuity files; why: include the new migration in the complete secret scan while excluding `.env` and all unrelated maintenance work.
+2026-11-02 | Before: scan the staged diff, including migration 0021, for secret-like credentials and non-empty secret-key assignments; why: verify the exact content to be committed without revealing any values.
+2026-11-02 | Result: PASS; staged-diff secret scan (including migration 0021) found 0 files and 0 matched lines. NEXT: mark the scan PASS in TEST-REPORT, update resume pointer to pre-push state, stage docs and rerun final staged checks.
+2026-11-02 | Before: replace pending secret-scan status with the verified result and update the resume pointer before commit; why: ensure continuity records reflect the completed exact-diff scan.
+2026-11-02 | Result: PASS; TEST-REPORT marks staged secret scan PASS; resume pointer says commit then push. Final staged checks show only 12 intended files, `.env` absent, and no whitespace errors. NEXT: repeat staged secret scan after the doc update, then commit.
+2026-11-02 | Before: repeat secret scan against final staged diff and confirm base ancestry; why: validate the exact commit payload and ensure it remains fast-forwardable to main.
+2026-11-02 | Result: PASS; final staged secret scan found 0 files/0 lines; origin/main is ancestor of HEAD; no force operation is needed. NEXT: create the local WIP-BROKEN commit, then push only its fast-forward to origin/main as authorized.
+2026-11-02 | Before: commit the isolated PDF repair on `codex/publish-invoice-pdf-fix`; why: preserve the verified patch before publishing it to main.

@@ -10,16 +10,16 @@ test('money repository helpers use integer minor units and reject excessive prec
   assert.throws(() => moneyToMinor('999999999999999999.00'));
 });
 
-test('invoice download audit inserts only invoice identity and request metadata', async () => {
-  const inserts=[];
-  const database={async insert(table,payload){inserts.push({table,payload});}};
+test('invoice download audit uses the scoped service-only RPC with invoice identity', async () => {
+  const calls=[];
+  const database={async rpc(name,args){calls.push({name,args});}};
   const repos=createPostgresRepositories(database);
   await repos.invoices.auditDownload('org-a','actor-a','invoice-a','request-a');
-  assert.deepEqual(inserts,[{table:'audit_log',payload:{org_id:'org-a',actor_id:'actor-a',action:'invoice.downloaded',entity:'invoice',entity_id:'invoice-a',metadata:{},request_id:'request-a'}}]);
+  assert.deepEqual(calls,[{name:'record_invoice_download_audit',args:{p_org:'org-a',p_actor:'actor-a',p_invoice:'invoice-a',p_request_id:'request-a'}}]);
 });
 
 test('invoice download audit privilege failure stays specific and fails closed', async () => {
-  const database={async insert(){throw Object.assign(new Error('Financial database write failed.'),{statusCode:503,code:'DATABASE_UNAVAILABLE',databaseCode:'42501',databaseMessage:'permission denied for table audit_log'});}};
+  const database={async rpc(){throw Object.assign(new Error('Financial database operation failed.'),{statusCode:503,code:'DATABASE_UNAVAILABLE',databaseCode:'42501'});}};
   const repos=createPostgresRepositories(database);
   await assert.rejects(repos.invoices.auditDownload('org-a','actor-a','invoice-a','request-a'),(error)=>error.statusCode===503&&error.code==='INVOICE_AUDIT_WRITE_FAILED'&&error.databaseCode==='42501'&&error.message==='Invoice download audit insert failed.');
 });
