@@ -1,7 +1,7 @@
 ## RESUME POINTER
 - Current task: fix AI Assistant local fallback on `fix-ai-assistant` (based on origin/main commit `b21c442`, PR #10 merged).
-- Last finished: authenticated API client wiring, backend response mapping, safe errors/route badge/citations, deterministic friendly greetings, explicit demo-only local fallback, and removed browser file-text injection.
-- Current state: implementation and tests are uncommitted; no push. `.env` is not tracked.
+- Last finished: local WIP-BROKEN checkpoint `8b6f734` includes authenticated API wiring, backend response mapping, safe errors/route badge/citations, deterministic greetings, explicit demo-only fallback, removal of browser file-text injection, tests and docs.
+- Current state: no push; `.env` is not tracked. Full suite retains the known no-store assertion failure.
 - Test state: focused assistant/router/cache/injection/budget suite 31/31 PASS; full `npm test` 183/184 (known `authenticated API client bypasses conditional HTTP caching` no-store failure); migrations 17/17; changed JS syntax PASS; diff check PASS; protected-file diff empty.
 - Live state: `/api/status` 200, authenticated config/Supabase/AI present; unauthenticated `/api/ai/chat` returns 401 AUTH_REQUIRED. Browser session is unavailable, so fixed-owner route and usage checks are UNVERIFIED; no LLM call made.
 - Next: review diff; run owner questions through the browser (`Convert 5000 INR to USD`, `Show refunds this month`), inspect route badge/hover reason and `ai_usage` for zero LLM tokens; only then consider one LLM question if budget permits. Complete browser checks below, then WIP-BROKEN commit locally. Never push.
@@ -3859,3 +3859,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 11:08 IST | Before: stage only the assistant implementation, tests and continuity files; why: prepare a local WIP-BROKEN checkpoint for the requested fix while preserving the known suite failure accurately.
 2026-11-01 11:09 IST | Result: PASS, staged only 12 intended assistant/docs files; `.env` absent from tracked and staged paths; NEXT: create local WIP-BROKEN checkpoint (known no-store suite failure).
 2026-11-01 11:09 IST | Before: commit assistant wiring, tests and handoff locally; why: preserve completed work on fix-ai-assistant without pushing.
+2026-11-01 11:10 IST | Result: PASS, local checkpoint `8b6f734` created on fix-ai-assistant; no push; NEXT: refresh pointer to identify checkpoint and verify final status.
+2026-11-01 11:10 IST | Before: update CONTEXT and RESUME POINTER with commit `8b6f734`; why: make the repository handoff match the actual local checkpoint and its pending browser verification.

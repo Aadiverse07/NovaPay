@@ -2,7 +2,7 @@
 
 ## HEADER
 - Date/time: 2026-11-01 11:01 IST
-- Branch: `fix-ai-assistant`, based on `origin/main` at `b21c442` (PR #10 merge); local-only work, no push.
+- Branch: `fix-ai-assistant`, based on `origin/main` at `b21c442` (PR #10 merge); local checkpoint `8b6f734`, no push.
 - Phase/task: AI Assistant authenticated wiring and fallback repair.
 
 ## DONE
@@ -13,7 +13,7 @@
 - Tests added for message-only request, demo gate, errors, route/citations, no browser context, and greetings.
 
 ## IN PROGRESS
-- Local code/tests/docs are not committed. No push.
+- Code/tests/docs checkpointed locally as `8b6f734` (`WIP-BROKEN:`). No push.
 - Owner live route checks are UNVERIFIED: browser session unavailable; no owner JWT used and no LLM call made.
 
 ## NEXT STEPS
