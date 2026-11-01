@@ -1,9 +1,9 @@
 ## RESUME POINTER
 - Current task: fix minor-unit money values in assistant evidence and deterministic answers on `fix-ai-assistant`.
 - Last finished: exponent-aware amount formatter; invoice, transaction, refund, fee and ledger evidence now pairs labeled `*_minor` integers with `*_formatted` currency strings; prompt documents the convention; SQL and FX answers use the same formatter.
-- Current state: implementation/tests/docs are local and pending WIP commit; no LLM call, no push, no `.env` tracked.
+- Current state: code/tests/docs checkpointed locally as `5e11456`; no LLM call, no push, no `.env` tracked.
 - Tests: focused AI/evidence/FX/router/cache/injection 51/51 PASS; `npm test` 189/190, only known no-store header failure; migrations 17/17; `node --check` 8 JS files PASS; `git diff --check` PASS; protected-file diff empty across 67 paths.
-- Next: commit locally with `WIP-BROKEN:` because the known no-store test remains; inspect final status; stop. Do not push.
+- Next: inspect `git status --short`; report result and stop. Do not push or call an LLM.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -3921,3 +3921,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 11:43 IST | Before: run final branch/status/env and protected-file audit; why: ensure local WIP includes only intended files and protected paths remain untouched.
 2026-11-01 11:44 IST | Result: PASS, branch fix-ai-assistant; no staged paths before staging; .env tracked count 0; protected-file diff empty; NEXT: stage the intended money-unit code/tests/docs and commit locally.
 2026-11-01 11:44 IST | Before: stage and locally commit the money-unit evidence fix; why: checkpoint completed work while recording the known no-store test failure; never push.
+2026-11-01 11:45 IST | Result: PASS, commit `5e11456` created locally on fix-ai-assistant; no push; NEXT: refresh RESUME POINTER and CONTEXT to record checkpoint and known test state.
+2026-11-01 11:45 IST | Before: update handoff pointer with commit `5e11456`; why: leave a fresh continuation point after the code checkpoint.

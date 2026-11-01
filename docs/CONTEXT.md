@@ -1,9 +1,9 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-11-01 11:40 IST
+- Date/time: 2026-11-01 11:45 IST
 - Branch: `fix-ai-assistant`, based on `origin/main` at `b21c442` (PR #10 merge); local checkpoint `8b6f734`, no push.
-- Phase/task: AI Assistant money-unit evidence formatting repair.
+- Phase/task: AI Assistant money-unit evidence formatting repair; code checkpoint `5e11456`.
 
 ## DONE
 - `src/assistant-client.js` maps backend answer/route/reason/citations and makes message-only calls through the auth-aware API client.
@@ -14,11 +14,10 @@
 - Currency formatter derives minor-unit exponents from ISO currency metadata; deterministic SQL and FX answers return formatted amounts with currency codes.
 
 ## IN PROGRESS
-- Money-unit changes and tests are complete locally; pending WIP-BROKEN commit due the known no-store test failure. No push or LLM calls.
+- Money-unit changes and tests are committed locally as `5e11456` (`WIP-BROKEN:`) due the known no-store test failure. No push or LLM calls.
 
 ## NEXT STEPS
-1. Create the local WIP-BROKEN checkpoint; the one full-suite failure is the known no-store assertion.
-2. Review status and stop; no live or LLM verification was requested for this change. Never push.
+1. Review `git status --short` and stop; no live or LLM verification was requested for this change. Never push.
 
 ## USER ACTIONS PENDING
 - None for this task.
