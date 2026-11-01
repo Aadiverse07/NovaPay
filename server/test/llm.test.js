@@ -8,7 +8,7 @@ test('AI service calls the provider interface and preserves sanitization guardra
   const repos = { async listTransactions(orgId) { assert.equal(orgId, 'org-a'); return [{ id: 'CAP-1', source_id: 'PAYPAL-CAP-1', source_type: 'capture', amount_minor: 1000, currency: 'USD', status: 'COMPLETED', occurred_at: '2026-10-01T00:00:00Z' }]; }, async trialBalance() { return { balanced: true, totals: {} }; } };
   const askAI = createAIService({ config: {}, repos, provider });
   const result = await askAI('What happened?', { orgId: 'org-a', transactions: [{ id: 'CLIENT-ORG-B-RECORD' }] });
-  assert.deepEqual(result, { reply: 'A supported result.', evidence: ['CAP-1'], proposal: null, insufficientEvidence: false, model: 'fake-model', usage: { model: 'fake-model', inputTokens: result.usage.inputTokens, outputTokens: 0 }, cached: false, cacheHit: false, route: 'llm', reason: 'general_read_only_question' });
+  assert.deepEqual(result, { reply: 'A supported result.', evidence: ['CAP-1'], proposal: null, speak: 'A supported result.', insufficientEvidence: false, model: 'fake-model', usage: { model: 'fake-model', inputTokens: result.usage.inputTokens, outputTokens: 0 }, cached: false, cacheHit: false, route: 'llm', reason: 'general_read_only_question' });
   assert.ok(result.usage.inputTokens > 0);
   assert.equal(provider.calls.length, 1);
   assert.match(provider.calls[0].prompt, /What happened\?/);
@@ -102,4 +102,30 @@ test('default provider is Gemini and Anthropic is selected only by explicit conf
 test('Gemini runtime configuration rejects models outside the verified free-tier allow-list', () => {
   assert.throws(() => createLLMAdapter({ config: { LLM_PROVIDER: 'gemini', LLM_API_KEY: 'key', LLM_MODEL: 'paid-model', LLM_FALLBACK_MODEL: '' } }), /verified free-tier allow-list/);
   assert.throws(() => createLLMAdapter({ config: { LLM_PROVIDER: 'gemini', LLM_API_KEY: 'key', LLM_MODEL: 'gemini-3.5-flash-lite', LLM_FALLBACK_MODEL: 'paid-model' } }), /verified free-tier allow-list/);
+});
+
+test('transcription adapter sends audio through the shared Gemini key-pool interface', async () => {
+  let requestBody = null, selectedModel = '';
+  const keyPool = {
+    configured: true,
+    async generate(options) {
+      selectedModel = options.models[0];
+      const response = await options.request({ apiKey: 'test-key', model: selectedModel, timeoutMs: 1000 });
+      return { value: await options.parse({ response, model: selectedModel }) };
+    },
+  };
+  const adapter = createLLMAdapter({
+    config: { LLM_PROVIDER: 'anthropic', LLM_API_KEY: 'not-used' },
+    keyPool,
+    purpose: 'transcription',
+    fetchImpl: async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'open ledger' }] } }] }), { status: 200 });
+    },
+  });
+  const transcript = await adapter.transcribeAudio({ audio: Buffer.from('voice-audio'), mimeType: 'audio/webm' });
+  assert.equal(transcript, 'open ledger');
+  assert.equal(selectedModel, 'gemini-3.5-transcribe');
+  assert.equal(requestBody.contents[0].parts[1].inline_data.mime_type, 'audio/webm');
+  assert.equal(Buffer.from(requestBody.contents[0].parts[1].inline_data.data, 'base64').toString(), 'voice-audio');
 });

@@ -48,7 +48,7 @@ Public PayPal callback. Request body is the raw PayPal event JSON, including str
 
 ## `POST /api/ai/chat`
 
-Requires bearer token and `X-Org-Id`; all organization roles may ask questions. Request: `{ "message": "Show refunds this month", "context": { "transactions": [] } }`. `message` must be a non-empty string up to 1,000 characters. The legacy `context` field remains accepted but is ignored; the server builds org-scoped evidence from the authenticated membership.
+Requires bearer token and `X-Org-Id`; all organization roles may ask questions. Request: `{ "message": "Show refunds this month", "context": { "view": "invoices" }, "interrupted": { "previousReply": "...", "spokenChars": 20 }, "history": [{ "role": "user", "text": "..." }] }`. `message` must be a non-empty string up to 1,000 characters. Optional voice context is bounded and advisory; the server builds org-scoped evidence from the authenticated membership and derives user/org/role from auth.
 
 HTTP 200 response shape:
 
@@ -57,6 +57,8 @@ HTTP 200 response shape:
 ```
 
 `route` is `code`, `sql`, `ocr`, `retrieval`, or `llm`. Arithmetic and FX use `code`; allow-listed structured financial reads use `sql`. Both bypass the LLM and report zero model tokens. For example, `Convert 5000 INR to USD` returns a computed answer with the `indicative, not a guaranteed settlement rate` label, source and timestamp. `citations` contains stable record IDs; an FX citation has the form `fx-rate:INR/USD:<timestamp>`. `retrieval`/`llm` answers cite IDs from the server-built evidence. The safe insufficient-evidence answer includes `insufficient_evidence: true`. The `usage` object reports selected model and input/output token counts; cache hits have zero provider tokens and `cached: true`. Daily-limit and provider-unavailable responses are HTTP 200 safe answers with their corresponding explanatory text; the limit response makes no provider call.
+
+Optional `speak` is a short safe TTS answer. Optional `actions` are validated against the shared `src/assistant-actions.js` registry, role and the user's own message. Tier 0 navigation/read actions run immediately; Tier 1 draft/export actions require an explicit UI or spoken confirmation within 15 seconds; Tier 2 opens the relevant human approval/review screen and cannot be completed by voice. Before any Tier 1/2 action runs, the UI posts only the action id, tier and outcome to `POST /api/ai/actions/audit`; errors fail closed. The endpoint validates the registry role and applies a five-per-user-per-minute cap to Tier 1/2 confirmations/proposals. No transcript or action arguments are audited.
 
 If the model proposes an action and its target is a cited, eligible record, the service creates an org-scoped `pending` approval and includes a `proposal` object with `type`, `txId`, sanitized `title`/`reason`, `approvalId`, and `status: "pending"`. Refund proposal amount is computed by the server from the exact completed capture's remaining refundable balance. Chat never calls PayPal. Only `owner`, `admin`, or `approver` can decide an approval through `POST /api/approvals/:approvalId/decision`; execution uses the existing checks and idempotent PayPal path. Unsupported, uncited, foreign, or ineligible proposals create no approval. No proposal is returned when none was persisted.
 

@@ -59,6 +59,7 @@
       showStatus(error.message || "Live invoices could not be loaded. No sample invoices are shown.", true);
     }
   }
+  window.NovaPayInvoices = { refresh: load };
   function activeView() { return location.hash === "#invoices" || Boolean(document.querySelector("#view-invoices:not([hidden])")); }
   function lineRows() { return lineItems ? Array.prototype.slice.call(lineItems.querySelectorAll("[data-invoice-line]")) : []; }
   function addLine(data) {

@@ -2,6 +2,8 @@
   "use strict";
   var $=function(id){return document.getElementById(id);};
   var toast=$("dashboard-toast"), toastTimer;
+  var speechOutput=window.NovaPaySpeechOutput&&window.NovaPaySpeechOutput.create({synthesis:window.speechSynthesis,Utterance:window.SpeechSynthesisUtterance,document:document,storage:window.localStorage});
+  function voiceDebug(step,detail){try{if(localStorage.getItem("novapay:voiceDebug")==="1")console.debug("[NovaPay voice]",step,detail||"")}catch(e){}}
   function showToast(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove("show");},3000);}
   function getUser(){
     try{
@@ -75,6 +77,71 @@
   function updateAiDataStatus(){var el=$("ai-data-status"),auth=window.NovaPayAuth;if(!el)return;if(!auth||auth.mode==="loading"){el.textContent="Checking assistant mode…";return}if(auth.mode==="supabase"){el.textContent="Secure mode · questions use organization-scoped API evidence.";return}if(auth.mode==="demo"&&auth.isAuthenticated()){el.textContent="DEMO MODE · illustrative sample data only; no live PayPal activity.";return}el.textContent="Assistant unavailable. Sign in again to continue."}
   window.NovaPayAssistant={refreshStatus:updateAiDataStatus};
   var aiTypeSeq=0;
+  function currencyMinorToMajor(value,currency){var exponent=2;try{exponent=new Intl.NumberFormat("en",{style:"currency",currency:currency}).resolvedOptions().maximumFractionDigits}catch(e){}return (Number(value)/Math.pow(10,exponent)).toFixed(exponent)}
+  async function executeAssistantAction(action){
+    var args=action.args||{},id=action.id;
+    if(id==="nav.open"||id==="report.open"){activate(id==="report.open"?"reports":args.view,true);return}
+    if(id==="assistant.stopSpeaking"){if(window.NovaPayVoiceAssistantController)window.NovaPayVoiceAssistantController.stopSpeaking();if(window.speechSynthesis)window.speechSynthesis.cancel();return}
+    if(id==="assistant.repeat"){var repeatText=previousAssistantReply||"There is no answer to repeat yet.";if(speechOutput)speechOutput.speak(repeatText);return}
+    if(id==="assistant.help"){var list=(window.NovaPayAssistantActions.registry||[]).map(function(item){return item.speakableName}).filter(Boolean);showToast("I can " + [...new Set(list)].slice(0,8).join(", ") + ".");return}
+    if(id==="documents.promptUpload"){activate("documents",true);var file=$("document-upload"),label=document.querySelector('label[for="document-upload"]');if(label){label.tabIndex=-1;label.focus();label.scrollIntoView({block:"center"})}else if(file){file.focus();file.scrollIntoView({block:"center"})}return}
+    if(id==="documents.readReview"||id==="documents.proposeConfirm"){activate("documents",true);$("ai-live-status").textContent=id==="documents.proposeConfirm"?"Review the extracted fields and confirm or reject in Documents. Voice cannot confirm records into the books.":"Open the document row in Documents to read its stored review.";var row=document.querySelector('[data-document-id="'+CSS.escape(String(args.documentId||""))+'"]');if(row)row.scrollIntoView({block:"center"});return}
+    if(id==="maintenance.openNew"){activate("maintenance",true);var maintenanceButton=document.querySelector('[data-ui-action="maintenance-new-live"]');if(maintenanceButton&&!maintenanceButton.disabled)maintenanceButton.click();return}
+    if(id==="funds.openCampaign"){activate("community-funds",true);var campaignButton=document.querySelector('[data-ui-action="campaign-view"]');if(campaignButton&&!campaignButton.disabled)campaignButton.click();return}
+    if(id==="invoice.requestSendApproval"){activate("invoices",true);$("ai-live-status").textContent="Voice did not send the invoice. Open Invoices and request send approval there.";return}
+    if(id==="ui.click"||id==="ledger.export"||id==="report.export"){
+      var actionName=id==="ui.click"?args.uiAction:id==="ledger.export"?"ledger-export":"reports-export";
+      if(!window.NovaPayAssistantActions.uiActions.includes(actionName))throw new Error("This app action is not available.");
+      var button=document.querySelector('[data-ui-action="'+CSS.escape(actionName)+'"]');
+      if(!button||button.disabled||button.hidden)throw new Error("That control is not currently available for your role or view.");
+      button.click();return;
+    }
+    if(id==="invoice.downloadPdf"){
+      var api=window.NovaPayApi,invoiceId=args.invoiceId;if(!invoiceId){var listed=await api.request("/api/invoices?limit=100"),latest=(listed.invoices||[])[0];if(!latest)throw new Error("There are no invoices to download yet.");invoiceId=latest.id}
+      var detail=await api.request("/api/invoices/"+encodeURIComponent(invoiceId));
+      var blob=await api.request("/api/invoices/"+encodeURIComponent(invoiceId)+"/download",{responseType:"blob"});
+      var invoice=detail.invoice||detail,number=String(invoice.invoiceNumber||invoiceId).replace(/[^A-Za-z0-9._-]/g,"-");
+      var url=URL.createObjectURL(blob),anchor=document.createElement("a");anchor.href=url;anchor.download="invoice-"+number+".pdf";anchor.click();setTimeout(function(){URL.revokeObjectURL(url)},1000);showToast("Invoice PDF downloaded.");return;
+    }
+    if(id==="invoice.createDraft"){
+      var key=crypto.randomUUID(),now=new Date(),number="INV-VOICE-"+now.getTime().toString(36).toUpperCase();
+      var lines=args.lines.map(function(line){return{description:line.description,quantity:String(line.quantity),unitPrice:currencyMinorToMajor(line.unitPriceMinor,args.currency),taxRate:line.taxRate==null?0:line.taxRate}});
+      var created=await window.NovaPayApi.request("/api/invoices",{method:"POST",headers:{"Idempotency-Key":key},body:{invoiceNumber:number,customerName:args.customerName,customerEmail:args.customerEmail,currency:args.currency,issueDate:args.issueDate,dueDate:args.dueDate,notes:args.notes||"",lines:lines}});
+      if(window.NovaPayInvoices&&window.NovaPayInvoices.refresh)await window.NovaPayInvoices.refresh();
+      activate("invoices",true);showToast("Draft invoice created after your confirmation.");$("ai-live-status").textContent="Draft invoice created. Sending still requires review and approval.";return created;
+    }
+    if(id==="funds.createCampaignDraft"){
+      var campaign=await window.NovaPayApi.request("/api/funds/campaigns",{method:"POST",headers:{"Idempotency-Key":crypto.randomUUID()},body:{title:args.title,purpose:args.purpose,targetMinor:args.targetMinor,currency:args.currency,deadline:args.deadline,organiser:args.organiser}});
+      document.dispatchEvent(new CustomEvent("novapay:funds-campaign-created"));activate("community-funds",true);showToast("Campaign created after your confirmation.");return campaign;
+    }
+    throw new Error("This assistant action is not available yet.");
+  }
+  async function auditAssistantAction(action,outcome){
+    if(!window.NovaPayApi)throw new Error("Action audit is unavailable; no action was taken.");
+    await window.NovaPayApi.request("/api/ai/actions/audit",{method:"POST",body:{actionId:action.id,tier:action.tier,outcome:outcome}});
+  }
+  function summarizeAssistantAction(action){var a=action.args||{};if(action.id==="invoice.createDraft")return"Create a draft invoice for "+a.customerName+" with "+a.lines.length+" line item(s), due "+a.dueDate+". Confirm?";if(action.id==="invoice.downloadPdf")return"Download the latest invoice PDF from this organization. Confirm?";if(action.id==="funds.createCampaignDraft")return"Create the campaign “"+a.title+"” with target "+currencyMinorToMajor(a.targetMinor,a.currency)+" "+a.currency+". Confirm?";return"This action needs your confirmation before NovaPay proceeds."}
+  function renderAssistantActions(actions){
+    var slot=$("ai-proposal-slot"),catalog=window.NovaPayAssistantActions&&window.NovaPayAssistantActions.registry||[];
+    (Array.isArray(actions)?actions:[]).slice(0,5).forEach(function(action){
+      if(action.id==="data.query")return;
+      var definition=catalog.find(function(item){return item.id===action.id});if(!definition)return;
+      var card=document.createElement("article"),heading=document.createElement("h4"),copy=document.createElement("p"),buttons=document.createElement("div");
+      card.className="ai-proposal-card assistant-action-card";heading.textContent=definition.title;copy.textContent=definition.tier===1?summarizeAssistantAction(action):definition.tier===2?"This request needs a human decision. Voice will only open the relevant screen; it will not complete it.":"NovaPay can do this now.";buttons.className="agent-actions";card.append(heading,copy);
+      if(definition.tier===1){
+        var confirm=document.createElement("button"),cancel=document.createElement("button"),completed=false;confirm.type=cancel.type="button";confirm.className="btn btn--primary assistant-action-confirm";confirm.textContent="Confirm";cancel.className="btn btn--ghost";cancel.textContent="Cancel";
+        var confirmationTimer=window.setTimeout(function(){completed=true;confirm.disabled=true;cancel.disabled=true;copy.textContent="Confirmation expired. Ask NovaPay again if you still want this draft or export."},15000);
+        var run=function(){if(completed)return;completed=true;window.clearTimeout(confirmationTimer);confirm.disabled=true;cancel.disabled=true;var voice=window.NovaPayVoiceAssistantController;if(voice)voice.cancelPendingConfirmation();auditAssistantAction(action,"confirmed").then(function(){return executeAssistantAction(action)}).then(function(){return auditAssistantAction(action,"completed")}).catch(function(error){auditAssistantAction(action,"failed").catch(function(){});showToast("Assistant action: "+(error.message||"could not be completed."));confirm.textContent="Could not complete"})};
+        confirm.addEventListener("click",run);cancel.addEventListener("click",function(){if(completed)return;completed=true;window.clearTimeout(confirmationTimer);auditAssistantAction(action,"cancelled").catch(function(){});confirm.disabled=true;cancel.disabled=true;if(window.NovaPayVoiceAssistantController)window.NovaPayVoiceAssistantController.cancelPendingConfirmation();cancel.textContent="Cancelled"});
+        buttons.append(confirm,cancel);var voice=window.NovaPayVoiceAssistantController;if(voice)voice.requestConfirmation(run,15000);
+      }else if(definition.tier===2){
+        var go=document.createElement("button");go.type="button";go.className="btn btn--ghost";go.textContent="Open for human review";go.addEventListener("click",function(){auditAssistantAction(action,"proposed").then(function(){return executeAssistantAction(action)}).catch(function(error){showToast("Assistant action: "+(error.message||"could not be completed."))})});buttons.appendChild(go);
+      }else{
+        executeAssistantAction(action).then(function(){card.remove()}).catch(function(error){copy.textContent=error.message||"This action could not be completed."});
+      }
+      card.appendChild(buttons);slot.appendChild(card);
+    });
+  }
   function appendAiMessage(q,response,records){
     var box=$("ai-conversation");if(!box)return;
     var user=document.createElement("div"),ud=document.createElement("div"),up=document.createElement("p");user.className="ai-bubble ai-bubble--user";ud.appendChild(up);up.textContent=q;user.appendChild(ud);
@@ -85,7 +152,7 @@
       var citations=Array.isArray(response.evidence)?response.evidence:[];
       if(response.route&&citations.length){var chips=document.createElement("div");chips.className="module-inline";citations.forEach(function(citation){var id=typeof citation==="string"?citation:String(citation&& (citation.id||citation.sourceId)||"");if(!id)return;var chip=document.createElement("button");chip.type="button";chip.className="table-action";chip.textContent=id;chip.title="Cited record ID: "+id;chip.addEventListener("click",function(){if(response.route==="ocr"){activate("documents",true);$("ai-live-status").textContent="Cited document "+id+". Open Documents to review it.";return}activate("transactions",true);var row=document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(id)+'"]');if(row&&row.dataset.source!=="Illustrative sample data")openTx(id);else $("ai-live-status").textContent="Cited record "+id+" is not currently loaded in Transactions."});chips.appendChild(chip)});bd.appendChild(chips)}
       if(response.mode){var mode=document.createElement("small");mode.className="ai-answer-mode";mode.textContent=response.mode;bd.appendChild(mode)}
-      if(response.proposal)renderAssistantProposal(response.proposal,records||[]);box.scrollTop=box.scrollHeight;
+      if(response.proposal)renderAssistantProposal(response.proposal,records||[]);renderAssistantActions(response.actions);box.scrollTop=box.scrollHeight;
     }
     if(window.NovaTextType&&prefs.aiTyping)NovaTextType(p,{text:response.reply,typingSpeed:14,typeEffect:"fade",mistakes:0,cursorStyle:"bar",cursorGlide:true,showCursor:true,loop:false,hideCursorOnComplete:true,onUpdate:function(){box.scrollTop=box.scrollHeight},onTypingComplete:reveal});else reveal();
   }
@@ -93,72 +160,103 @@
   function appendAiError(message){var box=$("ai-conversation"),bot=document.createElement("div"),bd=document.createElement("div"),name=document.createElement("b"),copy=document.createElement("p");bot.className="ai-bubble ai-bubble--assistant";name.textContent="NovaPay";copy.className="status warn";copy.textContent=message;bd.append(name,copy);bot.appendChild(bd);box.appendChild(bot);box.scrollTop=box.scrollHeight}
   function renderAssistantProposal(proposal,records){var slot=$("ai-proposal-slot");slot.textContent="";var ref=String(proposal.txId||""),row=records.find(function(r){return r.id===ref}),knownType=["refund","dispute-evidence","hold-payout"].indexOf(proposal.type)>-1,sourceRow=row&&document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(row.id)+'"]'),sandboxRefund=!!(row&&row.source==="PayPal Sandbox"&&proposal.type==="refund"&&row.currency==="USD"&&Number(sourceRow&&sourceRow.dataset.amount)>0),card=document.createElement("article"),title=document.createElement("h4"),copy=document.createElement("p"),dl=document.createElement("dl"),button=document.createElement("button"),reason=String(proposal.reason||"No reason supplied."),canSend=!!row&&knownType&&(proposal.type!=="refund"||row.source!=="PayPal Sandbox"||sandboxRefund);card.className="ai-proposal-card";card.tabIndex=-1;title.textContent=knownType?({refund:"Refund suggestion","dispute-evidence":"Dispute evidence suggestion","hold-payout":"Payout review suggestion"}[proposal.type]):"Informational finding · simulated only";copy.textContent=reason;card.appendChild(document.createTextNode("AI suggestion for review"));var mode=document.createElement("span");mode.className="status info";mode.textContent=sandboxRefund?"PayPal Sandbox · approval required":"Simulated only";card.appendChild(mode);card.appendChild(title);card.appendChild(copy);[["Reference",ref||"Unavailable"],["Amount",row?row.gross:"Unavailable"],["Currency",row?row.currency:"Unavailable"],["Source",row?row.source:"NovaPay AI"]].forEach(function(pair){var wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=pair[0];dd.textContent=pair[1];wrap.appendChild(dt);wrap.appendChild(dd);dl.appendChild(wrap)});card.appendChild(dl);button.type="button";button.className="btn btn--primary";button.textContent="Send to Approvals";button.disabled=!canSend;button.addEventListener("click",function(){if(!canSend)return;var item={type:proposal.type,txId:row.id,title:String(proposal.title||title.textContent),reason:reason,display:row.gross,source:"NovaPay AI",simulatedOnly:true,requiresSandbox:sandboxRefund,evidence:row.id+" · "+row.type+" · "+row.gross+" · "+row.status};if(sandboxRefund){item.captureId=row.id;item.currency="USD";item.usd=Number(sourceRow.dataset.amount);item.simulatedOnly=false}NovaLive.addProposal(item);button.disabled=true;button.textContent="Sent to Approvals";$("ai-live-status").textContent="Proposal sent to Approvals. Review it there before any action."});card.appendChild(button);if(!row){var note=document.createElement("p");note.className="ai-proposal-warning";note.textContent="This proposal has no matching transaction reference in the available data, so it cannot be sent as an actionable item.";card.appendChild(note)}else if(!knownType){var note2=document.createElement("p");note2.className="ai-proposal-warning";note2.textContent="This action type is not supported and will remain informational; no action can be attempted.";card.appendChild(note2)}else if(proposal.type==="refund"&&row.source==="PayPal Sandbox"&&!sandboxRefund){var note3=document.createElement("p");note3.className="ai-proposal-warning";note3.textContent="This capture is missing a supported USD amount, so the refund suggestion cannot be sent as an actionable item.";card.appendChild(note3)}slot.appendChild(card);card.focus()}
   var aiBusy=false;
-  function ask(q){q=(q||"").trim();if(!q||aiBusy)return;aiBusy=true;var records=[],box=$("ai-conversation"),status=$("ai-live-status"),send=$("ai-send"),auth=window.NovaPayAuth;$("ai-proposal-slot").textContent="";status.textContent="Sending to the organization assistant…";send.disabled=true;var thoughts=(window.NovaThoughts&&prefs.aiThoughts)?NovaThoughts.create(box):null,pending=thoughts?thoughts.el:document.createElement("p");if(!thoughts){pending.className="ai-loading";pending.setAttribute("role","status");pending.textContent="Waiting for the organization assistant…";box.appendChild(pending)}box.scrollTop=box.scrollHeight;var finish=function(response){var go=function(){pending.remove();if(response.insufficientEvidence&&!(response.evidence||[]).length)response.reply="No live records yet. There is no matching evidence in this organization for that question.";appendAiMessage(q,response,records);status.textContent="Answer ready.";send.disabled=false;aiBusy=false};if(thoughts)thoughts.complete(go);else go()};var fail=function(error){var go=function(){pending.remove();var message=window.NovaPayAssistantClient.errorMessage(error);status.textContent=message;appendAiError(message);send.disabled=false;aiBusy=false};if(thoughts)thoughts.complete(go);else go()};Promise.resolve(auth&&auth.ready).then(function(){return auth?auth.currentSession():null}).then(function(session){if(session)return NovaLive.assistantChat(q).then(finish);if(window.NovaPayAssistantClient.canUseDemoFallback(auth,session)&&auth.isAuthenticated()){records=assistantRecords();var service=$("ai-service-status");if(service){service.textContent="AI service · DEMO MODE · Local fallback";service.className="status warn"}finish(localAnswer(q,records));return}throw Object.assign(new Error("Sign in to continue."),{status:401,code:"AUTH_REQUIRED"})}).catch(fail)}
-  function askFromComposer(){var input=$("ai-input"),q=input.value.trim();if(q&&!aiBusy){ask(q);input.value=""}}
+  var lastAssistantReply = "";
+  var previousAssistantReply = "";
+  function ask(q, voiceMetadata){
+    q=(q||"").trim();if(!q)return Promise.resolve(null);if(aiBusy){var busyReply="I’m finishing the current question. Please try again in a moment.";appendAiError(busyReply);return Promise.resolve({reply:busyReply,speak:busyReply,error:true})}aiBusy=true;
+    var records=[],box=$("ai-conversation"),status=$("ai-live-status"),send=$("ai-send"),auth=window.NovaPayAuth;
+    $("ai-proposal-slot").textContent="";status.textContent="Sending to the organization assistant…";send.disabled=true;
+    var thoughts=(window.NovaThoughts&&prefs.aiThoughts)?NovaThoughts.create(box):null,pending=thoughts?thoughts.el:document.createElement("p");
+    if(!thoughts){pending.className="ai-loading";pending.setAttribute("role","status");pending.textContent="Waiting for the organization assistant…";box.appendChild(pending)}box.scrollTop=box.scrollHeight;
+    var finish=function(response){var go=function(){pending.remove();if(response.insufficientEvidence&&!(response.evidence||[]).length)response.reply="No live records yet. There is no matching evidence in this organization for that question.";previousAssistantReply=lastAssistantReply;lastAssistantReply=response.reply||"";appendAiMessage(q,response,records);status.textContent="Answer ready.";send.disabled=false;aiBusy=false};if(thoughts)thoughts.complete(go);else go();return response};
+    var fail=function(error){var category=window.NovaPayAssistantClient.errorMessage(error),message="My AI service is busy right now. I can still open modules and run quick commands. "+category;voiceDebug("response status",{status:error&&error.status||0,code:error&&error.code||"unknown"});var go=function(){pending.remove();status.textContent=message;appendAiError(message);send.disabled=false;aiBusy=false};if(thoughts)thoughts.complete(go);else go();return{reply:message,speak:message,error:true}};
+    var quick=window.NovaPayAssistantClient.parseQuickCommand(q);
+    if(quick){
+      voiceDebug("actions parsed",[quick.action.id]);
+      Promise.race([Promise.resolve(auth&&auth.ready).then(function(){return auth?auth.currentSession():null}),new Promise(function(_,reject){window.setTimeout(function(){reject(Object.assign(new Error("Session check timed out"),{code:"AUTH_TIMEOUT"}))},10000)})]).then(function(session){
+        if(!session||!window.NovaLive||!NovaLive.assistantChat)return null;
+        return NovaLive.assistantChat(q,voiceMetadata).then(function(response){voiceDebug("response status",{status:200,route:response&&response.route||"unknown",fastPath:true})})
+      }).catch(function(error){voiceDebug("response status",{status:error&&error.status||0,code:error&&error.code||"offline",fastPath:true})});
+      return Promise.resolve(executeAssistantAction(quick.action)).then(function(){return finish({reply:quick.reply,speak:quick.speak?quick.reply:"",route:"code",reason:"client_deterministic_fast_path",evidence:[],actions:[],suppressSpeech:!quick.speak})}).catch(fail)
+    }
+    var signedIn=false;
+    return Promise.race([Promise.resolve(auth&&auth.ready).then(function(){return auth?auth.currentSession():null}),new Promise(function(_,reject){window.setTimeout(function(){reject(Object.assign(new Error("The session check timed out."),{code:"AUTH_TIMEOUT"}))},10000)})]).then(function(session){
+      signedIn=Boolean(session);voiceDebug("query sent",{source:voiceMetadata&&voiceMetadata.source||"assistant",signedIn:signedIn,apiEnabled:window.NovaLive&&window.NovaLive.live&&window.NovaLive.live.ai});
+      if(session)return Promise.race([NovaLive.assistantChat(q,voiceMetadata),new Promise(function(_,reject){window.setTimeout(function(){reject(Object.assign(new Error("The assistant took too long to respond."),{code:"AI_TIMEOUT",status:504}))},45000)})]);
+      if(window.NovaPayAssistantClient.canUseDemoFallback(auth,session)&&auth.isAuthenticated()){records=assistantRecords();var service=$("ai-service-status");if(service){service.textContent="AI service · DEMO MODE · Local fallback";service.className="status warn"}return localAnswer(q,records)}
+      throw Object.assign(new Error("Sign in to continue."),{status:401,code:"AUTH_REQUIRED"});
+    }).then(function(response){
+      if(signedIn&&response&&/demo mode|local fallback|illustrative sample/i.test(String(response.mode||""))){voiceDebug("response status",{status:200,reason:"unexpected_local_fallback"});throw Object.assign(new Error("The signed-in request returned demo data."),{status:503,code:"AI_LOCAL_FALLBACK_BLOCKED"})}
+      voiceDebug("response status",{status:200,route:response&&response.route||"unknown"});if(response&&response.actions&&response.actions.length)voiceDebug("actions parsed",response.actions.map(function(action){return action.id}));return finish(response);
+    }).catch(fail);
+  }
+  function handleQuery(q,options){options=options||{};var metadata=Object.assign({},options.metadata||{});if(options.source)metadata.source=options.source;voiceDebug("query sent",{source:options.source||"typed"});return ask(q,metadata).then(function(response){if(options.speak!==false&&response&&response.reply&&!response.suppressSpeech&&!(response.actions||[]).some(function(action){return action.id==="assistant.stopSpeaking"||action.id==="assistant.repeat"})){if(window.NovaPayVoiceAssistantController&&window.NovaPayVoiceAssistantController.isEnabled())window.NovaPayVoiceAssistantController.speak(response.speak||response.reply);else if(speechOutput)speechOutput.speak(response.speak||response.reply).then(function(result){if(!result.ok){var status=$("ai-live-status");if(status)status.textContent="Answer is in chat, but speech playback failed ("+(result.error||"unavailable")+"). Tap or hold the mic button to try again."}})}return response})}
+  window.NovaPayAssistant.ask=handleQuery;window.NovaPayAssistant.handleQuery=handleQuery;
+  window.NovaPayAssistant.getLastReply=function(){return lastAssistantReply};
+  function askFromComposer(){var input=$("ai-input"),q=input.value.trim();if(q&&!aiBusy){if(speechOutput)speechOutput.markGesture();handleQuery(q,{source:"typed",speak:true});input.value=""}}
   $("ai-send").addEventListener("click",askFromComposer);
   $("ai-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.isComposing){e.preventDefault();askFromComposer()}});
   (function setupAssistantTools(){
-    var upload=$("ai-upload"),mic=$("ai-mic"),visualizer=$("ai-voice-visualizer"),voiceLabel=$("ai-voice-label"),stopMic=$("ai-mic-stop"),bars=visualizer&&visualizer.querySelector(".ai-voice-bars"),recognition=null,stream=null,audioContext=null,raf=0;
-
+    var upload=$("ai-upload"),mic=$("ai-mic"),loading=false,skipFallbackClick=false;
+    var pttRecorder=null,pttStream=null,pttParts=[],pttTimer=null,pttStarting=false,pttHeld=false,pttFailed=false;
     if(upload)upload.addEventListener("click",function(){activate("documents",true);$("ai-live-status").textContent="Upload or review organization documents in Documents."});
-    var row=mic&&mic.closest(".ai-chat-row"),wave=$("ai-dict-wave"),timeEl=$("ai-dict-time"),okBtn=$("ai-dict-confirm"),noBtn=$("ai-dict-cancel"),
-        active=false,pending=false,buffer="",interim="",startedAt=0,timerId=0,peak=0,lastPush=0,
-        strands=window.NovaStrands&&window.NovaStrands.create(wave,{listening:true,energy:.12,lightMode:document.documentElement.dataset.theme==="light"});
-    function cleanup(){
-      active=false;pending=false;cancelAnimationFrame(raf);raf=0;clearInterval(timerId);timerId=0;
-      if(recognition){var r=recognition;recognition=null;r.onend=null;r.onerror=null;r.onresult=null;try{r.abort()}catch(e){}}
-      if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
-      if(audioContext){try{audioContext.close()}catch(e){}audioContext=null}
-      if(strands){strands.setLevel(0);strands.setListening(false)}
-      if(row)row.classList.remove("is-dictating");
-      if(mic){mic.classList.remove("is-listening");mic.setAttribute("aria-label","Start voice input")}
+    function releasePTT(){if(pttStream){pttStream.getTracks().forEach(function(track){track.stop()});pttStream=null}}
+    function stopPTT(){pttHeld=false;if(pttTimer){clearTimeout(pttTimer);pttTimer=null}if(pttRecorder&&pttRecorder.state!=="inactive")pttRecorder.stop()}
+    function startPTT(event){
+      if(event){event.preventDefault();if(event.pointerId!=null&&mic.setPointerCapture)try{mic.setPointerCapture(event.pointerId)}catch(e){}}
+      if(pttRecorder||pttStarting)return;
+      pttHeld=true;skipFallbackClick=true;window.setTimeout(function(){skipFallbackClick=false},1000);
+      if(speechOutput)speechOutput.markGesture();
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){pttHeld=false;$("ai-live-status").textContent="Audio transcription is unavailable here. Type your question instead.";return}
+      pttStarting=true;$("ai-live-status").textContent="Hold the mic to record your question…";
+      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(stream){
+        if(!pttHeld){stream.getTracks().forEach(function(track){track.stop()});pttStarting=false;return}
+        pttStream=stream;pttParts=[];pttFailed=false;
+        var supports=window.MediaRecorder.isTypeSupported?window.MediaRecorder.isTypeSupported.bind(window.MediaRecorder):function(){return false};
+        var chosen=supports("audio/webm;codecs=opus")?"audio/webm;codecs=opus":supports("audio/ogg;codecs=opus")?"audio/ogg;codecs=opus":supports("audio/mp4")?"audio/mp4":"";
+        try{pttRecorder=chosen?new window.MediaRecorder(stream,{mimeType:chosen}):new window.MediaRecorder(stream)}catch(error){releasePTT();pttStarting=false;pttHeld=false;$("ai-live-status").textContent="This browser cannot record audio. Type your question instead.";return}
+        pttRecorder.ondataavailable=function(e){if(e.data&&e.data.size)pttParts.push(e.data)};
+        pttRecorder.onerror=function(){pttFailed=true;$("ai-live-status").textContent="The microphone recording failed. Try again or type your question.";stopPTT()};
+        pttRecorder.onstop=function(){
+          var recorder=pttRecorder,mime=(recorder&&recorder.mimeType||"audio/webm").split(";")[0],blob=new Blob(pttParts,{type:mime});
+          pttRecorder=null;pttParts=[];releasePTT();mic.classList.remove("is-listening");mic.setAttribute("aria-pressed","false");
+          if(pttFailed){pttFailed=false;return}
+          if(!blob.size){$("ai-live-status").textContent="No speech was recorded. Hold the mic and try again.";return}
+          $("ai-live-status").textContent="Transcribing your voice…";voiceDebug("query sent",{source:"push-to-talk-transcription",bytes:blob.size});
+          window.NovaPayAssistantClient.transcribeAndHandle(window.NovaPayApi,blob,handleQuery,function(transcript){
+            $("ai-input").value=transcript;voiceDebug("transcript",{kind:"transcribed",text:transcript})
+          }).catch(function(error){$("ai-live-status").textContent="Voice transcription failed: "+window.NovaPayAssistantClient.errorMessage(error)+" Type your question or try again."})
+        };
+        pttRecorder.start();pttStarting=false;mic.classList.add("is-listening");mic.setAttribute("aria-pressed","true");
+        $("ai-live-status").textContent="Listening to your held recording… Release to send.";pttTimer=window.setTimeout(stopPTT,15000)
+      }).catch(function(){pttStarting=false;pttHeld=false;$("ai-live-status").textContent="Microphone permission is blocked. Allow it in browser settings, then hold the mic."})
     }
-    function cancelDictation(){cleanup();buffer="";interim=""}
-    function confirmDictation(){
-      var text=(buffer+" "+interim).replace(/\s+/g," ").trim();cleanup();buffer="";interim="";
-      var input=$("ai-input");
-      if(text){input.value=(input.value?input.value.replace(/\s+$/,"")+" ":"")+text;$("ai-live-status").textContent=""}
-      else $("ai-live-status").textContent="No speech was detected. Try again.";
-      input.focus()
+    if(mic){
+      mic.addEventListener("click",function(event){
+        if(skipFallbackClick){skipFallbackClick=false;event.stopImmediatePropagation();return}
+        if(window.NovaPayVoiceAssistantController||loading)return;
+        loading=true;
+        import("./voice-assistant.js").then(function(module){
+          var controller=module.mountVoiceAssistant({
+            onQuery:function(message,metadata){return handleQuery(message,{source:"voice",metadata:metadata,speak:false})},
+            onTranscript:function(text){$("ai-input").value=text},
+            getContext:function(){return{view:location.hash.slice(1)||"dashboard"}},
+            speechOutput:speechOutput,
+            getLastReply:function(){return window.NovaPayAssistant.getLastReply()},
+            onConfirmationCancelled:function(){document.querySelectorAll(".assistant-action-confirm").forEach(function(button){button.disabled=true;button.textContent="Confirmation expired"})}
+          });
+          window.NovaPayVoiceAssistantController=controller;
+          if(controller&&controller.enableVoice)controller.enableVoice();
+        }).catch(function(){$("ai-live-status").textContent="Voice support could not load. Type your question instead."}).finally(function(){loading=false})
+      });
+      mic.addEventListener("pointerdown",function(event){if(window.NovaPayVoiceFallbackOnly)startPTT(event)});
+      mic.addEventListener("pointerup",function(){if(pttHeld)stopPTT()});
+      mic.addEventListener("pointercancel",function(){if(pttHeld)stopPTT()});
+      window.addEventListener("pointerup",function(){if(pttHeld)stopPTT()});
+      window.addEventListener("blur",function(){if(pttHeld)stopPTT()})
     }
-    function stopListening(){if(active||pending)confirmDictation()}
-    function monitor(analyser){
-      var td=new Uint8Array(analyser.fftSize);peak=0;lastPush=performance.now();if(strands)strands.setListening(true);
-      function frame(now){
-        analyser.getByteTimeDomainData(td);var sum=0;
-        for(var q=0;q<td.length;q++){var d=(td[q]-128)/128;sum+=d*d}
-        var lvl=Math.min(1,Math.sqrt(sum/td.length)*5);peak=Math.max(lvl,peak*.82);
-        if(strands)strands.setLevel(peak);
-        if(now-lastPush>=60){peak*=.25;lastPush=now}
-        raf=requestAnimationFrame(frame)
-      }
-      raf=requestAnimationFrame(frame)
-    }
-    function startListening(){
-      var Speech=window.SpeechRecognition||window.webkitSpeechRecognition,status=$("ai-live-status");
-      if(!Speech){status.textContent="Voice input is not supported by this browser. Use Chrome or Edge, or type your question.";return}
-      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent="Microphone access requires a supported browser on HTTPS or localhost.";return}
-      if(active||pending)return;pending=true;status.textContent="";mic.classList.add("is-listening");buffer="";interim="";
-      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}}).then(function(media){
-        if(!pending){media.getTracks().forEach(function(t){t.stop()});return}
-        pending=false;active=true;stream=media;
-        var Ctx=window.AudioContext||window.webkitAudioContext;
-        if(Ctx){audioContext=new Ctx();var analyser=audioContext.createAnalyser();analyser.fftSize=1024;analyser.smoothingTimeConstant=.4;audioContext.createMediaStreamSource(stream).connect(analyser);monitor(analyser)}
-        row.classList.add("is-dictating");mic.setAttribute("aria-label","Stop voice input");
-        startedAt=Date.now();timeEl.textContent="0:00";timerId=setInterval(function(){var sec=Math.floor((Date.now()-startedAt)/1000);timeEl.textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0")},250);
-        recognition=new Speech();recognition.lang=navigator.language||"en-US";recognition.interimResults=true;recognition.continuous=true;
-        recognition.onresult=function(e){var fin="",tmp="";for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else tmp+=e.results[i][0].transcript}if(fin)buffer=(buffer?buffer+" ":"")+fin.trim();interim=tmp};
-        recognition.onerror=function(e){if(e.error==="not-allowed"||e.error==="service-not-allowed"){cancelDictation();status.textContent="Microphone permission denied."}else if(e.error==="network"||e.error==="audio-capture"){cancelDictation();status.textContent=e.error==="network"?"Speech service is unreachable. Check your connection.":"No microphone was found."}};
-        recognition.onend=function(){if(!active||!recognition)return;if(interim){buffer=(buffer?buffer+" ":"")+interim.trim();interim=""}try{recognition.start()}catch(err){}};
-        try{recognition.start()}catch(err){}
-      }).catch(function(){cancelDictation();status.textContent="Microphone access was denied or is unavailable."})
-    }
-    if(mic)mic.addEventListener("click",function(){if(active||pending)confirmDictation();else startListening()});
-    if(okBtn)okBtn.addEventListener("click",confirmDictation);if(noBtn)noBtn.addEventListener("click",cancelDictation);
-    document.addEventListener("keydown",function(e){if(!active)return;if(e.key==="Escape"){e.preventDefault();cancelDictation()}else if(e.key==="Enter"&&!e.isComposing){e.preventDefault();e.stopPropagation();confirmDictation()}},true);
-    window.addEventListener("pagehide",stopListening);
   })();
-  document.querySelectorAll("[data-ai-query]").forEach(function(b){b.addEventListener("click",function(){ask(b.dataset.aiQuery)})});
+  document.querySelectorAll("[data-ai-query]").forEach(function(b){b.addEventListener("click",function(){if(speechOutput)speechOutput.markGesture();handleQuery(b.dataset.aiQuery,{source:"suggestion",speak:true})})});
   updateAiDataStatus();
   if(window.NovaPayAuth){Promise.resolve(NovaPayAuth.ready).then(updateAiDataStatus);document.addEventListener("novapay:auth",updateAiDataStatus)}
 
@@ -652,65 +750,42 @@
   document.addEventListener("click",function(e){var row=e.target.closest(".transaction-row");if(row&&!e.target.closest("button"))openTx(row.dataset.txId);});
   document.addEventListener("keydown",function(e){var row=e.target.closest&&e.target.closest(".transaction-row");if(row&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openTx(row.dataset.txId);}});
   document.querySelectorAll("[data-close-transaction]").forEach(function(b){b.addEventListener("click",closeTx);});
-  /* Transaction detail voice input: same dictation behaviour as the AI assistant mic. */
+  /* Transaction detail dictation uses the shared authenticated audio-transcription route.
+     The AI Assistant remains the only SpeechRecognition instance in the page. */
   (function setupTransactionMic(){
-    var mic=$("tx-ai-mic"),row=$("tx-ai-row"),input=$("tx-ai-question"),status=$("tx-voice-status"),wave=$("tx-dict-wave"),timeEl=$("tx-dict-time"),okBtn=$("tx-dict-confirm"),noBtn=$("tx-dict-cancel");
+    var mic=$("tx-ai-mic"),row=$("tx-ai-row"),input=$("tx-ai-question"),status=$("tx-voice-status"),wave=$("tx-dict-wave"),okBtn=$("tx-dict-confirm"),noBtn=$("tx-dict-cancel");
     if(!mic||!row||!input)return;
-    var recognition=null,stream=null,audioContext=null,raf=0,active=false,pending=false,buffer="",interim="",startedAt=0,timerId=0,peak=0,lastPush=0,strands=null;
-    function ensureStrands(){if(!strands&&window.NovaStrands&&wave)strands=window.NovaStrands.create(wave,{listening:true,energy:.12,lightMode:document.documentElement.dataset.theme==="light"});return strands}
-    function cleanup(){
-      active=false;pending=false;cancelAnimationFrame(raf);raf=0;clearInterval(timerId);timerId=0;
-      if(recognition){var r=recognition;recognition=null;r.onend=null;r.onerror=null;r.onresult=null;try{r.abort()}catch(e){}}
-      if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}
-      if(audioContext){try{audioContext.close()}catch(e){}audioContext=null}
-      if(strands){strands.setLevel(0);strands.setListening(false)}
-      row.classList.remove("is-dictating");mic.classList.remove("is-listening");mic.setAttribute("aria-label","Start voice input")
+    var recorder=null,stream=null,parts=[],discard=false,pending=false,strands=null;
+    function cleanup(){pending=false;if(stream){stream.getTracks().forEach(function(track){track.stop()});stream=null}if(strands){strands.setLevel(0);strands.setListening(false)}row.classList.remove("is-dictating");mic.classList.remove("is-listening");mic.setAttribute("aria-label","Start voice input")}
+    function finishRecording(){if(recorder&&recorder.state!=="inactive")recorder.stop()}
+    function cancelRecording(){discard=true;finishRecording();cleanup();parts=[];status.textContent=""}
+    function startRecording(){
+      if(pending||recorder)return;
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){status.textContent="Audio recording is unavailable here. Type your question instead.";return}
+      pending=true;discard=false;parts=[];status.textContent="Listening…";
+      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(media){
+        if(!pending){media.getTracks().forEach(function(track){track.stop()});return}
+        stream=media;var supports=window.MediaRecorder.isTypeSupported?window.MediaRecorder.isTypeSupported.bind(window.MediaRecorder):function(){return false};
+        var mime=supports("audio/webm;codecs=opus")?"audio/webm;codecs=opus":supports("audio/ogg;codecs=opus")?"audio/ogg;codecs=opus":supports("audio/mp4")?"audio/mp4":"";
+        try{recorder=mime?new window.MediaRecorder(stream,{mimeType:mime}):new window.MediaRecorder(stream)}catch(e){cleanup();status.textContent="Audio recording is unavailable here. Type your question instead.";return}
+        if(wave&&window.NovaStrands)strands=window.NovaStrands.create(wave,{listening:true,energy:.12,lightMode:document.documentElement.dataset.theme==="light"});
+        recorder.ondataavailable=function(event){if(event.data&&event.data.size)parts.push(event.data)};
+        recorder.onerror=function(){discard=true;status.textContent="The microphone recording failed. Try again.";finishRecording()};
+        recorder.onstop=function(){
+          var blob=new Blob(parts,{type:(recorder&&recorder.mimeType||"audio/webm").split(";")[0]});recorder=null;cleanup();parts=[];
+          if(discard){discard=false;return}
+          status.textContent="Transcribing…";
+          window.NovaPayAssistantClient.transcribe(window.NovaPayApi,blob).then(function(text){input.value=(input.value?input.value.replace(/\s+$/,"")+" ":"")+text;status.textContent="Transcript added. Review it, then choose Ask AI.";input.focus()}).catch(function(error){status.textContent="Voice transcription failed: "+window.NovaPayAssistantClient.errorMessage(error)})
+        };
+        recorder.start();pending=false;row.classList.add("is-dictating");mic.classList.add("is-listening");mic.setAttribute("aria-label","Stop voice input");status.textContent="Recording. Tap Done to transcribe."
+      }).catch(function(){cleanup();status.textContent="Microphone permission is blocked or unavailable."})
     }
-    function cancelDictation(){cleanup();buffer="";interim=""}
-    function confirmDictation(){
-      var text=(buffer+" "+interim).replace(/\s+/g," ").trim();cleanup();buffer="";interim="";
-      if(text){input.value=(input.value?input.value.replace(/\s+$/,"")+" ":"")+text;status.textContent=""}
-      else status.textContent="No speech was detected. Try again.";
-      input.focus()
-    }
-    function monitor(analyser){
-      var td=new Uint8Array(analyser.fftSize);peak=0;lastPush=performance.now();if(strands)strands.setListening(true);
-      function frame(now){
-        analyser.getByteTimeDomainData(td);var sum=0;
-        for(var q=0;q<td.length;q++){var d=(td[q]-128)/128;sum+=d*d}
-        var lvl=Math.min(1,Math.sqrt(sum/td.length)*5);peak=Math.max(lvl,peak*.82);
-        if(strands)strands.setLevel(peak);
-        if(now-lastPush>=60){peak*=.25;lastPush=now}
-        raf=requestAnimationFrame(frame)
-      }
-      raf=requestAnimationFrame(frame)
-    }
-    function startListening(){
-      var Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
-      if(!Speech){status.textContent="Voice input is not supported by this browser. Use Chrome or Edge, or type your question.";return}
-      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent="Microphone access requires a supported browser on HTTPS or localhost.";return}
-      if(active||pending)return;pending=true;status.textContent="";mic.classList.add("is-listening");buffer="";interim="";
-      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}}).then(function(media){
-        if(!pending){media.getTracks().forEach(function(t){t.stop()});return}
-        pending=false;active=true;stream=media;
-        row.classList.add("is-dictating");ensureStrands();
-        var Ctx=window.AudioContext||window.webkitAudioContext;
-        if(Ctx){audioContext=new Ctx();var analyser=audioContext.createAnalyser();analyser.fftSize=1024;analyser.smoothingTimeConstant=.4;audioContext.createMediaStreamSource(stream).connect(analyser);monitor(analyser)}
-        mic.setAttribute("aria-label","Stop voice input");
-        startedAt=Date.now();timeEl.textContent="0:00";timerId=setInterval(function(){var sec=Math.floor((Date.now()-startedAt)/1000);timeEl.textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0")},250);
-        recognition=new Speech();recognition.lang=navigator.language||"en-US";recognition.interimResults=true;recognition.continuous=true;
-        recognition.onresult=function(e){var fin="",tmp="";for(var i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else tmp+=e.results[i][0].transcript}if(fin)buffer=(buffer?buffer+" ":"")+fin.trim();interim=tmp};
-        recognition.onerror=function(e){if(e.error==="not-allowed"||e.error==="service-not-allowed"){cancelDictation();status.textContent="Microphone permission denied."}else if(e.error==="network"||e.error==="audio-capture"){cancelDictation();status.textContent=e.error==="network"?"Speech service is unreachable. Check your connection.":"No microphone was found."}};
-        recognition.onend=function(){if(!active||!recognition)return;if(interim){buffer=(buffer?buffer+" ":"")+interim.trim();interim=""}try{recognition.start()}catch(err){}};
-        try{recognition.start()}catch(err){}
-      }).catch(function(){cancelDictation();status.textContent="Microphone access was denied or is unavailable."})
-    }
-    mic.addEventListener("click",function(){if(active||pending)confirmDictation();else startListening()});
-    okBtn.addEventListener("click",confirmDictation);noBtn.addEventListener("click",cancelDictation);
-    document.addEventListener("keydown",function(e){if(!active)return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();cancelDictation()}else if(e.key==="Enter"&&!e.isComposing){e.preventDefault();e.stopPropagation();confirmDictation()}},true);
-    /* Stop the mic whenever the popup closes, and start clean when it opens. */
-    if(txModal)new MutationObserver(function(){if(txModal.hidden){cancelDictation();status.textContent=""}}).observe(txModal,{attributes:true,attributeFilter:["hidden"]});
-    window.addEventListener("pagehide",cancelDictation);
+    mic.addEventListener("click",function(){if(recorder)finishRecording();else startRecording()});
+    if(okBtn)okBtn.addEventListener("click",function(){if(recorder)finishRecording()});
+    if(noBtn)noBtn.addEventListener("click",cancelRecording);
+    document.addEventListener("keydown",function(event){if(!recorder)return;if(event.key==="Escape"){event.preventDefault();event.stopPropagation();cancelRecording()}else if(event.key==="Enter"&&!event.isComposing){event.preventDefault();event.stopPropagation();finishRecording()}},true);
+    if(txModal)new MutationObserver(function(){if(txModal.hidden)cancelRecording()}).observe(txModal,{attributes:true,attributeFilter:["hidden"]});
+    window.addEventListener("pagehide",cancelRecording);
   })();
   $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction,context=["ID: "+d.ref,"type: "+d.type,"status: "+d.status,"gross: "+d.amount,"fee: "+d.fee,"net: "+d.net,"currency: "+(d.currency||"Unavailable"),"buyer: "+(d.buyer||"Unavailable"),"source: "+(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data")].join("; ");$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.live.ai&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply;$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(){$("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context});else $("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context;});
   $("tx-send-approval").addEventListener("click",function(){if(!selectedTransaction)return;var answer=$("tx-ai-answer"),reason=answer.textContent.trim();if(!reason||reason.indexOf("Thinking")===0){showToast("Ask the AI and review its finding first.");return}if(window.NovaLive&&NovaLive.addTransactionFinding){var p=null;try{p=JSON.parse(answer.dataset.proposal||"null")}catch(e){}if(p&&["refund","dispute-evidence","hold-payout"].indexOf(p.type)>-1){p.reason=p.reason||reason;p.txId=selectedTransaction.ref;p.display=selectedTransaction.amount;p.source=p.source||"NovaPay AI";p.simulatedOnly=true;NovaLive.addProposal(p)}else NovaLive.addTransactionFinding(selectedTransaction,reason);closeTx();location.hash="#approvals";showToast("Finding sent to Approvals for human review.")}else showToast("Approvals service is unavailable.")});

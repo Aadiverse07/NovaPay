@@ -45,6 +45,31 @@ async function fetchWithTimeout(fetchImpl, url, options, timeoutMs) {
 export function createGeminiAdapter({ apiKey, keyPool, model, fallbackModel, events, fetchImpl = fetch, timeoutMs = REQUEST_TIMEOUT_MS, sleep = delay, maxOutputTokens = 400 }) {
   const pool = keyPool || createGeminiKeyPool({ keys: apiKey ? [{ slot: 1, key: apiKey }] : [], events, sleep });
   return {
+    async transcribeAudio({ audio, mimeType }) {
+      if (!pool.configured) throw providerError('Gemini transcription is not configured.');
+      if (!Buffer.isBuffer(audio) || !audio.length) throw providerError('Audio data is empty.');
+      const result = await pool.generate({
+        models: ['gemini-3.5-transcribe'], timeoutMs, deadlineMs: 20_000, endpoint: 'generateContent',
+        request: async ({ apiKey: selectedKey, model: selectedModel, timeoutMs: attemptTimeout }) => {
+          const url = `${GEMINI_ENDPOINT}/${encodeURIComponent(selectedModel)}:generateContent`;
+          return fetchWithTimeout(fetchImpl, url, {
+            method: 'POST', headers: { 'x-goog-api-key': selectedKey, 'content-type': 'application/json' },
+            body: JSON.stringify({ contents: [{ role: 'user', parts: [
+              { text: 'Transcribe the spoken words exactly. Return only the transcript, with no commentary or actions.' },
+              { inline_data: { mime_type: mimeType, data: audio.toString('base64') } },
+            ] }], generationConfig: { maxOutputTokens: 512 } }),
+          }, attemptTimeout);
+        },
+        parse: async ({ response, model: selectedModel }) => {
+          logCall(events, `POST gemini ${selectedModel}:generateContent transcription → ${response.status}`, response.ok);
+          if (!response.ok) throw providerError('Speech transcription provider returned an error.', { retryable: response.status >= 500 || response.status === 408 });
+          const data = await readJson(response), transcript = extractGeminiText(data).trim();
+          if (!transcript) throw providerError('Speech transcription returned no words.');
+          return { text: transcript.slice(0, 1000), model: selectedModel };
+        },
+      });
+      return result.value.text;
+    },
     async generate({ system, prompt }) {
       if (!pool.configured) throw providerError('LLM_API_KEY not set');
       try {
@@ -129,10 +154,14 @@ export function createFakeLLMAdapter({ response = '', error, onGenerate } = {}) 
   };
 }
 
-export function createLLMAdapter({ config, events, fetchImpl = fetch, keyPool }) {
+export function createLLMAdapter({ config, events, fetchImpl = fetch, keyPool, purpose = 'chat' }) {
   const maxOutputTokens = config.AI_MAX_OUTPUT_TOKENS || 400;
   const apiKey = config.resolvedLLMApiKey || config.LLM_API_KEY || (config.LLM_PROVIDER === 'anthropic' ? config.ANTHROPIC_API_KEY : '');
   const model = config.resolvedLLMModel || config.LLM_MODEL || (config.LLM_PROVIDER === 'anthropic' ? config.ANTHROPIC_MODEL : 'gemini-3.5-flash-lite');
+  if (purpose === 'transcription') {
+    const audioAdapter = createGeminiAdapter({ apiKey, keyPool: keyPool || createGeminiKeyPool({ keys: resolveGeminiKeySlots(config), events }), model: 'gemini-3.5-transcribe', events, fetchImpl, maxOutputTokens });
+    return { transcribeAudio: audioAdapter.transcribeAudio };
+  }
   if (config.LLM_PROVIDER === 'anthropic') return createAnthropicAdapter({ apiKey, model, events, fetchImpl, maxOutputTokens });
   const fallbackModel = config.LLM_FALLBACK_MODEL || '';
   if (!FREE_GEMINI_MODELS.includes(model) || (fallbackModel && !FREE_GEMINI_MODELS.includes(fallbackModel))) {

@@ -20,13 +20,17 @@ Requires a confirmed Supabase bearer JWT and no `X-Org-Id`. Unconfirmed users re
 
 ### `POST /api/ai/chat`
 
-Request: `{ "message": "Why did our fees increase?", "context": {} }`. `context` is accepted for compatibility and ignored. `message` must be non-empty and no more than 1,000 characters. All organization roles may ask.
+Request: `{ "message": "Why did our fees increase?", "context": { "view": "invoices" }, "interrupted": { "previousReply": "...", "spokenChars": 30 }, "history": [{ "role": "user", "text": "..." }] }`. Only the message is required; context, interruption metadata and at most six short history turns are optional. The server derives user, role and organization from the authenticated request. All organization roles may ask.
 
-Response: `{ "answer": "...", "route": "retrieval", "reason": "evidence_based_explanation", "citations": ["TRX-ID"], "usage": { "model": "gemini-3.5-flash-lite", "inputTokens": 300, "outputTokens": 40 }, "cached": false }`. `route` is one of `code`, `sql`, `ocr`, `retrieval`, `llm`; arithmetic/FX and structured queries are deterministic and report zero LLM usage. Citations are stable IDs from the authenticated organization's evidence, or `fx-rate:BASE/QUOTE:<timestamp>` for conversions. Optional fields include `proposal` (omitted when none is persisted), `stale`, and `insufficient_evidence`.
+Response: `{ "answer": "...", "speak": "Short speech answer.", "route": "retrieval", "reason": "evidence_based_explanation", "citations": ["TRX-ID"], "actions": [], "usage": { "model": "gemini-3.5-flash-lite", "inputTokens": 300, "outputTokens": 40 }, "cached": false }`. `route` is one of `code`, `sql`, `ocr`, `retrieval`, `llm`; arithmetic/FX and structured queries are deterministic and report zero LLM usage. Citations are stable IDs from the authenticated organization's evidence, or `fx-rate:BASE/QUOTE:<timestamp>` for conversions. Optional fields include `proposal` (omitted when none is persisted), validated `actions`, `speak`, `stale`, and `insufficient_evidence`.
 
 Proposals are persisted only as `pending` approvals. A refund proposal references a cited completed capture and uses the server-computed remaining refundable amount. No AI chat request executes a payment action. Approval decisions remain on `POST /api/approvals/:approvalId/decision` and are restricted to `owner`, `admin`, and `approver`; execution uses existing Phase 2/3 checks.
 
 Errors: invalid input returns HTTP 400 `AI_MESSAGE_INVALID`; auth/tenant errors return HTTP 401/403; route limits return `RATE_LIMITED` or `USER_RATE_LIMITED`. Daily AI limits return a safe answer that explains the limit and do not call the provider. Provider errors return a safe unavailable answer without provider response bodies.
+
+### `POST /api/ai/actions/audit`
+
+Authenticated, org-scoped action audit endpoint. Request contains only `{ "actionId": "invoice.createDraft", "tier": 1, "outcome": "confirmed" }`; valid outcomes are offered, confirmed, proposed, cancelled, completed and failed. Registry tier and role are checked server-side. Confirmed/proposed Tier 1/2 actions share a limit of five per user per minute. Audit failure is fail-closed; callers must not execute the action when this endpoint fails. No action arguments or transcripts are recorded.
 
 ## Notifications and anomalies
 
@@ -159,3 +163,7 @@ The browser fetches the PDF with JWT and `X-Org-Id` headers, then saves the blob
 - `GET /api/fx/currencies` (authenticated, organization-scoped): merged code/name/minor-unit exponent/provider coverage from Frankfurter and open.er-api.com; server cache TTL 6 hours.
 - `GET /api/fx/convert?amount=10.00&base=USD&quote=INR` (authenticated): decimal arithmetic with ISO exponents; primary Frankfurter, fallback open.er-api.com and USD cross rates where needed. Rates are stored in `fx_rates` with source and fetch timestamp; requests are rate-limited and provider calls time out/retry once.
 - Responses include `rate`, `source`, `timestamp`, and `indicative, not a guaranteed settlement rate`. These sources update about once per working day, not tick-by-tick. open.er-api.com requires attribution; the Reports converter links to ExchangeRate-API.
+
+### `POST /api/ai/transcribe`
+
+Authenticated, organization-scoped. Accepts an `application/octet-stream` audio body (maximum 8 MB) plus `X-Audio-Mime-Type` (`audio/webm`, `audio/mp4`, `audio/ogg`, `audio/wav`, `audio/mpeg`, or `audio/aac`). Limited to 10 clips per user per 15 minutes. Returns `{ "transcript": "..." }`; raw audio is not stored. This is the only voice path that sends audio to Gemini (Gemini 3.5 Transcribe via the server-side key pool). For Brave or browsers without a working SpeechRecognition service, hold the AI view mic button to record, then the transcript follows the same AI query pipeline as typed and recognized speech. Free-tier provider terms may allow submitted data to be used for product improvement; use only non-sensitive sample speech.
