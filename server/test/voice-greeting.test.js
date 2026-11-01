@@ -44,3 +44,10 @@ test('a speech error clears the session marker so the user may retry', () => {
   assert.equal(saved.getItem('novapay-voice-greeting-spoken'), null);
   assert.equal(speaker.speak(), true);
 });
+
+
+test('intro directs users to tap the mic for voice input', () => {
+  const greeting = buildVoiceGreeting(ASSISTANT_ACTION_REGISTRY);
+  assert.match(greeting, /tap the mic and tell me what you need/i);
+  assert.doesNotMatch(greeting, new RegExp(['Hey', 'NovaPay'].join(' '), 'i'));
+});

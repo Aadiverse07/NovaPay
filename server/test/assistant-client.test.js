@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
 
 const source = await readFile(new URL('../../src/assistant-client.js', import.meta.url), 'utf8');
 const dashboardSource = await readFile(new URL('../../src/dashboard.js', import.meta.url), 'utf8');
 const module = { exports: {} };
 vm.runInNewContext(source, { module, globalThis: {}, window: {} });
 const client = module.exports;
+const speechOutputModule = createRequire(import.meta.url)('../../src/assistant-speech.js');
 
 test('authenticated assistant request sends message only through the auth-aware API client', async () => {
   const calls = [];
@@ -55,7 +57,7 @@ test('backend response route labels and citation ids normalize without client-sc
 });
 
 test('dashboard confines local fallback to demo mode and does not scrape or attach browser content', () => {
-  assert.match(dashboardSource, /if\(session\)return NovaLive\.assistantChat\(q,voiceMetadata\)/);
+  assert.match(dashboardSource, /if\(session\)return Promise\.race\(\[NovaLive\.assistantChat\(q,voiceMetadata\)/);
   assert.match(dashboardSource, /if\(window\.NovaPayAssistantClient\.canUseDemoFallback\(auth,session\)&&auth\.isAuthenticated\(\)\)/);
   assert.match(dashboardSource, /return localAnswer\(q,records\)/);
   assert.doesNotMatch(dashboardSource, /Attached file content|FileReader|aiAttachmentText/);
@@ -69,4 +71,51 @@ test('assistant action UI enforces confirmation tiers and audits before writes',
   assert.ok(tierTwo > confirmation && tierZero > tierTwo);
   assert.match(dashboardSource, /setTimeout\(function\(\)\{completed=true;confirm\.disabled=true;cancel\.disabled=true;copy\.textContent="Confirmation expired/);
   assert.match(dashboardSource, /\/api\/ai\/actions\/audit/);
+});
+
+test('local quick commands parse navigation, stop, repeat, and help without a backend', () => {
+  assert.equal(client.parseQuickCommand('open ledger').action.args.view, 'ledger');
+  assert.equal(client.parseQuickCommand('show invoices').action.args.view, 'invoices');
+  assert.equal(client.parseQuickCommand('open approvals').action.args.view, 'approvals');
+  assert.equal(client.parseQuickCommand('take me to invoices').action.args.view, 'invoices');
+  assert.equal(client.parseQuickCommand('stop').action.id, 'assistant.stopSpeaking');
+  assert.equal(client.parseQuickCommand('repeat').action.id, 'assistant.repeat');
+  assert.equal(client.parseQuickCommand('help').action.id, 'assistant.help');
+  assert.equal(client.parseQuickCommand('show refunds last month'), null);
+});
+
+test('push-to-talk transcript enters the shared handler', async () => {
+  const calls = [], handled = [];
+  const response = await client.transcribeAndHandle({ async request(...args) { calls.push(args); return { transcript: 'show refunds this month' }; } }, new Blob(['audio'], { type: 'audio/webm' }), async (text, options) => { handled.push({ text, options }); return { reply: 'No live records yet.' }; });
+  assert.equal(calls[0][0], '/api/ai/transcribe');
+  assert.equal(calls[0][1].headers['X-Audio-Mime-Type'], 'audio/webm');
+  assert.equal(handled[0].text, 'show refunds this month');
+  assert.equal(handled[0].options.source, 'push-to-talk');
+  assert.equal(handled[0].options.speak, true);
+  assert.equal(response.reply, 'No live records yet.');
+});
+
+test('typed and recognized voice calls share the dashboard handler and quick commands precede API dispatch', () => {
+  assert.match(dashboardSource, /function handleQuery\(q,options\)/);
+  assert.match(dashboardSource, /handleQuery\(q,\{source:"typed",speak:true\}\)/);
+  assert.match(dashboardSource, /onQuery:function\(message,metadata\)\{return handleQuery\(message,\{source:"voice",metadata:metadata,speak:false\}\)\}/);
+  assert.match(dashboardSource, /transcribeAndHandle\(window\.NovaPayApi,blob,handleQuery/);
+  assert.match(dashboardSource, /parseQuickCommand\(q\)/);
+});
+
+test('typed and PTT queries use the same handler and both speak the returned answer', async () => {
+  const spoken = [], events = {};
+  const output = speechOutputModule.create({
+    synthesis: { getVoices: () => [{ lang: 'en-IN' }], speak(utterance) { spoken.push(utterance.text); setImmediate(() => utterance.onend()); } },
+    Utterance: class { constructor(text) { this.text = text; } },
+    document: { addEventListener(name, fn) { events[name] = fn; } }, storage: { getItem: () => null },
+  });
+  output.markGesture();
+  const handleQuery = async (text, options) => { const reply = `NovaPay answered ${text}`; await output.speak(reply); return { reply, options }; };
+  const typed = await handleQuery('open ledger', { source: 'typed', speak: true });
+  const ptt = await client.transcribeAndHandle({ async request() { return { transcript: 'show refunds this month' }; } }, new Blob(['audio'], { type: 'audio/webm' }), handleQuery);
+  assert.equal(typed.reply, 'NovaPay answered open ledger');
+  assert.equal(ptt.reply, 'NovaPay answered show refunds this month');
+  assert.deepEqual(spoken, ['NovaPay answered open ledger', 'NovaPay answered show refunds this month']);
+  assert.equal(ptt.options.source, 'push-to-talk');
 });

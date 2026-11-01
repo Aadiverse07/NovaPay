@@ -1,46 +1,47 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-01; branch `codex/voice-assistant`; based on published main `3b14187`; latest local checkpoint `8598148`; current task: Voice assistant implementation, task 1/1; implementation complete, local checkpoint pending.
+- Date: 2026-11-02; branch codex/voice-assistant; based on published main 3b14187; current task: tap-to-talk voice assistant; implementation done, local changes uncommitted; no push.
 
 ## DONE
-- Shared browser/server action registry in `src/assistant-actions.js` and `server/src/ai/actions.js`; server validates schema, user intent and role, with deterministic command fast path.
-- Extended AI chat with bounded voice context/history/interruption, short safe `speak`, and validated action results. No provider calls were made.
-- Added lazy Web Speech controller, wake-word capture, TTS greeting/replay, turn-taking, echo rejection, barge-in, bounded exponential restart/retry cap, 15-second confirmation, microphone echo/noise constraints, mute, visibility/sign-out/unload cleanup.
-- Added Tier 0 direct navigation/read controls, Tier 1 confirm-before-execute and Tier 2 human-only navigation; action audit before offering/writing, role checks, five-per-user-per-minute Tier 1/2 cap, fail-closed audit errors.
-- Added invoice/campaign refresh hooks and API contract docs. Human browser steps: `docs/VOICE-BROWSER-CHECKLIST.md`.
+- Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
+- One reusable SpeechRecognition object is configured en-IN, continuous=false, interimResults=true. It starts only after a mic tap, displays interim text, submits final/silence once, ignores duplicate starts, cancels on another tap, and allows tap-to-barge-in during speech.
+- Removed voice auto-resume from the floating indicator; its click activates the same AI mic. Transaction detail dictation now records audio and calls the authenticated transcription endpoint, avoiding a second recognizer. Main mic held-to-talk remains the fallback when browser recognition is unavailable.
+- Typed, spoken and transcribed queries share the dashboard handleQuery path. Deterministic navigation/help/stop/repeat remains; authenticated quick commands also issue one background chat request. Existing server action validation and Tier 0/1/2 execution remain.
+- Debug trace is gated by novapay:voiceDebug=1. Thinking times out after 15 seconds with a spoken status message.
+- Updated files: dashboard.html; src/voice-assistant.js, assistant-client.js, dashboard.js, voice-greeting.js, voice-indicator.js; server/src/ai/actions.js; tests server/test/assistant-actions.test.js, assistant-client.test.js, voice-assistant.test.js, voice-greeting.test.js, voice-indicator.test.js; docs/VOICE-BROWSER-CHECKLIST.md and continuity docs. Earlier local transcription endpoint files remain modified from the prior task: server/src/app.js, routes/ai.js, services/llm.js and assistant-speech/llm/routes tests.
+- No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- Fixed voice activation path after report showed no assistant chat requests; final docs/checkpoint commit pending. Files changed: `dashboard.html`, `preview.html`, `src/assistant-actions.js`, `src/assistant-client.js`, `src/dashboard.js`, `src/invoices-live.js`, `src/novapay-live.js`, `src/voice-assistant.js`, `src/voice-greeting.js`, `src/voice-indicator.js`, `server/src/ai/actions.js`, `server/src/app.js`, `server/src/routes/ai.js`, `server/src/services/ai.js`, `server/test/assistant-actions.test.js`, `server/test/assistant-client.test.js`, `server/test/routes.test.js`, `server/test/voice-assistant.test.js`, `server/test/voice-greeting.test.js`, `server/test/voice-indicator.test.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/VOICE-BROWSER-CHECKLIST.md`.
+- Implementation and unit checks complete; real-browser validation is pending.
 
 ## NEXT STEPS
-1. Human verifies mic startup and spoken assistant reply in Chrome; browser use is currently disabled here.
-2. Check `git status`, `.env` tracking/staging and final diff; ensure only the files above are included.
-2. Commit locally with `WIP-BROKEN: voice assistant with known baseline no-store test failure`; do not push.
-3. Human runs `docs/VOICE-BROWSER-CHECKLIST.md` with an already signed-in fixed owner and browser microphone; do not claim browser success from unit tests.
-4. Fix the separate `server/test/api-client.test.js` no-store failure only in a separately scoped task.
+1. Run docs/VOICE-BROWSER-CHECKLIST.md in real Chrome and Brave.
+2. Verify each spoken utterance produces exactly one POST /api/ai/chat, route/status/action trace, visible response and speech.
+3. Verify invoice tier-1 confirmation, download, document upload prompt, cancellation, barge-in and held-mic fallback.
 
 ## USER ACTIONS PENDING
-- In Chrome/Edge, open localhost and complete all steps in `docs/VOICE-BROWSER-CHECKLIST.md`; record PASS/FAIL manually. Mic permission may be requested.
+- In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
 
 ## LIVE STATE
-- No Supabase, Gemini or PayPal requests; no migrations run. Configuration secrets were not printed; `.env` remains untracked.
+- No browser or live API checks were possible; local browser control is disabled by desktop Work settings. No secrets printed, no migration run, no push.
 
 ## TEST STATE
 | Check | Status | Date | Command/details |
 |---|---|---|---|
-| Focused voice/action/client/routes | PASS | 2026-11-02 | Voice/indicator root-cause regressions 23/23; earlier action suite 33/33 |
-| Full suite | FAIL | 2026-11-02 | `npm test` 285/286; known `api-client.test.js` no-store assertion only |
-| Migration parser | PASS | 2026-11-01 | `npm run check:migrations`, 21/21 through 0021 |
-| Modified JS syntax | PASS | 2026-11-01 | `node --check` on changed JS/test files |
-| Whitespace/protected diff | PASS | 2026-11-01 | `git diff --check`; protected-file diff empty |
-| Real browser/mic | UNVERIFIED | 2026-11-01 | Browser disabled in Work settings; user terminal had no `/api/ai/chat` and repeated `/api/events` 401s |
+| Focused voice/action/client | PASS | 2026-11-02 | 37/37 across voice-assistant, voice-greeting, voice-indicator, assistant-client, assistant-actions and assistant-speech |
+| Full suite | FAIL | 2026-11-02 | npm test 284/285; sole failure server/test/api-client.test.js:29 expects Cache-Control no-store, actual undefined |
+| Migration syntax | PASS | 2026-11-02 | 21 static PostgreSQL migration checks ran inside npm test; none applied |
+| Changed JS syntax | PASS | 2026-11-02 | node --check on changed JavaScript files |
+| Whitespace | PASS | 2026-11-02 | git diff --check |
+| Protected paths | PASS | 2026-11-02 | changed-path filter empty for tokens, base, fonts, presets, themes, effects and assets |
+| Chrome/Brave | UNVERIFIED | 2026-11-02 | browser-control API reports local use disabled in Work settings; no live mic, chat log or TTS check |
 
 ## KNOWN ISSUES AND RISKS
-- Existing no-store assertion remains the sole failing test.
-- Browser speech services and microphone permissions vary; browser checklist is still pending.
-- Node emits a non-failing typeless-package warning when node:test imports browser ESM `.js`; root package type was not changed to avoid affecting the CommonJS server entry.
-- A few high-risk actions deliberately only navigate to the relevant human workflow; voice cannot execute Tier 2. `data.query` is fulfilled by the chat request and should not be rendered as a separate UI action.
+- Known API no-store assertion remains the only failing test and was not changed.
+- Chrome/Brave recognition, transcript delivery, POST logs, live actions and audible TTS remain unverified.
+- The transcription fallback sends recorded audio through the authenticated Gemini transcription adapter; use non-sensitive audio only.
+- Browser ESM imports produce non-failing Node type warnings during tests.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs in one transaction; never edit an applied migration; create a new numbered file.

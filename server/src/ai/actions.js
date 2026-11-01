@@ -97,7 +97,7 @@ const viewAliases = [
 
 export function parseNavigationCommand(value) {
   const text = String(value || '').toLocaleLowerCase('en-US').replace(/[’‘]/g, "'").trim();
-  if (!/^(?:(?:hey|hi|ok)\s+novapay[, ]*)?(?:please\s+)?(?:open|go to|navigate to|switch to|show me)\s+/.test(text)) return null;
+  if (!/^(?:please\s+)?(?:open|go to|navigate to|switch to|take me to|show me)\s+/.test(text)) return null;
   return viewAliases.map(([view, pattern]) => pattern.test(text) ? view : null).find(Boolean)
     ? { view: viewAliases.map(([view, pattern]) => pattern.test(text) ? view : null).find(Boolean) }
     : null;
@@ -111,7 +111,7 @@ export function parseFastAssistantCommand(message, role = 'viewer') {
   else if (/^(?:stop|stop speaking|cancel|be quiet|quiet)[.! ]*$/.test(text)) action = { id: 'assistant.stopSpeaking', tier: 0, args: {} };
   else if (/^(?:repeat|say that again|again)[.! ]*$/.test(text)) action = { id: 'assistant.repeat', tier: 0, args: {} };
   else if (/^(?:help|what can you do\??|capabilities\??)[.! ]*$/.test(text)) action = { id: 'assistant.help', tier: 0, args: {} };
-  else if (/^(?:download|save) (?:my |the )?(?:last|latest) invoice(?: pdf)?[.! ]*$/.test(text)) action = { id: 'invoice.downloadPdf', tier: 1, args: {} };
+  else if (/^(?:(?:download|save) (?:my |the )?(?:last|latest) invoice(?: pdf)?|download (?:it|that))[.! ]*$/.test(text)) action = { id: 'invoice.downloadPdf', tier: 1, args: {} };
   else if (/^(?:upload|attach|process) (?:my |the )?(?:document|file|receipt|invoice|pdf)[.! ]*$/.test(text)) action = { id: 'documents.promptUpload', tier: 0, args: {} };
   else if (/^(?:new|create|open|start) (?:a )?maintenance request[.! ]*$/.test(text)) action = { id: 'maintenance.openNew', tier: 0, args: {} };
   if (!action) return null;

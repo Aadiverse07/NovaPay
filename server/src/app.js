@@ -41,7 +41,7 @@ export function shouldLogAccess(path, status) {
   return status !== 304 || String(path || '').startsWith('/api/');
 }
 
-export function createApp({ config = defaultConfig, repos, paypal, askAI, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider } = {}) {
+export function createApp({ config = defaultConfig, repos, paypal, askAI, transcribeAudio, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider } = {}) {
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
@@ -49,6 +49,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   const geminiKeyPool = createGeminiKeyPool({ keys: config.geminiKeySlots || resolveGeminiKeySlots(config), events: repos.events });
   const documentRag = createDocumentRag({ config, database: identity?.database, embeddingProvider: documentEmbeddingProvider, keyPool: geminiKeyPool, events: repos.events });
   askAI ||= createAIService({ config, events: repos.events, repos, fx, provider: createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool }), documentSearch: documentRag });
+  transcribeAudio ||= createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool, purpose: 'transcription' }).transcribeAudio;
   const runAnomalyScan = createAnomalyService({ repos, config });
 
   app.disable('x-powered-by');
@@ -78,17 +79,18 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => `onboarding:${req.user.id}`, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_RATE_LIMITED', message: 'Too many onboarding attempts for this account. Try again later.' } } }));
   app.use('/api', webhookRoutes({ paypal, repos }));
   app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, keyPool: geminiKeyPool, rag: documentRag, events: repos.events }));
+  app.use('/api/ai/transcribe', express.raw({ type: 'application/octet-stream', limit: '8mb' }));
   app.use(express.json({ limit: '64kb' }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
-    if (req.path.startsWith('/api/') && req.method === 'POST' && !requestBody.safeParse(req.body).success) return res.status(400).json({ error: 'Request body must be valid JSON.' });
+    if (req.path.startsWith('/api/') && req.path !== '/api/ai/transcribe' && req.method === 'POST' && !requestBody.safeParse(req.body).success) return res.status(400).json({ error: 'Request body must be valid JSON.' });
     return next();
   });
   app.get('/', (_req, res, next) => res.sendFile(path.join(config.STATIC_DIR || root, 'preview.html'), (error) => error && next(error)));
   app.use('/api', statusRoutes({ config, paypal, repos }));
   app.get('/api/public-config', (_req, res) => res.json({ supabaseUrl: config.hasSupabase ? config.SUPABASE_URL : null, supabaseAnonKey: config.hasSupabase ? config.SUPABASE_ANON_KEY : null }));
   app.use('/api', onboardingRoutes({ identity }));
-  app.use('/api', aiRoutes({ config, askAI, identity }));
+  app.use('/api', aiRoutes({ config, askAI, identity, transcribeAudio }));
   app.use('/api', approvalRoutes({ config, repos, identity, paypal }));
   app.use('/api', financialRoutes({ repos }));
   app.use('/api', fxRoutes({ fx }));

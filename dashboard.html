@@ -214,7 +214,7 @@
             <div class="ai-proposal-slot" id="ai-proposal-slot" aria-live="polite"></div>
             <div class="ai-voice-visualizer" id="ai-voice-visualizer" hidden role="status" aria-label="Microphone frequency visualizer"><span class="ai-voice-bars" aria-hidden="true"></span><span id="ai-voice-label">Listening…</span><button type="button" id="ai-mic-stop">Stop</button></div>
             <div class="chat-row ai-chat-row"><div class="ai-dictation" id="ai-dictation" hidden aria-hidden="true"></div><input id="ai-input" placeholder="Ask about your organization…" aria-label="Ask about your organization"><button class="ai-tool-button" id="ai-upload" type="button" aria-label="Open Documents to review a file" title="Open Documents"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.4 11.1-8.5 8.5a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7L10 16.9a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg></button><button class="ai-tool-button" id="ai-mic" type="button" aria-label="Turn voice assistant on" aria-pressed="false" title="Voice off"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg></button><button class="btn btn--primary" id="ai-send" type="button">Send</button></div>
-            <p class="module-foot" id="ai-voice-note">Voice uses your browser’s speech service; microphone access starts only when Voice is turned on.</p>
+            <p class="module-foot" id="ai-voice-note">Tap the mic and tell me what you need. Hold it only if browser speech recognition is unavailable.</p>
             <p class="ai-live-status" id="ai-live-status" role="status" aria-live="polite"></p>
           </article>
         </div>
@@ -596,6 +596,7 @@
 <script src="src/workspace-guard.js"></script>
 <script src="src/api-client.js"></script>
 <script src="src/assistant-client.js"></script>
+<script src="src/assistant-speech.js"></script>
 <script src="src/assistant-actions.js"></script>
 <script type="module" src="src/voice-greeting.js"></script>
 <script src="src/voice-indicator.js" defer></script>

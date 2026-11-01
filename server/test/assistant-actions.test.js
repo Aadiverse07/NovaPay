@@ -7,18 +7,20 @@ import { createAIService } from '../src/services/ai.js';
 test('fast commands navigate in place without an LLM call', async () => {
   let providerCalls = 0;
   const askAI = createAIService({ config: {}, provider: { async generate() { providerCalls += 1; throw new Error('must not call'); } } });
-  const nav = await askAI('Hey NovaPay, open ledger', { role: 'viewer' });
+  const nav = await askAI('open ledger', { role: 'viewer' });
   assert.equal(nav.actions[0].id, 'nav.open');
   assert.deepEqual(nav.actions[0].args, { view: 'ledger' });
   assert.equal(nav.route, 'code');
   assert.equal(providerCalls, 0);
   assert.equal(parseFastAssistantCommand('show refunds this month'), null);
   assert.deepEqual(parseFastAssistantCommand('download last invoice').actions[0], { id: 'invoice.downloadPdf', tier: 1, args: {} });
+  assert.equal(parseFastAssistantCommand('download it', 'owner').actions[0].id, 'invoice.downloadPdf');
   assert.equal(parseFastAssistantCommand('upload my document', 'viewer'), null, 'fast commands enforce the registered minimum role');
 });
 
 test('navigation parser covers registered modules and rejects arbitrary targets', () => {
   assert.deepEqual(parseNavigationCommand('go to community funds'), { view: 'community-funds' });
+  assert.deepEqual(parseNavigationCommand('take me to invoices'), { view: 'invoices' });
   assert.equal(parseNavigationCommand('open an external website'), null);
   assert.deepEqual(ASSISTANT_ACTION_REGISTRY.views, [...new Set(ASSISTANT_ACTION_REGISTRY.views)]);
 });

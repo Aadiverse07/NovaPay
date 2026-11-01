@@ -10,9 +10,10 @@ const chatSchema = z.object({
   history: z.array(z.object({ role: z.enum(['user', 'assistant']), text: z.string().max(500) }).strict()).max(6).optional(),
 }).passthrough();
 
-export function aiRoutes({ config, askAI, identity }) {
+export function aiRoutes({ config, askAI, identity, transcribeAudio }) {
   const router = Router();
   const actionAttempts = new Map();
+  const transcriptionAttempts = new Map();
   const actionAuditSchema = z.object({ actionId: z.string().min(1).max(80), tier: z.number().int().min(0).max(2), outcome: z.enum(['confirmed', 'proposed', 'cancelled', 'completed', 'failed']) }).strict();
   async function auditAssistantAction(req, action, outcome) {
     try {
@@ -69,6 +70,23 @@ export function aiRoutes({ config, askAI, identity }) {
         ...(result.unavailable ? { unavailable: true } : {}),
       });
     } catch (error) { if (error.assistantAuditFailure) return res.status(503).json({ error: { code: 'ASSISTANT_AUDIT_FAILED', message: 'NovaPay could not safely record this action, so no action was offered.' }, requestId: req.id }); return next(error); }
+  });
+  router.post('/ai/transcribe', async (req, res) => {
+    const mimeType = String(req.get('x-audio-mime-type') || '').split(';')[0].trim().toLowerCase();
+    if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: { code: 'AI_AUDIO_INVALID', message: 'Hold the mic button while speaking, then try again.' } });
+    if (req.body.length > 8 * 1024 * 1024) return res.status(413).json({ error: { code: 'AI_AUDIO_TOO_LARGE', message: 'Voice clips must be 8 MB or smaller.' } });
+    if (!['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/mpeg', 'audio/aac'].includes(mimeType)) return res.status(415).json({ error: { code: 'AI_AUDIO_TYPE_UNSUPPORTED', message: 'This browser recording format is not supported.' } });
+    const now = Date.now(), recent = (transcriptionAttempts.get(req.user.id) || []).filter((stamp) => now - stamp < 15 * 60 * 1000);
+    if (recent.length >= 10) return res.status(429).json({ error: { code: 'AI_TRANSCRIPTION_RATE_LIMITED', message: 'Too many voice clips. Try again in 15 minutes.' } });
+    recent.push(now); transcriptionAttempts.set(req.user.id, recent);
+    if (typeof transcribeAudio !== 'function') return res.status(503).json({ error: { code: 'AI_TRANSCRIPTION_UNAVAILABLE', message: 'Speech transcription is not configured.' } });
+    try {
+      const transcript = await transcribeAudio({ audio: req.body, mimeType });
+      return res.json({ transcript: String(transcript || '').trim().slice(0, 1000) });
+    } catch (error) {
+      console.log(JSON.stringify({ level: 'error', event: 'ai_transcription_failed', requestId: req.id, code: error?.code || 'AI_TRANSCRIPTION_FAILED' }));
+      return res.status(503).json({ error: { code: 'AI_TRANSCRIPTION_UNAVAILABLE', message: 'Speech transcription is busy. Type your question or try again shortly.' } });
+    }
   });
   return router;
 }

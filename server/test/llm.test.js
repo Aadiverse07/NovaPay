@@ -103,3 +103,29 @@ test('Gemini runtime configuration rejects models outside the verified free-tier
   assert.throws(() => createLLMAdapter({ config: { LLM_PROVIDER: 'gemini', LLM_API_KEY: 'key', LLM_MODEL: 'paid-model', LLM_FALLBACK_MODEL: '' } }), /verified free-tier allow-list/);
   assert.throws(() => createLLMAdapter({ config: { LLM_PROVIDER: 'gemini', LLM_API_KEY: 'key', LLM_MODEL: 'gemini-3.5-flash-lite', LLM_FALLBACK_MODEL: 'paid-model' } }), /verified free-tier allow-list/);
 });
+
+test('transcription adapter sends audio through the shared Gemini key-pool interface', async () => {
+  let requestBody = null, selectedModel = '';
+  const keyPool = {
+    configured: true,
+    async generate(options) {
+      selectedModel = options.models[0];
+      const response = await options.request({ apiKey: 'test-key', model: selectedModel, timeoutMs: 1000 });
+      return { value: await options.parse({ response, model: selectedModel }) };
+    },
+  };
+  const adapter = createLLMAdapter({
+    config: { LLM_PROVIDER: 'anthropic', LLM_API_KEY: 'not-used' },
+    keyPool,
+    purpose: 'transcription',
+    fetchImpl: async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'open ledger' }] } }] }), { status: 200 });
+    },
+  });
+  const transcript = await adapter.transcribeAudio({ audio: Buffer.from('voice-audio'), mimeType: 'audio/webm' });
+  assert.equal(transcript, 'open ledger');
+  assert.equal(selectedModel, 'gemini-3.5-transcribe');
+  assert.equal(requestBody.contents[0].parts[1].inline_data.mime_type, 'audio/webm');
+  assert.equal(Buffer.from(requestBody.contents[0].parts[1].inline_data.data, 'base64').toString(), 'voice-audio');
+});

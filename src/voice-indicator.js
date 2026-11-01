@@ -9,10 +9,10 @@
   if (root && root.document) api.mount(root);
 }(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
-  var LIVE = { idle: "Listening", capturing: "Listening", thinking: "Thinking…", speaking: "Speaking…" };
+  var LIVE = { listening: "Listening", thinking: "Thinking…", speaking: "Speaking…" };
 
   function describe(snapshot, supported) {
-    if (supported === false) return { connected: false, text: "Not connected", sub: "Voice needs Chrome or Edge" };
+    if (supported === false || snapshot?.state === "unsupported-speech-service") return { connected: false, text: "Not connected", sub: String(snapshot?.message || "Voice recognition isn't available in this browser (Brave blocks it). Use Chrome/Edge, or type or hold the mic button.") };
     if (!snapshot || snapshot.state === "off") return { connected: false, text: "Not connected", sub: "Tap to turn on" };
     if (snapshot.problem || snapshot.state === "paused" || snapshot.state === "unsupported" || !snapshot.enabled || !LIVE[snapshot.state]) {
       return { connected: false, text: "Not connected", sub: String(snapshot.message || "Tap to turn on") };
@@ -37,14 +37,13 @@
       if (!win.NovaPayVoiceIndicator) doc.addEventListener("DOMContentLoaded", function () { mount(win); }, { once: true });
       return;
     }
-    var supported = Boolean(win.SpeechRecognition || win.webkitSpeechRecognition);
     var style = doc.createElement("style"); style.textContent = CSS; doc.head.appendChild(style);
     var button = doc.createElement("button");
     button.id = "np-voice-indicator"; button.type = "button";
     button.innerHTML = '<span class="np-vi-ring" aria-hidden="true"><span class="np-vi-dot"></span></span><span class="np-vi-line" aria-hidden="true"></span><span><span class="np-vi-text"></span><span class="np-vi-sub"></span></span>';
     var text = button.querySelector(".np-vi-text"), sub = button.querySelector(".np-vi-sub");
     function render(snapshot) {
-      var view = describe(snapshot, supported);
+      var view = describe(snapshot, true);
       button.dataset.connected = String(view.connected);
       text.textContent = view.text; sub.textContent = view.sub;
       button.setAttribute("aria-pressed", String(view.connected));
@@ -53,26 +52,13 @@
     }
     button.addEventListener("click", function () {
       var mic = doc.getElementById("ai-mic");
-      if (supported && mic) mic.click();
+      if (mic) mic.click();
     });
     render(null);
     doc.body.appendChild(button);
     win.NovaPayVoiceIndicator = { update: render, describe: describe };
 
-    // Come back on by itself after login/reload, but only if the user turned Voice on before AND the browser already granted the microphone.
-    try {
-      if (supported && win.localStorage.getItem("novapay-voice-enabled") === "true" && win.navigator.permissions && win.navigator.permissions.query) {
-        win.navigator.permissions.query({ name: "microphone" }).then(function (permission) {
-          if (permission.state !== "granted") return;
-          var auth = win.NovaPayAuth;
-          Promise.resolve(auth && auth.ready).then(function () {
-            if (auth && auth.isAuthenticated && !auth.isAuthenticated()) return;
-            var mic = doc.getElementById("ai-mic");
-            if (mic && !win.NovaPayVoiceAssistantController) mic.click();
-          });
-        }).catch(function () {});
-      }
-    } catch (_) {}
+
   }
 
   return { describe: describe, mount: mount };

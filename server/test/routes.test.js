@@ -206,6 +206,25 @@ test('AI proposals stay pending until an approver uses the existing refund path 
   });
 });
 
+test('audio transcription is authenticated, bounded, rate-limited, and returns transcript only', async () => {
+  const repos = createRepositories(); let calls = 0;
+  const app = createApp({ config: baseConfig, repos, identity, transcribeAudio: async ({ audio, mimeType }) => {
+    calls += 1; assert.equal(audio.toString(), 'sample-audio'); assert.equal(mimeType, 'audio/webm'); return 'open ledger';
+  } });
+  await withServer(app, async (base, _logs, request) => {
+    const denied = await fetch(`${base}/api/ai/transcribe`, { method: 'POST', headers: { 'content-type': 'application/octet-stream', 'x-audio-mime-type': 'audio/webm' }, body: 'sample-audio' });
+    assert.equal(denied.status, 401);
+    const headers = { 'content-type': 'application/octet-stream', 'x-audio-mime-type': 'audio/webm' };
+    const first = await request(`${base}/api/ai/transcribe`, { method: 'POST', headers, body: Buffer.from('sample-audio') });
+    assert.equal(first.status, 200); assert.deepEqual(await first.json(), { transcript: 'open ledger' });
+    const unsupported = await request(`${base}/api/ai/transcribe`, { method: 'POST', headers: { ...headers, 'x-audio-mime-type': 'text/plain' }, body: Buffer.from('sample-audio') });
+    assert.equal(unsupported.status, 415);
+    for (let i = 1; i < 10; i += 1) assert.equal((await request(`${base}/api/ai/transcribe`, { method: 'POST', headers, body: Buffer.from('sample-audio') })).status, 200);
+    const limited = await request(`${base}/api/ai/transcribe`, { method: 'POST', headers, body: Buffer.from('sample-audio') });
+    assert.equal(limited.status, 429); assert.equal(calls, 10);
+  });
+});
+
 test('AI provider error bodies and keys do not reach responses or activity logs', async () => {
   const secret = 'provider-secret-sentinel';
   const repos = createRepositories();

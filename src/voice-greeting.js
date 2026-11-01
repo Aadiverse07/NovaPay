@@ -7,7 +7,7 @@ export function buildVoiceGreeting(registry) {
     'community-funds': 'community funds', sandbox: 'PayPal Sandbox',
   }[view] || view.replaceAll('-', ' ')));
   const capabilities = names.length ? `I can help with everything inside NovaPay, including ${names.join(', ')}.` : 'I can help with the NovaPay modules available in this workspace.';
-  return `Hey, I’m NovaPay, the AI assistant for NovaPay Finance. ${capabilities} To use me, just say “Hey NovaPay” and then ask or tell me what you need. I’ll answer by voice, and I can open modules and help with supported tasks.`;
+  return `Hey, I’m NovaPay, the AI assistant for NovaPay Finance. ${capabilities} To use me, tap the mic and tell me what you need. I’ll answer by voice, and I can open modules and help with supported tasks.`;
 }
 
 export function createIntroSpeaker({ registry, synthesis, Utterance, sessionStore }) {
