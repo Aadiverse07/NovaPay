@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: Voice-driven NovaPay assistant on `codex/voice-assistant`; task 1/1 complete; checkpoint `4764c31`; never push.
+- Current task: Voice-driven NovaPay assistant on `codex/voice-assistant`; task 1/1 complete; code checkpoint `4764c31`, handoff checkpoint `65cd4c4`; never push.
 - Last finished: shared action protocol, voice controller/greeting, audited tier enforcement, tests and docs committed in `4764c31`.
 - Checks: focused suite 33/33; final `npm test` 269/270 with only known `api-client.test.js` no-store assertion; migrations 21/21; modified JS syntax and `git diff --check` pass; protected-file diff empty; staged secret scan zero; `.env` untracked.
 - Next: human completes `docs/VOICE-BROWSER-CHECKLIST.md` in Chrome/Edge with mic permission and fixed signed-in account; browser verification remains UNVERIFIED. Then decide separately whether to address the pre-existing no-store test.
@@ -4721,3 +4721,5 @@ ABOUT TO stage only task files; no .env path is included.
 - RESULT: FAIL; pointer-refresh command did not run because the tool wrapper rejected malformed command text; no files changed by this attempt.
 - NEXT: repeat the exact pointer refresh with corrected command quoting, then check and checkpoint.
 - 2026-11-01 21:47 IST — ABOUT TO: Refresh the top continuation pointer and context header to identify commit `4764c31` as the latest checkpoint. WHY: make repo-only resumption start from the exact committed state.
+- RESULT: PASS; handoff refresh committed locally as `65cd4c4`; branch remains `codex/voice-assistant`, `.env` untracked and worktree clean. No push.
+- NEXT: human completes `docs/VOICE-BROWSER-CHECKLIST.md`; browser checks remain UNVERIFIED. No more code work until that feedback or a new task.
