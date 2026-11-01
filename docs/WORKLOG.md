@@ -1,9 +1,10 @@
 ## RESUME POINTER
-- Current task: repair invoice PDF audit INSERT privilege on `fix-download-campaigns`; do not switch branches or push.
-- Diagnosis: live TEST-001 GET returned 503; server log exact safe message is `Error`, `INVOICE_AUDIT_WRITE_FAILED`, SQLSTATE 42501, `permission denied for table audit_log`.
-- Fix staged in code: audit failure remains fail-closed with specific server log; migration `0019_restore_audit_log_service_insert.sql` revokes broad grants and grants INSERT to service_role only; NOT applied.
-- Tests: focused 21/21 PASS; npm test 205/206 (known no-store assertion); migrations 19/19; JS syntax 10/10; diff check and protected-file diff pass. Synthetic fixture PDF 1,755 bytes with `%PDF-` and `%%EOF`; actual API PDF UNVERIFIED.
-- NEXT: provide/apply 0019 in Supabase SQL Editor; then rerun real download and verify audit/PDF; finalize local WIP commit, never push.
+- Current task: invoice PDF 503 diagnosed and code repaired on `fix-download-campaigns`; never push or switch branches.
+- Latest implementation commit: `2441c95` (`WIP-BROKEN: fix invoice PDF audit privilege; migration 0019 pending`).
+- Live cause: TEST-001 PDF endpoint returned 503; audit insert failed with SQLSTATE 42501 (`permission denied for table audit_log`). Safe log identifies `INVOICE_AUDIT_WRITE_FAILED`; PDF correctly fails closed.
+- Fix: specific server-side audit failure logging plus unapplied migration `0019_restore_audit_log_service_insert.sql`, which grants only service_role INSERT on audit_log.
+- Checks: focused 21/21; full npm test 205/206 (known no-store test); migration check 19/19; JS syntax 10/10; diff check and protected diff pass. Synthetic PDF 1,755 bytes with `%PDF-` and `%%EOF`; real TEST-001 response UNVERIFIED pending migration.
+- NEXT: human applies migration 0019 in Supabase SQL Editor and verifies `select has_table_privilege('service_role','public.audit_log','INSERT');`; then rerun TEST-001 download and verify PDF bytes plus audit row. No new user/document needed.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4223,3 +4224,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: verify current branch/no `.env`, stage only source/tests/migration/docs, then WIP-BROKEN commit; why: checkpoint the fail-closed fix while the known unrelated test remains failing.
 2026-11-02 | Result: PASS, 10 intended files staged; `.env` is not tracked or staged; staged diff check clean; NEXT: commit the local fix and migration.
 2026-11-02 | Before: create local WIP-BROKEN commit; why: preserve the SQLSTATE 42501 repair and migration steps without pushing.
+2026-11-02 | Before: verify branch, commit, clean status and .env tracking; why: confirm local checkpoint completed without staging secrets.
+2026-11-02 | Before: stage resume pointer and continuity context, then make local docs-only checkpoint; why: preserve actual implementation commit and pending live migration accurately.

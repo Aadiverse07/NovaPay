@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-02 Asia/Kolkata
 - Branch: `fix-download-campaigns`; based on `origin/main` invoice work; no push.
-- Latest task commit pending: invoice PDF audit privilege fix and migration 0019.
+- Latest local implementation commit: `2441c95` (migration 0019 pending); no push.
 - Task: diagnose/fix TEST-001 PDF HTTP 503.
 
 ## DONE
