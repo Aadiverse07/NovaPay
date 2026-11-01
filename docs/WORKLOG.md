@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: diagnose/fix silent speech synthesis for tap-to-talk; branch codex/voice-assistant; local changes uncommitted; never push.
+- Current task: diagnose/fix silent speech synthesis for tap-to-talk; branch codex/voice-assistant; implementation checkpoint a4b245d committed locally; never push.
 - Done: one reusable, one-shot en-IN SpeechRecognition instance; tap toggles listening, interim text appears, final/silence submits once, tap during speech interrupts; no startup or continuous listening.
 - Removed wake matching/state and changed intro copy. Floating pill forwards to the same AI mic. Transaction dictation now uses the authenticated transcription API, not another recognizer. Hold the same main mic for transcription fallback when recognition is unavailable.
 - Spoken and typed prompts share handleQuery; quick navigation/help/stop/repeat remain deterministic; authenticated quick commands also send one background chat POST. Tiered, allowlisted server actions remain enabled.
@@ -4876,3 +4876,4 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 00:37 IST | ABOUT TO: Append test outcomes and TTS decision to reports; WHY: keep continuation files synchronized with this task and explicitly mark browser work unverified.
 2026-11-02 00:37 IST | RESULT: PASS; CONTEXT resume pointer, checklist, TEST-REPORT, and DECISIONS now cover shared TTS, mute synchronization, new test counts, and browser limitation. NEXT: final worktree/scope checks, then a local WIP-BROKEN checkpoint; no push.
 2026-11-02 00:38 IST | ABOUT TO: Verify changed paths, tracked .env, whitespace, and JS syntax before checkpoint; WHY: ensure only authorized speech code/tests/docs are included and no protected files changed.
+2026-11-02 00:39 IST | ABOUT TO: Commit the corrected resume pointer; WHY: keep CONTEXT/WORKLOG aligned with the already-created local TTS checkpoint.

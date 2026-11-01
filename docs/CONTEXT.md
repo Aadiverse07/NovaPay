@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; current task: diagnose silent speech synthesis; local changes uncommitted; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; current task: diagnose silent speech synthesis; local checkpoint a4b245d; no push.
 
 ## DONE
 - Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
