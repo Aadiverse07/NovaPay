@@ -13,6 +13,8 @@ test('fast commands navigate in place without an LLM call', async () => {
   assert.equal(nav.route, 'code');
   assert.equal(providerCalls, 0);
   assert.equal(parseFastAssistantCommand('show refunds this month'), null);
+  assert.deepEqual(parseFastAssistantCommand('download last invoice').actions[0], { id: 'invoice.downloadPdf', tier: 1, args: {} });
+  assert.equal(parseFastAssistantCommand('upload my document', 'viewer'), null, 'fast commands enforce the registered minimum role');
 });
 
 test('navigation parser covers registered modules and rejects arbitrary targets', () => {
@@ -37,6 +39,11 @@ test('action args, roles and user wording are validated independently of model o
   assert.equal(validateAssistantActions([{ id: 'invoice.createDraft', args: {} }], 'create an invoice draft', 'viewer').length, 0);
   assert.equal(validateAssistantActions([{ id: 'invoice.createDraft', args: {} }], 'why did the fee change?', 'owner').length, 0);
   assert.equal(validateAssistantActions([{ id: 'ui.click', args: { uiAction: 'invoice-create' } }], 'create invoice', 'viewer').length, 0);
+  assert.equal(validateAssistantActions([{ id: 'ui.click', args: { uiAction: 'report-open' } }], 'open report', 'viewer')[0].tier, 0);
+  assert.equal(validateAssistantActions([{ id: 'ui.click', args: { uiAction: 'reports-export' } }], 'export report', 'owner').length, 0);
+  const invoice = validateAssistantActions([{ id: 'invoice.createDraft', args: { customerName: 'Acme', customerEmail: 'billing@example.test', currency: 'INR', issueDate: '2026-11-01', dueDate: '2026-11-15', lines: [{ description: 'Consulting', quantity: 1, unitPriceMinor: 13750 }] } }], 'create an invoice draft', 'owner');
+  assert.equal(invoice.length, 1);
+  assert.equal(invoice[0].args.lines[0].unitPriceMinor, 13750);
 });
 
 test('document instructions cannot authorize a model-emitted app action', async () => {

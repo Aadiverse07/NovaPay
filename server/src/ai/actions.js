@@ -59,6 +59,7 @@ export function validateAssistantActions(candidates, message, role = 'viewer') {
     const parsed = fromJsonSchema(definition.args).safeParse(candidate.args || {});
     if (!parsed.success) continue;
     const args = parsed.data;
+    if (definition.id === 'ui.click' && ['ledger-export', 'reports-export'].includes(args.uiAction)) continue;
     if (definition.id === 'ui.click' && uiRoleRules[args.uiAction] && !uiRoleRules[args.uiAction].includes(role)) continue;
     if (!actionMatchesUserText(definition.id, args, text)) continue;
     result.push({ id: definition.id, title: definition.title, tier: definition.tier, args });
@@ -102,7 +103,7 @@ export function parseNavigationCommand(value) {
     : null;
 }
 
-export function parseFastAssistantCommand(message) {
+export function parseFastAssistantCommand(message, role = 'viewer') {
   const text = String(message || '').toLocaleLowerCase('en-US').replace(/[’‘]/g, "'").trim();
   let action;
   const navigation = parseNavigationCommand(text);
@@ -110,9 +111,12 @@ export function parseFastAssistantCommand(message) {
   else if (/^(?:stop|stop speaking|cancel|be quiet|quiet)[.! ]*$/.test(text)) action = { id: 'assistant.stopSpeaking', tier: 0, args: {} };
   else if (/^(?:repeat|say that again|again)[.! ]*$/.test(text)) action = { id: 'assistant.repeat', tier: 0, args: {} };
   else if (/^(?:help|what can you do\??|capabilities\??)[.! ]*$/.test(text)) action = { id: 'assistant.help', tier: 0, args: {} };
+  else if (/^(?:download|save) (?:my |the )?(?:last|latest) invoice(?: pdf)?[.! ]*$/.test(text)) action = { id: 'invoice.downloadPdf', tier: 1, args: {} };
   else if (/^(?:upload|attach|process) (?:my |the )?(?:document|file|receipt|invoice|pdf)[.! ]*$/.test(text)) action = { id: 'documents.promptUpload', tier: 0, args: {} };
   else if (/^(?:new|create|open|start) (?:a )?maintenance request[.! ]*$/.test(text)) action = { id: 'maintenance.openNew', tier: 0, args: {} };
   if (!action) return null;
+  const registered = registry.get(action.id);
+  if (!registered || !registered.roles.includes(role)) return null;
   const phrases = {
     'assistant.stopSpeaking': 'Okay, I stopped speaking.', 'assistant.repeat': 'I will repeat my previous answer.',
     'assistant.help': 'I can open NovaPay modules, answer questions from your organization data, and guide you to supported forms and reviews.',

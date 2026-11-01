@@ -19,6 +19,21 @@ test('authenticated assistant request sends message only through the auth-aware 
   assert.deepEqual(result.evidence, ['invoice-42']);
 });
 
+test('voice requests add only bounded view, interruption and recent-turn metadata', async () => {
+  const calls = [];
+  await client.send({ async request(...args) { calls.push(args); return { answer: 'A short answer.' }; } }, 'Open invoices', {
+    context: { view: 'ai-assistant', selection: 'invoice-id-only' },
+    interrupted: { previousReply: 'Earlier answer', spokenChars: 42 },
+    history: [{ role: 'user', text: 'Earlier question' }, { role: 'assistant', text: 'Earlier answer' }],
+  });
+  const body = calls[0][1].body;
+  assert.equal(body.message, 'Open invoices');
+  assert.equal(JSON.stringify(body.context), JSON.stringify({ view: 'ai-assistant', selection: 'invoice-id-only' }));
+  assert.equal(JSON.stringify(body.interrupted), JSON.stringify({ previousReply: 'Earlier answer', spokenChars: 42 }));
+  assert.equal(JSON.stringify(body.history), JSON.stringify([{ role: 'user', text: 'Earlier question' }, { role: 'assistant', text: 'Earlier answer' }]));
+  assert.equal(JSON.stringify(Object.keys(body).sort()), JSON.stringify(['context', 'history', 'interrupted', 'message']));
+});
+
 test('local assistant fallback is permitted only in explicit demo mode without a session', () => {
   assert.equal(client.canUseDemoFallback({ mode: 'demo' }, null), true);
   assert.equal(client.canUseDemoFallback({ mode: 'supabase' }, null), false);
@@ -40,6 +55,18 @@ test('backend response route labels and citation ids normalize without client-sc
 });
 
 test('dashboard confines local fallback to demo mode and does not scrape or attach browser content', () => {
-  assert.match(dashboardSource, /canUseDemoFallback\(auth,session\)&&auth\.isAuthenticated\(\)\)\{records=assistantRecords\(\).*?finish\(localAnswer\(q,records\)\)/s);
+  assert.match(dashboardSource, /if\(session\)return NovaLive\.assistantChat\(q,voiceMetadata\)/);
+  assert.match(dashboardSource, /if\(window\.NovaPayAssistantClient\.canUseDemoFallback\(auth,session\)&&auth\.isAuthenticated\(\)\)/);
+  assert.match(dashboardSource, /return localAnswer\(q,records\)/);
   assert.doesNotMatch(dashboardSource, /Attached file content|FileReader|aiAttachmentText/);
+});
+
+test('assistant action UI enforces confirmation tiers and audits before writes', () => {
+  const confirmation = dashboardSource.indexOf('auditAssistantAction(action,"confirmed").then(function(){return executeAssistantAction(action)})');
+  const tierTwo = dashboardSource.indexOf('else if(definition.tier===2)');
+  const tierZero = dashboardSource.indexOf('executeAssistantAction(action).then(function(){card.remove()}', tierTwo);
+  assert.ok(confirmation > 0, 'Tier 1 must be confirmed and audited before execution');
+  assert.ok(tierTwo > confirmation && tierZero > tierTwo);
+  assert.match(dashboardSource, /setTimeout\(function\(\)\{completed=true;confirm\.disabled=true;cancel\.disabled=true;copy\.textContent="Confirmation expired/);
+  assert.match(dashboardSource, /\/api\/ai\/actions\/audit/);
 });

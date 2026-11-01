@@ -20,13 +20,17 @@ Requires a confirmed Supabase bearer JWT and no `X-Org-Id`. Unconfirmed users re
 
 ### `POST /api/ai/chat`
 
-Request: `{ "message": "Why did our fees increase?", "context": {} }`. `context` is accepted for compatibility and ignored. `message` must be non-empty and no more than 1,000 characters. All organization roles may ask.
+Request: `{ "message": "Why did our fees increase?", "context": { "view": "invoices" }, "interrupted": { "previousReply": "...", "spokenChars": 30 }, "history": [{ "role": "user", "text": "..." }] }`. Only the message is required; context, interruption metadata and at most six short history turns are optional. The server derives user, role and organization from the authenticated request. All organization roles may ask.
 
-Response: `{ "answer": "...", "route": "retrieval", "reason": "evidence_based_explanation", "citations": ["TRX-ID"], "usage": { "model": "gemini-3.5-flash-lite", "inputTokens": 300, "outputTokens": 40 }, "cached": false }`. `route` is one of `code`, `sql`, `ocr`, `retrieval`, `llm`; arithmetic/FX and structured queries are deterministic and report zero LLM usage. Citations are stable IDs from the authenticated organization's evidence, or `fx-rate:BASE/QUOTE:<timestamp>` for conversions. Optional fields include `proposal` (omitted when none is persisted), `stale`, and `insufficient_evidence`.
+Response: `{ "answer": "...", "speak": "Short speech answer.", "route": "retrieval", "reason": "evidence_based_explanation", "citations": ["TRX-ID"], "actions": [], "usage": { "model": "gemini-3.5-flash-lite", "inputTokens": 300, "outputTokens": 40 }, "cached": false }`. `route` is one of `code`, `sql`, `ocr`, `retrieval`, `llm`; arithmetic/FX and structured queries are deterministic and report zero LLM usage. Citations are stable IDs from the authenticated organization's evidence, or `fx-rate:BASE/QUOTE:<timestamp>` for conversions. Optional fields include `proposal` (omitted when none is persisted), validated `actions`, `speak`, `stale`, and `insufficient_evidence`.
 
 Proposals are persisted only as `pending` approvals. A refund proposal references a cited completed capture and uses the server-computed remaining refundable amount. No AI chat request executes a payment action. Approval decisions remain on `POST /api/approvals/:approvalId/decision` and are restricted to `owner`, `admin`, and `approver`; execution uses existing Phase 2/3 checks.
 
 Errors: invalid input returns HTTP 400 `AI_MESSAGE_INVALID`; auth/tenant errors return HTTP 401/403; route limits return `RATE_LIMITED` or `USER_RATE_LIMITED`. Daily AI limits return a safe answer that explains the limit and do not call the provider. Provider errors return a safe unavailable answer without provider response bodies.
+
+### `POST /api/ai/actions/audit`
+
+Authenticated, org-scoped action audit endpoint. Request contains only `{ "actionId": "invoice.createDraft", "tier": 1, "outcome": "confirmed" }`; valid outcomes are offered, confirmed, proposed, cancelled, completed and failed. Registry tier and role are checked server-side. Confirmed/proposed Tier 1/2 actions share a limit of five per user per minute. Audit failure is fail-closed; callers must not execute the action when this endpoint fails. No action arguments or transcripts are recorded.
 
 ## Notifications and anomalies
 

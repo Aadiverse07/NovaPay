@@ -1,9 +1,10 @@
 ## RESUME POINTER
-- Current task: build the voice-driven NovaPay assistant on local branch `codex/voice-assistant`; never push.
-- Last finished step: shared action registry, server fast command parser, safe model-action validation, bounded speech output, and injection/role/drift tests. Focused suite 39/39; full suite 255/256 with only the known no-store assertion.
-- Next: implement and test the lazy browser voice state machine, wake word, TTS greeting, action confirmation UI, and cleanup/accessibility.
-- Pending human action: later run Chrome localhost microphone checks; no live provider/database work was done.
-- Safety: preserve auth redirects/protected assets, never execute Tier 2 by voice, never expose secrets, and do not push.
+- Current task: Voice-driven NovaPay assistant on `codex/voice-assistant`; task 1/1; implementation complete; local checkpoint commit pending; never push.
+- Last finished: final focused tests 33/33; full `npm test` 269/270 with only known `api-client.test.js` no-store assertion; migrations 21/21; changed JS syntax, `git diff --check`, protected-file diff all PASS.
+- Current branch/base: `codex/voice-assistant`, based on published main `3b14187`; existing last commit `542706b`; local changes include action audit/tiering, lazy voice module, greeting, tests and docs.
+- Next: (1) inspect status/diff and `.env` tracking; (2) local `WIP-BROKEN:` checkpoint; (3) human completes `docs/VOICE-BROWSER-CHECKLIST.md`; (4) stop without pushing.
+- Pending human action: Chrome/Edge microphone and real signed-in browser checklist; no new user needed. Do not claim it is verified from unit tests.
+- Safety: no live provider/database calls or migrations; keep Tier 2 human-only; do not expose secrets or push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4645,3 +4646,72 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: capture full-suite summary counts without exposing test payloads; why: accurately record the phase result in the continuity files. NEXT: append the exact result and proceed with the voice module.
 2026-11-01 | Result: full `npm test` FAIL 255/256; sole failure is known `server/test/api-client.test.js` no-store assertion. Focused AI/action/LLM/routes suite PASS 39/39. No live Gemini/PayPal/Supabase calls. NEXT: checkpoint action protocol; then implement lazy browser voice controller, greeting listener, confirmation cards and teardown tests.
 2026-11-01 | Before: checkpoint backend action-protocol phase locally; why: preserve tested registry/parser and current resume pointer before starting the voice controller. NEXT: continue with the isolated voice controller implementation.
+2026-11-01 | Before: replace the legacy one-shot dictation handlers and connect voice metadata/output to the shared AI client; why: use one lazy wake-word recognizer with bounded state and no duplicate microphone loops. NEXT: add action rendering/confirmation and run controller tests.
+2026-11-01 | Before: add deterministic unit coverage for voice states, wake detection, query capture, spoken confirmation, barge-in, echo rejection and restart backoff; why: protect browser-specific behavior without microphone access or network calls. NEXT: run focused voice/controller and syntax checks.
+2026-11-01 | Before: add the session-scoped introduction TTS/chip and lazy voice controls; why: satisfy first-interaction greeting without changing intro timing, visuals or assets. NEXT: add module script and greeting unit tests.
+2026-11-01 | Before: run focused voice controller, greeting, action registry and API-client tests plus JS syntax checks; why: exercise the new browser state machine and response wiring without using a real microphone or network. NEXT: fix any unexpected failures, then add integration/security caps and docs.
+2026-11-01 | Result: initial focused UI/controller tests found 3 test issues: one stale dashboard source regex after formatting, confirmation executor assertion did not await its promise, and a greeting test used `assert.match` with a string. Fixed assertions to check behavior and made confirmation test async. NEXT: rerun focused tests and syntax checks.
+2026-11-01 | Result: focused rerun reached 21/22; the only failure was Node VM cross-realm prototype comparison in the new client metadata test (values matched). NEXT: compare serialized payload shapes, then rerun focused checks.
+2026-11-01 | Before: rerun focused voice/action/client tests after making VM-safe structural assertions; why: confirm the metadata contract and browser state controller before adding remaining server limits and UI contract tests. NEXT: fix only failures.
+- 2026-11-01 19:30 IST — ABOUT TO: Inspect current voice implementation, handoff and package/test wiring. WHY: resume from the repo state and close remaining spec gaps without duplicating work.
+- RESULT: PASS; current branch is `codex/voice-assistant`; handoff confirms server action protocol and voice/greeting modules are in progress. Found remaining gaps to audit: per-minute action cap/audit route, action tier execution semantics, repeat handling, speech chunking/microphone echo constraints. No secrets read or printed.
+- NEXT: inspect current context/test/decision tail plus application wiring and the remainder of the voice/action UI, then implement the smallest missing pieces.
+- 2026-11-01 19:34 IST — ABOUT TO: Add server-side assistant action offer/outcome audit and per-user action cap, then correct client tier handling and voice lifecycle gaps. WHY: enforce the supplied financial-app safety contract before treating the feature as complete.
+- RESULT: PARTIAL; server action-audit route and app identity wiring applied. First dashboard patch did not match the actual UI block and made no dashboard changes.
+- NEXT: read the exact compact action-rendering block and apply the tier/audit change against its current text.
+- RESULT: PASS; Tier 1 now requires an audited confirmation before execution and records completion/failure; Tier 2 only opens its human-review destination; Tier 0 executes directly. Voice speech now chunks text, and microphone acquisition requests echo cancellation/noise suppression and releases tracks on off, hide, sign-out and unload.
+- NEXT: add regression coverage for action auditing/caps and speech chunking/microphone lifecycle, then run the focused suite.
+- 2026-11-01 19:42 IST — ABOUT TO: Inspect existing route/controller test harnesses before adding regressions. WHY: match current fake-service patterns and avoid real network/provider access.
+- RESULT: PASS; read the route and controller fake harnesses. Existing auth test identity does not implement `audit`, so a new dedicated test must inject an audit spy; no test/live requests were run.
+- NEXT: add API tests for role-scoped action audit, Tier 1/Tier 2 cap and audit failure, plus chunked TTS regression coverage.
+- 2026-11-01 19:46 IST — ABOUT TO: Add fake-only regression tests for the new audit endpoint and speech chunking. WHY: verify tier/cap/fail-closed behavior without touching Supabase or providers.
+- RESULT: PASS; added fake-only route coverage for role/tier validation, five-per-minute Tier 1 cap, audit insert failure, and TTS chunk size/sequence. No migrations or external services involved.
+- NEXT: run focused assistant/voice/action tests; fix failures before broad checks.
+- 2026-11-01 19:50 IST — ABOUT TO: Run the focused assistant-action, voice, route and client tests. WHY: validate the new safety and browser-controller behavior before full suite execution.
+- RESULT: FAIL; focused run has 15 passing and 1 failing assertion because the test expected all TTS chunks to be queued immediately; implementation intentionally speaks one chunk at a time. Audit endpoint tests pass.
+- NEXT: adjust the TTS regression to drive each utterance's `onend` sequentially and then rerun focused tests.
+- RESULT: PASS; focused voice/action/client/routes suite 32/32. One Node warning remains because browser ESM files use `.js` under a CommonJS package; browser module loading is native and no package-wide type change is appropriate.
+- NEXT: fix the invoice action schema mismatch, prior-reply repeat behavior, campaign idempotency header, and a real 15-second visible confirmation timeout; add corresponding tests.
+- 2026-11-01 19:58 IST — ABOUT TO: Patch the identified action protocol and UI edge cases, then update focused assertions. WHY: ensure valid draft actions can pass validation and confirmations expire consistently for typed and spoken actions.
+- RESULT: PASS; corrected invoice minor-unit schema, last-answer repeat, typed/spoken confirmation expiry, fast `download last invoice`, and Tier 0 open-control vs Tier 1 export classification. Added focused assertions; no external calls made.
+- NEXT: inspect global listener teardown, add action endpoint/API documentation, refresh handoff/test/decision logs, then execute required validation.
+- 2026-11-01 20:05 IST — ABOUT TO: Verify voice/greeting global listener cleanup and API docs structure. WHY: ensure unload/logout do not leak new listeners and document the audited action endpoint.
+- RESULT: PASS; API and frontend contracts now describe bounded voice metadata, speech/actions, the audit endpoint, role validation, confirmation windows and rate caps. DECISIONS.md records the safety model and rejected alternatives.
+- NEXT: rerun the focused suite after the schema, repeat, tier and echo changes; append exact test output to TEST-REPORT.md.
+- 2026-11-01 20:12 IST — ABOUT TO: Rerun focused tests for assistant action validation, routes, voice state machine/greeting and request client. WHY: confirm final code after the latest schema/tier and echo fixes.
+- 2026-11-01 20:18 IST — ABOUT TO: Make assistant audit failures return a specific safe error with request id and restrict the action cap to Tier 1/2; inspect refresh hooks for executed Tier 1 actions. WHY: close audit observability and exact cap semantics before full validation.
+- RESULT: PASS; audit insert failures now emit a secret-free error event with request id and return HTTP 503 `ASSISTANT_AUDIT_FAILED`; the UI does not execute when offered/confirmation audit fails. Tier 1/2 confirmations alone count toward the five-per-minute cap. Invoice refresh and campaign-created events now target existing loaders.
+- NEXT: run focused tests and syntax checks, then full `npm test`, migration check, changed-JS checks and whitespace/protected-file diff checks.
+- 2026-11-01 20:24 IST — ABOUT TO: Run focused test suite and syntax checks for all modified JavaScript files. WHY: catch route/UI integration errors before the expensive full repository suite.
+- RESULT: FAIL; focused tests 32/33 because the existing regression expected generic HTTP 500 after audit failure; implementation now returns the intended explicit 503 fail-closed response.
+- NEXT: update the assertion to require 503 and `ASSISTANT_AUDIT_FAILED`, rerun focused tests and syntax checks.
+- RESULT: PASS; focused suite 33/33; `node --check` passed for modified server/UI JS. Node emits a non-failing MODULE_TYPELESS_PACKAGE_JSON warning for browser ESM `.js` files; root package remains CommonJS for server compatibility.
+- NEXT: execute full npm suite and migration parser, then whitespace/protected diff and inspect changed files for safety regressions.
+- 2026-11-01 20:31 IST — ABOUT TO: Run `npm test` and `npm run check:migrations`. WHY: verify repository-wide regressions and migration parser status after the voice/action implementation.
+- RESULT: PASS; deterministic fast commands now enforce the action registry role before returning an action; viewer upload does not bypass the minimum role. No real services touched.
+- NEXT: rerun focused and full tests after this final role-gate edit; capture exit codes and append exact result entries.
+- 2026-11-01 20:38 IST — ABOUT TO: Run final focused voice/action/routes tests, full `npm test`, and standalone migration check. WHY: the role-gating change landed after the previous full-suite run.
+- RESULT: IN PROGRESS; tightened restart handling so recognition sessions that end without results count as failures, exponential backoff advances up to 5s, and valid results reset backoff. Regression now asserts 200/400/800ms progression.
+- NEXT: rerun the focused tests and full suite after this lifecycle change; then finalize browser checklist and continuity docs.
+- 2026-11-01 20:48 IST — ABOUT TO: Run the focused voice/action/routes/client tests after restart backoff adjustment. WHY: verify no unintended pause or restart-loop behavior before final suite.
+- RESULT: PASS; focused suite 33/33 after exponential-backoff and echo improvements.
+- NEXT: run final `npm test`, standalone migration parser, changed-JS `node --check`, whitespace/protected-file checks, and verify no `.env` is tracked or staged.
+- 2026-11-01 20:54 IST — ABOUT TO: Run final full and static checks for this voice-assistant task. WHY: record accurate completion status before local checkpoint; no provider, PayPal, database or browser login calls.
+- RESULT: FAIL (expected baseline only); final `npm test` reports 269/270. Sole failure remains `server/test/api-client.test.js:6`, expected `Cache-Control: no-store` but received undefined; no unrelated tests failed. Standalone migration parser output reached migration 0021; static checks are being confirmed separately because the combined command yielded before final summary output.
+- NEXT: independently confirm changed-JS syntax, migrations, whitespace and protected-file diff, then write continuity docs and commit the verified state.
+- 2026-11-01 21:02 IST — ABOUT TO: Independently capture exit status for migration parser, changed JavaScript syntax, whitespace, protected-file diff and `.env` tracking checks. WHY: ensure each final status is based on a completed command result.
+- RESULT: PASS; recorded focused/full/migration/static outcomes, known baseline failure and browser UNVERIFIED in TEST-REPORT.md; appended decisions on fail-closed audit handling. `.env` not tracked.
+- NEXT: add the human browser checklist; rewrite CONTEXT.md and top RESUME POINTER with exact files/state; inspect final diff, then local WIP-BROKEN commit due known suite failure.
+- 2026-11-01 21:10 IST — ABOUT TO: Create a numbered human voice/browser checklist and refresh the compact handoff files. WHY: complete the requested manual verification handoff and make continuation possible without this chat.
+- RESULT: PASS; final review fixes: query-result actions no longer render as unsupported controls; voice repeat no longer gets overwritten by its acknowledgement TTS; client cannot forge internal `offered` audit outcomes.
+- NEXT: repeat final tests/checks, append definitive results, review diff, update latest commit pointer and locally checkpoint.
+- 2026-11-01 21:18 IST — ABOUT TO: Re-run focused and full test commands after final UI/audit review, then run migration/syntax/diff guards.
+- RESULT: PASS; final review noted chunk-local speech boundary offsets would under-report interrupted character position across long TTS. Added cumulative offset tracking; now rerunning voice-focused tests and final checks after this edit.
+- NEXT: run focused voice tests, full npm test, migration parser and static checks one last time; then commit.
+- 2026-11-01 21:24 IST — ABOUT TO: Run the final voice-focused test after cumulative spoken-character tracking. WHY: ensure interruption metadata stays accurate across chunked speech.
+- RESULT: PASS; voice controller/greeting tests 11/11 and `node --check src/voice-assistant.js` passed after speech-offset change.
+- NEXT: rerun `npm test` on the exact final tree, then append exact results and prepare local checkpoint.
+- 2026-11-01 21:26 IST — ABOUT TO: Run full test suite on the final source tree. WHY: no code edits should follow without another final regression result.
+- RESULT: PASS with one known suite issue; final `npm test` on final source 269/270 and 11/11 latest voice tests. `server/test/api-client.test.js` remains the only failure (`Cache-Control: no-store` undefined). No live services used.
+- NEXT: rerun `git diff --check`, protected-file diff, syntax and migration status; stage all intended files, inspect staged names/secrets without printing any values, then create local WIP-BROKEN checkpoint.
+- 2026-11-01 21:34 IST — ABOUT TO: Run final static guards and stage only this task's tracked/untracked repo changes for local checkpoint review. WHY: ensure docs and code are checkpointed together with no secret file.

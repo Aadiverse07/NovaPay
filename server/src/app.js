@@ -88,7 +88,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, identi
   app.use('/api', statusRoutes({ config, paypal, repos }));
   app.get('/api/public-config', (_req, res) => res.json({ supabaseUrl: config.hasSupabase ? config.SUPABASE_URL : null, supabaseAnonKey: config.hasSupabase ? config.SUPABASE_ANON_KEY : null }));
   app.use('/api', onboardingRoutes({ identity }));
-  app.use('/api', aiRoutes({ config, askAI }));
+  app.use('/api', aiRoutes({ config, askAI, identity }));
   app.use('/api', approvalRoutes({ config, repos, identity, paypal }));
   app.use('/api', financialRoutes({ repos }));
   app.use('/api', fxRoutes({ fx }));

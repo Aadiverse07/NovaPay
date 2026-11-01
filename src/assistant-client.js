@@ -15,6 +15,8 @@
       reply: reply.trim(), route: Object.prototype.hasOwnProperty.call(ROUTES, payload.route) ? payload.route : "llm",
       reason: typeof payload.reason === "string" ? payload.reason : "", evidence: Array.isArray(payload.citations) ? payload.citations : Array.isArray(payload.evidence) ? payload.evidence : [],
       proposal: payload.proposal || null, insufficientEvidence: Boolean(payload.insufficient_evidence || payload.insufficientEvidence),
+      speak: typeof payload.speak === "string" ? payload.speak.slice(0, 300) : "",
+      actions: Array.isArray(payload.actions) ? payload.actions.slice(0, 5) : [],
       limited: Boolean(payload.limited), unavailable: Boolean(payload.unavailable), usage: payload.usage || null,
     };
   }
@@ -29,8 +31,21 @@
     return error && error.message ? error.message : "The assistant request could not be completed.";
   }
   function canUseDemoFallback(auth, session) { return Boolean(auth && auth.mode === "demo" && !session); }
-  async function send(api, message) {
-    var payload = await api.request("/api/ai/chat", { method: "POST", body: { message: String(message || "").slice(0, 1000) } });
+  async function send(api, message, metadata) {
+    metadata = metadata || {};
+    var body = { message: String(message || "").slice(0, 1000) };
+    if (metadata.context && typeof metadata.context === "object") body.context = {
+      ...(typeof metadata.context.view === "string" ? { view: metadata.context.view.slice(0, 40) } : {}),
+      ...(typeof metadata.context.selection === "string" ? { selection: metadata.context.selection.slice(0, 150) } : {}),
+    };
+    if (metadata.interrupted && typeof metadata.interrupted === "object") body.interrupted = {
+      previousReply: String(metadata.interrupted.previousReply || "").slice(0, 1000),
+      spokenChars: Math.max(0, Math.min(2000, Number(metadata.interrupted.spokenChars) || 0)),
+    };
+    if (Array.isArray(metadata.history)) body.history = metadata.history.slice(-6).map(function (turn) {
+      return { role: turn && turn.role === "assistant" ? "assistant" : "user", text: String(turn && turn.text || "").slice(0, 500) };
+    });
+    var payload = await api.request("/api/ai/chat", { method: "POST", body: body });
     return normalize(payload);
   }
   return { routeLabels: ROUTES, normalize: normalize, errorMessage: errorMessage, canUseDemoFallback: canUseDemoFallback, send: send };

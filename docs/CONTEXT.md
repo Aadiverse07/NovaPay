@@ -1,53 +1,56 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-01; branch `codex/voice-assistant`; based on current published `main` (`3b14187`); last local checkpoint `d6f6b28` (documentation); voice assistant task in progress, backend/action protocol phase complete.
+- Date: 2026-11-01; branch `codex/voice-assistant`; based on published main `3b14187`; latest existing commit `542706b`; current task: Voice assistant implementation, task 1/1; implementation complete, local checkpoint pending.
 
 ## DONE
-- Confirmed 8-slot Gemini pool exists; tests exercise sequential exhaustion/fallback. No real provider calls made.
-- Added shared action registry in `src/assistant-actions.js`; server imports the same list in `server/src/ai/actions.js`.
-- Added allowlisted deterministic navigation/help/repeat/stop/upload/maintenance fast commands, role/schema and user-intent validation for model actions, bounded speech/context output, and server prompt protections.
-- Added action registry drift, intent/role/schema and OCR-injection tests. Focused AI/action/LLM/routes tests: 39/39 PASS.
+- Shared browser/server action registry in `src/assistant-actions.js` and `server/src/ai/actions.js`; server validates schema, user intent and role, with deterministic command fast path.
+- Extended AI chat with bounded voice context/history/interruption, short safe `speak`, and validated action results. No provider calls were made.
+- Added lazy Web Speech controller, wake-word capture, TTS greeting/replay, turn-taking, echo rejection, barge-in, bounded exponential restart/retry cap, 15-second confirmation, microphone echo/noise constraints, mute, visibility/sign-out/unload cleanup.
+- Added Tier 0 direct navigation/read controls, Tier 1 confirm-before-execute and Tier 2 human-only navigation; action audit before offering/writing, role checks, five-per-user-per-minute Tier 1/2 cap, fail-closed audit errors.
+- Added invoice/campaign refresh hooks and API contract docs. Human browser steps: `docs/VOICE-BROWSER-CHECKLIST.md`.
 
 ## IN PROGRESS
-- Browser voice controller, greeting TTS, action rendering/execution and tests remain. Current server/action changes are uncommitted.
-- Files changed this phase: `src/assistant-actions.js`, `server/src/ai/actions.js`, `server/src/services/ai.js`, `server/src/routes/ai.js`, `server/test/assistant-actions.test.js`, `server/test/llm.test.js`, plus docs.
+- No code task remains. Final docs/checkpoint commit pending. Files changed: `dashboard.html`, `preview.html`, `src/assistant-actions.js`, `src/assistant-client.js`, `src/dashboard.js`, `src/invoices-live.js`, `src/novapay-live.js`, `src/voice-assistant.js`, `src/voice-greeting.js`, `server/src/ai/actions.js`, `server/src/app.js`, `server/src/routes/ai.js`, `server/src/services/ai.js`, `server/test/assistant-actions.test.js`, `server/test/assistant-client.test.js`, `server/test/routes.test.js`, `server/test/voice-assistant.test.js`, `server/test/voice-greeting.test.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/VOICE-BROWSER-CHECKLIST.md`.
 
 ## NEXT STEPS
-1. Implement one lazy Web Speech controller with wake-word capture, turn-taking, barge-in, bounded restart backoff, visibility/logout teardown and TTS.
-2. Integrate voice toggle/status/actions with the existing AI panel and add one-session intro greeting without changing intro timing/visuals.
-3. Add controller state-machine and frontend request-shape/action-tier tests; run `npm test` after the next phase.
-4. Complete API/docs, final checks, and exact browser verification report. Never push.
+1. Check `git status`, `.env` tracking/staging and final diff; ensure only the files above are included.
+2. Commit locally with `WIP-BROKEN: voice assistant with known baseline no-store test failure`; do not push.
+3. Human runs `docs/VOICE-BROWSER-CHECKLIST.md` with an already signed-in fixed owner and browser microphone; do not claim browser success from unit tests.
+4. Fix the separate `server/test/api-client.test.js` no-store failure only in a separately scoped task.
 
 ## USER ACTIONS PENDING
-- Browser microphone checks require the human: Chrome on localhost, mic permission, wake word, barge-in, voice action confirmation, Tier 2 approval-only behavior, and voice-off check.
+- In Chrome/Edge, open localhost and complete all steps in `docs/VOICE-BROWSER-CHECKLIST.md`; record PASS/FAIL manually. Mic permission may be requested.
 
 ## LIVE STATE
-- No Gemini/PayPal/Supabase calls and no migrations run. Secrets/JWTs not recorded.
+- No Supabase, Gemini or PayPal requests; no migrations run. Configuration secrets were not printed; `.env` remains untracked.
 
 ## TEST STATE
-| Check | Result | Date | Command/details |
+| Check | Status | Date | Command/details |
 |---|---|---|---|
-| Focused AI/action/routes | PASS 39/39 | 2026-11-01 | `node --test server/test/assistant-actions.test.js server/test/ai.test.js server/test/llm.test.js server/test/routes.test.js` |
-| Full suite | FAIL 255/256 | 2026-11-01 | `npm test`; sole known no-store assertion failure in `server/test/api-client.test.js` |
-| Migration parser | PASS 21/21 | 2026-11-01 | Ran inside `npm test` |
-| Browser voice flow | UNVERIFIED | 2026-11-01 | No browser/microphone verification performed |
+| Focused voice/action/client/routes | PASS | 2026-11-01 | `node --test ...` 33/33 |
+| Full suite | FAIL | 2026-11-01 | `npm test` 269/270; known `api-client.test.js` no-store assertion only |
+| Migration parser | PASS | 2026-11-01 | `npm run check:migrations`, 21/21 through 0021 |
+| Modified JS syntax | PASS | 2026-11-01 | `node --check` on changed JS/test files |
+| Whitespace/protected diff | PASS | 2026-11-01 | `git diff --check`; protected-file diff empty |
+| Real browser/mic | UNVERIFIED | 2026-11-01 | Not run; live signed-in calls excluded from fake-only verification |
 
 ## KNOWN ISSUES AND RISKS
-- The known `Cache-Control: no-store` assertion remains failing; it was not changed.
-- Tier 1 actions must remain behind a visible user confirmation; Tier 2 must never execute by voice.
-- Browser recognition/TTS is environment- and permission-dependent; do not claim it works until manually checked.
+- Existing no-store assertion remains the sole failing test.
+- Browser speech services and microphone permissions vary; browser checklist is still pending.
+- Node emits a non-failing typeless-package warning when node:test imports browser ESM `.js`; root package type was not changed to avoid affecting the CommonJS server entry.
+- A few high-risk actions deliberately only navigate to the relevant human workflow; voice cannot execute Tier 2. `data.query` is fulfilled by the chat request and should not be rendered as a separate UI action.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; never edit an applied migration.
-- SECURITY DEFINER/posting RPCs must be service_role-only and tested with ordinary JWTs.
-- PostgREST embeds need explicit foreign-key names when relationships are ambiguous.
-- audit_log is insert-only and ON DELETE RESTRICT; cleanup journal entries before audit rows and organizations.
-- PayPal Sandbox uses a US Personal buyer, USD seller and `/api/webhook`; verify raw-body signatures.
-- Never print `.env` values; use key names only. Gemini fallback rotates only for quota or invalid-key conditions, not transient failures.
+- Supabase SQL Editor runs in one transaction; never edit an applied migration; create a new numbered file.
+- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated and grant only service_role; verify denial with ordinary user JWT.
+- PostgREST embeds require explicit foreign-key names when relationships are ambiguous.
+- audit_log is insert-only with ON DELETE RESTRICT; cleanup journal entries before audit rows/org/auth users.
+- PayPal Sandbox needs a US Personal buyer, USD seller, Visa checkout, matching webhook ID and `/api/webhook`; raw body is required for signature verification.
+- Never print `.env` values; report key names only.
 
 ## DO NOT
-- Never push, expose secrets/JWT/OTP, call real Gemini/PayPal/Supabase, run migrations, trust model actions, let voice complete Tier 2, touch auth redirects or protected visual assets, or weaken tests.
+- Never push, expose secrets/JWT/OTP, call live Gemini/PayPal/Supabase, run migrations, trust model actions, let voice complete Tier 2, click arbitrary DOM, or touch protected visual/auth redirect files.
 
 ## RESUME COMMANDS
 - `git status --short`

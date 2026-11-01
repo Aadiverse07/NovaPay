@@ -279,7 +279,7 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
 
 export function createAIService({ config, events, repos, fx, provider = createLLMAdapter({ config, events }), documentSearch }) {
   return async function askAI(message, context, requestContext = {}) {
-    const fastCommand = parseFastAssistantCommand(message);
+    const fastCommand = parseFastAssistantCommand(message, context.role || 'viewer');
     if (fastCommand) return fastCommand;
     const classification = classifyAIIntent(message);
     const withRoute = (result) => ({ ...result, route: classification.route, reason: classification.reason });

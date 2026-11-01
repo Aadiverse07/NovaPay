@@ -277,3 +277,28 @@ test('partial Supabase configuration fails fast without echoing secrets', () => 
   assert.doesNotMatch(result.stderr, new RegExp(sentinel));
   assert.doesNotMatch(result.stderr, /\bat\s+file:/);
 });
+
+test('assistant action audit is role-scoped, capped and fails closed', async () => {
+  const records = [];
+  const auditedIdentity = { ...identity, async audit(row) { records.push(row); } };
+  const app = createApp({ config: baseConfig, repos: createRepositories(), identity: auditedIdentity, askAI: async () => ({ reply: 'Ready.' }) });
+  await withServer(app, async (base, _logs, request) => {
+    const body = { actionId: 'invoice.createDraft', tier: 1, outcome: 'confirmed' };
+    for (let i = 0; i < 5; i += 1) assert.equal((await request(`${base}/api/ai/actions/audit`, { method: 'POST', body: JSON.stringify(body) })).status, 200);
+    assert.equal((await request(`${base}/api/ai/actions/audit`, { method: 'POST', body: JSON.stringify(body) })).status, 429);
+    assert.equal(records.length, 5);
+    assert.equal(records[0].metadata.actionId, 'invoice.createDraft');
+    const viewer = await fetch(`${base}/api/ai/actions/audit`, { method: 'POST', headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    assert.equal(viewer.status, 403);
+    const tierTamper = await request(`${base}/api/ai/actions/audit`, { method: 'POST', body: JSON.stringify({ ...body, tier: 2 }) });
+    assert.equal(tierTamper.status, 403);
+  });
+
+  const failingIdentity = { ...identity, async audit() { throw new Error('audit unavailable'); } };
+  const failingApp = createApp({ config: baseConfig, repos: createRepositories(), identity: failingIdentity, askAI: async () => ({ reply: 'Ready.' }) });
+  await withServer(failingApp, async (base, _logs, request) => {
+    const response = await request(`${base}/api/ai/actions/audit`, { method: 'POST', body: JSON.stringify({ actionId: 'invoice.createDraft', tier: 1, outcome: 'confirmed' }) });
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).error.code, 'ASSISTANT_AUDIT_FAILED');
+  });
+});
