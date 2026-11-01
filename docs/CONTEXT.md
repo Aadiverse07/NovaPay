@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-01 Asia/Kolkata
 - Branch: `fix-download-campaigns`, created from `origin/main` after invoice PR #12 merged (`5d6ff72`). No push.
-- Last base commit: `5d6ff72`.
+- Last base commit: `5d6ff72`; latest local task commit: `904e536`.
 - Phase/task: invoice download error handling and Community Funds campaign-create wiring.
 
 ## DONE

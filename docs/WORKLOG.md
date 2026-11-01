@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: invoice PDF download errors and Community Funds create wiring on `fix-download-campaigns`, based on merged `origin/main` commit `5d6ff72`; no push.
-- Last finished: single View row action and detail-only authenticated PDF download; live campaign renderer/create form, role gating, truthful empty state, campaign summary and filtered contributions.
+- Current task: invoice PDF download errors and Community Funds create wiring on `fix-download-campaigns`, based on merged `origin/main` commit `5d6ff72`.
+- Last finished: local commit `904e536` (`WIP-BROKEN: fix invoice download and wire campaigns; known no-store test failure`); worktree was clean after commit; no push.
 - Checks: focused tests 10/10; campaign scope/exponent assertions 2/2; npm test 203/204 (known no-store assertion only); migrations 18/18; JS syntax 6/6; diff check PASS; protected-file diff empty.
 - Live fixed-owner PDF and campaign create/list/cleanup: UNVERIFIED because browser automation and fixed owner credentials are unavailable; no live data changed.
-- NEXT: verify no `.env` is staged, commit locally using `WIP-BROKEN` because npm test has one known failure, then stop. Never push.
+- NEXT: human browser checks: sign in owner → Invoices → View → Download PDF; Community Funds → Start a campaign → submit → verify one live card → View contributions; repeat read-only as viewer. Never push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4174,3 +4174,7 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: stage only invoice/campaign source, tests and required docs; why: avoid including any environment or unrelated files in the local checkpoint.
 2026-11-01 | Result: PASS, 14 intended files staged; no `.env` path in the index; staged whitespace check clean; NEXT: create local WIP-BROKEN checkpoint.
 2026-11-01 | Before: commit the validated invoice download and campaign wiring on fix-download-campaigns; why: preserve work locally while truthfully recording the known full-suite failure.
+2026-11-01 | Result: PASS, local WIP-BROKEN commit `904e536` created; worktree clean; no push; NEXT: update handoff pointers to the new commit.
+2026-11-01 | Before: update CONTEXT header and RESUME POINTER with commit `904e536`; why: make the final repo handoff resumable at the exact checkpoint.
+2026-11-01 | Result: PASS, CONTEXT and RESUME POINTER point to `904e536`, document test results and human browser steps; NEXT: commit handoff update locally.
+2026-11-01 | Before: commit the final handoff changes only; why: keep CONTEXT and RESUME POINTER synchronized with the clean implementation checkpoint.
