@@ -48,6 +48,35 @@ test('action args, roles and user wording are validated independently of model o
   assert.equal(invoice[0].args.lines[0].unitPriceMinor, 13750);
 });
 
+test('invoice creation is a deterministic, partial slot flow and parses stated details without creating', () => {
+  const actions = ASSISTANT_ACTION_REGISTRY;
+  assert.equal(actions.isInvoiceCreateIntent('create an invoice for me'), true);
+  assert.equal(actions.isInvoiceCreateIntent('I want you to create a new invoice for me'), true);
+  assert.equal(actions.isInvoiceCreateIntent('generate an invoice for Acme'), true);
+  assert.equal(actions.isInvoiceCreateIntent('read this document'), false);
+  const empty = actions.parseInvoiceCreateText('create an invoice for me', '2026-11-02');
+  assert.equal(actions.nextInvoiceSlot(empty), 'customerName');
+  const oneShot = actions.parseInvoiceCreateText('create an invoice for Acme for 12000 due 15 November', '2026-11-02');
+  assert.equal(oneShot.customerName, 'Acme');
+  assert.equal(oneShot.amountMinor, 1200000, 'INR 12000 major units become 1200000 minor units');
+  assert.equal(oneShot.dueDate, '2026-11-15');
+  assert.equal(actions.nextInvoiceSlot(oneShot), 'customerEmail', 'required email is requested instead of invented');
+  let slots = { customerName: '', customerEmail: '', amountMinor: null, currency: 'INR', description: '', dueDate: '' };
+  for (const [field, answer] of [['customerName', 'Acme'], ['customerEmail', 'billing@acme.example'], ['amountMinor', '12000'], ['description', 'Consulting'], ['dueDate', '15 November']]) {
+    const parsed = actions.parseInvoiceSlot(field, answer, slots, '2026-11-02');
+    assert.equal(parsed.error, undefined, field);
+    slots[field] = parsed.value;
+    if (parsed.currency) slots.currency = parsed.currency;
+  }
+  assert.equal(actions.nextInvoiceSlot(slots), '', 'confirmation is only offered after all route-required fields');
+  assert.match(actions.parseInvoiceSlot('amountMinor', '0', slots).error, /greater than zero/);
+  assert.match(actions.parseInvoiceSlot('dueDate', 'yesterday', slots, '2026-11-02').error, /future due date/);
+  assert.equal(actions.parseInvoiceSlot('amountMinor', 'change the amount to 15000', slots).value, 1500000);
+  const partialAction = validateAssistantActions([{ id: 'invoice.createDraft', args: { customerName: 'Acme' } }], 'create an invoice for Acme', 'owner');
+  assert.equal(partialAction.length, 1, 'fuzzy/server route may emit only validated partial args');
+  assert.equal(validateAssistantActions([{ id: 'invoice.createDraft', args: { customerName: 'Acme' } }], 'create an invoice for Acme', 'viewer').length, 0);
+});
+
 test('document instructions cannot authorize a model-emitted app action', async () => {
   let providerCalls = 0;
   const askAI = createAIService({

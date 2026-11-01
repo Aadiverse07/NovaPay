@@ -167,6 +167,29 @@ test('AI route accepts legacy context fields but supplies only verified membersh
   });
 });
 
+test('invoice create chat intent bypasses LLM and refuses viewers without offering an action', async () => {
+  const repos = createRepositories();
+  let providerCalls = 0;
+  const app = createApp({ config: baseConfig, repos, identity, askAI: async () => { providerCalls += 1; throw new Error('invoice intent must not call LLM'); } });
+  await withServer(app, async (base) => {
+    const owner = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { authorization: 'Bearer valid-user-token', 'x-org-id': orgA, 'content-type': 'application/json' }, body: JSON.stringify({ message: 'create an invoice for Acme for 12000 due 15 November' }) });
+    assert.equal(owner.status, 200);
+    const ownerBody = await owner.json();
+    assert.equal(ownerBody.route, 'code');
+    assert.equal(ownerBody.reason, 'invoice_create_draft_slot_filling');
+    assert.equal(ownerBody.answer, 'What email address should appear on the invoice?');
+    assert.equal(ownerBody.actions[0].id, 'invoice.createDraft');
+    assert.equal(ownerBody.actions[0].args.customerName, 'Acme');
+    assert.equal(ownerBody.actions[0].args.amountMinor, 1200000);
+    const viewer = await fetch(`${base}/api/ai/chat`, { method: 'POST', headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA, 'content-type': 'application/json' }, body: JSON.stringify({ message: 'create an invoice for me' }) });
+    assert.equal(viewer.status, 200);
+    const viewerBody = await viewer.json();
+    assert.match(viewerBody.answer, /Your role can't create invoices/);
+    assert.deepEqual(viewerBody.actions, []);
+    assert.equal(providerCalls, 0);
+  });
+});
+
 test('AI proposals stay pending until an approver uses the existing refund path exactly once', async () => {
   const repos = createRepositories();
   repos.captures.add({ id: 'CAPTURE-AI-1', value: '10.00', fee: '0.59', net: '9.41', currency: 'USD', status: 'COMPLETED' }, orgA);

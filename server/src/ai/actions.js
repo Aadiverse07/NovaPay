@@ -76,7 +76,7 @@ function actionMatchesUserText(id, args, text) {
   if (id === 'documents.promptUpload') return /\b(upload|attach|process)\b.{0,35}\b(document|file|receipt|invoice|pdf)\b/.test(text);
   if (id === 'maintenance.openNew') return /\b(new|create|open|start)\b.{0,35}\bmaintenance\b/.test(text);
   if (id === 'funds.openCampaign') return /\b(open|show|view)\b.{0,35}\b(campaign|funds?)\b/.test(text);
-  if (id === 'invoice.createDraft') return /\b(create|make|prepare)\b.{0,40}\b(invoice|draft)\b/.test(text);
+  if (id === 'invoice.createDraft') return /\b(create|make|new|generate|raise|prepare)\b.{0,60}\b(invoice|draft)\b|\b(invoice|draft)\b.{0,45}\b(create|make|generate|raise)\b/.test(text);
   if (id === 'invoice.downloadPdf') return /\b(download|save)\b.{0,35}\b(invoice|pdf)\b/.test(text);
   if (id === 'invoice.requestSendApproval') return /\b(send|deliver)\b.{0,35}\binvoice\b/.test(text);
   if (id === 'funds.createCampaignDraft') return /\b(create|make|prepare)\b.{0,40}\b(campaign|fundraiser)\b/.test(text);

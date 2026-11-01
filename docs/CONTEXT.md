@@ -16,12 +16,17 @@
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- TTS code and focused tests are complete. Real Chrome playback and the requested live debug lines remain unverified.
+- Invoice draft assistant flow is implemented in `src/dashboard.js`: deterministic intent intercept before data-answer path, role check via authenticated invoice list, one-at-a-time required slots, validation, two-minute expiry, cancel/change amount, readback/confirm card, and existing authenticated idempotent POST only after confirmation.
+- Server classifies invoice-create messages as code intent and returns a validated partial action or viewer refusal before `askAI`; no invoice action is inferred from OCR/document evidence.
+- Actual invoice route requires customerName, customerEmail, currency, issueDate, dueDate, and at least one line description/quantity/unitPrice. INR is the UI default, issue date is generated as today, quantity=1 and tax=0 follow the existing form defaults. Email and line description are asked when missing.
+- After create, the existing invoice API refreshes and opens Invoices, the row is highlighted, and “open it”/“download it” resolve to the created invoice. Sending remains unchanged.
+- Files changed in this task: `src/assistant-actions.js`, `src/dashboard.js`, `src/modules.css`, `server/src/ai/actions.js`, `server/src/ai/router.js`, `server/src/routes/ai.js`, tests `server/test/assistant-actions.test.js`, `assistant-client.test.js`, `ai-router.test.js`, `routes.test.js`, plus continuity docs.
+- Browser verification and actual invoice POST/debug/server log are UNVERIFIED; local browser control is disabled in Work settings.
 
 ## NEXT STEPS
-1. Run docs/VOICE-BROWSER-CHECKLIST.md in real Chrome; record onstart/onend/error for “open ledger” and “how much did I receive today?”.
-2. Verify one chat POST per spoken query and test the visible Test voice button/status; check Chrome tab mute and system output if events end without audible output.
-3. Verify invoice tier-1 confirmation, download, document upload prompt, explicit stop and held-mic fallback.
+1. In Chrome, sign in as an owner/admin/accountant, open AI Assistant, type “create an invoice for me”, then provide customer name, email, amount, line description, and a future due date one at a time; inspect the readback and click Confirm. Verify one POST `/api/invoices`, one draft row, and its invoice number.
+2. Repeat by mic; speak “create an invoice for Acme for 12000 due 15 November”. Since the route requires email and line description, answer those prompts, confirm verbally or on screen, and inspect debug plus server POST logs. Then say “download it” and “open it”.
+3. Verify viewer refusal and cancellation; report browser evidence in TEST-REPORT.md. Do not push or run migrations.
 
 ## USER ACTIONS PENDING
 - In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
@@ -39,6 +44,9 @@
 | Whitespace | PASS | 2026-11-02 | git diff --check |
 | Protected paths | PASS | 2026-11-02 | changed-path filter empty for tokens, base, fonts, presets, themes, effects and assets |
 | Chrome TTS | UNVERIFIED | 2026-11-02 | browser-control API reports local use disabled in Work settings; no utterance logs, audio, tab mute, or system volume check |
+| Invoice assistant focused tests | PASS | 2026-11-02 | `node --test server/test/assistant-actions.test.js server/test/ai-router.test.js server/test/assistant-client.test.js server/test/routes.test.js` — 37/37 |
+| Full suite after invoice flow | FAIL | 2026-11-02 | `npm test` — 296/297; known `server/test/api-client.test.js:29` Cache-Control no-store assertion, 21 migration syntax checks passed |
+| Invoice browser flow and live POST | UNVERIFIED | 2026-11-02 | Chrome unavailable in Work settings; no live draft created or customer data used |
 
 ## KNOWN ISSUES AND RISKS
 - Known API no-store assertion remains the only failing test and was not changed.
