@@ -10,25 +10,21 @@ export function buildVoiceGreeting(registry) {
   return `Hey, I’m NovaPay, the AI assistant for NovaPay Finance. ${capabilities} To use me, tap the mic and tell me what you need. I’ll answer by voice, and I can open modules and help with supported tasks.`;
 }
 
-export function createIntroSpeaker({ registry, synthesis, Utterance, sessionStore }) {
+export function createIntroSpeaker({ registry, speechOutput, sessionStore }) {
   let spokenThisPage = false;
   function speak({ replay = false } = {}) {
-    if (!synthesis || !Utterance || spokenThisPage) return false;
+    if (!speechOutput || spokenThisPage) return false;
     if (!replay) {
       try { if (sessionStore?.getItem(GREETING_KEY)) return false; } catch {}
     }
-    const utterance = new Utterance(buildVoiceGreeting(registry));
-    utterance.lang = 'en-IN'; utterance.rate = 1;
-    const voices = synthesis.getVoices?.() || [];
-    utterance.voice = voices.find((voice) => /^en-IN$/i.test(voice.lang)) || voices.find((voice) => /^en-US$/i.test(voice.lang)) || null;
-    utterance.onstart = () => {
-      spokenThisPage = true;
-      try { sessionStore?.setItem(GREETING_KEY, 'true'); } catch {}
-    };
-    utterance.onerror = () => {
-      if (!replay) { spokenThisPage = false; try { sessionStore?.removeItem(GREETING_KEY); } catch {} }
-    };
-    try { synthesis.speak(utterance); return true; } catch { return false; }
+    spokenThisPage = true;
+    try {
+      Promise.resolve(speechOutput.speak(buildVoiceGreeting(registry))).then((result) => {
+        if (result?.ok) { try { sessionStore?.setItem(GREETING_KEY, 'true'); } catch {} }
+        else { spokenThisPage = false; try { sessionStore?.removeItem(GREETING_KEY); } catch {} }
+      }).catch(() => { spokenThisPage = false; });
+      return true;
+    } catch { spokenThisPage = false; return false; }
   }
   return { speak: () => speak(), replay: () => { spokenThisPage = false; return speak({ replay: true }); }, text: () => buildVoiceGreeting(registry) };
 }
@@ -38,8 +34,7 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
   try { sessionStore = window.sessionStorage; } catch {}
   const speaker = createIntroSpeaker({
     registry: window.NovaPayAssistantActions,
-    synthesis: window.speechSynthesis,
-    Utterance: window.SpeechSynthesisUtterance,
+    speechOutput: window.NovaPaySpeechOutputInstance,
     sessionStore,
   });
   window.NovaPayIntroGreeting = speaker;

@@ -96,6 +96,13 @@ test('document questions route to OCR retrieval and evidence-based explanations 
   assert.equal(classifyAIIntent('Explain what the document says about the payment').route, 'ocr');
 });
 
+test('invoice creation intent is a deterministic code action and document text alone is not an intent', () => {
+  for (const question of ['create an invoice for me', 'I want you to create a new invoice for me', 'make an invoice for Acme', 'generate an invoice for Acme']) {
+    assert.deepEqual({ route: classifyAIIntent(question).route, intent: classifyAIIntent(question).intent }, { route: 'code', intent: 'invoice_create' });
+  }
+  assert.equal(classifyAIIntent('Read the attached document').intent, 'document', 'document content is not supplied as an intent input');
+});
+
 test('router dispatch attaches deterministic metadata and never trusts an input route field', async () => {
   const calls = [];
   const route = createAIRouter({ sql: async (input) => { calls.push(input); return { answer: 'ledger result' }; } });

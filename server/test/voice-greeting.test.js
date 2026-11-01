@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { buildVoiceGreeting, createIntroSpeaker } from '../../src/voice-greeting.js';
 import { ASSISTANT_ACTION_REGISTRY } from '../src/ai/actions.js';
 
-class Utterance { constructor(text) { this.text = text; } }
 function store(initial = {}) {
   const values = new Map(Object.entries(initial));
   return { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key) };
@@ -17,12 +16,12 @@ test('intro capability sentence is derived from registered navigation views', ()
   }
 });
 
-test('first interaction greeting is once per session and replay remains available', () => {
-  const saved = store(), utterances = [], synthesis = { getVoices: () => [{ lang: 'en-US' }], speak(value) { utterances.push(value); } };
-  const speaker = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, synthesis, Utterance, sessionStore: saved });
+test('first interaction greeting uses shared speech output once per session and replay remains available', async () => {
+  const saved = store(), utterances = [], speechOutput = { speak(value) { utterances.push(value); return Promise.resolve({ ok: true }); } };
+  const speaker = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, speechOutput, sessionStore: saved });
   assert.equal(speaker.speak(), true);
-  assert.equal(utterances[0].lang, 'en-IN');
-  utterances[0].onstart();
+  assert.match(utterances[0], /tap the mic and tell me what you need/i);
+  await new Promise((resolve) => setImmediate(resolve));
   assert.equal(saved.getItem('novapay-voice-greeting-spoken'), 'true');
   assert.equal(speaker.speak(), false);
   assert.equal(speaker.replay(), true);
@@ -30,17 +29,16 @@ test('first interaction greeting is once per session and replay remains availabl
 });
 
 test('blocked speech and unavailable browser speech fail without throwing', () => {
-  const speaker = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, synthesis: { speak() { throw new Error('blocked'); } }, Utterance, sessionStore: store() });
-  assert.doesNotThrow(() => speaker.speak());
+  const speaker = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, speechOutput: { speak() { throw new Error('blocked'); } }, sessionStore: store() });
   assert.equal(speaker.speak(), false);
   const unsupported = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, sessionStore: store() });
   assert.equal(unsupported.speak(), false);
 });
 
-test('a speech error clears the session marker so the user may retry', () => {
-  const saved = store(), utterances = [], synthesis = { speak(value) { utterances.push(value); } };
-  const speaker = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, synthesis, Utterance, sessionStore: saved });
-  speaker.speak(); utterances[0].onstart(); utterances[0].onerror();
+test('a speech error clears the session marker so the user may retry', async () => {
+  const saved = store(), utterances = [], speechOutput = { speak(value) { utterances.push(value); return Promise.resolve({ ok: false, error: 'network' }); } };
+  const speaker = createIntroSpeaker({ registry: ASSISTANT_ACTION_REGISTRY, speechOutput, sessionStore: saved });
+  speaker.speak(); await new Promise((resolve) => setImmediate(resolve));
   assert.equal(saved.getItem('novapay-voice-greeting-spoken'), null);
   assert.equal(speaker.speak(), true);
 });

@@ -87,3 +87,5 @@
    .specular-button { position: relative } was overriding .modal-close { position: absolute }. */
 .invoice-dialog>.modal-close{position:absolute;top:18px;right:18px;left:auto;margin:0;float:none;z-index:4}
 @media(max-width:560px){.invoice-dialog>.modal-close{top:14px;right:14px}}
+
+#invoice-table tbody tr.invoice-row-highlight{outline:2px solid var(--accent,#2563eb);outline-offset:-2px;background:var(--info-soft,rgba(37,99,235,.08))}

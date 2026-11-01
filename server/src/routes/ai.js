@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
 import { classifyAIIntent } from '../ai/router.js';
+import { validateAssistantActions } from '../ai/actions.js';
 
 const chatSchema = z.object({
   message: z.string().trim().min(1).max(1000),
@@ -48,6 +49,15 @@ export function aiRoutes({ config, askAI, identity, transcribeAudio }) {
       // Legacy client context is accepted for compatibility but intentionally ignored.
       const verifiedContext = { orgId: req.orgId, role: req.orgRole, userId: req.user?.id };
       const classification = classifyAIIntent(parsed.data.message);
+      if (classification.intent === 'invoice_create') {
+        if (!['owner', 'admin', 'accountant'].includes(req.orgRole)) return res.json({ answer: "Your role can't create invoices. Ask an owner or admin, or create it manually in Invoices.", speak: "Your role can't create invoices. Ask an owner or admin, or create it manually in Invoices.", route: 'code', reason: 'invoice_create_role_refused', citations: [], actions: [], usage: { model: null, inputTokens: 0, outputTokens: 0 } });
+        const parsedDetails = globalThis.NovaPayAssistantActions.parseInvoiceCreateText(parsed.data.message);
+        const partial = { customerName: parsedDetails.customerName || undefined, customerEmail: parsedDetails.customerEmail || undefined, currency: parsedDetails.currency, issueDate: parsedDetails.issueDate, dueDate: parsedDetails.dueDate || undefined, amountMinor: parsedDetails.amountMinor || undefined, description: parsedDetails.description || undefined };
+        const actions = validateAssistantActions([{ id: 'invoice.createDraft', args: partial }], parsed.data.message, req.orgRole);
+        const firstMissing = !partial.customerName ? 'Who is the invoice for?' : !partial.customerEmail ? 'What email address should appear on the invoice?' : !partial.amountMinor ? 'What is the invoice amount?' : !partial.description ? 'What should I list as the invoice line item?' : !partial.dueDate ? 'What is the due date?' : 'I have the invoice details ready. Please confirm before I create the draft.';
+        const result = { answer: firstMissing, speak: firstMissing, route: 'code', reason: classification.reason, citations: [], actions, usage: { model: null, inputTokens: 0, outputTokens: 0 } };
+        return res.json(result);
+      }
       const result = await askAI(parsed.data.message, verifiedContext, {
         context: parsed.data.context && typeof parsed.data.context === 'object' ? { view: parsed.data.context.view, selection: parsed.data.context.selection } : undefined,
         interrupted: parsed.data.interrupted,

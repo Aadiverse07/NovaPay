@@ -49,6 +49,8 @@ export function classifyAIIntent(message) {
   const text = normalize(message);
   if (!text) return { route: 'llm', reason: 'empty_or_unrecognized_question', intent: 'unknown' };
 
+  if (/\b(?:(?:create|make|new|generate|raise|prepare)\b.{0,60}\binvoices?\b|\binvoices?\b.{0,45}\b(?:create|make|generate|raise)\b)/i.test(text)) return { route: 'code', reason: 'invoice_create_draft_slot_filling', intent: 'invoice_create' };
+
   // Explicit numeric/FX operations run before any data-query classification.
   if (hasFXIntent(text)) return { route: 'code', reason: 'currency_conversion_or_fx_rate', intent: 'fx' };
   if (hasArithmeticIntent(text)) return { route: 'code', reason: 'deterministic_arithmetic', intent: 'arithmetic' };

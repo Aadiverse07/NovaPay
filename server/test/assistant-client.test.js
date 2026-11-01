@@ -63,6 +63,23 @@ test('dashboard confines local fallback to demo mode and does not scrape or atta
   assert.doesNotMatch(dashboardSource, /Attached file content|FileReader|aiAttachmentText/);
 });
 
+test('invoice create intent uses the shared typed/voice handler, explicit confirmation, and the authenticated draft endpoint', () => {
+  assert.match(dashboardSource, /return Promise\.resolve\(\)\.then\(function\(\)\{return handleInvoiceAssistant\(q\)\}\)\.then\(function\(invoiceResponseValue\)\{return invoiceResponseValue\|\|ask\(q,metadata\)/, 'invoice action interception precedes the evidence-answer path');
+  assert.match(dashboardSource, /pendingInvoiceDraft\.awaitingConfirmation/);
+  assert.match(dashboardSource, /confirm\|yes\|confirmed/);
+  assert.match(dashboardSource, /data\.submitting/);
+  assert.match(dashboardSource, /auditAssistantAction\(action,"confirmed"\).*executeAssistantAction\(action\)/);
+  assert.match(dashboardSource, /"\/api\/invoices"/);
+  assert.match(dashboardSource, /"Idempotency-Key":key/);
+  assert.match(dashboardSource, /renewInvoiceExpiry\(\).*120000/);
+  assert.match(dashboardSource, /resetPendingInvoice\(\);return invoiceResponse\(q,"I cancelled the invoice draft/);
+  assert.match(dashboardSource, /invoiceDraftIdempotencyKey=crypto\.randomUUID\(\)/);
+  assert.match(dashboardSource, /lastCreatedInvoiceId=invoice\.id/);
+  assert.match(dashboardSource, /change the amount to a new value/);
+  assert.match(dashboardSource, /customerEmail/);
+  assert.match(dashboardSource, /invoicePrompt\(missing\)/);
+});
+
 test('assistant action UI enforces confirmation tiers and audits before writes', () => {
   const confirmation = dashboardSource.indexOf('auditAssistantAction(action,"confirmed").then(function(){return executeAssistantAction(action)})');
   const tierTwo = dashboardSource.indexOf('else if(definition.tier===2)');
@@ -118,4 +135,19 @@ test('typed and PTT queries use the same handler and both speak the returned ans
   assert.equal(ptt.reply, 'NovaPay answered show refunds this month');
   assert.deepEqual(spoken, ['NovaPay answered open ledger', 'NovaPay answered show refunds this month']);
   assert.equal(ptt.options.source, 'push-to-talk');
+});
+
+test('an authenticated chat response after the fake API fetch triggers exactly one shared speak', async () => {
+  const calls = [], utterances = [], events = [];
+  const output = speechOutputModule.create({
+    synthesis: { getVoices: () => [{ lang: 'en-IN', localService: true }], resume() {}, speak(utterance) { utterances.push(utterance.text); setImmediate(() => { utterance.onstart(); utterance.onend(); }); } },
+    Utterance: class { constructor(text) { this.text = text; } },
+    document: { addEventListener(name, fn) { events.push(name); } }, storage: { getItem: () => null },
+  });
+  output.markGesture();
+  const response = await client.send({ async request(path, options) { calls.push({ path, options }); return { answer: 'The organization received funds today.', speak: '', route: 'sql' }; } }, 'how much did I receive today?');
+  const result = await output.speak(response.speak || response.reply);
+  assert.equal(calls.length, 1); assert.equal(calls[0].path, '/api/ai/chat');
+  assert.equal(result.ok, true); assert.deepEqual(utterances, ['The organization received funds today.']);
+  assert.ok(events.includes('pointerdown'));
 });
