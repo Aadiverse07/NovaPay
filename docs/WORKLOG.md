@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: typed/voice assistant creates invoice drafts by collecting details; branch `codex/voice-assistant`; latest local checkpoint `c25f10b`; task implementation committed locally; never push or run migrations.
+- Current task: typed/voice assistant creates invoice drafts by collecting details; branch `codex/voice-assistant`; latest committed checkpoint `112a407`; task implementation committed locally; never push or run migrations.
 - Last completed step: invoice creation route/UI requirements traced; deterministic client/server intent, partial action schema, slot validation, confirmation, role refusal, idempotency key, invoice open/download follow-ups implemented.
 - Test state: focused suite PASS 37/37. `npm test` FAIL 296/297 solely at known `server/test/api-client.test.js:29` (`Cache-Control: no-store` expected, undefined); 21 migration syntax checks passed. Changed JS syntax and `git diff --check` PASS; protected-file diff empty.
 - Scope files: `src/assistant-actions.js`, `src/dashboard.js`, `src/modules.css`, `server/src/ai/actions.js`, `server/src/ai/router.js`, `server/src/routes/ai.js`, and four server tests; docs updated for continuity.
@@ -4930,3 +4930,4 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 03:08 IST | ABOUT TO: Replace the exact stale context header line using its stable prefix and verify it before commit; WHY: previous literal replacement did not match the repository text.
 2026-11-02 03:10 IST | RESULT: PASS; CONTEXT header now reflects invoice slot filling; local commit `c25f10b` created; no source changes. NEXT: update pointer/header to c25f10b and checkpoint the final journal state.
 2026-11-02 03:11 IST | ABOUT TO: Set both handoff references to the latest documentation commit c25f10b and commit WORKLOG/CONTEXT; WHY: leave continuity metadata synchronized with HEAD.
+2026-11-02 03:14 IST | RESULT: PASS; documentation checkpoint `112a407` is HEAD on codex/voice-assistant; implementation WIP commit `b9668b7` remains in history; no push. Current final journal/context pointer update is local only. NEXT: user completes Chrome owner flow and reports POST/debug evidence; do not claim browser verification.
