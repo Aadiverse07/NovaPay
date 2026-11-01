@@ -51,6 +51,8 @@ test('AI context drops buyer and unknown fields; user text redacts common sensit
   const askAI = createAIService({ config: {}, events: null, provider: { async generate(input) { prompt = input.prompt; return '{"reply":"safe","evidence":[],"proposal":null}'; } } });
   await askAI('Is ada@example.com linked to this payment?', { transactions: [{ id: 'CAPTURE_123', buyer: 'Ada Lovelace' }] });
   assert.doesNotMatch(prompt, /ada@example|Ada Lovelace/);
+  assert.match(prompt, /every \*_minor field is an integer count of the ISO currency's minor units/);
+  assert.match(prompt, /Use formatted fields for answers/);
 });
 
 test('PII redaction masks Unicode names, addresses, phone, account/card numbers, and tokens without near-match over-redaction', () => {
@@ -145,17 +147,51 @@ test('an uncited AI proposal does not create an approval', async () => {
 test('FX and structured refund questions bypass the LLM and report zero provider tokens', async () => {
   let providerCalls = 0;
   const provider = { async generate() { providerCalls += 1; throw new Error('LLM must not run for deterministic routes'); } };
-  const fx = { async convert(args) { assert.deepEqual(args, { orgId: 'org-a', amount: '5000', base: 'INR', quote: 'USD' }); return { amount: '5000.00', baseCurrency: 'INR', convertedAmount: '60.00', quoteCurrency: 'USD', rate: '0.012', source: 'fixture', timestamp: '2026-10-24T00:00:00.000Z', label: 'indicative, not a guaranteed settlement rate', fees: [] }; } };
+  const fx = { async convert(args) { assert.deepEqual(args, { orgId: 'org-a', amount: '5000', base: 'INR', quote: 'USD' }); return { amount: '5000.00 INR', baseCurrency: 'INR', convertedAmount: '60.00 USD', quoteCurrency: 'USD', rate: '0.012', source: 'fixture', timestamp: '2026-10-24T00:00:00.000Z', label: 'indicative, not a guaranteed settlement rate', fees: [] }; } };
   const repos = { async listTransactions(_orgId, filters) { assert.equal(filters.type, 'refund'); return [{ id: 'REF-T1', source_type: 'refund', source_id: 'REF-T1', amount_minor: 250, currency: 'USD', status: 'COMPLETED' }]; } };
   const askAI = createAIService({ config: {}, repos, fx, provider });
   const converted = await askAI('Convert 5000 INR to USD', { orgId: 'org-a', userId: 'user-a' });
   assert.equal(converted.route, 'code');
-  assert.match(converted.reply, /60\.00 USD/);
+  assert.match(converted.reply, /5000\.00 INR = 60\.00 USD/);
   assert.deepEqual(converted.usage, { model: null, inputTokens: 0, outputTokens: 0 });
   const refunds = await askAI('Show refunds this month', { orgId: 'org-a', userId: 'user-a' });
   assert.equal(refunds.route, 'sql');
   assert.match(refunds.reply, /1 refund record\(s\), totaling 2\.50 USD/);
   assert.deepEqual(refunds.evidence, ['REF-T1']);
   assert.deepEqual(refunds.usage, { model: null, inputTokens: 0, outputTokens: 0 });
+  assert.equal(providerCalls, 0);
+});
+
+test('SQL refund answers format totals using each currency minor-unit exponent', async () => {
+  let providerCalls = 0;
+  const repos = {
+    async listTransactions(_orgId, filters) {
+      assert.equal(filters.type, 'refund');
+      return [
+        { id: 'REF-JPY', source_type: 'refund', amount_minor: 13750, currency: 'JPY', status: 'COMPLETED' },
+        { id: 'REF-KWD', source_type: 'refund', amount_minor: 13750, currency: 'KWD', status: 'COMPLETED' },
+      ];
+    },
+  };
+  const askAI = createAIService({ config: {}, repos, provider: { async generate() { providerCalls += 1; throw new Error('LLM must not run'); } } });
+  const result = await askAI('Show refunds this month', { orgId: 'org-a', userId: 'user-a' });
+  assert.equal(result.route, 'sql');
+  assert.match(result.reply, /13750 JPY/);
+  assert.match(result.reply, /13\.750 KWD/);
+  assert.equal(result.usage.inputTokens, 0);
+  assert.equal(providerCalls, 0);
+});
+
+test('code FX route preserves base and quote currency exponent formatting', async () => {
+  const fx = { async convert(args) {
+    assert.deepEqual(args, { orgId: 'org-a', amount: '1.234', base: 'KWD', quote: 'JPY' });
+    return { amount: '1.234 KWD', baseCurrency: 'KWD', convertedAmount: '123 JPY', quoteCurrency: 'JPY', rate: '100', source: 'fixture', timestamp: '2026-10-24T00:00:00.000Z' };
+  } };
+  let providerCalls = 0;
+  const askAI = createAIService({ config: {}, fx, provider: { async generate() { providerCalls += 1; throw new Error('LLM must not run'); } } });
+  const result = await askAI('Convert 1.234 KWD to JPY', { orgId: 'org-a', userId: 'user-a' });
+  assert.equal(result.route, 'code');
+  assert.match(result.reply, /1\.234 KWD = 123 JPY/);
+  assert.equal(result.usage.inputTokens, 0);
   assert.equal(providerCalls, 0);
 });

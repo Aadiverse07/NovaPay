@@ -8,7 +8,18 @@ import { createRepositories } from '../src/repos/memory.js';
 
 test('FX conversion uses decimal integer arithmetic and half-up minor-unit rounding',()=>{
   assert.equal(convertMinorUnits(1001,'1.2345'),1236);
+  assert.equal(convertMinorUnits(100,'1',2,0),1);
+  assert.equal(convertMinorUnits(100,'1.2345',2,3),1235);
   assert.throws(()=>convertMinorUnits(100,'1e2'));
+});
+
+test('FX service formats zero- and three-decimal currencies in their own minor units', async()=>{
+  const service=createFxService({now:()=>Date.parse('2026-10-24T00:00:00.000Z'),rates:{async get(){return {rate:'1.2345',source:'fixture',fetched_at:'2026-10-24T00:00:00.000Z'};},async put(){}}});
+  const jpy=await service.convert({orgId:'org',amount:'100',base:'USD',quote:'JPY'});
+  const kwd=await service.convert({orgId:'org',amount:'1.00',base:'USD',quote:'KWD'});
+  assert.equal(jpy.amount,'100.00 USD');
+  assert.equal(jpy.convertedAmount,'123 JPY');
+  assert.equal(kwd.convertedAmount,'1.235 KWD');
 });
 
 test('document invoice draft computes totals on the server and rejects a mismatched total',()=>{
@@ -23,8 +34,8 @@ test('FX service caches provider rates and returns source, timestamp, label, and
   const service=createFxService({now,rates:{async get(_org,base,quote){return rows.get(`${base}:${quote}`)||null;},async put(row){rows.set(`${row.base_currency}:${row.quote_currency}`,row);}},fetchImpl:async(url)=>{calls++;assert.equal(new URL(url).hostname,'api.frankfurter.dev');return {ok:true,json:async()=>({date:'2026-10-23',rates:{EUR:1.2345}})};}});
   const first=await service.convert({orgId:'org',amount:'10.01',base:'USD',quote:'EUR'});
   const second=await service.convert({orgId:'org',amount:'1.00',base:'USD',quote:'EUR'});
-  assert.equal(first.convertedAmount,'12.36');assert.equal(first.rate,'1.2345');assert.equal(first.source,'Frankfurter');
-  assert.equal(first.label,'indicative, not a guaranteed settlement rate');assert.deepEqual(first.fees,[]);assert.ok(first.timestamp);assert.equal(second.convertedAmount,'1.23');assert.equal(calls,1);
+  assert.equal(first.convertedAmount,'12.36 EUR');assert.equal(first.rate,'1.2345');assert.equal(first.source,'Frankfurter');
+  assert.equal(first.label,'indicative, not a guaranteed settlement rate');assert.deepEqual(first.fees,[]);assert.ok(first.timestamp);assert.equal(second.convertedAmount,'1.23 EUR');assert.equal(calls,1);
 });
 
 test('FX provider throttle reserves distinct slots for concurrent currency pairs',async()=>{
@@ -141,7 +152,7 @@ test('Phase 3 routes return tenant-scoped FX, report, and recalculated invoice s
   const call=(path,options={})=>fetch(`${base}${path}`,{...options,headers:{authorization:`Bearer ${options.token||'ok'}`,'x-org-id':org,...(options.body?{'content-type':'application/json'}:{}),...options.headers}});
   try{
     const unauth=await fetch(`${base}/api/fx/convert?amount=1.00&base=USD&quote=EUR`);assert.equal(unauth.status,401);
-    const fx=await call('/api/fx/convert?amount=1.00&base=USD&quote=USD');assert.equal(fx.status,200);assert.equal((await fx.json()).convertedAmount,'1.00');
+    const fx=await call('/api/fx/convert?amount=1.00&base=USD&quote=USD');assert.equal(fx.status,200);assert.equal((await fx.json()).convertedAmount,'1.00 USD');
     const badFx=await call('/api/fx/convert?amount=-1&base=USD&quote=EUR');assert.equal(badFx.status,400);
     const report=await call('/api/reports/profit-and-loss?from=2026-10-01&to=2026-10-31');const reportBody=await report.json();assert.equal(report.status,200);assert.equal(reportBody.totals.revenueMinor,'10000');
     assert.deepEqual(await (await call('/api/reports/profit-and-loss?from=2026-10-01&to=2026-10-31')).json(),reportBody);

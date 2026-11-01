@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { formatMinorAmount } from './money-units.js';
 
 export const AI_TOOL_MAX_CALLS = 3;
 export const AI_TOOL_TIMEOUT_MS = 1500;
@@ -62,6 +63,11 @@ function amountString(row, field, fallback) {
   return value == null ? null : String(value);
 }
 
+function moneyEvidenceFields(name, value, currency) {
+  const minor = value == null ? '' : String(value);
+  return { [`${name}_minor`]: minor, [`${name}_formatted`]: formatMinorAmount(minor, currency) };
+}
+
 function transactionEvidence(row) {
   const id = String(row?.id || '');
   if (!id) return null;
@@ -71,10 +77,10 @@ function transactionEvidence(row) {
     type: String(row.source_type || row.type || ''),
     sourceId: String(row.source_id || row.sourceId || row.paypal_capture_id || row.paypal_refund_id || ''),
     status: String(row.status || ''),
-    amountMinor: amountString(row, 'amount_minor', 'amountMinor'),
-    feeMinor: amountString(row, 'fee_minor', 'feeMinor'),
-    netMinor: amountString(row, 'net_minor', 'netMinor'),
     currency: String(row.currency || ''),
+    ...moneyEvidenceFields('amount', amountString(row, 'amount_minor', 'amountMinor'), String(row.currency || '')),
+    ...moneyEvidenceFields('fee', amountString(row, 'fee_minor', 'feeMinor'), String(row.currency || '')),
+    ...moneyEvidenceFields('net', amountString(row, 'net_minor', 'netMinor'), String(row.currency || '')),
     occurredAt: String(row.occurred_at || row.occurredAt || ''),
   };
 }
@@ -92,9 +98,9 @@ function invoiceEvidence(row, orgId) {
     customerRef,
     state: String(row.state || ''),
     currency: String(row.currency || ''),
-    subtotalMinor: String(row.subtotalMinor ?? row.subtotal_minor ?? ''),
-    taxMinor: String(row.taxMinor ?? row.tax_minor ?? ''),
-    totalMinor: String(row.totalMinor ?? row.total_minor ?? ''),
+    ...moneyEvidenceFields('subtotal', row.subtotalMinor ?? row.subtotal_minor, String(row.currency || '')),
+    ...moneyEvidenceFields('tax', row.taxMinor ?? row.tax_minor, String(row.currency || '')),
+    ...moneyEvidenceFields('total', row.totalMinor ?? row.total_minor, String(row.currency || '')),
     createdAt: String(row.createdAt || row.created_at || ''),
   };
 }
@@ -108,7 +114,7 @@ function feeEvidence(row) {
     recordType: 'fee_summary',
     period,
     currency,
-    feeMinor: String(row.fee_minor ?? row.feeMinor ?? '0'),
+    ...moneyEvidenceFields('fee', row.fee_minor ?? row.feeMinor ?? '0', currency),
   };
 }
 
@@ -151,13 +157,13 @@ function makeToolHandlers(repos, orgId) {
         recordType: 'ledger_summary',
         currency,
         balanced: Boolean(summary?.balanced),
-        debitMinor: String(totals.debitMinor ?? totals.debit_minor ?? '0'),
-        creditMinor: String(totals.creditMinor ?? totals.credit_minor ?? '0'),
+        ...moneyEvidenceFields('debit', totals.debitMinor ?? totals.debit_minor ?? '0', currency),
+        ...moneyEvidenceFields('credit', totals.creditMinor ?? totals.credit_minor ?? '0', currency),
         accounts: (summary?.accounts || []).slice(0, AI_TOOL_MAX_ROWS).map((account) => ({
           code: String(account.code || ''),
           name: String(account.name || ''),
-          debitMinor: String(account.debitMinor ?? account.debit_minor ?? '0'),
-          creditMinor: String(account.creditMinor ?? account.credit_minor ?? '0'),
+          ...moneyEvidenceFields('debit', account.debitMinor ?? account.debit_minor ?? '0', currency),
+          ...moneyEvidenceFields('credit', account.creditMinor ?? account.credit_minor ?? '0', currency),
         })),
       };
     },

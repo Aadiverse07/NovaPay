@@ -1,12 +1,9 @@
 ## RESUME POINTER
-- Current task: fix AI Assistant local fallback on `fix-ai-assistant` (based on origin/main commit `b21c442`, PR #10 merged).
-- Last finished: local WIP-BROKEN checkpoint `8b6f734` includes authenticated API wiring, backend response mapping, safe errors/route badge/citations, deterministic greetings, explicit demo-only fallback, removal of browser file-text injection, tests and docs.
-- Current state: no push; `.env` is not tracked. Full suite retains the known no-store assertion failure.
-- Test state: focused assistant/router/cache/injection/budget suite 31/31 PASS; full `npm test` 183/184 (known `authenticated API client bypasses conditional HTTP caching` no-store failure); migrations 17/17; changed JS syntax PASS; diff check PASS; protected-file diff empty.
-- Live state: `/api/status` 200, authenticated config/Supabase/AI present; unauthenticated `/api/ai/chat` returns 401 AUTH_REQUIRED. Browser session is unavailable, so fixed-owner route and usage checks are UNVERIFIED; no LLM call made.
-- Next: review diff; run owner questions through the browser (`Convert 5000 INR to USD`, `Show refunds this month`), inspect route badge/hover reason and `ai_usage` for zero LLM tokens; only then consider one LLM question if budget permits. Complete browser checks below, then WIP-BROKEN commit locally. Never push.
-- Human browser steps: start/reload localhost:3000, sign in as fixed owner, click AI Assistant, ask each question and Send; verify Code/Database badge and hover reason, citation IDs or “No live records yet”; inspect console/network for POST `/api/ai/chat` with only `message`, Authorization and X-Org-Id; verify no sample-data banner/rows; try a greeting and offline/error state.
-- Do not call Gemini directly, create users, or push.
+- Current task: fix minor-unit money values in assistant evidence and deterministic answers on `fix-ai-assistant`.
+- Last finished: exponent-aware amount formatter; invoice, transaction, refund, fee and ledger evidence now pairs labeled `*_minor` integers with `*_formatted` currency strings; prompt documents the convention; SQL and FX answers use the same formatter.
+- Current state: implementation/tests/docs are local and pending WIP commit; no LLM call, no push, no `.env` tracked.
+- Tests: focused AI/evidence/FX/router/cache/injection 51/51 PASS; `npm test` 189/190, only known no-store header failure; migrations 17/17; `node --check` 8 JS files PASS; `git diff --check` PASS; protected-file diff empty across 67 paths.
+- Next: commit locally with `WIP-BROKEN:` because the known no-store test remains; inspect final status; stop. Do not push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -3865,3 +3862,62 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 11:11 IST | Before: check final branch, working-tree paths, HEAD and tracked `.env`; why: ensure the requested local-only fix is on fix-ai-assistant and no environment file is part of the work.
 2026-11-01 11:11 IST | Result: PASS, on fix-ai-assistant at `db51a65`; no `.env` tracked; only this final journal result is pending; NEXT: commit the journal checkpoint locally and stop for human browser verification.
 2026-11-01 11:11 IST | Before: commit final work journal status locally; why: retain the latest exact handoff state without pushing.
+2026-11-01 | Before: verify branch/worktree and read current RESUME POINTER; why: start the minor-unit evidence fix on the requested branch and preserve continuation state.
+2026-11-01 11:12 IST | Result: PASS, correct repo and branch; worktree had only the live WORKLOG entry; RESUME POINTER read; NEXT: trace targeted AI evidence construction and amount-formatting utilities.
+2026-11-01 11:12 IST | Before: inspect only AI service, SQL route/repo and money helpers for invoice/transaction/refund/fee/ledger formatting; why: find raw minor-unit exposure across model and deterministic answer paths.
+2026-11-01 11:13 IST | Result: PARTIAL, evidence builders live in `server/src/services/ai.js` and SQL rows in repos; first rg included nonexistent `server/src/lib` and returned a path error; NEXT: inspect exact AI service/repo functions and currency sources.
+2026-11-01 11:13 IST | Before: read AI context construction, prompt header, SQL refund path and repo money columns; why: identify all money fields before adding a shared exponent-aware formatter.
+2026-11-01 11:14 IST | Result: PASS, AI evidence path calls `buildAIEvidence`; repo rows retain *_minor raw values; legacy formatter evidenceNumbers hardcodes /100; SQL answers use deterministicCodeResult; NEXT: inspect those exact implementations and existing currency metadata.
+2026-11-01 11:14 IST | Before: read buildAIEvidence, deterministicCodeResult, currency metadata and ledger repo methods; why: implement one formatter that correctly handles 0/2/3 minor-unit exponents.
+2026-11-01 11:15 IST | Result: PASS, `transactionEvidence`, `invoiceEvidence`, `feeEvidence`, and ledger summary emit raw amountMinor fields; deterministic SQL reply code hardcodes `/100`; NEXT: inspect exact function boundaries and available currency support.
+2026-11-01 11:15 IST | Before: inspect the relevant evidence functions and SQL answer branches in small ranges; why: establish a safe shared formatted representation for every persisted money field.
+2026-11-01 11:16 IST | Result: PASS, builders are in `server/src/ai/evidence.js`; deterministic SQL formatter (`moneyText`) hardcodes 2 decimals; currency tools can derive exponents with Intl; NEXT: map internal field usages and choose snake-case evidence fields while preserving deterministic arithmetic.
+2026-11-01 11:16 IST | Before: find every consumer of evidence minor fields; why: add labeled amounts without breaking deterministic SQL calculations or ungrounded-number checks.
+2026-11-01 11:18 IST | Result: PASS, only deterministic SQL handlers consume evidence minor fields; numeric grounding guard currently also treats raw minor values as valid claims; invoice evidence test fixtures available; NEXT: inspect FX code route formatting and tests.
+2026-11-01 11:18 IST | Before: inspect FX formatter/route and evidence tests; why: align code-route conversion formatting with currency exponents and avoid touching unrelated money paths.
+2026-11-01 11:19 IST | Result: PASS, FX code route currently uses repo fixed-2 money helpers; will share formatter and exponent-aware conversion only within FX/AI path; NEXT: inspect FX tests and create the shared currency money utility.
+2026-11-01 11:19 IST | Before: read FX unit tests and package conventions; why: preserve existing conversion behavior while supporting currencies with zero/three minor-unit digits.
+2026-11-01 11:22 IST | Result: PASS, shared exponent-aware formatter added; evidence uses labeled *_minor plus *_formatted fields; grounding guard no longer permits raw minor integers; SQL and FX format currency-aware values; files changed include ai evidence/service and FX; NEXT: add zero/two/three-decimal and invoice evidence regression tests.
+2026-11-01 11:22 IST | Before: inspect existing AI evidence test fixture and prompt tests before extending; why: keep test setup narrow and ensure regression checks exercise the actual model evidence payload.
+2026-11-01 11:24 IST | Result: PASS, added tests for INR/JPY/KWD formatting, invoice labeled minor fields, transaction/fee/ledger pairs, SQL refunds, and FX exponents; NEXT: check FX route allowed currencies and deterministic route selection before focused tests.
+2026-11-01 11:24 IST | Before: inspect FX route currency validation and AI FX intent allow-list; why: ensure zero/three-decimal currencies can reach code-route formatting where supported.
+2026-11-01 11:28 IST | Result: PASS, FX request classifier/API validation now accept ISO currency precision and convert base/quote scales; formatter tests cover JPY/KWD; NEXT: run focused evidence, SQL/FX, router/cache/injection tests.
+2026-11-01 11:28 IST | Before: run focused AI evidence, AI service, FX service, router, cache and injection tests; why: verify formatting changes and ensure no LLM provider is called by deterministic test cases.
+2026-11-01 11:28 IST | Result: FAIL, focused suite exit=1; ℹ tests 51;ℹ pass 48;ℹ fail 3;; TEST-REPORT.md appended; NEXT: fix any focused failure, then full checks.
+2026-11-01 11:29 IST | Result: FAIL, focused suite includes one existing FX endpoint expectation that omitted the now-required currency suffix (`1.00` vs `1.00 USD`); other results need count extraction; NEXT: update the assertion to the explicit currency contract and rerun.
+2026-11-01 11:29 IST | Before: inspect focused test summary and endpoint assertion; why: adjust only the expected output for the new explicit amount format.
+2026-11-01 11:30 IST | Result: FAIL, focused suite 48/51; besides endpoint currency suffix, two failures require inspection; NEXT: list failing test names and error headlines.
+2026-11-01 11:30 IST | Before: extract focused failure titles and concise assertions from saved test output; why: distinguish expected-contract changes from implementation defects.
+2026-11-01 11:32 IST | Result: REVIEW, failures were expected response-contract adjustments plus duplicated code-route currency suffix; service output now carries currency once and tests expect explicit currency; NEXT: rerun focused suite.
+2026-11-01 11:32 IST | Before: rerun focused evidence, AI, FX, router, cache and injection tests after correcting outputs; why: confirm implementation and updated response contract.
+2026-11-01 11:32 IST | Result: FAIL, focused suite rerun exit=1; ℹ tests 51;ℹ pass 50;ℹ fail 1;; TEST-REPORT.md appended; NEXT: inspect remaining failures if any, otherwise full checks.
+2026-11-01 11:33 IST | Result: FAIL, focused rerun exposed one stale FX mock: test stub returns bare amounts while production formatter now includes currency; NEXT: update fixture and assertion to realistic formatted strings, then rerun.
+2026-11-01 11:33 IST | Before: inspect the structured FX unit test around its stub and assertions; why: align the fixture contract with the currency-bearing FX response.
+2026-11-01 11:34 IST | Result: PASS, FX mock now returns explicit formatted amounts and test asserts both currencies; NEXT: rerun focused suite.
+2026-11-01 11:34 IST | Before: rerun focused evidence, AI, FX, router, cache and injection tests; why: verify updated fixtures and all unit conversions after the correction.
+2026-11-01 11:34 IST | Result: PASS, focused suite exit=0; ℹ tests 51;ℹ pass 51;ℹ fail 0;; TEST-REPORT.md appended; NEXT: complete full requested checks.
+2026-11-01 11:35 IST | Result: PASS, focused suite 51/51; test includes injection/router/cache/budget and deterministic no-provider behavior; NEXT: run full npm test and record exact result.
+2026-11-01 11:35 IST | Before: run full `npm test`; why: check all regressions after the money unit changes.
+2026-11-01 11:35 IST | Result: FAIL, npm test exit=1; ℹ tests 190;ℹ pass 189;ℹ fail 1;; TEST-REPORT.md appended; NEXT: run migration check.
+2026-11-01 11:36 IST | Result: FAIL, full npm suite retains the known `authenticated API client bypasses conditional HTTP caching` failure (`Cache-Control` undefined); TEST-REPORT contains test/pass/fail counts; NEXT: run migration parser.
+2026-11-01 11:36 IST | Before: run `npm run check:migrations`; why: verify all migration files remain parseable after backend-only formatting changes.
+2026-11-01 11:36 IST | Result: PASS, check:migrations exit=0; TEST-REPORT.md appended; NEXT: node --check changed JavaScript.
+2026-11-01 11:37 IST | Result: PASS, full suite 190 tests: 189 pass/1 known no-store failure; migrations 17/17 parse; NEXT: syntax-check all changed JS.
+2026-11-01 11:37 IST | Before: run `node --check` on every changed/new JavaScript file; why: catch parse errors in formatter, evidence, FX route and tests.
+2026-11-01 11:37 IST | Result: PASS, node --check exit=0 for 8 changed files; TEST-REPORT.md appended; NEXT: run git diff --check.
+2026-11-01 11:38 IST | Result: PASS, all 8 changed JS files pass syntax check; TEST-REPORT appended; NEXT: whitespace and protected-file audits.
+2026-11-01 11:38 IST | Before: run `git diff --check` across current changes; why: ensure patch and docs have no whitespace errors before final review.
+2026-11-01 11:38 IST | Result: PASS, diff check exit=0; TEST-REPORT appended; NEXT: verify protected-file diff is empty.
+2026-11-01 11:39 IST | Result: PASS, `git diff --check` clean; TEST-REPORT append succeeded; NEXT: compare all tracked protected paths with origin/main.
+2026-11-01 11:39 IST | Before: run protected-file diff stat vs origin/main; why: verify no protected styling, animation or asset files changed.
+2026-11-01 11:39 IST | Result: PASS, protected diff exit=0; TEST-REPORT appended; NEXT: refresh handoff and record currency-formatting decision.
+2026-11-01 11:40 IST | Result: PASS, protected diff empty across 67 tracked protected paths; NEXT: update CONTEXT, RESUME POINTER and DECISIONS for the currency minor-unit fix.
+2026-11-01 11:40 IST | Before: refresh current handoff and append currency decision; why: make the next continuation point describe this task and the exact remaining known test failure.
+2026-11-01 11:42 IST | Result: PASS, CONTEXT/RESUME POINTER updated for money-unit fix; DECISIONS appended; TEST-REPORT has focused/full results; NEXT: final whitespace/protected/status checks before WIP-BROKEN commit.
+2026-11-01 11:42 IST | Before: rerun `git diff --check` after continuity edits; why: validate final docs and code formatting before checkpoint.
+2026-11-01 11:42 IST | Result: PASS, final whitespace check; TEST-REPORT updated; NEXT: confirm protected diff and staged/env status.
+2026-11-01 11:42 IST | Result: 0, final whitespace check; TEST-REPORT updated; NEXT: confirm protected diff and staged/env status.
+2026-11-01 11:43 IST | Result: PASS, final whitespace check clean; NEXT: confirm branch, staged paths, `.env` tracking and protected-file diff.
+2026-11-01 11:43 IST | Before: run final branch/status/env and protected-file audit; why: ensure local WIP includes only intended files and protected paths remain untouched.
+2026-11-01 11:44 IST | Result: PASS, branch fix-ai-assistant; no staged paths before staging; .env tracked count 0; protected-file diff empty; NEXT: stage the intended money-unit code/tests/docs and commit locally.
+2026-11-01 11:44 IST | Before: stage and locally commit the money-unit evidence fix; why: checkpoint completed work while recording the known no-store test failure; never push.

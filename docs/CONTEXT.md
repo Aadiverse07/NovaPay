@@ -1,30 +1,27 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-11-01 11:01 IST
+- Date/time: 2026-11-01 11:40 IST
 - Branch: `fix-ai-assistant`, based on `origin/main` at `b21c442` (PR #10 merge); local checkpoint `8b6f734`, no push.
-- Phase/task: AI Assistant authenticated wiring and fallback repair.
+- Phase/task: AI Assistant money-unit evidence formatting repair.
 
 ## DONE
 - `src/assistant-client.js` maps backend answer/route/reason/citations and makes message-only calls through the auth-aware API client.
 - `src/novapay-live.js`, `src/dashboard.js`, and `dashboard.html` now use the authenticated API in session mode; local fallback is explicitly labelled and gated to demo mode only.
 - Removed transaction DOM context and browser file-text ingestion from assistant requests. File button opens Documents.
 - Backend greets vague help requests deterministically without LLM tokens; UI shows route labels, hover reason, citation IDs, empty-evidence and user-safe errors.
-- Tests added for message-only request, demo gate, errors, route/citations, no browser context, and greetings.
+- Tests cover message-only request, demo gate, errors, route/citations, no browser context, greetings, currency exponents and labeled invoice/transaction/fee/ledger evidence.
+- Currency formatter derives minor-unit exponents from ISO currency metadata; deterministic SQL and FX answers return formatted amounts with currency codes.
 
 ## IN PROGRESS
-- Code/tests/docs checkpointed locally as `8b6f734` (`WIP-BROKEN:`). No push.
-- Owner live route checks are UNVERIFIED: browser session unavailable; no owner JWT used and no LLM call made.
+- Money-unit changes and tests are complete locally; pending WIP-BROKEN commit due the known no-store test failure. No push or LLM calls.
 
 ## NEXT STEPS
-1. In the fixed owner browser session, ask “Convert 5000 INR to USD” and “Show refunds this month”; verify Code and Database metadata/reasons.
-2. Check `ai_usage` rows for zero LLM tokens for those requests. If daily budget allows, at most one “Why did our fees change?” request; record HTTP status only.
-3. Verify greeting, citation chips, empty-evidence state, session/budget/provider/offline errors, no sample banner/rows, and request headers/body in DevTools.
-4. Rerun the focused and full checks if code changes; commit locally with `WIP-BROKEN:` because the known no-store test still fails. Never push.
+1. Create the local WIP-BROKEN checkpoint; the one full-suite failure is the known no-store assertion.
+2. Review status and stop; no live or LLM verification was requested for this change. Never push.
 
 ## USER ACTIONS PENDING
-- Browser: start/reload `npm start` at localhost:3000; sign in as the fixed owner; click AI Assistant; enter each of the two questions above and click Send; hover each route badge; inspect citations and Network request; verify Transactions has no illustrative rows/banner; submit “hey can you help me in something”; test offline only if safely available.
-- Check database `ai_usage` for the two code/SQL questions; no LLM invocation was made in this run.
+- None for this task.
 
 ## LIVE STATE
 - `/api/status`: HTTP 200, server reports authenticated mode, Supabase configured, AI configured.
@@ -35,19 +32,19 @@
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused assistant/router/cache/injection/budget suite | PASS | 31/31 |
-| `npm test` | FAIL | 183/184; existing `authenticated API client bypasses conditional HTTP caching` no-store assertion |
+| Focused assistant/evidence/FX/router/cache/injection suite | PASS | 51/51 |
+| `npm test` | FAIL | 189/190; known `authenticated API client bypasses conditional HTTP caching` no-store assertion |
 | `npm run check:migrations` | PASS | 17/17 parsed |
 | `node --check` changed JS | PASS | 8 files |
 | `git diff --check` | PASS | clean |
 | Protected-file diff vs origin/main | PASS | empty (67 protected paths) |
-| Owner FX route and zero LLM usage | UNVERIFIED | no browser owner session/JWT available |
-| Owner SQL route and zero LLM usage | UNVERIFIED | no browser owner session/JWT available |
-| Single optional LLM question | UNVERIFIED | not called; browser session unavailable |
+| Currency exponent formatting (INR/JPY/KWD) | PASS | 13750 minor => 137.50 INR / 13750 JPY / 13.750 KWD |
+| Invoice evidence minor labels and formatting | PASS | `*_minor` plus `*_formatted`; no unlabelled total field |
+| Owner live questions | UNVERIFIED | not run; no LLM calls made |
 
 ## KNOWN ISSUES AND RISKS
 - Full suite still has the previously known API no-store header test failure; this task did not alter that code.
-- Live route metadata and ai_usage must be verified using the fixed owner session.
+- Full suite retains the known API no-store header failure; money-unit changes do not touch that path.
 
 ## LESSONS LEARNED
 - Supabase SQL Editor runs inside one transaction; errors roll back everything. Never edit an applied migration; add a numbered file.

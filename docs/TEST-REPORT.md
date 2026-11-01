@@ -1301,3 +1301,12 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 11:01 IST | Fixed-owner SQL question (`Show refunds this month`) and `ai_usage` zero-LLM check | UNVERIFIED | browser session unavailable; request not sent.
 2026-11-01 11:01 IST | Optional single LLM question | UNVERIFIED | not called; owner session unavailable.
 2026-11-01 11:07 IST | `git diff --check` final | PASS | staged and unstaged clean.
+2026-11-01 11:28 IST | Focused AI/evidence/FX/router/cache/injection tests | FAIL | ℹ tests 51;ℹ pass 48;ℹ fail 3;
+2026-11-01 11:32 IST | Focused AI/evidence/FX/router/cache/injection tests (rerun) | FAIL | ℹ tests 51;ℹ pass 50;ℹ fail 1;
+2026-11-01 11:34 IST | Focused AI/evidence/FX/router/cache/injection tests (final) | PASS | ℹ tests 51;ℹ pass 51;ℹ fail 0;
+2026-11-01 11:35 IST | `npm test` | FAIL | ℹ tests 190;ℹ pass 189;ℹ fail 1;
+2026-11-01 11:36 IST | `npm run check:migrations` | PASS | 0017_document_invoice_confirmation.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+2026-11-01 11:37 IST | `node --check` money/evidence/FX JS | PASS | 8 files; exit=0.
+2026-11-01 11:38 IST | `git diff --check` | PASS | exit=0.
+2026-11-01 11:39 IST | protected-file diff vs origin/main | PASS | empty across tracked protected paths.
+2026-11-01 11:42 IST | final `git diff --check` | PASS | exit=0.
