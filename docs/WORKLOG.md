@@ -1,12 +1,13 @@
 ## RESUME POINTER
-- Current task: remove the wake phrase and make NovaPay tap-to-talk; branch codex/voice-assistant; local changes uncommitted; never push.
+- Current task: diagnose/fix silent speech synthesis for tap-to-talk; branch codex/voice-assistant; local changes uncommitted; never push.
 - Done: one reusable, one-shot en-IN SpeechRecognition instance; tap toggles listening, interim text appears, final/silence submits once, tap during speech interrupts; no startup or continuous listening.
 - Removed wake matching/state and changed intro copy. Floating pill forwards to the same AI mic. Transaction dictation now uses the authenticated transcription API, not another recognizer. Hold the same main mic for transcription fallback when recognition is unavailable.
 - Spoken and typed prompts share handleQuery; quick navigation/help/stop/repeat remain deterministic; authenticated quick commands also send one background chat POST. Tiered, allowlisted server actions remain enabled.
 - Current files include dashboard.html; src/voice-assistant.js, assistant-client.js, assistant-speech.js, dashboard.js, voice-greeting.js, voice-indicator.js; server/src/ai/actions.js; assistant/voice/client/greeting/indicator tests; docs/VOICE-BROWSER-CHECKLIST.md and continuity docs. Earlier local transcription endpoint edits remain in server/src/app.js, routes/ai.js, services/llm.js and tests.
-- Checks: focused suite PASS 37/37; npm test FAIL 284/285, only known api-client.test.js:29 no-store assertion; 21 migration syntax checks PASS; changed JS syntax and git diff --check PASS; protected path filter empty.
-- Browser: UNVERIFIED. Local browser control is disabled in Work settings; no Chrome mic, POST log, audio, or action check was run. Follow docs/VOICE-BROWSER-CHECKLIST.md in Chrome and Brave.
-- Next: run the checklist; verify each spoken POST /api/ai/chat, status and response; check create invoice confirmation, download, upload prompt, TTS and hold fallback. No migrations or push.
+- Done: added TTS lifecycle diagnostics behind novapay:voiceDebug=1, 1-second voice loading, en-IN/en-GB/en-US/default selection, resume-before-speak, utterance retention, sentence chunks, plain-text fallback, shared explicit mute state defaulting ON, mic-tap gesture registration, and visible error status.
+- Checks: focused speech/client/controller tests PASS 28/28; npm test FAIL 288/289, sole known api-client.test.js:29 no-store assertion; 21 migration syntax checks PASS; node --check and git diff --check PASS; protected paths untouched.
+- Browser: UNVERIFIED. Browser control reports local browser use disabled in Work settings; no Chrome TTS lifecycle logs or tab/system audio status could be read. Follow docs/VOICE-BROWSER-CHECKLIST.md.
+- Next: in Chrome set localStorage novapay:voiceDebug=1, reload, run “open ledger” and “how much did I receive today?”, verify utterance onstart/onend and POST /api/ai/chat per query; check tab/system volume. No migrations or push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4865,3 +4866,13 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 00:21 IST | ABOUT TO: Fetch remote refs and compare PR scope against origin/main; WHY: local main diff spans unrelated historic files, so inspect actual PR delta before publishing.
 2026-11-02 00:22 IST | ABOUT TO: Run npm test on the PR branch; WHY: validate before any push.
 2026-11-02 00:22 IST | RESULT: npm test completed: 284 passed, 1 failed; sole failure is known api-client.test.js no-store assertion (header was undefined). Migration syntax checks: 21/21. NEXT: record result locally, run final safety/cleanliness checks, then push only codex/voice-assistant and open PR if clean.
+2026-11-02 00:31 IST | ABOUT TO: Trace speech synthesis and all assistant reply paths; WHY: locate why text/action replies are not audible before changing behavior.
+2026-11-02 00:33 IST | ABOUT TO: Run focused speech, voice-controller, and assistant-client tests; WHY: verify voice replies, muted behavior, voice selection, lifecycle logging, chunking, and turn reset.
+2026-11-02 00:34 IST | ABOUT TO: Correct failed test assertions and expose TTS failure reason in the status; WHY: first focused run found cross-realm assertion mismatch and generic playback-failure copy.
+2026-11-02 00:35 IST | ABOUT TO: Run full npm test; WHY: verify the speech changes against all existing application tests.
+2026-11-02 00:35 IST | RESULT: full npm test 288/289; only known api-client.test.js no-store failure. node --check, git diff --check passed; protected paths unchanged. NEXT: try real Chrome verification and record whether browser access is available.
+2026-11-02 00:36 IST | ABOUT TO: Inspect available browser surfaces; WHY: user requested real Chrome TTS logs and tab/system audio status.
+2026-11-02 00:36 IST | RESULT: browser apps are installed/running, but browser inventory is empty because local browser use is disabled in Work settings; actual Chrome audio, tab mute, system volume, and requested debug lines are UNVERIFIED. NEXT: update resume pointer and reports with the TTS fix and verification limits.
+2026-11-02 00:37 IST | ABOUT TO: Append test outcomes and TTS decision to reports; WHY: keep continuation files synchronized with this task and explicitly mark browser work unverified.
+2026-11-02 00:37 IST | RESULT: PASS; CONTEXT resume pointer, checklist, TEST-REPORT, and DECISIONS now cover shared TTS, mute synchronization, new test counts, and browser limitation. NEXT: final worktree/scope checks, then a local WIP-BROKEN checkpoint; no push.
+2026-11-02 00:38 IST | ABOUT TO: Verify changed paths, tracked .env, whitespace, and JS syntax before checkpoint; WHY: ensure only authorized speech code/tests/docs are included and no protected files changed.

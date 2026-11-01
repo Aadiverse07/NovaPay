@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; based on published main 3b14187; current task: tap-to-talk voice assistant; implementation done, local changes uncommitted; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; current task: diagnose silent speech synthesis; local changes uncommitted; no push.
 
 ## DONE
 - Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
@@ -9,11 +9,13 @@
 - Removed voice auto-resume from the floating indicator; its click activates the same AI mic. Transaction detail dictation now records audio and calls the authenticated transcription endpoint, avoiding a second recognizer. Main mic held-to-talk remains the fallback when browser recognition is unavailable.
 - Typed, spoken and transcribed queries share the dashboard handleQuery path. Deterministic navigation/help/stop/repeat remains; authenticated quick commands also issue one background chat request. Existing server action validation and Tier 0/1/2 execution remain.
 - Debug trace is gated by novapay:voiceDebug=1. Thinking times out after 15 seconds with a spoken status message.
+- Speech output now logs text length, voice count/selection, and utterance start/end/error behind the same debug flag; it waits up to one second for voices, prefers en-IN then en-GB/en-US/default, resumes synthesis, keeps utterance references, chunks long text, and uses a short plain-language fallback.
+- Voice mute is explicitly persisted and defaults on; the visible toggle now matches stored state, typed and spoken output share the mute control, and mic tap is recorded as the speech gesture.
 - Updated files: dashboard.html; src/voice-assistant.js, assistant-client.js, dashboard.js, voice-greeting.js, voice-indicator.js; server/src/ai/actions.js; tests server/test/assistant-actions.test.js, assistant-client.test.js, voice-assistant.test.js, voice-greeting.test.js, voice-indicator.test.js; docs/VOICE-BROWSER-CHECKLIST.md and continuity docs. Earlier local transcription endpoint files remain modified from the prior task: server/src/app.js, routes/ai.js, services/llm.js and assistant-speech/llm/routes tests.
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- Implementation and unit checks complete; real-browser validation is pending.
+- TTS code and focused tests are complete. Real Chrome playback and the requested live debug lines remain unverified.
 
 ## NEXT STEPS
 1. Run docs/VOICE-BROWSER-CHECKLIST.md in real Chrome and Brave.
@@ -29,13 +31,13 @@
 ## TEST STATE
 | Check | Status | Date | Command/details |
 |---|---|---|---|
-| Focused voice/action/client | PASS | 2026-11-02 | 37/37 across voice-assistant, voice-greeting, voice-indicator, assistant-client, assistant-actions and assistant-speech |
-| Full suite | FAIL | 2026-11-02 | npm test 284/285; sole failure server/test/api-client.test.js:29 expects Cache-Control no-store, actual undefined |
+| Focused speech/client/controller | PASS | 2026-11-02 | 28/28: node --test server/test/assistant-speech.test.js server/test/voice-assistant.test.js server/test/assistant-client.test.js |
+| Full suite | FAIL | 2026-11-02 | npm test 288/289; sole failure server/test/api-client.test.js:29 expects Cache-Control no-store, actual undefined |
 | Migration syntax | PASS | 2026-11-02 | 21 static PostgreSQL migration checks ran inside npm test; none applied |
 | Changed JS syntax | PASS | 2026-11-02 | node --check on changed JavaScript files |
 | Whitespace | PASS | 2026-11-02 | git diff --check |
 | Protected paths | PASS | 2026-11-02 | changed-path filter empty for tokens, base, fonts, presets, themes, effects and assets |
-| Chrome/Brave | UNVERIFIED | 2026-11-02 | browser-control API reports local use disabled in Work settings; no live mic, chat log or TTS check |
+| Chrome TTS | UNVERIFIED | 2026-11-02 | browser-control API reports local use disabled in Work settings; no utterance logs, audio, tab mute, or system volume check |
 
 ## KNOWN ISSUES AND RISKS
 - Known API no-store assertion remains the only failing test and was not changed.

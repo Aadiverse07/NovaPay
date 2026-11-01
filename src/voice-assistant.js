@@ -103,7 +103,7 @@ export function createVoiceController(options = {}) {
     setState("speaking", "Speaking…"); debug("speak start");
     return Promise.resolve(speechOutput.speak(spoken)).then((result) => {
       debug("speak end", result?.error || "ok");
-      if (request === turnId && !destroyed) finishTurn(result?.ok ? "Tap the mic to speak." : "Answer is shown in the chat. Tap the mic to try voice again.");
+      if (request === turnId && !destroyed) finishTurn(result?.ok ? "Tap the mic to speak." : "Answer is shown in the chat. Speech playback failed (" + String(result?.error || "unavailable") + "). Tap the mic to try voice again.");
       return result;
     }).catch((error) => {
       if (request === turnId && !destroyed) finishTurn("Answer is shown in the chat. Speech playback failed (" + String(error?.name || "unavailable") + ").");
@@ -145,7 +145,7 @@ export function createVoiceController(options = {}) {
     cancelPendingConfirmation(); pendingConfirmation = execute;
     confirmationTimer = setTimer(cancelPendingConfirmation, Math.min(15000, timeoutMs));
   }
-  function setMuted(value) { muted = Boolean(value); if (muted) stopSpeaking(); }
+  function setMuted(value) { muted = Boolean(value); speechOutput?.setMuted?.(muted); if (muted) stopSpeaking(); }
   function destroy() {
     stop(); destroyed = true;
     if (recognizer) { recognizer.onstart = null; recognizer.onresult = null; recognizer.onerror = null; recognizer.onend = null; try { recognizer.abort(); } catch (_) {} }
@@ -165,7 +165,8 @@ export function mountVoiceAssistant(options = {}) {
   if (!button || !status) return null;
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   let muted = false, microphoneStream = null, requestingMicrophone = false;
-  try { muted = localStorage.getItem("novapay-voice-muted") === "true" || localStorage.getItem("novapay-sound") === "off"; } catch (_) {}
+  try { muted = localStorage.getItem("novapay-voice-muted") === "true"; } catch (_) {}
+  options.speechOutput?.setMuted?.(muted);
   const releaseMicrophone = () => { microphoneStream?.getTracks?.().forEach((track) => track.stop()); microphoneStream = null; };
   const controller = createVoiceController({
     Recognition, speechOutput: options.speechOutput, muted, onQuery: options.onQuery, onTranscript: options.onTranscript,
@@ -184,6 +185,7 @@ export function mountVoiceAssistant(options = {}) {
     },
   });
   async function begin() {
+    options.speechOutput?.markGesture?.();
     const current = controller.getState();
     if (current === "listening") { controller.stop(); return; }
     if (current === "speaking" || current === "thinking") { controller.start(); return; }
@@ -206,6 +208,7 @@ export function mountVoiceAssistant(options = {}) {
     muteButton.setAttribute("aria-pressed", String(muted)); muteButton.textContent = muted ? "Unmute voice" : "Mute voice";
     try { localStorage.setItem("novapay-voice-muted", String(muted)); } catch (_) {}
   });
+  if (muteButton) { muteButton.setAttribute("aria-pressed", String(muted)); muteButton.textContent = muted ? "Unmute voice" : "Mute voice"; }
   const onAuth = (event) => { if (event.detail?.signedIn === false || event.detail?.event === "SIGNED_OUT") controller.stop(); };
   const onPageHide = () => { controller.destroy(); releaseMicrophone(); document.removeEventListener("novapay:auth", onAuth); };
   document.addEventListener("novapay:auth", onAuth); window.addEventListener("pagehide", onPageHide, { once: true });
