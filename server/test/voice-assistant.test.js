@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { createVoiceController } from '../../src/voice-assistant.js';
 
 class FakeRecognition {
@@ -44,6 +45,20 @@ test('one recognizer handles supported wake phrases and waits for the end of spe
     assert.equal(state.recognition().starts, 1, 'the controller creates and starts one recognizer');
     state.controller.destroy();
   }
+});
+
+test('dashboard lazy-load activation uses permission-aware voice enablement', async () => {
+  const dashboard = await readFile(new URL('../../src/dashboard.js', import.meta.url), 'utf8');
+  const controller = await readFile(new URL('../../src/voice-assistant.js', import.meta.url), 'utf8');
+  assert.match(dashboard, /controller&&controller\.enableVoice\)controller\.enableVoice\(\)/);
+  assert.doesNotMatch(dashboard, /window\.NovaPayVoiceAssistantController=controller;[^\n]*controller\.start\(\)/);
+  assert.match(controller, /getUserMedia\(\{ audio: \{ echoCancellation: true/);
+  assert.match(controller, /controller\.enableVoice = startVoice/);
+});
+
+test('dashboard activity poll uses the authenticated API client', async () => {
+  const live = await readFile(new URL('../../src/novapay-live.js', import.meta.url), 'utf8');
+  assert.match(live, /NovaPayApi\?window\.NovaPayApi\.request\("\/api\/events"\)/);
 });
 
 test('long speech is split into bounded TTS utterances and returns to listening', async () => {
@@ -119,4 +134,56 @@ test('recognizer restart uses backoff and stop/destroy remove active behavior', 
   state.recognition().onend(); assert.equal(state.timers.runDelay(800), true);
   state.controller.stop(); assert.equal(state.controller.getState(), 'off');
   state.controller.destroy(); assert.equal(state.recognition().onresult, null);
+});
+
+// ---- Regression: voice never answered after login (silent auto-pause + brittle wake phrase + hidden errors) ----
+test('quiet rooms do not pause voice: normal no-speech session ends restart quietly, forever', () => {
+  let clock = 1000; const state = setup({ now: () => clock }); state.controller.start();
+  for (let index = 0; index < 40; index += 1) {
+    clock += 7000; state.recognition().onerror({ error: 'no-speech' }); state.recognition().onend();
+    assert.equal(state.timers.runDelay(200), true, 'restart scheduled at the normal delay');
+  }
+  assert.equal(state.controller.isEnabled(), true);
+  assert.notEqual(state.controller.getState(), 'paused');
+  assert.equal(state.recognition().starts, 41);
+  assert.equal(FakeRecognition.instances.length, 1);
+});
+
+test('instantly-ending sessions are still treated as failures and pause (no tight restart loop)', () => {
+  let clock = 1000; const state = setup({ now: () => clock }); state.controller.start();
+  for (let index = 0; index < 5; index += 1) { clock += 50; state.recognition().onend(); state.timers.runNext(); }
+  assert.equal(state.controller.getState(), 'paused');
+  assert.equal(state.states.at(-1).problem, true);
+});
+
+for (const [phrase, expected] of [
+  ['Hey, NovaPay, open ledger', 'open ledger'],
+  ['hey nova pay: show invoices', 'show invoices'],
+  ['Hey Nova Pe open ledger', 'open ledger'],
+  ['hey nova pai open ledger', 'open ledger'],
+  ['Hey Noah pay open ledger', 'open ledger'],
+  ['a nova pay open ledger', 'open ledger'],
+  ['Hello NovaPay what is my trial balance', 'what is my trial balance'],
+]) {
+  test(`wake phrase variant is understood: ${phrase}`, async () => {
+    const state = setup(); state.controller.start();
+    state.recognition().onresult({ resultIndex: 0, results: [result(phrase)] });
+    state.timers.runDelay(1200); await settle();
+    assert.equal(state.queries.length, 1);
+    assert.equal(state.queries[0].message, expected);
+  });
+}
+
+test('speech-service and microphone problems are surfaced with a reason instead of failing silently', () => {
+  const blocked = setup(); blocked.controller.start();
+  blocked.recognition().onerror({ error: 'not-allowed' });
+  assert.equal(blocked.controller.getState(), 'paused');
+  assert.equal(blocked.states.at(-1).problem, true);
+  assert.match(blocked.states.at(-1).message, /Microphone is blocked/);
+  const offline = setup(); offline.controller.start();
+  offline.recognition().onerror({ error: 'network' });
+  assert.equal(offline.states.at(-1).problem, true);
+  assert.match(offline.states.at(-1).message, /speech service/);
+  offline.recognition().onresult({ resultIndex: 0, results: [result('hello there', false)] });
+  assert.equal(offline.states.at(-1).problem, false, 'problem clears when audio flows again');
 });

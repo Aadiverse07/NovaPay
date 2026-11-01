@@ -11,10 +11,11 @@
 - Added invoice/campaign refresh hooks and API contract docs. Human browser steps: `docs/VOICE-BROWSER-CHECKLIST.md`.
 
 ## IN PROGRESS
-- No code task remains. Final docs/checkpoint commit pending. Files changed: `dashboard.html`, `preview.html`, `src/assistant-actions.js`, `src/assistant-client.js`, `src/dashboard.js`, `src/invoices-live.js`, `src/novapay-live.js`, `src/voice-assistant.js`, `src/voice-greeting.js`, `server/src/ai/actions.js`, `server/src/app.js`, `server/src/routes/ai.js`, `server/src/services/ai.js`, `server/test/assistant-actions.test.js`, `server/test/assistant-client.test.js`, `server/test/routes.test.js`, `server/test/voice-assistant.test.js`, `server/test/voice-greeting.test.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/VOICE-BROWSER-CHECKLIST.md`.
+- Fixed voice activation path after report showed no assistant chat requests; final docs/checkpoint commit pending. Files changed: `dashboard.html`, `preview.html`, `src/assistant-actions.js`, `src/assistant-client.js`, `src/dashboard.js`, `src/invoices-live.js`, `src/novapay-live.js`, `src/voice-assistant.js`, `src/voice-greeting.js`, `src/voice-indicator.js`, `server/src/ai/actions.js`, `server/src/app.js`, `server/src/routes/ai.js`, `server/src/services/ai.js`, `server/test/assistant-actions.test.js`, `server/test/assistant-client.test.js`, `server/test/routes.test.js`, `server/test/voice-assistant.test.js`, `server/test/voice-greeting.test.js`, `server/test/voice-indicator.test.js`, `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/TEST-REPORT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/VOICE-BROWSER-CHECKLIST.md`.
 
 ## NEXT STEPS
-1. Check `git status`, `.env` tracking/staging and final diff; ensure only the files above are included.
+1. Human verifies mic startup and spoken assistant reply in Chrome; browser use is currently disabled here.
+2. Check `git status`, `.env` tracking/staging and final diff; ensure only the files above are included.
 2. Commit locally with `WIP-BROKEN: voice assistant with known baseline no-store test failure`; do not push.
 3. Human runs `docs/VOICE-BROWSER-CHECKLIST.md` with an already signed-in fixed owner and browser microphone; do not claim browser success from unit tests.
 4. Fix the separate `server/test/api-client.test.js` no-store failure only in a separately scoped task.
@@ -28,12 +29,12 @@
 ## TEST STATE
 | Check | Status | Date | Command/details |
 |---|---|---|---|
-| Focused voice/action/client/routes | PASS | 2026-11-01 | `node --test ...` 33/33 |
-| Full suite | FAIL | 2026-11-01 | `npm test` 269/270; known `api-client.test.js` no-store assertion only |
+| Focused voice/action/client/routes | PASS | 2026-11-01 | Voice/indicator root-cause regressions 21/21; earlier action suite 33/33 |
+| Full suite | FAIL | 2026-11-01 | `npm test` 283/284 after voice fix; known `api-client.test.js` no-store assertion only |
 | Migration parser | PASS | 2026-11-01 | `npm run check:migrations`, 21/21 through 0021 |
 | Modified JS syntax | PASS | 2026-11-01 | `node --check` on changed JS/test files |
 | Whitespace/protected diff | PASS | 2026-11-01 | `git diff --check`; protected-file diff empty |
-| Real browser/mic | UNVERIFIED | 2026-11-01 | Not run; live signed-in calls excluded from fake-only verification |
+| Real browser/mic | UNVERIFIED | 2026-11-01 | Browser disabled in Work settings; user terminal had no `/api/ai/chat` and repeated `/api/events` 401s |
 
 ## KNOWN ISSUES AND RISKS
 - Existing no-store assertion remains the sole failing test.

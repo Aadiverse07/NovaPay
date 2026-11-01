@@ -193,7 +193,7 @@
           onConfirmationCancelled:function(){document.querySelectorAll(".assistant-action-confirm").forEach(function(button){button.disabled=true;button.textContent="Cancelled"})}
         });
         window.NovaPayVoiceAssistantController=controller;
-        if(controller)controller.start();
+        if(controller&&controller.enableVoice)controller.enableVoice();
       }).catch(function(){var status=$("ai-live-status");if(status)status.textContent="Voice support could not load. Type your question instead."}).finally(function(){loading=false});
     });
   })();

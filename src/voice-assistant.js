@@ -1,4 +1,7 @@
-const WAKE = /\b(?:hey\s+nova\s*pay|hey\s+novapay|ok\s+novapay|hi\s+novapay|hey\s+nova)\b/i;
+const SEP = "[\\s,.;:!?'\u2019-]*";
+const WAKE = new RegExp(
+  "(?:\\b(?:hey|hi|hello|ok|okay|hay|hei)\\b" + SEP + "(?:nova|noah|novo|no\\s?va|know\\s?va|nowa)" + SEP + "(?:pay|pe|pai|paid|pey|bay|pi|pays|play)?\\b"
+  + "|\\ba" + SEP + "nova" + SEP + "pay\\b)", "i");
 const STOP = /\b(?:stop|wait|no|cancel)\b/i;
 
 function normalizeText(value) {
@@ -49,8 +52,10 @@ export function createVoiceController(options = {}) {
   let pendingConfirmation = null;
   let confirmationTimer = null;
   let destroyed = false;
+  let sessionStartedAt = 0;
+  let problem = false;
 
-  const setState = (value, message) => { state = value; onState({ state, message: message || state, enabled }); };
+  const setState = (value, message, isProblem = false) => { state = value; problem = Boolean(isProblem); onState({ state, message: message || state, enabled, problem }); };
   const isEnabled = () => enabled;
   const getState = () => state;
   const createRecognizer = () => {
@@ -59,15 +64,25 @@ export function createVoiceController(options = {}) {
     recognizer.lang = 'en-IN';
     recognizer.continuous = true;
     recognizer.interimResults = true;
-    recognizer.onstart = () => { setState(state === 'capturing' ? 'capturing' : 'idle', state === 'capturing' ? 'Listening…' : "Listening for ‘Hey NovaPay’"); };
+    recognizer.onstart = () => { sessionStartedAt = now(); setState(state === 'capturing' ? 'capturing' : 'idle', state === 'capturing' ? 'Listening…' : "Listening for ‘Hey NovaPay’"); };
     recognizer.onresult = handleResult;
     recognizer.onerror = (event) => {
-      if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') { stop(); setState('paused', 'Microphone permission denied. Turn Voice on again to retry.'); return; }
-      if (event?.error === 'network' || event?.error === 'audio-capture') recordRestartFailure();
+      const code = event?.error;
+      if (code === 'not-allowed' || code === 'service-not-allowed') {
+        stop(); setState('paused', code === 'not-allowed' ? 'Microphone is blocked. Allow it in your browser’s site settings, then tap Voice.' : 'The browser’s speech service is blocked here. Use Chrome or Edge.', true); return;
+      }
+      if (code === 'network' || code === 'audio-capture') {
+        const message = code === 'network' ? 'Cannot reach the browser’s speech service. Check your internet connection (Brave and some VPNs block it).' : 'No working microphone was found.';
+        if (recordRestartFailure() && enabled) setState(state, message, true);
+      }
+      // 'no-speech' and 'aborted' are normal when the room is quiet; they are not failures.
     };
     recognizer.onend = () => {
       if (!enabled || destroyed) return;
-      if (!restartHadResult && !recordRestartFailure()) return;
+      // A session that lived a while is a normal end (Chrome closes continuous sessions after silence): restart quickly, never count it as a failure.
+      const lived = now() - sessionStartedAt;
+      if (restartHadResult || lived >= 1500) { restartDelay = 200; scheduleRestart(); return; }
+      if (!recordRestartFailure()) return;
       scheduleRestart();
     };
     return recognizer;
@@ -80,7 +95,7 @@ export function createVoiceController(options = {}) {
       enabled = false;
       clearTimer(restartTimer);
       restartTimer = null;
-      setState('paused', 'Voice paused after repeated speech-service failures. Tap Voice to resume.');
+      setState('paused', 'Voice paused after repeated speech-service failures. Tap Voice to resume.', true);
       return false;
     }
     return true;
@@ -156,6 +171,7 @@ export function createVoiceController(options = {}) {
   function handleResult(event) {
     restartHadResult = true;
     restartDelay = 200;
+    if (problem) setState(state, state === 'capturing' ? 'Listening…' : "Listening for ‘Hey NovaPay’");
     const heard = [];
     for (let index = event.resultIndex || 0; index < event.results.length; index += 1) {
       const result = event.results[index];
@@ -227,7 +243,7 @@ export function createVoiceController(options = {}) {
     if (!Recognition) { setState('unsupported', 'Voice wake word is not supported here. Type your question instead.'); return; }
     enabled = true;
     setState('idle', "Listening for ‘Hey NovaPay’");
-    restartHadResult = false;
+    restartHadResult = false; sessionStartedAt = now();
     try { createRecognizer().start(); } catch { if (recordRestartFailure()) scheduleRestart(); }
   }
   function stop() {
@@ -280,6 +296,8 @@ export function mountVoiceAssistant(options = {}) {
     getContext: options.getContext,
     onQuery: options.onQuery,
     onState(snapshot) {
+      try { window.NovaPayVoiceIndicator?.update(snapshot); } catch {}
+      if (snapshot.problem && !snapshot.enabled) releaseMicrophone();
       const active = snapshot.enabled;
       button.setAttribute('aria-pressed', String(active));
       button.setAttribute('aria-label', active ? 'Turn voice assistant off' : 'Turn voice assistant on');
@@ -294,6 +312,7 @@ export function mountVoiceAssistant(options = {}) {
   });
   let microphoneStream = null, requestingMicrophone = false;
   const releaseMicrophone = () => { microphoneStream?.getTracks?.().forEach((track) => track.stop()); microphoneStream = null; };
+  const setPreference = (on) => { try { localStorage.setItem('novapay-voice-enabled', String(Boolean(on))); } catch {} };
   const stopVoice = () => { controller.stop(); releaseMicrophone(); };
   const startVoice = async () => {
     if (requestingMicrophone || controller.isEnabled()) return;
@@ -301,10 +320,16 @@ export function mountVoiceAssistant(options = {}) {
     try {
       if (navigator.mediaDevices?.getUserMedia) microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
       controller.start();
-    } catch { if (note) note.textContent = 'Microphone permission is needed for voice. Typing still works.'; }
+    } catch {
+      setPreference(false);
+      const message = 'Microphone permission is needed for voice. Allow it in your browser’s site settings, then tap Voice.';
+      if (note) note.textContent = message;
+      try { window.NovaPayVoiceIndicator?.update({ state: 'paused', enabled: false, problem: true, message }); } catch {}
+    }
     finally { requestingMicrophone = false; }
   };
-  button.addEventListener('click', () => controller.isEnabled() ? stopVoice() : startVoice());
+  controller.enableVoice = startVoice;
+  button.addEventListener('click', () => { if (controller.isEnabled()) { setPreference(false); stopVoice(); } else { setPreference(true); startVoice(); } });
   stopButton?.addEventListener('click', () => controller.stopSpeaking());
   muteButton?.addEventListener('click', () => {
     muted = !muted; controller.setMuted(muted);
