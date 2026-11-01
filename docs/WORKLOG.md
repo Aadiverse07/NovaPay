@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: finish review and publish the accumulated NovaPay changes from `publish-main-sync` to `main`; user authorized this push.
-- Last finished step: squash integration from `fix-fx-otp-maintenance` onto fetched `origin/main`; all four documentation conflicts resolved preserving both branches' entries. No publication commit or push yet.
-- Next: inspect status and staged diff; run tests, migration check, JS syntax, whitespace, conflict-marker and secret scans; commit locally; then fast-forward push only to `origin/main` and verify the remote hash.
-- Pending human action: none before checks. Migration application status for 0020/0021 remains unverified.
-- Safety: `.env` is ignored/untracked; do not print values, force-push, or weaken tests.
+- Current task: build the voice-driven NovaPay assistant on local branch `codex/voice-assistant`; never push.
+- Last finished step: shared action registry, server fast command parser, safe model-action validation, bounded speech output, and injection/role/drift tests. Focused suite 39/39; full suite 255/256 with only the known no-store assertion.
+- Next: implement and test the lazy browser voice state machine, wake word, TTS greeting, action confirmation UI, and cleanup/accessibility.
+- Pending human action: later run Chrome localhost microphone checks; no live provider/database work was done.
+- Safety: preserve auth redirects/protected assets, never execute Tier 2 by voice, never expose secrets, and do not push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4636,3 +4636,12 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: inspect voice-assistant entry points and route registry as requested by the voice feature spec; why: understand existing behavior and avoid conflicting with recent login/publication fixes. NEXT: map supported views/actions, AI handler contracts, intro events and lazy-load setup.
 2026-11-01 | Result: PASS; required entry points exist, shared Gemini pool is present, branch is `publish-main-sync`, and worktree was clean before this inspection; current assistant uses typed `/api/ai/chat` plus single-utterance dictation, not wake-word control. NEXT: read focused handlers and existing API/action capabilities, then create a dedicated local feature branch.
 2026-11-01 | Before: inspect current voice/send/view handlers, AI service response assembly, intro events and available APIs; why: define implementable actions from shipped routes only. NEXT: branch for the voice feature and implement deterministic action registry/fast path first.
+2026-11-01 | Before: run `npm test` after the first action-registry/backend phase; why: verify fast commands, schema/role gating, route compatibility, and document-injection rejection before building the voice UI. NEXT: fix only unexpected failures; if the known no-store assertion is the sole failure, record it and proceed.
+2026-11-01 | Result: `npm test` FAIL during first action/backend phase: 248? tests include the existing no-store failure plus `llm.test.js` expected shape missing new `speak`; focused new tests not yet isolated. NEXT: inspect the exact assertion, update it for the response contract, run focused action/AI tests, then full suite.
+2026-11-01 | Before: update the expected AI response shape and run focused tests; why: `speak` is a deliberate new response field for browser TTS and must be asserted without removing other checks. NEXT: fix any focused failures.
+2026-11-01 | Result: focused action/AI/LLM/route tests PASS 39/39 after updating the expected `speak` field. The initial full run's second failure was the same stale shape assertion; no production failure remains. NEXT: full suite checkpoint for this phase.
+2026-11-01 | Before: rerun full `npm test` after resolving the response-shape assertion; why: capture the actual remaining baseline failure count before moving to voice UI. NEXT: record exact counts; the known no-store assertion is the only expected failure.
+2026-11-01 | Result: full `npm test` failed only at `api-client.test.js` (expected `Cache-Control: no-store`, actual undefined); the tail-only capture omitted Node's test totals. NEXT: rerun to a temporary report and extract only test/pass/fail counts before recording the checkpoint.
+2026-11-01 | Before: capture full-suite summary counts without exposing test payloads; why: accurately record the phase result in the continuity files. NEXT: append the exact result and proceed with the voice module.
+2026-11-01 | Result: full `npm test` FAIL 255/256; sole failure is known `server/test/api-client.test.js` no-store assertion. Focused AI/action/LLM/routes suite PASS 39/39. No live Gemini/PayPal/Supabase calls. NEXT: checkpoint action protocol; then implement lazy browser voice controller, greeting listener, confirmation cards and teardown tests.
+2026-11-01 | Before: checkpoint backend action-protocol phase locally; why: preserve tested registry/parser and current resume pointer before starting the voice controller. NEXT: continue with the isolated voice controller implementation.
