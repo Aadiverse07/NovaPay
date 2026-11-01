@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: typed/voice assistant creates invoice drafts by collecting details; branch `codex/voice-assistant`; latest local checkpoint `1fb4459`; task implementation committed locally; never push or run migrations.
+- Current task: typed/voice assistant creates invoice drafts by collecting details; branch `codex/voice-assistant`; latest local checkpoint `c25f10b`; task implementation committed locally; never push or run migrations.
 - Last completed step: invoice creation route/UI requirements traced; deterministic client/server intent, partial action schema, slot validation, confirmation, role refusal, idempotency key, invoice open/download follow-ups implemented.
 - Test state: focused suite PASS 37/37. `npm test` FAIL 296/297 solely at known `server/test/api-client.test.js:29` (`Cache-Control: no-store` expected, undefined); 21 migration syntax checks passed. Changed JS syntax and `git diff --check` PASS; protected-file diff empty.
 - Scope files: `src/assistant-actions.js`, `src/dashboard.js`, `src/modules.css`, `server/src/ai/actions.js`, `server/src/ai/router.js`, `server/src/routes/ai.js`, and four server tests; docs updated for continuity.
@@ -4926,3 +4926,7 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 03:01 IST | ABOUT TO: Refresh CONTEXT header and RESUME POINTER to local commit b9668b7 and state browser verification remains pending; WHY: ensure a fresh agent can resume from the exact checkpoint.
 2026-11-02 03:04 IST | RESULT: CLARIFIED; checkpoint commits `b9668b7` and `1fb4459` are present and worktree is clean, but CONTEXT header still names the earlier TTS task/checkpoint because its exact text differed from the scripted replacement. NEXT: fix the CONTEXT header and update the pointer to 1fb4459, then commit docs locally.
 2026-11-02 03:05 IST | ABOUT TO: Correct the stale CONTEXT header and latest checkpoint pointer; WHY: continuity docs must describe the current invoice task, not the prior TTS task.
+2026-11-02 03:07 IST | RESULT: FAIL/STALE DOC; CONTEXT header replacement again missed because its checkpoint text omitted “committed locally”; WORKLOG pointer is current, worktree is clean. NEXT: replace CONTEXT header by line prefix, verify it, and commit the correction.
+2026-11-02 03:08 IST | ABOUT TO: Replace the exact stale context header line using its stable prefix and verify it before commit; WHY: previous literal replacement did not match the repository text.
+2026-11-02 03:10 IST | RESULT: PASS; CONTEXT header now reflects invoice slot filling; local commit `c25f10b` created; no source changes. NEXT: update pointer/header to c25f10b and checkpoint the final journal state.
+2026-11-02 03:11 IST | ABOUT TO: Set both handoff references to the latest documentation commit c25f10b and commit WORKLOG/CONTEXT; WHY: leave continuity metadata synchronized with HEAD.
