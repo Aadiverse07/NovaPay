@@ -133,6 +133,9 @@
 :root[data-theme="dark"] .transaction-modal .transaction-dialog.holo-target::after { display: block !important; }
 :root[data-theme="dark"] :is(.dashboard-main .view .holo-target.holo-active, .action-modal .holo-target.holo-active, .transaction-modal .holo-target.holo-active) { filter: drop-shadow(0 0 16px color-mix(in srgb, #63b3ff 38%, transparent)); }
 :root[data-theme="light"] .transaction-modal .transaction-dialog.holo-target::after { display: none !important; }
+/* Documents module, light theme only: no rainbow pointer shine on Organization documents card or its rows. Dark theme and other views untouched. */
+:root[data-theme="light"] .dashboard-main #view-documents .holo-target::before,
+:root[data-theme="light"] .dashboard-main #view-documents .holo-target::after { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   #hero-stage :is(.float-card, .lpui-card, .lpui-kpi) { rotate: var(--r, 0deg); transition: none; }
