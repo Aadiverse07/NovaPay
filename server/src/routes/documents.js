@@ -1,9 +1,11 @@
 import { createHash, randomUUID } from 'node:crypto';
 import express from 'express';
+import { z } from 'zod';
 import { PDFDocument } from 'pdf-lib';
 import { rbac } from '../middleware/auth.js';
 import { auditApiAction } from '../services/audit.js';
 import { createGeminiDocumentOCRProvider, validateDocumentExtraction } from '../services/documentOcr.js';
+import { buildDocumentInvoiceDraft } from '../services/invoices.js';
 
 export const DOCUMENT_BUCKET = 'novapay-documents';
 const MIME_TYPES = new Map([
@@ -11,6 +13,15 @@ const MIME_TYPES = new Map([
   ['image/png', { extension: 'png', signature: (bytes) => bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) }],
   ['image/jpeg', { extension: 'jpg', signature: (bytes) => bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff])) }],
 ]);
+const documentInvoiceSchema = z.object({
+  invoiceNumber: z.string().trim().min(1).max(25),
+  customerName: z.string().trim().min(1).max(160),
+  customerEmail: z.string().trim().email().max(254),
+  currency: z.string().regex(/^[A-Za-z]{3}$/).transform((value) => value.toUpperCase()),
+  subtotal: z.string().regex(/^\d{1,10}(?:\.\d{1,2})?$/),
+  tax: z.string().regex(/^\d{1,10}(?:\.\d{1,2})?$/),
+  total: z.string().regex(/^\d{1,10}(?:\.\d{1,2})?$/),
+}).strict();
 
 function publicError(statusCode, code, message) {
   return Object.assign(new Error(message), { statusCode, code });
@@ -169,18 +180,26 @@ export function documentRoutes({ config, identity, provider, rag, events }) {
       const documentId = zodUuid(req.params.documentId);
       if (!documentId) throw publicError(400, 'DOCUMENT_ID_INVALID', 'A valid document ID is required.');
       const db = identity?.database;
-      if (!db?.select || !db?.patch) throw publicError(503, 'DOCUMENT_PROCESSING_UNAVAILABLE', 'Document review is unavailable.');
+      if (!db?.select || !db?.rpc) throw publicError(503, 'DOCUMENT_PROCESSING_UNAVAILABLE', 'Document review is unavailable.');
       const query = new URLSearchParams({ select: 'id,org_id,status,extraction', id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, limit: '1' }).toString();
       const rows = await db.select('documents', query);
       const document = Array.isArray(rows) ? rows[0] : null;
       if (!document) throw publicError(404, 'DOCUMENT_NOT_FOUND', 'Document not found.');
       if (document.status !== 'processed') throw publicError(409, 'DOCUMENT_NOT_READY', 'Only processed documents can be confirmed.');
-      const invoiceDraftId = zodUuid(req.body?.invoiceDraftId) ? req.body.invoiceDraftId : null;
-      const extraction = { ...(document.extraction && typeof document.extraction === 'object' ? document.extraction : {}), confirmation: { confirmedAt: new Date().toISOString(), confirmedBy: req.user.id, ...(invoiceDraftId ? { invoiceDraftId } : {}) } };
-      const updated = await db.patch('documents', new URLSearchParams({ id: `eq.${documentId}`, org_id: `eq.${req.orgId}`, status: 'eq.processed' }).toString(), { extraction, updated_at: new Date().toISOString() });
-      if (!Array.isArray(updated) || !updated.length) throw publicError(409, 'DOCUMENT_NOT_READY', 'Document changed before it could be confirmed.');
-      await auditApiAction(identity, req, { action: 'document.confirmed', entity: 'document', entityId: documentId });
-      return res.json({ document: { id: documentId, status: 'processed', extraction }, confirmed: true });
+      const parsed = documentInvoiceSchema.safeParse(req.body);
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0];
+        const fieldName = String(issue?.path?.[0] || 'invoice details');
+        throw publicError(400, 'DOCUMENT_INVOICE_FIELD_REQUIRED', `${fieldName} is required or invalid.`);
+      }
+      const draft = buildDocumentInvoiceDraft(parsed.data, req.user.id);
+      const result = await db.rpc('confirm_document_invoice', {
+        p_org: req.orgId, p_document: documentId, p_actor: req.user.id,
+        p_invoice: draft.invoice, p_lines: draft.lines, p_request_id: req.id,
+      });
+      const invoiceId = result?.invoice_id || result?.invoice?.id;
+      if (!zodUuid(invoiceId)) throw publicError(503, 'DOCUMENT_CONFIRMATION_UNAVAILABLE', 'Invoice draft confirmation did not return a valid invoice.');
+      return res.json({ document: { id: documentId, status: 'processed' }, invoice: { id: invoiceId, state: result.state || 'draft' }, confirmed: true, alreadyConfirmed: Boolean(result.already_confirmed) });
     } catch (error) { return next(error); }
   });
 

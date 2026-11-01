@@ -1278,3 +1278,14 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 | `npm test` | FAIL | 174 passed, 1 failed: known authenticated API client test expects missing `Cache-Control: no-store`.
 2026-11-01 | `npm run check:migrations` | PASS | 16/16 migrations parse.
 2026-11-01 | `node --check` on every JS file changed from origin/main; `git diff --check`; protected-file diff | PASS | All syntax/whitespace checks clean; protected diff empty.
+
+2026-11-01 10:32 IST | `node --test server/test/document-ocr.test.js server/test/document-processing.test.js server/test/phase3-services.test.js server/test/document-invoice-migration.test.js` | PASS | 33 passed, 0 failed; atomic confirm/idempotency, missing email, totals, confidence, migration checks.
+2026-11-01 10:32 IST | `npm test` | FAIL | 177 passed, 1 failed of 178; known `authenticated API client bypasses conditional HTTP caching` expects missing `Cache-Control: no-store`.
+2026-11-01 10:32 IST | `npm run check:migrations` | PASS | 17/17 numbered migrations parse, including unapplied 0017.
+2026-11-01 10:32 IST | `node --check` changed JS; `git diff --check`; protected-file diff vs origin/main | PASS | All changed JS parses; whitespace clean; protected diff empty.
+2026-11-01 10:32 IST | Live confirmation of existing Invoice_D_TEST-001.pdf | UNVERIFIED | No invoice row queried/created because migration 0017 is unapplied; no upload or Gemini request made.
+2026-11-01 10:33 IST | `npm test` (final rerun) | FAIL | 177 passed, 1 failed of 178; only known `authenticated API client bypasses conditional HTTP caching` no-store assertion.
+2026-11-01 10:33 IST | `node --check` all changed JS; `git diff --check`; protected-file diff vs origin/main | PASS | Syntax/whitespace clean; protected diff empty.
+2026-11-01 | `npm test` on `fix-documents-confirm` | FAIL | 177 passed, 1 failed of 178; known `authenticated API client bypasses conditional HTTP caching` expects missing `Cache-Control: no-store`; parser passed 17/17.
+2026-11-01 | `npm run check:migrations` | PASS | 17/17 migrations parsed.
+2026-11-01 | `node --check` changed JS; `git diff --check origin/main...HEAD`; protected-file diff vs `origin/main` | PASS | Changed JS parses, whitespace clean, protected-file diff empty.

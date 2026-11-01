@@ -1,54 +1,59 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-11-01 (Asia/Kolkata)
-- Branch: `fix-ocr-validation`, based on `fix-login-errors`; no push
-- Current task: resolve Invoice_C_TEST-003 OCR validation and duplicate retry behavior
+- Date/time: 2026-11-01 10:32 IST
+- Branch: `fix-documents-confirm`, based on unmerged `fix-ocr-validation` (PR #9 remains open); no push authorized.
+- Task: document confirmation, confidence, and live invoice view repair.
 
 ## DONE
-- Read-only lookup found C in org `59bd3bcb-0c4b-4479-aa32-cbaeb65ec678`, status `failed`, code `OCR_FIELD_VALIDATION`, safe message `currency: required_when_amounts_present`.
-- Latest three ai_usage rows for org: route `ocr`, status `invalid_response`.
-- Root cause: validator treated absent currency as fatal whenever amounts existed. Missing currency is now a visible review warning; it is not inferred unless an explicit rupee marker indicates INR.
-- Invalid ISO currencies and currency-symbol mismatch still fail; wrong totals remain flagged as arithmetic warnings. Documents view asks reviewer to select currency before creating invoice draft.
-- Duplicate query excludes `failed` documents (`status=neq.failed`); rejected, processed and other nonfailed rows continue to block same-hash duplicates.
-- Added tests for missing-currency warning through service/route and failed-vs-rejected duplicate behavior.
+- Root cause: blank required Supplier email causes client validation to return before any HTTP request; prior validation only showed a generic status message.
+- Confirmation now sends one request. Additive migration 0017 links one org-scoped invoice draft to the source document, confirms and audits atomically, and returns the same draft on retry.
+- Server recomputes subtotal/tax/total in integer minor units and rejects mismatches. UI shows inline field errors/toast, a draft link, and refreshes Invoices.
+- Invoices view no longer shows seed rows; it loads `/api/invoices` and saves its existing draft form through the API.
+- Confidence display is code-derived: arithmetic can verify amount fields; date/currency and OCR text matches are labelled; model-only values are capped and labelled unverified.
+- Field review uses existing theme tokens, with one field per row.
 
 ## IN PROGRESS
-- No live upload/reprocess performed; user explicitly prohibited uploads. C remains failed until a later owner re-upload/retry.
+- Local code and migration 0017 complete; migration is not applied. No live invoice row was created or verified.
 
 ## NEXT STEPS
-1. Do not upload in this turn. Later, owner can re-upload the same file; the failed row will not block its hash.
-2. Review the currency warning and enter the correct currency before invoice draft confirmation.
+1. Apply `supabase/migrations/0017_document_invoice_confirmation.sql` in the Supabase SQL Editor and confirm `applied`.
+2. Restart `npm start`; sign in as the fixed owner and open Documents.
+3. Open existing processed `Invoice_D_TEST-001.pdf`, fill Supplier email and review fields, click Confirm once; verify one draft appears in Invoices and linked document state.
+4. Repeat-click/retry the same confirmation and verify invoice row count stays one.
+5. Complete browser checks listed in the current task; do not upload or invoke Gemini.
 
 ## USER ACTIONS PENDING
-- None required now.
+- Apply migration 0017: Supabase Dashboard → project → SQL Editor → New query → paste the full contents of `supabase/migrations/0017_document_invoice_confirmation.sql` → Run → confirm `applied`.
+- Browser verification after apply: sign in as fixed owner; Dashboard → Documents → open already processed Invoice_D_TEST-001.pdf; leave Supplier email blank and click Confirm to verify inline error/toast without a request; enter a valid email and click once; open Invoices and verify one live draft; return and repeat confirmation only if it is available; verify count remains one. Check both light and dark themes.
 
 ## LIVE STATE
-- Read-only DB inspection only. No users, docs, Storage objects, or rows changed.
-- No upload attempted. Existing A/B/C failures remain as recorded.
-- No secrets or key values recorded.
+- No Gemini requests, uploads, or live invoice confirmations performed.
+- Migration 0017 pending human application; migrations 0001–0016 previously applied.
+- No secrets or environment values recorded.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused OCR/document processing | PASS | 18/18 |
-| Full suite | FAIL | 174/175; known API-client `Cache-Control: no-store` assertion |
-| Migrations | PASS | 16/16 |
-| Changed JS syntax | PASS | app, document route/service, Documents view and two tests |
-| `git diff --check` | PASS | Clean |
-| Protected-file diff | PASS | Empty against origin/main |
-| C failure reason | PASS | stored path/rule is `currency: required_when_amounts_present` |
-| Re-upload duplicate policy | PASS | failed excluded; rejected still duplicate |
-| Live reprocess | UNVERIFIED | no upload by explicit user instruction |
+| Focused confirmation/OCR/invoice tests | PASS | 33/33 |
+| Full `npm test` | FAIL | 177/178; known authenticated client no-store failure |
+| Migration syntax | PASS | 17/17 parsed; 0017 not live-applied |
+| Changed JS syntax | PASS | `node --check` all changed JS |
+| `git diff --check` | PASS | clean |
+| Protected-file diff vs origin/main | PASS | empty |
+| Existing sample confirmation and invoice row count | UNVERIFIED | Requires migration 0017 and browser action; no live mutation performed |
 
 ## KNOWN ISSUES AND RISKS
-- C remains failed until a later owner retry/re-upload. The updated handler only affects new processing attempts.
-- Full suite retains unrelated no-store failure.
+- Migration 0017 must be applied before the new confirmation endpoint can work against Supabase.
+- Full suite retains the known unrelated API `Cache-Control: no-store` failure.
+- Browser checks are pending; no visual/browser run was performed.
 
 ## LESSONS LEARNED
-- Never print `.env` values, credentials, JWTs or document content.
-- Missing currency should be reviewable; never assign a currency without an explicit marker or user review.
-- OCR errors expose field paths/rules only; never persist raw provider text.
+- Supabase SQL Editor runs inside one transaction; syntax/runtime errors roll back. Never edit an applied migration; add a new numbered file.
+- SECURITY DEFINER/posting RPCs must revoke execution from public, anon, authenticated and grant only service_role.
+- Never print `.env` values, keys, JWTs, or document content.
+- Never claim PASS for an unrun check.
 
 ## DO NOT
-- Never push, create users, upload documents in this turn, expose document text, or weaken validation.
+- Do not push, merge, upload documents, or call Gemini in this task.
+- Do not edit protected design files or weaken tests.

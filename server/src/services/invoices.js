@@ -1,6 +1,10 @@
 import { moneyToMinor, minorToMoney } from '../repos/postgres.js';
 import { PAYPAL_API, paypalRequestId } from './paypal.js';
 
+const supportedCurrencies = new Set(typeof Intl.supportedValuesOf === 'function'
+  ? Intl.supportedValuesOf('currency')
+  : ['AUD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'INR', 'JPY', 'NZD', 'SGD', 'USD']);
+
 const PAYPAL_INVOICE_ID = /^INV2-(?:[A-Z0-9]{4,5}-){1,3}[A-Z0-9]{4,5}$/i;
 const PAYPAL_INVOICE_PATH = /^\/v2\/invoicing\/invoices\/([^/]+)$/;
 
@@ -65,6 +69,26 @@ export function buildInvoiceDraft(input,userId) {
     invoice:{invoice_number:input.invoiceNumber,customer_name:input.customerName,customer_email:input.customerEmail,currency:input.currency,
       subtotal_minor:computed.subtotalMinor,tax_minor:computed.taxMinor,total_minor:computed.totalMinor,created_by:userId},
     lines:computed.lines,
+  };
+}
+
+export function buildDocumentInvoiceDraft(input, userId) {
+  if (!supportedCurrencies.has(input.currency)) throw Object.assign(new Error('Currency must be a valid ISO currency code.'), { statusCode: 422, code: 'DOCUMENT_CURRENCY_INVALID' });
+  const subtotalMinor = moneyToMinor(input.subtotal);
+  const taxMinor = moneyToMinor(input.tax);
+  const totalMinor = moneyToMinor(input.total);
+  if (subtotalMinor < 0 || taxMinor < 0 || taxMinor > subtotalMinor || totalMinor <= 0 || subtotalMinor + taxMinor !== totalMinor) {
+    throw Object.assign(new Error('Invoice total must equal subtotal plus tax.'), { statusCode: 422, code: 'DOCUMENT_TOTAL_MISMATCH' });
+  }
+  const rateScaled = subtotalMinor ? Math.round(taxMinor * 10000 / subtotalMinor) : 0;
+  return {
+    invoice: {
+      invoice_number: input.invoiceNumber, customer_name: input.customerName, customer_email: input.customerEmail,
+      currency: input.currency, subtotal_minor: subtotalMinor, tax_minor: taxMinor, total_minor: subtotalMinor + taxMinor,
+      created_by: userId,
+    },
+    lines: [{ description: `Invoice ${input.invoiceNumber}`.slice(0, 200), quantity: '1', unit_price_minor: subtotalMinor,
+      tax_rate: (rateScaled / 10000).toFixed(4), line_subtotal_minor: subtotalMinor, tax_minor: taxMinor, line_total_minor: subtotalMinor + taxMinor }],
   };
 }
 

@@ -34,6 +34,7 @@ function mapInvoice(row, lines = []) {
     subtotalMinor: Number(row.subtotal_minor), taxMinor: Number(row.tax_minor), totalMinor: Number(row.total_minor),
     subtotal: minorToMoney(row.subtotal_minor), tax: minorToMoney(row.tax_minor), total: minorToMoney(row.total_minor),
     paypalInvoiceId: row.paypal_invoice_id || null, paypalCaptureId: row.paypal_capture_id || null,
+    sourceDocumentId: row.source_document_id || null,
     createdBy: row.created_by, createdAt: row.created_at, updatedAt: row.updated_at,
     lines: lines.map((line) => ({ id: line.id, description: line.description, quantity: String(line.quantity),
       unitPriceMinor: Number(line.unit_price_minor), unitPrice: minorToMoney(line.unit_price_minor), taxRate: String(line.tax_rate),
