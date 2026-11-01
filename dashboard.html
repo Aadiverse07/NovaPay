@@ -8,7 +8,6 @@
 <meta name="color-scheme" content="light dark">
 <script>(function(){var d=document.documentElement,t=null;try{t=localStorage.getItem("novapay-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";d.setAttribute("data-theme",t);})();</script>
 <script>try{var _s=JSON.parse(localStorage.getItem("novapay-settings")||"{}")||{},_r=document.documentElement;if(_s.reduceMotion)_r.classList.add("reduce-motion");if(_s.compact)_r.classList.add("density-compact")}catch(e){}</script>
-<script>try{if(localStorage.getItem("novapay-demo-auth")!=="true"){location.replace("preview.html#login")}}catch(e){location.replace("preview.html#login")}</script>
 <script>try{if(sessionStorage.getItem("novapay-hero-enter")==="1"){sessionStorage.removeItem("novapay-hero-enter");document.documentElement.classList.add("fx-enter");setTimeout(function(){document.documentElement.classList.remove("fx-enter")},1100)}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,7 +32,7 @@
 <link rel="stylesheet" href="src/animated-list.css">
 <link rel="stylesheet" href="src/approvals-polish.css">
 <link rel="stylesheet" href="src/modules.css">
-<link rel="stylesheet" href="src/capabilities-holo.css?v=2">
+<link rel="stylesheet" href="src/capabilities-holo.css?v=3">
 <link rel="stylesheet" href="src/hero-scene.css">
 <link rel="stylesheet" href="src/nav-colorful.css">
 <link rel="stylesheet" href="src/dashboard-enter.css">
@@ -246,8 +245,8 @@
       </div>
       <div class="view" id="view-invoices" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/invoices.png" alt="" width="64" height="64"><h2>Invoices</h2><p>Create and track invoices with totals calculated from line items. Sending an invoice should require approval.</p></div>
-        <div class="module-kpis"><article class="dash-card"><small>Outstanding</small><strong>₹1,24,500</strong><span>4 invoices</span></article><article class="dash-card"><small>Paid this month</small><strong>₹2,80,000</strong><span>8 invoices</span></article><article class="dash-card"><small>Drafts</small><strong id="invoice-draft-count">2</strong><span>Ready for review</span></article></div>
-        <article class="dash-card module-card"><div class="card-heading"><div><h3>Invoice workspace</h3><p>Review status, due dates and customer balances.</p></div><button class="btn btn--primary" data-ui-action="invoice-create">＋ New invoice</button></div><div class="module-toolbar"><input type="search" id="invoice-search" placeholder="Search invoices or customers" aria-label="Search invoices"><select id="invoice-filter" aria-label="Filter invoices"><option value="">All statuses</option><option>Draft</option><option>Awaiting approval</option><option>Sent</option><option>Paid</option><option>Overdue</option></select></div><div class="module-table-wrap"><table class="module-table" id="invoice-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Issue date</th><th>Due date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody><tr tabindex="0" aria-label="Open invoice INV-2048 details"><td>INV-2048</td><td>Northstar Studio</td><td>14 Oct 2026</td><td>28 Oct 2026</td><td>₹48,000</td><td><span class="status warn">Awaiting approval</span></td><td><button class="table-action" data-ui-action="invoice-review">Review</button></td></tr><tr tabindex="0" aria-label="Open invoice INV-2047 details"><td>INV-2047</td><td>Willow Market</td><td>02 Oct 2026</td><td>16 Oct 2026</td><td>₹32,500</td><td><span class="status danger">Overdue</span></td><td><button class="table-action" data-ui-action="invoice-review">View</button></td></tr><tr tabindex="0" aria-label="Open invoice INV-2046 details"><td>INV-2046</td><td>BrightPath Co.</td><td>01 Oct 2026</td><td>15 Oct 2026</td><td>₹44,000</td><td><span class="status ok">Paid</span></td><td><button class="table-action" data-ui-action="invoice-review">View</button></td></tr></tbody></table></div><div class="module-foot"><span>Sample invoice records · no invoice is sent from this preview.</span></div></article>
+        <div class="module-kpis"><article class="dash-card"><small>Organization invoices</small><strong id="invoice-count">—</strong><span>Live Supabase records</span></article><article class="dash-card"><small>Paid</small><strong id="invoice-paid-count">—</strong><span>Live Supabase records</span></article><article class="dash-card"><small>Drafts</small><strong id="invoice-draft-count">—</strong><span>Ready for review</span></article></div>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Invoice workspace</h3><p>Draft totals are calculated by the server. Sending remains disabled.</p></div><button class="btn btn--primary" data-ui-action="invoice-create">＋ New invoice</button></div><div class="module-toolbar"><input type="search" id="invoice-search" placeholder="Search invoices or customers" aria-label="Search invoices"><select id="invoice-filter" aria-label="Filter invoices"><option value="">All statuses</option><option>Draft</option><option>Awaiting approval</option><option>Sent</option><option>Paid</option><option>Overdue</option></select></div><div class="module-table-wrap"><table class="module-table" id="invoice-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Created</th><th>Due date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div><div class="module-foot"><span id="invoice-live-status" role="status">Loading live invoices…</span></div></article>
       </div>
       <div class="invoice-modal" id="invoice-create-modal" hidden aria-hidden="true">
         <button class="invoice-modal-backdrop" type="button" data-invoice-close aria-label="Close new invoice form"></button>
@@ -258,8 +257,7 @@
           <form id="invoice-create-form">
             <div class="invoice-form-grid">
               <label class="invoice-field invoice-field--wide">Customer or business<input name="customer" required maxlength="100" autocomplete="organization" placeholder="e.g. Northstar Studio"></label>
-              <label class="invoice-field">Issue date<input name="issueDate" type="date" required></label>
-              <label class="invoice-field">Due date<input name="dueDate" type="date" required></label>
+              <label class="invoice-field invoice-field--wide">Customer email<input name="customerEmail" type="email" required maxlength="254" autocomplete="email" placeholder="accounts@example.com"></label>
               <label class="invoice-field invoice-field--wide">Description<input name="description" required maxlength="140" placeholder="Services or products provided"></label>
               <label class="invoice-field">Quantity<input name="quantity" type="number" min="1" step="1" value="1" required></label>
               <label class="invoice-field">Rate (₹)<input name="rate" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
@@ -575,6 +573,9 @@
   </div>
 </div>
 <div class="toast" id="dashboard-toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+<script src="src/auth.js"></script>
+<script src="src/api-client.js"></script>
 <script src="src/chart-theme.js"></script>
 <script src="src/motion.js"></script>
 <script src="src/text-type.js"></script>
@@ -584,6 +585,7 @@
 <script src="src/ai-fullscreen.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
+<script src="src/invoices-live.js"></script>
 <script src="src/documents.js"></script>
 <script src="src/transaction-effects.js"></script>
 <script src="src/transaction-premium.js?v=6"></script>
@@ -598,5 +600,14 @@
 <script src="src/topbar-fx.js"></script>
 <script src="src/date-picker.js"></script>
 <script src="src/help-support.js"></script>
+<script>
+(function () {
+  var auth = window.NovaPayAuth;
+  if (!auth) { location.replace("preview.html#login"); return; }
+  auth.ready.then(function () {
+    if (!auth.isAuthenticated()) location.replace("preview.html#login");
+  }).catch(function () { location.replace("preview.html#login"); });
+})();
+</script>
 </body>
 </html>

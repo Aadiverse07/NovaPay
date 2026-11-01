@@ -33,7 +33,10 @@ async function setup(t, overrides = {}) {
     async select(table, query) {
       calls.push({ type: 'select', table, query });
       if (table !== 'documents') return [];
-      if (query.includes('sha256=eq.') && overrides.duplicate) return [{ id: duplicateId }];
+      if (query.includes('sha256=eq.') && overrides.duplicate) {
+        if (overrides.duplicateStatus === 'failed' && query.includes('status=neq.failed')) return [];
+        return [{ id: duplicateId, status: overrides.duplicateStatus || 'processed' }];
+      }
       if (query.includes('&id=eq.')) return doc.status === 'deleted' ? [] : [{ ...doc }];
       return [];
     },
@@ -44,6 +47,14 @@ async function setup(t, overrides = {}) {
       if (name === 'reserve_ai_usage') return overrides.reservation || { allowed: true, usageId: 'usage-test-1' };
       if (name === 'complete_ai_usage') return true;
       if (name === 'search_document_chunks') return [];
+      if (name === 'confirm_document_invoice') {
+        if (!doc.extraction.confirmation) {
+          doc.extraction = { ...doc.extraction, confirmation: { confirmedBy: args.p_actor, invoiceDraftId: 'a0000000-0000-4000-8000-000000000303' } };
+          audit.push({ action: 'document.confirmed', entityId: documentId });
+          return { invoice_id: 'a0000000-0000-4000-8000-000000000303', state: 'draft', already_confirmed: false };
+        }
+        return { invoice_id: doc.extraction.confirmation.invoiceDraftId, state: 'draft', already_confirmed: true };
+      }
       if (name === 'delete_document' && overrides.deleteError) throw Object.assign(new Error('delete unavailable'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' });
       if (name === 'delete_document') { const path = doc.storage_path; doc.status = 'deleted'; return path; }
       throw new Error(`unexpected rpc ${name}`);
@@ -145,7 +156,7 @@ test('organization concurrency cap blocks OCR before usage reservation', async (
 });
 
 test('same-org hash match marks a duplicate rejected and writes a rejection audit without calling OCR', async (t) => {
-  const state = await setup(t, { duplicate: true });
+  const state = await setup(t, { duplicate: true, duplicateStatus: 'rejected' });
   const response = await state.send();
   assert.equal(response.status, 409);
   assert.equal((await response.json()).error.code, 'DUPLICATE_DOCUMENT');
@@ -154,9 +165,22 @@ test('same-org hash match marks a duplicate rejected and writes a rejection audi
   assert.equal(state.audit[0].action, 'document.rejected');
   assert.equal(state.providerCalls(), 0);
   assert.equal(state.calls.some((call) => call.name === 'claim_document_processing'), false);
+  const duplicateQuery = state.calls.find((call) => call.type === 'select' && call.query.includes('sha256=eq.'));
+  assert.match(duplicateQuery.query, /status=neq\.failed/);
 });
 
-test('viewer cannot process documents and malformed provider output is stored only as a safe error code', async (t) => {
+test('a failed same-hash document does not block a fresh upload from processing', async (t) => {
+  const state = await setup(t, { duplicate: true, duplicateStatus: 'failed' });
+  const response = await state.send();
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).document.status, 'processed');
+  assert.equal(state.providerCalls(), 1);
+  assert.equal(state.doc.status, 'processed');
+  const duplicateQuery = state.calls.find((call) => call.type === 'select' && call.query.includes('sha256=eq.'));
+  assert.match(duplicateQuery.query, /status=neq\.failed/);
+});
+
+test('viewer cannot process documents and malformed provider output stores safe validation diagnostics', async (t) => {
   const viewer = await setup(t);
   assert.equal((await viewer.send('viewer-token')).status, 403);
   assert.equal(viewer.providerCalls(), 0);
@@ -165,19 +189,54 @@ test('viewer cannot process documents and malformed provider output is stored on
   const response = await invalid.send();
   assert.equal(response.status, 502);
   assert.equal(invalid.doc.status, 'failed');
-  assert.deepEqual(invalid.doc.extraction, { errorCode: 'OCR_INVALID_RESPONSE' });
+  assert.equal(invalid.doc.extraction.errorCode, 'OCR_INVALID_RESPONSE');
+  assert.equal(invalid.doc.extraction.errorMessage, 'OCR fields failed validation: document: invalid_json');
+  assert.deepEqual(invalid.doc.extraction.validationIssues, [{ path: 'document', rule: 'invalid_json' }]);
+  assert.deepEqual((await response.json()).error.fields, [{ path: 'document', rule: 'invalid_json' }]);
   assert.equal(invalid.calls.find((call) => call.name === 'complete_ai_usage').args.p_status, 'invalid_response');
+
+  const invalidField = await setup(t, { ocrResult: { text: JSON.stringify({ ...extraction, vendorName: 987654321 }), model: 'gemini-3.5-flash-lite' } });
+  const fieldResponse = await invalidField.send();
+  assert.equal(fieldResponse.status, 422);
+  const fieldBody = await fieldResponse.json();
+  assert.deepEqual(fieldBody.error.fields, [{ path: 'vendor_name', rule: 'expected_string_got_number' }]);
+  assert.equal(JSON.stringify(fieldBody).includes('987654321'), false);
+  assert.deepEqual(invalidField.doc.extraction.validationIssues, fieldBody.error.fields);
+  assert.equal(invalidField.doc.extraction.errorMessage.includes('987654321'), false);
+
+  const missingCurrency = await setup(t, { ocrResult: { text: JSON.stringify({ ...extraction, currency: null }), model: 'gemini-3.5-flash-lite' } });
+  const currencyResponse = await missingCurrency.send();
+  assert.equal(currencyResponse.status, 200);
+  const currencyBody = await currencyResponse.json();
+  assert.equal(currencyBody.document.extraction.fields.currency, null);
+  assert.deepEqual(currencyBody.document.extraction.validation.warnings, ['currency_missing']);
+  assert.equal(currencyBody.document.extraction.validation.arithmetic, 'passed');
 });
 
-test('accountant confirmation and rejection are org-scoped, state-checked, and audited; viewer cannot review', async (t) => {
+test('document confirmation creates one org-scoped invoice draft atomically and is idempotent; viewer cannot review', async (t) => {
   const confirm = await setup(t);
   confirm.doc.status = 'processed';
   assert.equal((await confirm.request('POST', '/confirm', 'viewer-token')).status, 403);
   assert.equal((await confirm.request('POST', '/confirm', 'accountant-token', {}, 'a0000000-0000-4000-8000-000000000099')).status, 403);
-  assert.equal((await confirm.request('POST', '/confirm', 'accountant-token', { invoiceDraftId: 'a0000000-0000-4000-8000-000000000303' })).status, 200);
+  const draftInput = { invoiceNumber: 'INV-100', customerName: 'Sample Vendor', customerEmail: 'ap@example.com', currency: 'USD', subtotal: '12.00', tax: '1.00', total: '13.00' };
+  const first = await confirm.request('POST', '/confirm', 'accountant-token', draftInput);
+  assert.equal(first.status, 200);
+  const firstBody = await first.json();
+  assert.equal(firstBody.invoice.id, 'a0000000-0000-4000-8000-000000000303');
+  assert.equal(firstBody.invoice.state, 'draft');
+  assert.equal(firstBody.alreadyConfirmed, false);
+  const second = await confirm.request('POST', '/confirm', 'accountant-token', draftInput);
+  assert.equal(second.status, 200);
+  assert.equal((await second.json()).alreadyConfirmed, true);
+  assert.equal(confirm.audit.filter((event) => event.action === 'document.confirmed').length, 1);
   assert.equal(confirm.doc.extraction.confirmation.confirmedBy, actorId);
   assert.equal(confirm.doc.extraction.confirmation.invoiceDraftId, 'a0000000-0000-4000-8000-000000000303');
-  assert.equal(confirm.audit.at(-1).action, 'document.confirmed');
+
+  const missingEmail = await setup(t); missingEmail.doc.status = 'processed';
+  const invalid = await missingEmail.request('POST', '/confirm', 'accountant-token', { ...draftInput, customerEmail: '' });
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json()).error.message, 'customerEmail is required or invalid.');
+  assert.equal(missingEmail.calls.some((call) => call.name === 'confirm_document_invoice'), false);
 
   const reject = await setup(t);
   const response = await reject.request('POST', '/reject', 'accountant-token', { reason: 'Unreadable scan' });

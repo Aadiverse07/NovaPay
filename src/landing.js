@@ -34,7 +34,13 @@
 
   function getAccounts() { try { return JSON.parse(localStorage.getItem("novapay-demo-accounts") || "{}"); } catch (e) { return {}; } }
   function saveAccounts(a) { try { localStorage.setItem("novapay-demo-accounts", JSON.stringify(a)); } catch (e) {} }
-  function isAuthed() { try { return localStorage.getItem("novapay-demo-auth") === "true"; } catch (e) { return false; } }
+  function isAuthed() {
+    var auth = window.NovaPayAuth;
+    if (!auth) return false;
+    if (auth && auth.mode === "supabase") return auth.isAuthenticated();
+    if (auth && auth.mode !== "demo") return false;
+    try { return localStorage.getItem("novapay-demo-auth") === "true"; } catch (e) { return false; }
+  }
   function setSession(user) {
     try {
       localStorage.setItem("novapay-demo-user", JSON.stringify(user));
@@ -53,7 +59,7 @@
   function setMode(mode) { authMode = mode; syncAuthMode(); focusFirst(); }
 
   function openModal(mode) {
-    if (isAuthed() && mode === "login") { window.location.href = "dashboard.html"; return; }
+    if (isAuthed() && mode === "login") { openViaLaptop(); return; }
     lastFocus = document.activeElement;
     authMode = mode === "signup" ? "signup" : "login";
     syncAuthMode();                                   // set the state while hidden, so opening doesn't animate
@@ -84,6 +90,23 @@
     setSession({ name: name || "NovaPay User", email: e });
     goDashboard();
   }
+  async function validateLogin() {
+    var auth = window.NovaPayAuth;
+    if (!auth) { showToast("Sign-in is unavailable due to a network or configuration issue. Try again later."); return; }
+    try { await auth.ready; }
+    catch (error) { showToast(auth.loginErrorMessage(error)); loginPass.focus(); return; }
+    if (auth.mode === "supabase") {
+      try { await auth.signIn(loginEmail.value.trim().toLowerCase(), loginPass.value); goDashboard(); }
+      catch (error) { showToast(auth.loginErrorMessage(error)); loginPass.focus(); }
+      return;
+    }
+    if (auth.mode !== "demo") {
+      showToast(auth.loginErrorMessage(new Error("Supabase authentication configuration is unavailable.")));
+      loginPass.focus();
+      return;
+    }
+    validateDemoLogin();
+  }
   function googleDemo() {
     setSession({ name: "Google User", email: "google-user@novapay.app" });
     showToast("Google sign-in is simulated.");
@@ -93,7 +116,7 @@
   document.querySelectorAll("[data-open]").forEach(function (el) {
     el.addEventListener("click", function () { openModal(el.getAttribute("data-open")); });
   });
-  $("login").addEventListener("click", function () { if (isAuthed()) return; openModal("login"); });   // when signed in, the button is "Dashboard" and uses the laptop transition
+  $("login").addEventListener("click", function () { if (isAuthed()) { openViaLaptop(); return; } openModal("login"); });
   [["get-started"], ["hero-start"], ["pricing-start"]].forEach(function (a) {
     var el = $(a[0]);
     if (el) el.addEventListener("click", function () { openModal("signup"); });
@@ -114,7 +137,7 @@
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus({ preventScroll: true }); }
     }
   });
-  $("login-form").addEventListener("submit", function (e) { e.preventDefault(); validateDemoLogin(); });
+  $("login-form").addEventListener("submit", function (e) { e.preventDefault(); validateLogin(); });
   $("signup-form").addEventListener("submit", function (e) {
     e.preventDefault();
     var addr = signEmail.value.trim().toLowerCase();
@@ -139,7 +162,17 @@
   $("google-demo-2").addEventListener("click", googleDemo);
   authMode = "login";
   syncAuthMode();
-  if (location.hash === "#login" && !isAuthed()) { openModal("login"); history.replaceState(null, "", location.pathname); }
+  function handleLoginHash() {
+    if (location.hash !== "#login") return;
+    var finish = function () {
+      if (isAuthed()) goDashboard();
+      else openModal("login");
+      history.replaceState(null, "", location.pathname);
+    };
+    if (window.NovaPayAuth) window.NovaPayAuth.ready.then(finish, finish);
+    else finish();
+  }
+  handleLoginHash();
   try {
     if (localStorage.getItem("novapay-signout-reason") === "inactive") {
       localStorage.removeItem("novapay-signout-reason");
@@ -152,7 +185,7 @@
   function setMenu(open) { menu.hidden = !open; mtoggle.setAttribute("aria-expanded", String(open)); mtoggle.setAttribute("aria-label", open ? "Close menu" : "Open menu"); }
   mtoggle.addEventListener("click", function () { setMenu(menu.hidden); });
   menu.addEventListener("click", function (e) { if (e.target.tagName === "A" && e.target.id !== "mm-login") setMenu(false); });
-  $("mm-login").addEventListener("click", function (e) { e.preventDefault(); setMenu(false); openModal("login"); });
+  $("mm-login").addEventListener("click", function (e) { e.preventDefault(); setMenu(false); if (isAuthed()) openViaLaptop(e); else openModal("login"); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
   document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target) && !mtoggle.contains(e.target)) setMenu(false); });
 
@@ -164,12 +197,16 @@
   }
   window.addEventListener("scroll", spy, { passive: true }); spy();
 
-  if (isAuthed()) {
-    $("login").textContent = "Dashboard";
-    $("mm-login").textContent = "Dashboard";
-    $("mm-login").setAttribute("href", "dashboard.html");
-    $("login").addEventListener("click", openViaLaptop);
-    $("mm-login").addEventListener("click", openViaLaptop);
+  function syncLoginNavigation() {
+    var signedIn = isAuthed();
+    $("login").textContent = signedIn ? "Dashboard" : "Login";
+    $("mm-login").textContent = signedIn ? "Dashboard" : "Login";
+    $("mm-login").setAttribute("href", signedIn ? "dashboard.html" : "#login");
+  }
+  syncLoginNavigation();
+  if (window.NovaPayAuth) {
+    window.NovaPayAuth.ready.then(syncLoginNavigation);
+    document.addEventListener("novapay:auth", syncLoginNavigation);
   }
 
   var stage = $("hero-stage");

@@ -1,74 +1,59 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-10-28 (Asia/Kolkata)
-- Branch: `phase5-backend`
-- Latest local code/log checkpoint: `7b6ab23`; no push
-- Current task: GET-by-ID fix applied; deletion response diagnosed; live checks and final tests complete
+- Date/time: 2026-11-01 10:32 IST
+- Branch: `fix-documents-confirm`, based on unmerged `fix-ocr-validation` (PR #9 remains open); no push authorized.
+- Task: document confirmation, confidence, and live invoice view repair.
 
 ## DONE
-- Added authenticated, org-scoped `GET /api/documents/:documentId`; returns standard 404 `DOCUMENT_NOT_FOUND` for missing/foreign IDs and excludes Storage path.
-- Added test coverage for same-org 200, foreign-org 404, unknown 404, unauthenticated 401. Focused test PASS 6/6; full suite PASS 165/165.
-- Migrations syntax PASS 16/16; `node --check` PASS for two changed JS files; `git diff --check` PASS.
-- Live run used existing fixed owner A/B and org A/B, one synthetic PDF. Membership setup confirmed B has no org A membership; B requests used own JWT/org B.
-- Live cross-tenant: B retrieval request 200, one citation not matching org A document; B search RPC 403/0; B list 200/0 org A rows; B GET 404; B Storage read 400 denied; owner A positive control 200/1 citation.
-- Delete cascade: DELETE 200; document/chunks/search hits 0; Storage list API 0; owner audit query 1. Post-delete direct object GET was 400 JSON/88 bytes; `CF-Cache-Status: BYPASS`, no cache-control/age.
-- No code fix for Storage behavior. Prior owner GET 200 was not reproduced; its precise cause is unresolved. Direct `storage.objects` SQL count was unavailable (no SQL client/CLI/connection); Storage list API used instead.
+- Root cause: blank required Supplier email causes client validation to return before any HTTP request; prior validation only showed a generic status message.
+- Confirmation now sends one request. Additive migration 0017 links one org-scoped invoice draft to the source document, confirms and audits atomically, and returns the same draft on retry.
+- Server recomputes subtotal/tax/total in integer minor units and rejects mismatches. UI shows inline field errors/toast, a draft link, and refreshes Invoices.
+- Invoices view no longer shows seed rows; it loads `/api/invoices` and saves its existing draft form through the API.
+- Confidence display is code-derived: arithmetic can verify amount fields; date/currency and OCR text matches are labelled; model-only values are capped and labelled unverified.
+- Field review uses existing theme tokens, with one field per row.
 
 ## IN PROGRESS
-- No implementation work remains. Review diff, commit locally on `phase5-backend`; never push.
-- Preserve `.env.example` pre-existing modification without staging it.
+- Local code and migration 0017 complete; migration is not applied. No live invoice row was created or verified.
 
 ## NEXT STEPS
-1. Review status and changed paths; ensure only intended files are staged and `.env` is absent.
-2. Commit GET route/tests/docs and diagnostic logs locally.
-3. If desired, ask for a direct SQL connection to verify `storage.objects` count or further investigation of the unreproduced earlier 200.
+1. Apply `supabase/migrations/0017_document_invoice_confirmation.sql` in the Supabase SQL Editor and confirm `applied`.
+2. Restart `npm start`; sign in as the fixed owner and open Documents.
+3. Open existing processed `Invoice_D_TEST-001.pdf`, fill Supplier email and review fields, click Confirm once; verify one draft appears in Invoices and linked document state.
+4. Repeat-click/retry the same confirmation and verify invoice row count stays one.
+5. Complete browser checks listed in the current task; do not upload or invoke Gemini.
 
 ## USER ACTIONS PENDING
-- None required to use the new GET route.
-- Optional: provide an approved SQL access path if exact `storage.objects` SQL count is required.
+- Apply migration 0017: Supabase Dashboard → project → SQL Editor → New query → paste the full contents of `supabase/migrations/0017_document_invoice_confirmation.sql` → Run → confirm `applied`.
+- Browser verification after apply: sign in as fixed owner; Dashboard → Documents → open already processed Invoice_D_TEST-001.pdf; leave Supplier email blank and click Confirm to verify inline error/toast without a request; enter a valid email and click once; open Invoices and verify one live draft; return and repeat confirmation only if it is available; verify count remains one. Check both light and dark themes.
 
 ## LIVE STATE
-- Server stopped. Loaded limits at run start were user 100/org 300; status HTTP 200.
-- Fixed identities reused, no users/orgs created. Run-specific synthetic sample was deleted.
-- Migrations 0001–0016 applied; no migrations modified.
-- Key names only: `AI_DAILY_USER_LIMIT`, `AI_DAILY_ORG_LIMIT`, `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- No Gemini requests, uploads, or live invoice confirmations performed.
+- Migration 0017 pending human application; migrations 0001–0016 previously applied.
+- No secrets or environment values recorded.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| GET-by-ID route tests | PASS | 6/6 focused tests; same/foreign/missing/unauthenticated assertions. |
-| Full suite | PASS 165/165 | `npm test`. |
-| Migration syntax | PASS 16/16 | `npm run check:migrations`. |
-| Changed JS syntax | PASS | `node --check` on route and test. |
-| Diff whitespace | PASS | `git diff --check`. |
-| Cross-tenant retrieval | PASS | B retrieval response had no org A document citation; RPC 403. |
-| B list/get isolation | PASS | list 200/0 org A rows; get 404. |
-| B Storage RLS | PASS | B read denied HTTP 400. |
-| A positive control | PASS | retrieval route 200/1 citation. |
-| Delete cascade | PASS via API/list | DB rows 0, Storage list 0, audit 1; direct SQL count UNVERIFIED. |
-| Earlier post-delete 200 cause | UNRESOLVED | Not reproduced; current GET 400 with cache BYPASS and no cache headers. |
+| Focused confirmation/OCR/invoice tests | PASS | 33/33 |
+| Full `npm test` | FAIL | 177/178; known authenticated client no-store failure |
+| Migration syntax | PASS | 17/17 parsed; 0017 not live-applied |
+| Changed JS syntax | PASS | `node --check` all changed JS |
+| `git diff --check` | PASS | clean |
+| Protected-file diff vs origin/main | PASS | empty |
+| Existing sample confirmation and invoice row count | UNVERIFIED | Requires migration 0017 and browser action; no live mutation performed |
 
 ## KNOWN ISSUES AND RISKS
-- The exact `storage.objects` SQL count was not run due lack of SQL access tooling.
-- Previous HTTP 200 after delete lacks headers/byte length and cannot be attributed to caching or signed URL.
-- One initial positive-control query routed to structured SQL; corrected retrieval wording was used for passing positive control. One B harness flag was a false positive from marker echo in its own question; citation ID did not match org A document.
-- `.env.example` contains an unrelated pre-existing modified file; leave untouched.
+- Migration 0017 must be applied before the new confirmation endpoint can work against Supabase.
+- Full suite retains the known unrelated API `Cache-Control: no-store` failure.
+- Browser checks are pending; no visual/browser run was performed.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor is transactional; never edit applied migrations; add numbered migrations.
-- SECURITY DEFINER/posting RPCs revoke public/anon/authenticated and grant only service_role; prove ordinary JWT denial.
-- PostgREST embeds need explicit FK names with multiple relationships.
-- audit_log is insert-only/ON DELETE RESTRICT; cleanup journal entries, audit_log, organizations, auth.users; reuse fixed users/orgs.
-- PayPal sandbox buyer US Personal; seller USD; Visa; webhook ends `/api/webhook`; raw body required for signature verification.
-- Never print `.env` values or JWTs.
+- Supabase SQL Editor runs inside one transaction; syntax/runtime errors roll back. Never edit an applied migration; add a new numbered file.
+- SECURITY DEFINER/posting RPCs must revoke execution from public, anon, authenticated and grant only service_role.
+- Never print `.env` values, keys, JWTs, or document content.
+- Never claim PASS for an unrun check.
 
-## DO NOT LIST
-- Never push; do not touch main/backend/protected design files; no force; do not weaken tests/edit applied migrations/commit `.env`.
-
-## RESUME COMMANDS
-- `git branch --show-current`
-- `git status --short`
-- `git log --oneline -5`
-- `npm test`
-- `npm run check:migrations`
+## DO NOT
+- Do not push, merge, upload documents, or call Gemini in this task.
+- Do not edit protected design files or weaken tests.

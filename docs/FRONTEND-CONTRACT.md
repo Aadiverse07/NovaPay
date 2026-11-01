@@ -170,6 +170,8 @@ Trial-balance rows include account code/name/type, debit, credit, and balance mi
 
 ### `GET /api/invoices`
 
+The Invoices view must render only these organization-scoped API rows; do not show hard-coded sample rows in authenticated mode. After a document-confirmation response, refresh this list and link to the returned draft ID. Show a live empty state when no rows exist.
+
 Available to all organization roles. Optional `limit` (default 50, max 100), `offset` (default 0), and `state=draft|reviewed|sent|paid|void`. Returns `{ "invoices": [<invoice>], "page": { "limit": 50, "offset": 0 } }`.
 
 ### `POST /api/invoices`
@@ -362,8 +364,6 @@ Allowed roles: `owner`, `admin`; optional inclusive UTC date filters `from=YYYY-
 
 `GET /api/documents` loads the live organization list and resolved role. It returns no storage paths; show an explicit empty state when there are no rows and an unavailable state on errors. Do not substitute example records in authenticated mode. Viewers may read the list but cannot upload, process, confirm, reject or delete; the server enforces owner/admin/accountant for writes.
 
-Upload raw selected `File` bytes to `POST /api/documents` with its MIME type and `X-File-Name`, then call `POST /api/documents/:id/process`. Show uploaded/processing/processed/rejected/failed states. Review `extraction.fields`, each `confidence` value, `validation.warnings`, and `duplicate_of`; show arithmetic and duplicate warnings before confirmation. Confirmation creates an invoice draft only, using `POST /api/invoices`, followed by `POST /api/documents/:id/confirm`; never call invoice send or send-approval from this flow. Collect supplier email if absent from OCR. If the draft request succeeds and confirmation fails, do not repeat draft creation automatically. Reject via `POST /api/documents/:id/reject`.
-
-On successful invoice draft creation, include its returned UUID as `invoiceDraftId` in the document confirm request. The confirmation metadata is returned by the list route and the UI should show a completed state, preventing repeat draft creation from that document.
+Upload raw selected `File` bytes to `POST /api/documents` with its MIME type and `X-File-Name`, then call `POST /api/documents/:id/process`. Show uploaded/processing/processed/rejected/failed states. Review `extraction.fields`, `validation.warnings`, and `duplicate_of`; derive confidence from code checks and label the basis. Confirmation submits the reviewed `invoiceNumber`, `customerName`, `customerEmail`, `currency`, `subtotal`, `tax`, and `total` to `POST /api/documents/:id/confirm`. The server atomically creates one org-scoped draft linked to the document, recomputes totals, confirms the document, and audits it; retries return the same draft. Show inline field errors and the returned invoice link. Never call invoice send or send-approval from this flow. Reject via `POST /api/documents/:id/reject`.
 
 `GET /api/documents/:id` is authenticated and resolves the ID only inside the organization selected by `X-Org-Id`. A document from another org and an unknown document both return the standard structured 404 `DOCUMENT_NOT_FOUND`; clients must not distinguish them. Unauthenticated requests return 401. The response omits the private Storage path.
