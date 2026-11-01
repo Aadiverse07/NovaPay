@@ -18,6 +18,12 @@ test('invoice download audit inserts only invoice identity and request metadata'
   assert.deepEqual(inserts,[{table:'audit_log',payload:{org_id:'org-a',actor_id:'actor-a',action:'invoice.downloaded',entity:'invoice',entity_id:'invoice-a',metadata:{},request_id:'request-a'}}]);
 });
 
+test('invoice download audit privilege failure stays specific and fails closed', async () => {
+  const database={async insert(){throw Object.assign(new Error('Financial database write failed.'),{statusCode:503,code:'DATABASE_UNAVAILABLE',databaseCode:'42501',databaseMessage:'permission denied for table audit_log'});}};
+  const repos=createPostgresRepositories(database);
+  await assert.rejects(repos.invoices.auditDownload('org-a','actor-a','invoice-a','request-a'),(error)=>error.statusCode===503&&error.code==='INVOICE_AUDIT_WRITE_FAILED'&&error.databaseCode==='42501'&&error.message==='Invoice download audit insert failed.');
+});
+
 test('invoice detail loads lines and status events only for the selected organization and invoice', async () => {
   const calls=[];
   const database={async select(table,query){calls.push({table,query});if(table==='invoices')return [{id:'invoice-a',org_id:'org-a',invoice_number:'INV-A',state:'draft',currency:'INR',subtotal_minor:13440,tax_minor:0,total_minor:13440}];if(table==='invoice_lines')return [{id:'line-a',description:'Consulting',quantity:1,unit_price_minor:13440,line_total_minor:13440}];if(table==='invoice_events')return [{event_type:'draft.created',created_at:'2026-11-01T10:00:00.000Z'}];return [];}};

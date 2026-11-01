@@ -29,6 +29,23 @@ test('invoice money formatter uses the ISO currency exponent', () => {
   assert.equal(formatInvoiceMinor(13440, 'KWD'), '13.440 KWD');
 });
 
+test('invoice PDF builder supports documented INR amounts, long names, and multiple lines', async () => {
+  assert.equal(formatInvoiceMinor(13750, 'INR'), '137.50 INR');
+  assert.equal(formatInvoiceMinor(1344000, 'INR'), '13,440.00 INR');
+  const cases = [
+    { name: 'minor amount', invoice: { ...fixture, subtotalMinor: 13750, totalMinor: 13750, lines: [{ description: 'Service', quantity: '1', unitPriceMinor: 13750, totalMinor: 13750 }] } },
+    { name: 'large INR amount', invoice: { ...fixture, subtotalMinor: 1344000, totalMinor: 1344000, lines: [{ description: 'Service', quantity: '1', unitPriceMinor: 1344000, totalMinor: 1344000 }] } },
+    { name: 'long names', invoice: { ...fixture, customerName: 'Example '.repeat(80), notes: 'Long note '.repeat(100) } },
+    { name: 'several lines', invoice: { ...fixture, lines: Array.from({ length: 12 }, (_, i) => ({ description: `Service item ${i + 1}`, quantity: '1', unitPriceMinor: 13750, totalMinor: 13750 })) } },
+  ];
+  for (const scenario of cases) {
+    const bytes = await createInvoicePdf(scenario.invoice);
+    assert.equal(bytes.subarray(0, 5).toString('ascii'), '%PDF-', scenario.name);
+    assert.ok(bytes.subarray(-1024).toString('latin1').includes('%%EOF'), scenario.name);
+    assert.ok(bytes.length > 1000, scenario.name);
+  }
+});
+
 test('viewer can fetch an org-scoped PDF; response is audited and auth/tenant boundaries hold', async () => {
   const repos = createRepositories(), audits = [];
   let requestedScope;
@@ -59,13 +76,13 @@ test('viewer can fetch an org-scoped PDF; response is audited and auth/tenant bo
 test('download audit failure returns a categorized server error instead of pretending a file was saved', async () => {
   const repos = createRepositories();
   repos.invoices.get = async (scope, id) => scope === orgA && id === invoiceId ? fixture : null;
-  repos.invoices.auditDownload = async () => { throw Object.assign(new Error('private database detail'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' }); };
+  repos.invoices.auditDownload = async () => { throw Object.assign(new Error('Invoice download audit insert failed.'), { statusCode: 503, code: 'INVOICE_AUDIT_WRITE_FAILED', databaseCode: '42501' }); };
   const app = createApp({ config, repos, identity, paypal: { async pp() { throw new Error('unexpected PayPal'); } }, askAI: async () => ({}) });
   const server = app.listen(0, '127.0.0.1'); await new Promise((resolve) => server.once('listening', resolve));
   try {
     const response = await fetch(`http://127.0.0.1:${server.address().port}/api/invoices/${invoiceId}/download`, { headers: { authorization: 'Bearer viewer-token', 'x-org-id': orgA } });
     assert.equal(response.status, 503);
-    assert.equal((await response.json()).error.code, 'DATABASE_UNAVAILABLE');
+    assert.equal((await response.json()).error.code, 'INVOICE_AUDIT_WRITE_FAILED');
   } finally { await new Promise((resolve) => server.close(resolve)); }
   const client = await readFile(new URL('../../src/invoices-live.js', import.meta.url), 'utf8');
   assert.match(client, /error\.status >= 500 \? "Invoice PDF server error/);

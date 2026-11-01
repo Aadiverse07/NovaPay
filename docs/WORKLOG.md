@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: invoice PDF download errors and Community Funds create wiring on `fix-download-campaigns`, based on merged `origin/main` commit `5d6ff72`.
-- Last finished: local commit `904e536` (`WIP-BROKEN: fix invoice download and wire campaigns; known no-store test failure`); worktree was clean after commit; no push.
-- Checks: focused tests 10/10; campaign scope/exponent assertions 2/2; npm test 203/204 (known no-store assertion only); migrations 18/18; JS syntax 6/6; diff check PASS; protected-file diff empty.
-- Live fixed-owner PDF and campaign create/list/cleanup: UNVERIFIED because browser automation and fixed owner credentials are unavailable; no live data changed.
-- NEXT: human browser checks: sign in owner → Invoices → View → Download PDF; Community Funds → Start a campaign → submit → verify one live card → View contributions; repeat read-only as viewer. Never push.
+- Current task: repair invoice PDF audit INSERT privilege on `fix-download-campaigns`; do not switch branches or push.
+- Diagnosis: live TEST-001 GET returned 503; server log exact safe message is `Error`, `INVOICE_AUDIT_WRITE_FAILED`, SQLSTATE 42501, `permission denied for table audit_log`.
+- Fix staged in code: audit failure remains fail-closed with specific server log; migration `0019_restore_audit_log_service_insert.sql` revokes broad grants and grants INSERT to service_role only; NOT applied.
+- Tests: focused 21/21 PASS; npm test 205/206 (known no-store assertion); migrations 19/19; JS syntax 10/10; diff check and protected-file diff pass. Synthetic fixture PDF 1,755 bytes with `%PDF-` and `%%EOF`; actual API PDF UNVERIFIED.
+- NEXT: provide/apply 0019 in Supabase SQL Editor; then rerun real download and verify audit/PDF; finalize local WIP commit, never push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4180,3 +4180,46 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: commit the final handoff changes only; why: keep CONTEXT and RESUME POINTER synchronized with the clean implementation checkpoint.
 2026-11-01 | Result: PASS, handoff commit `509e228` created after implementation commit `904e536`; worktree clean; NEXT: record this final checkpoint and confirm branch/status.
 2026-11-01 | Before: commit the final worktree/branch verification in the journal; why: complete the local-only handoff with no unstaged state.
+2026-11-02 | Before: confirm current branch/worktree and check whether the local API server is up; why: reproduce the existing invoice PDF failure without changing branch or exposing credentials.
+2026-11-02 | Result: PASS, current branch is `fix-download-campaigns`, worktree changes only WORKLOG.md, local API on port 3000 returns 200; NEXT: read-only locate fixed owner's existing TEST-001 draft and mint a temporary session for that user only.
+2026-11-02 | Before: use service-role reads to find the existing fixed owner and TEST-001 draft, then request a magic-link session for that existing user without printing values; why: reproduce PDF download through normal authenticated org scope without creating users.
+2026-11-02 | Result: FAIL, temporary repro helper could not import dotenv from /tmp; no live query/session was made and no credential data printed; NEXT: load env vars in-memory from the repo `.env` with a no-output parser and retry.
+2026-11-02 | Before: replace the helper's dotenv import with a local no-output `.env` parser and rerun the read-only lookup/session flow; why: module resolution from `/tmp` is isolated from repo dependencies.
+2026-11-02 | Result: PARTIAL, service-role read found one owner org and one TEST-001 draft; magic-link verification returned HTTP 400 because the generated response did not include the expected verification type; no access token or customer fields printed; NEXT: inspect only response field names and correct the verification type.
+2026-11-02 | Before: inspect admin magic-link response keys only, then adjust verification request; why: fix temporary test-session flow without exposing its token or user data.
+2026-11-02 | Result: PASS, magic-link response stores `hashed_token` and `verification_type` at the top level; only field names/type inspected; NEXT: use that shape to authenticate the owner and request the existing invoice PDF.
+2026-11-02 | Before: correct helper to read top-level link properties and retry authenticated GET for the one existing TEST-001 draft; why: reproduce actual HTTP status and verify saved PDF bytes without creating database rows besides required audit.
+2026-11-02 | Result: PARTIAL, OTP verification requires email plus its email_otp; response was HTTP 400 and no session created; NEXT: use the documented email/OTP shape, then call the API.
+2026-11-02 | Before: retry magic-link verification using existing account email and generated email OTP; why: obtain a short-lived session for the existing owner only.
+2026-11-02 | Result: PARTIAL, normal authenticated API reproduced HTTP 503 `DATABASE_UNAVAILABLE`; response body is generic. Likely failure occurs in audited route; next capture safe server-side exception classification and SQLSTATE on a fresh local process.
+2026-11-02 | Before: add safe failure diagnostics (error name, generic operation message, SQLSTATE only) to PDF route and inspect the existing audit helper path; why: distinguish audit insert from PDF/query errors without logging customer values.
+2026-11-02 | Result: PASS, audit repo now wraps failed writes as `INVOICE_AUDIT_WRITE_FAILED`; route logs only error name, safe operation message, status and SQLSTATE; NEXT: start a loopback fresh app instance on port 3001 to capture the failing write code.
+2026-11-02 | Before: start an isolated loopback API instance using current source and loaded config, with logs captured in the exec session; why: reproduce with a fixed-owner session without disturbing the already-running port 3000 server.
+2026-11-02 | Result: PASS, isolated loopback API on port 3001 started from current source; port 3000 remains untouched; NEXT: repeat fixed-owner download against the instrumented instance.
+2026-11-02 | Before: rerun the fixed-owner TEST-001 download against localhost:3001 and capture only HTTP/error metadata and PDF bytes; why: obtain SQLSTATE and confirm whether audit logging is the failing operation.
+2026-11-02 | Result: FAIL reproduced, fresh source returned HTTP 503 and server log reports `Error`, `INVOICE_AUDIT_WRITE_FAILED`, SQLSTATE 42501; PDF/audit failure confirmed, exact privilege subtype not yet distinguished; NEXT: inspect audit table RLS/grants and the Supabase error body safely.
+2026-11-02 | Before: inspect audit_log migration grants/policies and instrumented PostgREST response handling; why: determine whether 42501 is missing SQL INSERT privilege or an RLS policy failure before choosing a narrow fix.
+2026-11-02 | Result: PASS, migration confirms service_role has INSERT privilege on audit_log; observed SQLSTATE 42501 means current PostgREST request role/key mapping is not exercising that grant (or privilege revocation); NEXT: check key format without printing value and isolate Supabase service-role request behavior.
+2026-11-02 | Before: detect only whether loaded service key is legacy JWT or new secret-key format, then inspect service request auth tests; why: choose the correct privilege fix based on how PostgREST receives the server credential.
+2026-11-02 | Result: PASS, DB insert errors now propagate only SQLSTATE and a strict allowlist of privilege/RLS message strings; audit route logs those fields without body or invoice data; NEXT: repro once on fresh instrumentation to identify missing privilege precisely.
+2026-11-02 | Before: start fresh loopback server on port 3002 with the safe database-error logging changes; why: distinguish table grant from RLS denial.
+2026-11-02 | Result: PASS, fresh loopback server on 3002 is ready; NEXT: repeat one existing TEST-001 PDF request and read its safe privilege log.
+2026-11-02 | Before: reproduce TEST-001 PDF download on localhost:3002 with the existing owner's short-lived magic-link session; why: capture the database's sanitized privilege message.
+2026-11-02 | Result: PASS, exact server log identifies `Error: Invoice download audit insert failed.` with SQLSTATE 42501 / `permission denied for table audit_log`; route returned 503 and no PDF saved; NEXT: stop temporary loopback servers, then add the least-privilege grant migration and regression tests.
+2026-11-02 | Before: stop temporary port 3001 and 3002 repro servers; why: clean up diagnostic processes while leaving the existing port 3000 server untouched.
+2026-11-02 | Result: PASS, both temporary servers stopped with exit 130; port 3000 remains untouched; NEXT: add migration grant and tests for audit privilege failure plus invoice PDF variants.
+2026-11-02 | Before: inspect test insertion points and current migration parser numbering; why: add focused coverage and the next ordered migration without altering applied files.
+2026-11-02 | Result: PASS, 0019 restores only service_role INSERT on audit_log; tests now cover SQLSTATE 42501 fail-closed behavior and PDF fixture shapes 137.50/13,440.00 INR, long names, and multiple lines; NEXT: run focused tests and required checks.
+2026-11-02 | Before: run focused invoice/repository tests, full npm test, migration checker, syntax, diff and protected-file checks; why: verify the grant fix and preserve all existing behavior.
+2026-11-02 | Result: PASS, focused invoice/Postgres suite 21/21; includes bytes for requested INR values, long/multiline invoices, scoped 200 PDF response and 42501 audit fail-closed case; NEXT: append focused result and run full tests/checks.
+2026-11-02 | Before: append focused run to TEST-REPORT.md and run npm test; why: maintain append-only test record and check all regressions after new migration.
+2026-11-02 | Result: PASS, focused tests and exact live 503 diagnostic logged; NEXT: run npm test, migrations, syntax, diff and protected-file checks.
+2026-11-02 | Before: run full test and required static checks for the migration and code fix; why: verify the complete branch without weakening existing tests.
+2026-11-02 | Result: PASS with known failure, `npm test` 205/206 (only no-store assertion); migration 19/19; changed JS 10/10; diff and protected-file checks clean; NEXT: generate a synthetic PDF fixture in /tmp and verify size/header/EOF.
+2026-11-02 | Before: write a non-customer synthetic invoice PDF fixture to `/tmp` and check byte size, `%PDF` header and `%%EOF`; why: verify builder output independently while the live download remains blocked on the audit privilege migration.
+2026-11-02 | Result: PASS, synthetic PDF saved at `/tmp/novapay-invoice-fixture.pdf`, 1,755 bytes, `%PDF-` header and `%%EOF`; actual TEST-001 download still fails before response due audit privilege and remains UNVERIFIED; NEXT: append full checks and update handoff with migration steps.
+2026-11-02 | Before: append final checks and exact live failure to TEST-REPORT; update DECISIONS, CONTEXT and RESUME POINTER with pending migration instructions; why: preserve factual verification and continuation steps.
+2026-11-02 | Result: PASS, TEST-REPORT, DECISIONS, CONTEXT and RESUME POINTER reflect confirmed cause, unapplied migration and live verification blocker; NEXT: inspect final diff, commit locally, and leave user exact migration steps.
+2026-11-02 | Before: verify current branch/no `.env`, stage only source/tests/migration/docs, then WIP-BROKEN commit; why: checkpoint the fail-closed fix while the known unrelated test remains failing.
+2026-11-02 | Result: PASS, 10 intended files staged; `.env` is not tracked or staged; staged diff check clean; NEXT: commit the local fix and migration.
+2026-11-02 | Before: create local WIP-BROKEN commit; why: preserve the SQLSTATE 42501 repair and migration steps without pushing.

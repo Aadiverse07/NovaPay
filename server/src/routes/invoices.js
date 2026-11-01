@@ -74,7 +74,8 @@ export function invoiceRoutes({ repos }) {
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).send(pdf);
     } catch (error) {
-      console.error(JSON.stringify({ level: 'error', event: 'invoice_pdf_download_failed', requestId: req.id, status: error?.statusCode || 500, code: error?.code || error?.databaseCode || 'INTERNAL_ERROR' }));
+      const auditFailure = error?.code === 'INVOICE_AUDIT_WRITE_FAILED';
+      console.error(JSON.stringify({ level: 'error', event: 'invoice_pdf_download_failed', requestId: req.id, status: error?.statusCode || 500, errorName: error?.name || 'Error', code: error?.code || error?.databaseCode || 'INTERNAL_ERROR', databaseCode: error?.databaseCode || null, databaseMessage: error?.databaseMessage || null, message: auditFailure ? 'Invoice download audit insert failed.' : 'Invoice PDF generation failed.' }));
       return next(error);
     }
   });
