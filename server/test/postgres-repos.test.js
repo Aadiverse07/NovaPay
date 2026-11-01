@@ -10,6 +10,24 @@ test('money repository helpers use integer minor units and reject excessive prec
   assert.throws(() => moneyToMinor('999999999999999999.00'));
 });
 
+test('invoice download audit inserts only invoice identity and request metadata', async () => {
+  const inserts=[];
+  const database={async insert(table,payload){inserts.push({table,payload});}};
+  const repos=createPostgresRepositories(database);
+  await repos.invoices.auditDownload('org-a','actor-a','invoice-a','request-a');
+  assert.deepEqual(inserts,[{table:'audit_log',payload:{org_id:'org-a',actor_id:'actor-a',action:'invoice.downloaded',entity:'invoice',entity_id:'invoice-a',metadata:{},request_id:'request-a'}}]);
+});
+
+test('invoice detail loads lines and status events only for the selected organization and invoice', async () => {
+  const calls=[];
+  const database={async select(table,query){calls.push({table,query});if(table==='invoices')return [{id:'invoice-a',org_id:'org-a',invoice_number:'INV-A',state:'draft',currency:'INR',subtotal_minor:13440,tax_minor:0,total_minor:13440}];if(table==='invoice_lines')return [{id:'line-a',description:'Consulting',quantity:1,unit_price_minor:13440,line_total_minor:13440}];if(table==='invoice_events')return [{event_type:'draft.created',created_at:'2026-11-01T10:00:00.000Z'}];return [];}};
+  const repos=createPostgresRepositories(database), invoice=await repos.invoices.get('org-a','invoice-a');
+  assert.equal(invoice.lines[0].unitPriceMinor,13440);
+  assert.deepEqual(invoice.events,[{type:'draft.created',occurredAt:'2026-11-01T10:00:00.000Z'}]);
+  assert.equal(calls.length,3);
+  assert.ok(calls.every((call)=>call.query.includes('org_id=eq.org-a')&&call.query.includes('invoice_id=eq.invoice-a')||call.table==='invoices'&&call.query.includes('id=eq.invoice-a')));
+});
+
 test('Postgres funds repository uses T4 service-only queue RPCs and maps maintenance context', async () => {
   const calls=[];
   const database={

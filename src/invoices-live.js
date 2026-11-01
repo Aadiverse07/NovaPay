@@ -13,6 +13,12 @@
   function dateText(value) { if (!value) return "—"; var date = new Date(value + "T00:00:00"); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(); }
   function newKey() { return window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) { var r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16); }); }
   function actionButton(cell, text, action, className) { var button = document.createElement("button"); button.type = "button"; button.className = className || "table-action"; button.textContent = text; button.dataset.invoiceAction = action; cell.appendChild(button); return button; }
+  function downloadButton(cell, invoice) {
+    var button = document.createElement("button"); button.type = "button"; button.className = "btn btn--ghost invoice-download-button";
+    button.dataset.invoiceAction = "download"; button.dataset.invoiceId = invoice.id; button.setAttribute("aria-label", "Download invoice " + invoice.invoiceNumber + " PDF"); button.title = "Download PDF";
+    button.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 17v3h16v-3"/></svg>';
+    cell.appendChild(button); return button;
+  }
   function render() {
     if (!tbody) return;
     tbody.replaceChildren();
@@ -24,7 +30,7 @@
       row.setAttribute("aria-label", "Open invoice " + invoice.invoiceNumber + " details");
       [invoice.invoiceNumber, invoice.customerName, dateText(invoice.issueDate || invoice.createdAt), dateText(invoice.dueDate), money(invoice)].forEach(function (value) { row.insertCell().textContent = value || "—"; });
       var state = row.insertCell(), badge = document.createElement("span"); badge.className = "status " + (invoice.state === "paid" ? "ok" : invoice.state === "draft" ? "info" : invoice.state === "void" ? "warn" : "info"); badge.textContent = label(invoice.state); state.appendChild(badge);
-      var actions = row.insertCell(); actionButton(actions, "View", "view");
+      var actions = row.insertCell(); actionButton(actions, "View", "view"); downloadButton(actions, invoice);
       if (canWrite()) {
         if (invoice.state === "draft") { actionButton(actions, "Edit", "edit"); actionButton(actions, "Review", "review"); actionButton(actions, "Delete", "delete"); }
         else if (invoice.state === "reviewed") { actionButton(actions, "Move to draft", "reopen"); actionButton(actions, "Send · SIMULATED", "send"); actionButton(actions, "Void", "void"); }
@@ -136,12 +142,32 @@
       window.NovaPayInvoiceModal.open(trigger); setFormMode("edit", result.invoice);
     } catch (error) { toast(error.message || "Invoice could not be loaded for editing."); }
   }
+  async function downloadInvoice(id, invoice, button) {
+    if (!api || !id) return;
+    var oldLabel = button && button.getAttribute("aria-label"), oldTitle = button && button.title, oldText = button && button.textContent;
+    if (button) { button.disabled = true; button.setAttribute("aria-busy", "true"); button.setAttribute("aria-label", "Preparing invoice PDF"); button.title = "Preparing PDF…"; if (button.hasAttribute("data-invoice-detail-download")) button.textContent = "Preparing PDF…"; }
+    try {
+      var blob = await api.request("/api/invoices/" + encodeURIComponent(id) + "/download", { responseType: "blob" });
+      var number = String(invoice && invoice.invoiceNumber || id).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 50), url = URL.createObjectURL(blob), link = document.createElement("a");
+      link.href = url; link.download = "invoice-" + number + ".pdf"; document.body.appendChild(link); link.click(); link.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      toast("Invoice PDF downloaded.");
+    } catch (error) { toast(error.message || "Invoice PDF could not be prepared."); }
+    finally { if (button) { button.disabled = false; button.removeAttribute("aria-busy"); button.setAttribute("aria-label", oldLabel || "Download invoice PDF"); button.title = oldTitle || "Download PDF"; if (button.hasAttribute("data-invoice-detail-download")) button.textContent = oldText || "⇩ Download PDF"; } }
+  }
   async function performAction(button) {
     var row = button.closest("tr"), invoice = row && invoices.find(function (item) { return item.id === row.dataset.invoiceId; });
+    if (button.dataset.invoiceAction === "download" && !invoice) invoice = invoices.find(function (item) { return item.id === button.dataset.invoiceId; });
+    if (button.dataset.invoiceAction === "download" && !row) invoice = invoices.find(function (item) { return item.id === button.dataset.invoiceId; });
+    if (button.dataset.invoiceAction === "download") { await downloadInvoice(button.dataset.invoiceId || invoice && invoice.id, invoice, button); return; }
     if (!invoice) return;
     var action = button.dataset.invoiceAction; button.disabled = true;
     try {
-      if (action === "view") { var view = await api.request("/api/invoices/" + encodeURIComponent(invoice.id)); var content = (view.invoice.notes || "No notes."); toast("Invoice " + view.invoice.invoiceNumber + " · " + label(view.invoice.state) + " · " + content); return; }
+      if (action === "view") {
+        if (window.NovaPayInvoiceDetail) window.NovaPayInvoiceDetail.showLoading(button);
+        var view = await api.request("/api/invoices/" + encodeURIComponent(invoice.id));
+        if (window.NovaPayInvoiceDetail) window.NovaPayInvoiceDetail.open(view.invoice, button);
+        return;
+      }
       if (action === "edit") { await editInvoice(invoice.id, button); return; }
       if (action === "review") { await api.request("/api/invoices/" + encodeURIComponent(invoice.id) + "/review", { method: "POST", body: {} }); toast("Invoice marked reviewed."); }
       else if (action === "reopen") { await api.request("/api/invoices/" + encodeURIComponent(invoice.id) + "/reopen", { method: "POST", body: {} }); toast("Invoice moved back to draft. You can edit it now."); }
@@ -156,7 +182,7 @@
         await api.request("/api/invoices/" + encodeURIComponent(invoice.id) + "/send-approval", { method: "POST", body: {} }); toast("Send request added to Approvals; SIMULATED, not delivered.");
       }
       await load();
-    } catch (error) { toast(error.message || "Invoice action could not be completed."); }
+    } catch (error) { if (action === "view" && window.NovaPayInvoiceDetail) window.NovaPayInvoiceDetail.showError(error.message || "Invoice details could not be loaded."); else toast(error.message || "Invoice action could not be completed."); }
     finally { if (button.isConnected) button.disabled = false; }
   }
   document.addEventListener("DOMContentLoaded", function () {
@@ -164,6 +190,8 @@
     document.addEventListener("click", function (event) {
       if (event.target.closest('[data-view="invoices"], [href="#invoices"]')) load();
       var action = event.target.closest("[data-invoice-action]"); if (action) performAction(action);
+      var detailDownload = event.target.closest("[data-invoice-detail-download]");
+      if (detailDownload) { var id = detailDownload.dataset.invoiceId, item = invoices.find(function (invoice) { return invoice.id === id; }); downloadInvoice(id, item, detailDownload); }
       if (event.target.closest("#invoice-add-line")) addLine();
       var remove = event.target.closest("[data-invoice-remove-line]");
       if (remove) { if (lineRows().length > 1) remove.closest("[data-invoice-line]").remove(); updatePreview(); }

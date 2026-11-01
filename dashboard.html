@@ -531,7 +531,7 @@
 <div class="approval-modal" id="invoice-detail-modal" hidden aria-hidden="true">
   <div class="approval-modal-backdrop" data-close-invoice-detail></div>
   <section class="approval-dialog transaction-dialog" role="dialog" aria-modal="true" aria-labelledby="invoice-detail-title">
-    <button class="modal-close" type="button" data-close-invoice-detail aria-label="Close invoice details">×</button><span class="section-kicker">INVOICE DETAIL</span><h2 id="invoice-detail-title">Invoice</h2><p id="invoice-detail-subtitle">Invoice record</p><dl id="invoice-detail-fields" class="approval-detail-fields transaction-detail-grid"></dl><p class="approval-detail-effect detail-note">Review invoice details before requesting approval or sending. No invoice is sent from this preview.</p><button class="btn btn--ghost" type="button" data-close-invoice-detail>Close</button>
+    <button class="modal-close" type="button" data-close-invoice-detail aria-label="Close invoice details">×</button><span class="section-kicker">INVOICE DETAIL</span><h2 id="invoice-detail-title">Invoice</h2><p id="invoice-detail-subtitle">Live organization invoice</p><p id="invoice-detail-status" role="status" aria-live="polite"></p><dl id="invoice-detail-fields" class="approval-detail-fields transaction-detail-grid"></dl><div class="module-table-wrap"><table class="module-table"><thead><tr><th>Description</th><th>Quantity</th><th>Unit price</th><th>Line total</th></tr></thead><tbody id="invoice-detail-lines"></tbody></table></div><p id="invoice-detail-totals" class="module-foot"></p><h3>Notes</h3><p id="invoice-detail-notes"></p><h3>Status history</h3><ul id="invoice-detail-history"></ul><div class="agent-actions"><button class="btn btn--primary" type="button" data-invoice-detail-download hidden disabled>⇩ Download PDF</button><button class="btn btn--ghost" type="button" data-close-invoice-detail>Close</button></div>
   </section>
 </div>
 <div class="approval-modal" id="approval-confirm-modal" hidden aria-hidden="true">
@@ -590,6 +590,7 @@
 <script src="src/ai-fullscreen.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
+<script src="src/invoice-detail.js"></script>
 <script src="src/invoices-live.js"></script>
 <script src="src/documents.js"></script>
 <script src="src/transaction-effects.js"></script>

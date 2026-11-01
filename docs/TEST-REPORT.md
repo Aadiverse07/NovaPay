@@ -1330,3 +1330,17 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 | Final `node --check` on 11 changed JS files | PASS | All parse successfully.
 2026-11-01 | Final `git diff --check` | PASS | Clean.
 2026-11-01 | Final protected-file diff vs `origin/main` | PASS | Empty.
+2026-11-01 | Focused PDF/blob/auth/audit tests | PASS | 6/6; verified INR 134.40 and JPY/KWD exponents, PDF response/filename, viewer access, cross-org 404, auth 401, audit identity-only payload, pagination and browser auth/org headers.
+2026-11-01 | Focused invoice-download + API-client + Postgres test files | FAIL | 19 passed, 1 known no-store failure (`authenticated API client bypasses conditional HTTP caching`, `Cache-Control` undefined).
+2026-11-01 | `node --test server/test/invoice-download.test.js server/test/postgres-repos.test.js` | PASS | 18/18; PDF/auth/tenant/viewer/audit, status-history query scope, formatting, long-text pagination all pass.
+2026-11-01 | `npm test` | FAIL | 200 passed, 1 failed of 201; only failure is the pre-existing `authenticated API client bypasses conditional HTTP caching` assertion (`Cache-Control` undefined instead of `no-store`); invoice CRUD, approval, assistant and PDF tests pass.
+2026-11-01 | `npm run check:migrations` | PASS | 18/18 PostgreSQL migrations parse; no migration added for this feature.
+2026-11-01 | `node --check` on 10 changed JS files | PASS | All changed application and test files parse.
+2026-11-01 | `git diff --check` | PASS | Clean.
+2026-11-01 | `git diff --stat origin/main -- <protected files>` | PASS | Empty.
+2026-11-01 | Final `npm test` | FAIL | 200 passed, 1 failed of 201; only the same pre-existing no-store assertion fails (`server/test/api-client.test.js` line 29); no invoice/PDF/approval/tenant test failed.
+2026-11-01 | Final `npm run check:migrations` | PASS | 18/18 parse.
+2026-11-01 | Final `node --check` on 10 changed JS files | PASS | All parse.
+2026-11-01 | Final `git diff --check` | PASS | Clean.
+2026-11-01 | Final protected-file diff vs `origin/main` | PASS | Empty.
+2026-11-01 | Additional `npm test` run during final documentation inspection | FAIL | 200 passed, 1 failed of 201; same pre-existing no-store assertion only. Shell substitution made the search expression invalid after the test completed; no repository source files were changed by that command.

@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import { rateLimit } from 'express-rate-limit';
 import { rbac } from '../middleware/auth.js';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
 import { buildInvoiceDraft, invoiceMoney } from '../services/invoices.js';
+import { createInvoicePdf } from '../services/invoicePdf.js';
 
 const writers = ['owner', 'admin', 'accountant'];
 const uuid = z.string().uuid();
@@ -47,11 +49,31 @@ function validateInvoiceBody(req, res, next) {
 
 export function invoiceRoutes({ repos }) {
   const router = Router();
+  const invoiceDownloadLimit = rateLimit({
+    windowMs: 60 * 60 * 1000, limit: 20, standardHeaders: 'draft-8', legacyHeaders: false,
+    keyGenerator: (req) => req.user.id,
+    message: { error: { code: 'INVOICE_DOWNLOAD_RATE_LIMITED', message: 'Invoice downloads are temporarily rate limited.' } },
+  });
   router.get('/invoices', async (req, res, next) => {
     const limit = Number(req.query.limit ?? 50), offset = Number(req.query.offset ?? 0), state = req.query.state;
     if (!Number.isInteger(limit) || limit < 1 || limit > 100 || !Number.isInteger(offset) || offset < 0 || offset > 100000 || state && !['draft', 'reviewed', 'sent', 'paid', 'void'].includes(String(state))) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR', 'Invoice filters are invalid.'));
     try { return res.json({ invoices: await repos.invoices.list(req.orgId, { limit, offset, state: state || undefined }), page: { limit, offset }, role: req.orgRole }); }
     catch (error) { return next(error); }
+  });
+  router.get('/invoices/:invoiceId/download', invoiceDownloadLimit, async (req, res, next) => {
+    if (!uuid.safeParse(req.params.invoiceId).success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR', 'Invoice ID is invalid.'));
+    try {
+      const invoice = await repos.invoices.get(req.orgId, req.params.invoiceId);
+      if (!invoice) return invoiceError(res, 'INVOICE_NOT_FOUND', 'The invoice was not found.', 404);
+      const pdf = await createInvoicePdf(invoice);
+      await repos.invoices.auditDownload(req.orgId, req.user.id, invoice.id, req.id);
+      const safeNumber = String(invoice.invoiceNumber || 'invoice').replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 50);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="invoice-${safeNumber}.pdf"`);
+      res.setHeader('Content-Length', pdf.length);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).send(pdf);
+    } catch (error) { return next(error); }
   });
   router.post('/invoices', rbac(writers), validateInvoiceBody, async (req, res, next) => {
     const key = uuid.safeParse(req.get('Idempotency-Key') || '');

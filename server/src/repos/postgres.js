@@ -210,8 +210,14 @@ export function createPostgresRepositories(database) {
     async get(orgId,id) {
       const rows=await database.select('invoices',q({select:'*',org_id:`eq.${orgId}`,id:`eq.${id}`,limit:'1'}));
       if(!rows?.[0]) return null;
-      const lines=await database.select('invoice_lines',q({select:'*',org_id:`eq.${orgId}`,invoice_id:`eq.${id}`,order:'created_at.asc'}));
-      return mapInvoice(rows[0],lines||[]);
+      const [lines,events]=await Promise.all([
+        database.select('invoice_lines',q({select:'*',org_id:`eq.${orgId}`,invoice_id:`eq.${id}`,order:'created_at.asc'})),
+        database.select('invoice_events',q({select:'event_type,created_at',org_id:`eq.${orgId}`,invoice_id:`eq.${id}`,order:'created_at.asc'})),
+      ]);
+      return { ...mapInvoice(rows[0],lines||[]), events:(events||[]).map((event)=>({type:event.event_type,occurredAt:event.created_at})) };
+    },
+    async auditDownload(orgId,actorId,invoiceId,requestId) {
+      await database.insert('audit_log',{org_id:orgId,actor_id:actorId,action:'invoice.downloaded',entity:'invoice',entity_id:invoiceId,metadata:{},request_id:requestId});
     },
     async createDraft(orgId,invoice,lines) {
       const row=await database.rpc('create_invoice_draft',{p_org:orgId,p_invoice:invoice,p_lines:lines});
