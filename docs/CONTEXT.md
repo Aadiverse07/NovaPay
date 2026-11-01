@@ -2,7 +2,7 @@
 
 ## HEADER
 - Date/time: 2026-11-01 Asia/Kolkata
-- Branch: `fix-invoices-crud`, created from `origin/main` at `a226d59`; local checkpoint `4622169` (`WIP-BROKEN`); no push.
+- Branch: `fix-invoices-crud`, created from `origin/main` at `a226d59`; last code checkpoint `4622169`; handoff commit `ca54539`; no push.
 - Phase/task: invoice create, update, review, delete and void repair.
 
 ## DONE
