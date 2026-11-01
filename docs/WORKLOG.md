@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: invoice detail View and PDF download on `fix-invoice-view`, based on `fix-invoices-crud` at `f113f54`; no push.
-- Last finished: server-generated invoice PDF, accessible org-scoped detail, history, audit, per-user rate limit and authenticated blob save; no migration/dependency change.
-- Checks: focused PDF/repository tests 18/18 PASS; npm test 200/201 (known no-store failure only); migrations 18/18, syntax 10/10, diff check pass, protected diff empty.
-- Human pending: browser checks for View, focus, PDF content/download and viewer access.
-- NEXT: verify staged file list excludes `.env`, WIP-BROKEN commit locally due known test failure, then stop; never push.
+- Current task: invoice detail View and PDF download on `fix-invoice-view`, based on `fix-invoices-crud` at `f113f54`; local commit `da8e4a7`; no push.
+- Last finished: org-scoped read-only invoice detail, server-generated PDF download, status history, invoice-ID-only audit, per-user rate limit and authenticated blob save; no migration or dependency change.
+- Checks: focused PDF/repository tests 18/18 PASS; `npm test` 200/201 (sole known no-store assertion failure); migrations 18/18, changed JS syntax 10/10, `git diff --check` PASS, protected-file diff empty.
+- Human pending: run the browser checks below for View, keyboard close/focus, PDF contents/download and viewer access.
+- NEXT: commit this handoff update locally; then stop. Never push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4090,3 +4090,7 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: stage only invoice detail/download source, tests, API docs and handoff files; why: create the local checkpoint without touching secrets or unrelated work.
 2026-11-01 | Result: PASS, staged 17 intended files only; `.env` absent; NEXT: commit local WIP-BROKEN because full suite retains the known no-store failure.
 2026-11-01 | Before: make a local WIP-BROKEN commit on fix-invoice-view; why: preserve the verified feature while recording the unrelated failing test in the commit message.
+2026-11-01 | Before: inspect current branch, latest local commit, worktree status and tracked `.env` path; why: confirm checkpoint state without exposing credentials.
+2026-11-01 | Result: PASS, branch `fix-invoice-view`, commit `da8e4a7`, only WORKLOG.md remains modified, `.env` is untracked by Git; NEXT: finalize RESUME POINTER and CONTEXT with committed checkpoint and browser checks pending.
+2026-11-01 | Before: update the RESUME POINTER and task status to reflect commit `da8e4a7` and pending browser verification; why: leave an accurate continuation handoff.
+2026-11-01 | Result: PASS, RESUME POINTER and CONTEXT now identify commit `da8e4a7`, finished checks and pending browser verification; NEXT: commit documentation handoff locally.

@@ -14,12 +14,11 @@
 - Files: `dashboard.html`; `src/api-client.js`, `src/invoice-detail.js`, `src/invoices-live.js`; `server/src/routes/invoices.js`, `server/src/repos/memory.js`, `server/src/repos/postgres.js`, `server/src/services/invoicePdf.js`; `server/test/api-client.test.js`, `server/test/invoice-download.test.js`, `server/test/postgres-repos.test.js`; `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/DECISIONS.md`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/WORKLOG.md`.
 
 ## IN PROGRESS
-- Focused PDF/blob/audit tests pass 6/6; status-history repository assertions were just added. Full suite and final static checks remain.
+- Implementation and local checks are complete in commit `da8e4a7` (plus this handoff update); no push. Browser verification remains pending.
 
 ## NEXT STEPS
-1. Confirm staged files exclude `.env`, then commit locally with WIP-BROKEN because of the known no-store failure.
-2. Complete the browser checklist below by hand.
-3. Never push.
+1. Complete the browser checklist below by hand.
+2. Never push.
 
 ## USER ACTIONS PENDING
 - Browser: sign in as owner; open Invoices; click View and verify customer, dates, lines, INR 134.40 formatting, notes, linked document/history where present; close with × and Escape; confirm focus returns to View.
