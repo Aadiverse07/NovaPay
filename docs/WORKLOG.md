@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: stop intermittent/no-response voice on `codex/voice-assistant`; restart accounting fixed; local checkpoint pending; never push.
+- Current task: stop intermittent/no-response voice on `codex/voice-assistant`; restart accounting fixed; checkpoint `8598148`; never push.
 - Latest fixes: dashboard's lazy-load click now uses permission-aware `enableVoice`; same-session SpeechRecognition `onerror` + `onend` counts as one failure; `/api/events` polling uses authenticated API client.
 - Evidence: attached server output had zero `/api/ai/chat` requests and repeated `/api/events` 401s. Video files are unavailable at their supplied paths; browser SpeechRecognition error itself remains unverified.
 - Checks: voice/indicator 23/23; final `npm test` 285/286 (sole known `api-client.test.js` no-store assertion); changed JS syntax and diff whitespace PASS. No browser verification possible in this environment.
-- Next: local WIP-BROKEN checkpoint; user reloads Chrome, signs in, taps Voice/grants mic, says “Hey NovaPay, open ledger,” and checks `/api/ai/chat`, module navigation and TTS reply.
+- Next: checkpoint `8598148`; user reloads Chrome, signs in, taps Voice/grants mic, says “Hey NovaPay, open ledger,” and checks `/api/ai/chat`, module navigation and TTS reply.
 - Pending human action: run Chrome recording check. Do not push.
 
 ## Backfill
@@ -4755,3 +4755,6 @@ ABOUT TO stage only task files; no .env path is included.
 - RESULT: PASS; documented 23/23 targeted voice tests, 285/286 full suite with known no-store failure, missing video/browser verification, root cause and next user check. JS syntax, whitespace and `.env` tracked checks pass.
 - NEXT: stage and locally WIP-BROKEN commit this fix plus continuity docs, then refresh the pointer with its commit hash. No push.
 - 2026-11-02 00:15 IST — ABOUT TO: Create a local WIP-BROKEN checkpoint for the voice restart fix. WHY: full npm test retains one verified unrelated failure; commit must state it accurately.
+- RESULT: PASS; commit `8598148` checkpointed voice restart deduplication, end-to-end controller regression and continuity docs; no push.
+- NEXT: update RESUME POINTER and CONTEXT header to `8598148`, commit the pointer refresh, then await the user's Chrome verification.
+- 2026-11-02 00:18 IST — ABOUT TO: Refresh the handoff checkpoint hash to `8598148`. WHY: ensure the top-of-journal pointer reflects the latest code commit.
