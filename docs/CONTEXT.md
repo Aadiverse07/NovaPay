@@ -2,7 +2,7 @@
 
 ## HEADER
 - Date/time: 2026-11-01 Asia/Kolkata
-- Branch: `fix-invoices-crud`, created from `origin/main` at `a226d59`; current changes are not committed or pushed yet.
+- Branch: `fix-invoices-crud`, created from `origin/main` at `a226d59`; local checkpoint `4622169` (`WIP-BROKEN`); no push.
 - Phase/task: invoice create, update, review, delete and void repair.
 
 ## DONE
@@ -15,13 +15,13 @@
 - Files edited: `dashboard.html`; `src/modules.js`, `src/invoices-live.js`, `src/api-client.js`; `server/src/routes/invoices.js`, `server/src/routes/approvals.js`, `server/src/services/invoices.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`; `server/test/invoices-crud.test.js`, `server/test/invoice-crud-migration.test.js`, `server/test/phase3-services.test.js`; `supabase/migrations/0018_invoice_crud.sql`; `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 
 ## IN PROGRESS
-- Full test suite and final static checks; live CRUD and browser flows depend on migration 0018 and a signed-in owner session.
+- Implementation is checkpointed locally. Live CRUD and browser flows depend on migration 0018 and a signed-in owner session.
 
 ## NEXT STEPS
-1. Run `npm test`, `npm run check:migrations`, `node --check` for changed JS, `git diff --check`, and protected-file diff.
-2. Inspect the final diff; record each real test result in TEST-REPORT.md.
-3. Commit locally on `fix-invoices-crud`; never push.
-4. Human applies migration 0018, then verifies live create/edit/review/reopen/delete/create/void and browser clicks.
+1. Human applies migration 0018 in Supabase SQL Editor.
+2. Re-run fixed-owner live CRUD/status checks after migration; do not create users or use PayPal/Gemini.
+3. Complete the browser checks listed under USER ACTIONS PENDING.
+4. Push only if separately authorized; current task did not authorize pushing.
 
 ## USER ACTIONS PENDING
 - In Supabase Dashboard → SQL Editor → New query, paste the full contents of `supabase/migrations/0018_invoice_crud.sql`, click Run, confirm success, and reply `applied`. Do not run live invoice CRUD before then.

@@ -1,9 +1,9 @@
 ## RESUME POINTER
 - Current task: invoice CRUD repair on `fix-invoices-crud`, based on `origin/main` at `a226d59`; not pushed.
-- Last finished: UI/API CRUD and migration 0018 prepared; focused invoice tests 5/5 pass; no live invoice records created.
+- Last finished: UI/API CRUD, migration 0018 and tests committed locally as `4622169`; no live invoice records created or push made.
 - Checks: npm test 193/194 (known no-store assertion fails); migrations 18/18; node --check 11/11; diff check pass; protected paths empty.
 - Human action pending: apply `supabase/migrations/0018_invoice_crud.sql` in Supabase SQL Editor before live CRUD verification; then run browser checks.
-- NEXT: inspect final status, WIP-BROKEN commit locally with exact no-store failure recorded; do not push.
+- NEXT: human applies migration 0018, then performs fixed-owner API and browser verification; do not push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4028,3 +4028,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | Before: verify branch/status and `.env` tracking, then stage only intended files; why: ensure no secret file enters the local checkpoint.
 2026-11-01 | Result: PASS, staged only the 19 intended files; `.env` is absent from tracked and staged paths; NEXT: commit local WIP-BROKEN with exact known test failure in the message/context.
 2026-11-01 | Before: commit the invoice CRUD checkpoint locally; why: preserve completed work despite the unrelated known no-store test failure.
+2026-11-01 | Result: PASS, local WIP-BROKEN checkpoint `4622169` created on fix-invoices-crud; no push; NEXT: record checkpoint hash and confirm clean status.
+2026-11-01 | Before: update CONTEXT and RESUME POINTER with checkpoint hash and pending migration/browser steps; why: make the repository handoff accurate after commit.
