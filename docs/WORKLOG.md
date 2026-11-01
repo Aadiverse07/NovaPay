@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: typed/voice assistant creates invoice drafts by collecting details; branch `codex/voice-assistant`; prior checkpoint `40a8cf7`; this task is not yet committed; never push or run migrations.
+- Current task: typed/voice assistant creates invoice drafts by collecting details; branch `codex/voice-assistant`; latest local checkpoint `b9668b7`; task implementation committed locally; never push or run migrations.
 - Last completed step: invoice creation route/UI requirements traced; deterministic client/server intent, partial action schema, slot validation, confirmation, role refusal, idempotency key, invoice open/download follow-ups implemented.
 - Test state: focused suite PASS 37/37. `npm test` FAIL 296/297 solely at known `server/test/api-client.test.js:29` (`Cache-Control: no-store` expected, undefined); 21 migration syntax checks passed. Changed JS syntax and `git diff --check` PASS; protected-file diff empty.
 - Scope files: `src/assistant-actions.js`, `src/dashboard.js`, `src/modules.css`, `server/src/ai/actions.js`, `server/src/ai/router.js`, `server/src/routes/ai.js`, and four server tests; docs updated for continuity.
 - Important required fields: route requires customer name/email, currency, issue/due dates, at least one line description/quantity/unit price. Form defaults INR, issue date today, quantity 1, tax 0. Never invent the required email or description; one-shot example needs those prompts before confirmation.
 - Browser and live invoice POST/server log: UNVERIFIED; local browser control disabled. No invoice was created.
-- NEXT STEPS: (1) inspect final diff and syntax, (2) update test/decision/continuity entries if changes occur, (3) local WIP commit after confirming no `.env` staged, (4) tell user browser steps and exact known test failure. No push.
+- NEXT STEPS: (1) perform typed and mic browser flow as existing owner, (2) verify one POST/draft and test download/open follow-ups, (3) log browser results. No push or migrations.
 - USER ACTIONS PENDING: in real Chrome, sign in with an existing owner; type and mic test the slot flow, confirm once, verify one invoice row/POST, then “download it” and “open it”; test viewer refusal and cancellation.
 
 ## Backfill
@@ -4922,3 +4922,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 02:53 IST | ABOUT TO: Review final source diff and verify only expected files changed, protected paths remain untouched, and no `.env` is staged; WHY: prepare a safe local checkpoint without secrets or unintended files.
 2026-11-02 02:56 IST | RESULT: PASS; diff contains only expected source/tests/continuity docs; `git diff --check` clean; protected-file diff empty; `git ls-files .env` empty and no `.env` staged. NEXT: create local-only WIP checkpoint, then verify commit/status.
 2026-11-02 02:57 IST | ABOUT TO: Stage the 14 reviewed task files and create a local WIP commit on codex/voice-assistant; WHY: preserve the tested implementation and current resume pointer. Never push.
+2026-11-02 03:00 IST | RESULT: PASS; local WIP commit `b9668b7` created on codex/voice-assistant; worktree clean, no tracked `.env`, no push. NEXT: refresh RESUME POINTER and CONTEXT header with b9668b7 and leave the post-commit journal update committed locally.
+2026-11-02 03:01 IST | ABOUT TO: Refresh CONTEXT header and RESUME POINTER to local commit b9668b7 and state browser verification remains pending; WHY: ensure a fresh agent can resume from the exact checkpoint.
