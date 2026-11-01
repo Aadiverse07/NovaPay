@@ -4255,3 +4255,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: commit the isolated PDF repair on `codex/publish-invoice-pdf-fix`; why: preserve the verified patch before publishing it to main.
 2026-11-02 | Result: PASS; isolated implementation commit `62e6177` created on `codex/publish-invoice-pdf-fix`; it contains only requested PDF repair files/migration/docs; no push yet.
 2026-11-02 | Before: update RESUME POINTER for committed publish branch and record the pre-push checkpoint; why: preserve exact scope and test caveat before updating origin/main.
+2026-11-02 | Result: PASS; origin/main is still `1ec11fd8fe5d5742ac259fe4d11000ca4e1a45a7`, local HEAD descends from it, worktree clean before this journal line; fast-forward push is possible.
+2026-11-02 | Before: checkpoint the confirmed pre-push state, then push only the isolated branch fast-forward to `origin/main`; why: fulfill the explicit request without force-push or unrelated Maintenance commits.
