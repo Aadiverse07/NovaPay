@@ -10,15 +10,14 @@
 - `.env` is untracked and ignored; no credential values were printed.
 
 ## IN PROGRESS
-- Squash integration is staged on `publish-main-sync`; documentation conflicts were resolved preserving both histories. Checks are complete; commit and authorized fast-forward push remain.
+- Integrated publication commit `59c2046` plus journal checkpoint `8c5ae7f` were fast-forward pushed to `origin/main`; remote ref verified against `8c5ae7f58a2696b39fcf8a418c83cb3e73529a5f`. This final handoff checkpoint is being committed.
 - Relevant new migration from the source branch: `supabase/migrations/0020_fund_maintenance_activity_read.sql`; migration 0021 is already part of current main. Neither migration application state is verified by this local publish task.
 
 ## NEXT STEPS
 1. Review staged diff and verify no conflict markers or secrets.
 2. Run `npm test`, `npm run check:migrations`, JS syntax checks, and `git diff --check`; record exact outcomes.
 3. Commit the integrated delta locally on `publish-main-sync`.
-4. Confirm `.env` is untracked, branch is based on `origin/main`, and worktree is clean; then use the user's explicit authorization to fast-forward push to `origin/main` without force.
-5. Verify remote `main` points to the published commit and update the handoff.
+4. Verify the documentation-only handoff commit is fast-forwarded to `origin/main`; keep `.env` untracked and do not force-push.
 
 ## USER ACTIONS PENDING
 - No action before local checks. If migration 0020 or 0021 is not applied in the target Supabase project, apply it through the documented SQL Editor steps before relying on its feature.
