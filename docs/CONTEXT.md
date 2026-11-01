@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-01; branch `codex/voice-assistant`; based on published main `3b14187`; latest local checkpoint `4764c31`; current task: Voice assistant implementation, task 1/1; implementation complete, local checkpoint pending.
+- Date: 2026-11-01; branch `codex/voice-assistant`; based on published main `3b14187`; latest local checkpoint `766df4d`; current task: Voice assistant implementation, task 1/1; implementation complete, local checkpoint pending.
 
 ## DONE
 - Shared browser/server action registry in `src/assistant-actions.js` and `server/src/ai/actions.js`; server validates schema, user intent and role, with deterministic command fast path.

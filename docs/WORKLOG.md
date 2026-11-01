@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: diagnose/fix voice no-response on `codex/voice-assistant`; root code path fixed; local checkpoint pending; never push.
+- Current task: diagnose/fix voice no-response on `codex/voice-assistant`; root code path fixed; code checkpoint `766df4d`; never push.
 - Last finished: lazy dashboard loading calls permission-aware `enableVoice()`; activity polling now uses authenticated `NovaPayApi.request` to avoid `/api/events` 401s.
 - Evidence: user log had zero `/api/ai/chat` calls, repeated `/api/events` 401s, and no browser-side speech error output. This establishes no query reached the AI backend but not the exact browser mic/service state.
 - Checks: focused voice/indicator 21/21; `npm test` 283/284 (known no-store assertion only); changed JS syntax and `git diff --check` pass. Browser verification remains UNVERIFIED because local browser use is disabled.
-- Next: WIP-BROKEN local checkpoint; user should reload dashboard in Chrome, sign in, click Voice, permit mic, say “Hey NovaPay, open ledger,” and confirm listening, `/api/ai/chat`, ledger change and spoken reply.
+- Next: checkpoint `766df4d` recorded; user should reload dashboard in Chrome, sign in, click Voice, permit mic, say “Hey NovaPay, open ledger,” and confirm listening, `/api/ai/chat`, ledger change and spoken reply.
 - Pending human action: run that Chrome check; no new user needed. Do not push.
 
 ## Backfill
@@ -4736,3 +4736,6 @@ ABOUT TO stage only task files; no .env path is included.
 - RESULT: PASS with known baseline failure; focused voice/indicator tests 21/21; `node --check` passed for dashboard, voice assistant and live client; `git diff --check` passed. Full `npm test` 283/284; sole failure remains the pre-existing `api-client.test.js` no-store assertion. Logs confirm no `/api/ai/chat` request, but cannot reveal browser-only SpeechRecognition error state.
 - NEXT: update TEST-REPORT.md, DECISIONS.md, CONTEXT.md and this RESUME POINTER; locally WIP-BROKEN commit the applied voice patch plus verified startup/auth-poll fixes. No push.
 - 2026-11-01 23:08 IST — ABOUT TO: Record the voice root cause and exact test status in continuity docs before local checkpoint. WHY: preserve findings and browser-verification caveat for the next run.
+- RESULT: PASS; checkpoint `766df4d` created locally on `codex/voice-assistant`; includes voice permission startup correction, authenticated activity poll, regression tests and handoff updates. `.env` is not tracked; no push.
+- NEXT: refresh the RESUME POINTER/CONTEXT header with `766df4d`, commit the pointer-only update, then wait for the user's Chrome verification.
+- 2026-11-01 23:14 IST — ABOUT TO: Update the handoff checkpoint hash to `766df4d` and commit that pointer-only documentation change. WHY: ensure the repo-only resume point names the latest code checkpoint.
