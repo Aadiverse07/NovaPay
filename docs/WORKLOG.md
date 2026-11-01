@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: user authorized publishing `fix-download-campaigns` and opening a PR into main; do not push main or merge.
-- Local branch is 6 commits ahead of `origin/main`; no PR existed before publication. No `.env` tracked; outgoing-diff secret scan clean.
-- Includes campaign-create wiring and invoice PDF audit failure repair. Migration `0019_restore_audit_log_service_insert.sql` is not applied; live download remains blocked until applied.
+- Current task: `fix-download-campaigns` was pushed and PR #13 is open: https://github.com/Aadiverse07/NovaPay/pull/13. Never push main or merge.
+- Published implementation/preflight head before this documentation checkpoint: `14fab0f`; `.env` is not tracked, outgoing secret scan was clean.
+- Includes campaign-create wiring and invoice PDF audit failure repair. Migration `0019_restore_audit_log_service_insert.sql` is not applied; live download needs the service_role audit INSERT grant.
 - Checks: npm test 205/206 (known no-store assertion); migration parser 19/19; changed-JS syntax and diff checks pass; protected diff empty.
-- NEXT: checkpoint these docs, push only `fix-download-campaigns`, open PR to main, then record pushed hash/PR URL. Never merge or push main.
+- NEXT: review PR #13; apply migration 0019 in Supabase before retesting the real invoice PDF download. No more product code requested.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4229,3 +4229,4 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: checkpoint the post-commit result line and confirm the branch/worktree; why: keep the append-only journal synchronized with the actual commit.
 2026-11-02 | Before: scan outgoing diff for credentials and verify `.env` remains untracked; why: prepare a safe feature-branch publication and PR.
 2026-11-02 | Before: record release preflight results and pending migration in continuity docs, then checkpoint locally; why: user authorized feature-branch push and PR, and the live PDF grant remains unapplied.
+2026-11-02 | Before: record successful feature-branch push and PR #13 in handoff docs; why: preserve the published commit and review URL in the repo.

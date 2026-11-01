@@ -65,3 +65,5 @@
 ## PR publication checkpoint (2026-11-02)
 - `npm test`: 205/206; the known no-store assertion remains. Migration check 19/19, JS syntax and diff checks pass; protected diff empty. Secret scan clean and `.env` untracked.
 - Migration 0019 remains unapplied, so live invoice PDF download is still blocked pending its service_role audit INSERT grant.
+
+- Published branch head: `14fab0f`; PR #13: https://github.com/Aadiverse07/NovaPay/pull/13.
