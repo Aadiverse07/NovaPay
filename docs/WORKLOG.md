@@ -1,6 +1,6 @@
 ## RESUME POINTER
 - Current task: fix document confirm, invoice draft persistence, and field confidence on `fix-documents-confirm`.
-- Last completed: code/tests/docs updated; local commit pending; no push.
+- Last completed: code/tests/docs locally committed as `e9081de` (WIP-BROKEN due the known no-store test); no push.
 - Root cause: required Supplier email was blank; UI silently exited client-side before any request. Previous confirm route only marked confirmation.
 - State: migration 0017 created but NOT applied; live invoice row count UNVERIFIED; no document upload/Gemini call/live confirm.
 - Checks: focused 33/33 PASS; `npm test` 177/178 (known no-store failure); migrations 17/17 parse; changed JS syntax/diff/protected diff PASS.
@@ -3713,3 +3713,6 @@ ABOUT TO append the latest full-suite result and perform final syntax/whitespace
 RESULT: PASS; final changed-JS syntax and whitespace checks clean, protected diff empty. NEXT: verify branch, no staged/tracked .env, then stage explicit files and local WIP commit.
 ABOUT TO verify branch and secret-safe staging state; stage only the named implementation/docs/test files and create a local WIP-BROKEN checkpoint because npm test retains one known failure.
 ABOUT TO stage only task files; no .env path is included.
+
+2026-11-01 | RESULT: PASS; local implementation commit e9081de created on fix-documents-confirm; no .env staged/tracked, no push. NEXT: save the updated resume pointer in a local docs-only checkpoint; await migration application before live confirmation.
+2026-11-01 | ABOUT TO commit WORKLOG resume-pointer update locally; no branch push or live mutation.
