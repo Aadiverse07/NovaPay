@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: Voice-driven NovaPay assistant on `codex/voice-assistant`; task 1/1; implementation complete; local checkpoint commit pending; never push.
-- Last finished: final focused tests 33/33; full `npm test` 269/270 with only known `api-client.test.js` no-store assertion; migrations 21/21; changed JS syntax, `git diff --check`, protected-file diff all PASS.
-- Current branch/base: `codex/voice-assistant`, based on published main `3b14187`; existing last commit `542706b`; local changes include action audit/tiering, lazy voice module, greeting, tests and docs.
-- Next: (1) inspect status/diff and `.env` tracking; (2) local `WIP-BROKEN:` checkpoint; (3) human completes `docs/VOICE-BROWSER-CHECKLIST.md`; (4) stop without pushing.
-- Pending human action: Chrome/Edge microphone and real signed-in browser checklist; no new user needed. Do not claim it is verified from unit tests.
-- Safety: no live provider/database calls or migrations; keep Tier 2 human-only; do not expose secrets or push.
+- Current task: Voice-driven NovaPay assistant on `codex/voice-assistant`; task 1/1 complete; checkpoint `4764c31`; never push.
+- Last finished: shared action protocol, voice controller/greeting, audited tier enforcement, tests and docs committed in `4764c31`.
+- Checks: focused suite 33/33; final `npm test` 269/270 with only known `api-client.test.js` no-store assertion; migrations 21/21; modified JS syntax and `git diff --check` pass; protected-file diff empty; staged secret scan zero; `.env` untracked.
+- Next: human completes `docs/VOICE-BROWSER-CHECKLIST.md` in Chrome/Edge with mic permission and fixed signed-in account; browser verification remains UNVERIFIED. Then decide separately whether to address the pre-existing no-store test.
+- Pending human action: browser checklist only; no new user needed. Do not claim voice verified from tests.
+- Safety: no live Supabase/Gemini/PayPal calls or migrations; Tier 2 remains human-only; do not expose secrets or push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4715,3 +4715,9 @@ ABOUT TO stage only task files; no .env path is included.
 - RESULT: PASS with one known suite issue; final `npm test` on final source 269/270 and 11/11 latest voice tests. `server/test/api-client.test.js` remains the only failure (`Cache-Control: no-store` undefined). No live services used.
 - NEXT: rerun `git diff --check`, protected-file diff, syntax and migration status; stage all intended files, inspect staged names/secrets without printing any values, then create local WIP-BROKEN checkpoint.
 - 2026-11-01 21:34 IST — ABOUT TO: Run final static guards and stage only this task's tracked/untracked repo changes for local checkpoint review. WHY: ensure docs and code are checkpointed together with no secret file.
+- RESULT: PASS; changed JS syntax, `git diff --check`, staged diff check and protected-file diff all clean; `.env` tracked count 0; staged secret scan found 0 credential-shaped lines. Staged file list is the intended implementation/docs/tests only.
+- NEXT: create a local `WIP-BROKEN:` checkpoint noting the exact known no-store test failure, then update the top pointer with the resulting commit hash and make a pointer-only local follow-up commit.
+- 2026-11-01 21:42 IST — ABOUT TO: Commit the completed local voice assistant work as WIP-BROKEN. WHY: full npm suite has one verified, known no-store assertion failure; protocol requires preserving the precise breakage in the commit message and handoff.
+- RESULT: FAIL; pointer-refresh command did not run because the tool wrapper rejected malformed command text; no files changed by this attempt.
+- NEXT: repeat the exact pointer refresh with corrected command quoting, then check and checkpoint.
+- 2026-11-01 21:47 IST — ABOUT TO: Refresh the top continuation pointer and context header to identify commit `4764c31` as the latest checkpoint. WHY: make repo-only resumption start from the exact committed state.
