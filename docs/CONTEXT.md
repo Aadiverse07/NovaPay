@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; current task: assistant invoice draft slot filling; latest committed checkpoint 112a407; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; current task: assistant invoice draft slot filling; latest committed checkpoint 01c8b43; no push.
 
 ## DONE
 - Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
