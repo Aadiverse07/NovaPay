@@ -1,10 +1,9 @@
 ## RESUME POINTER
-- Current task: invoice PDF 503 diagnosed and code repaired on `fix-download-campaigns`; never push or switch branches.
-- Latest implementation commit: `2441c95` (`WIP-BROKEN: fix invoice PDF audit privilege; migration 0019 pending`).
-- Live cause: TEST-001 PDF endpoint returned 503; audit insert failed with SQLSTATE 42501 (`permission denied for table audit_log`). Safe log identifies `INVOICE_AUDIT_WRITE_FAILED`; PDF correctly fails closed.
-- Fix: specific server-side audit failure logging plus unapplied migration `0019_restore_audit_log_service_insert.sql`, which grants only service_role INSERT on audit_log.
-- Checks: focused 21/21; full npm test 205/206 (known no-store test); migration check 19/19; JS syntax 10/10; diff check and protected diff pass. Synthetic PDF 1,755 bytes with `%PDF-` and `%%EOF`; real TEST-001 response UNVERIFIED pending migration.
-- NEXT: human applies migration 0019 in Supabase SQL Editor and verifies `select has_table_privilege('service_role','public.audit_log','INSERT');`; then rerun TEST-001 download and verify PDF bytes plus audit row. No new user/document needed.
+- Current task: user authorized publishing `fix-download-campaigns` and opening a PR into main; do not push main or merge.
+- Local branch is 6 commits ahead of `origin/main`; no PR existed before publication. No `.env` tracked; outgoing-diff secret scan clean.
+- Includes campaign-create wiring and invoice PDF audit failure repair. Migration `0019_restore_audit_log_service_insert.sql` is not applied; live download remains blocked until applied.
+- Checks: npm test 205/206 (known no-store assertion); migration parser 19/19; changed-JS syntax and diff checks pass; protected diff empty.
+- NEXT: checkpoint these docs, push only `fix-download-campaigns`, open PR to main, then record pushed hash/PR URL. Never merge or push main.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4228,3 +4227,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: stage resume pointer and continuity context, then make local docs-only checkpoint; why: preserve actual implementation commit and pending live migration accurately.
 2026-11-02 | Result: PASS; docs-only handoff commit `1411ddc` created locally on `fix-download-campaigns`; no push; next action: human applies migration 0019, then repeat live PDF download.
 2026-11-02 | Before: checkpoint the post-commit result line and confirm the branch/worktree; why: keep the append-only journal synchronized with the actual commit.
+2026-11-02 | Before: scan outgoing diff for credentials and verify `.env` remains untracked; why: prepare a safe feature-branch publication and PR.
+2026-11-02 | Before: record release preflight results and pending migration in continuity docs, then checkpoint locally; why: user authorized feature-branch push and PR, and the live PDF grant remains unapplied.

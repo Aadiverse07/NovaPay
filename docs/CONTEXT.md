@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-02 Asia/Kolkata
 - Branch: `fix-download-campaigns`; based on `origin/main` invoice work; no push.
-- Latest local implementation commit: `2441c95` (migration 0019 pending); no push.
+- Latest local implementation commit: `2441c95` (migration 0019 pending); subsequent local handoff commits are present. User has authorized publishing `fix-download-campaigns` and opening a PR; do not push main or merge.
 - Task: diagnose/fix TEST-001 PDF HTTP 503.
 
 ## DONE
@@ -61,3 +61,7 @@
 - `git status --short`
 - `npm test`
 - `npm run check:migrations`
+
+## PR publication checkpoint (2026-11-02)
+- `npm test`: 205/206; the known no-store assertion remains. Migration check 19/19, JS syntax and diff checks pass; protected diff empty. Secret scan clean and `.env` untracked.
+- Migration 0019 remains unapplied, so live invoice PDF download is still blocked pending its service_role audit INSERT grant.
