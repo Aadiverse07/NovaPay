@@ -58,6 +58,7 @@ export function classifyAIIntent(message) {
 
   if (hasDocumentIntent(text)) return { route: 'ocr', reason: 'document_extraction_request', intent: 'document' };
   if (hasExplanationIntent(text)) return { route: 'retrieval', reason: 'evidence_based_explanation', intent: 'explanation' };
+  if (/^(?:hi|hello|hey|good morning|good afternoon|good evening)\b/i.test(text)) return { route: 'code', reason: 'friendly_greeting', intent: 'greeting' };
   return { route: 'llm', reason: 'general_read_only_question', intent: 'general' };
 }
 

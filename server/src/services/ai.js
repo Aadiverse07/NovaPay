@@ -277,6 +277,9 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       return withRoute({ reply: AI_INPUT_LIMIT_REPLY, evidence: [], proposal: null, inputLimitReached: true });
     }
     if (classification.route === 'code') {
+      if (classification.reason === 'friendly_greeting') {
+        return withRoute({ reply: 'Hi! Of course. What would you like help with?', evidence: [], proposal: null, usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
+      }
       const result = await deterministicCodeResult({ message, orgId: context?.orgId, fx });
       return withRoute({ ...result, usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
     }

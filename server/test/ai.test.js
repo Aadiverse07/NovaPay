@@ -7,6 +7,17 @@ test('AI sanitizer safely handles malformed JSON', () => {
   assert.deepEqual(sanitizeAIResponse('{bad'), { reply: UNSAFE_REPLY, evidence: [], proposal: null });
 });
 
+test('greetings and vague help requests get a friendly deterministic response without calling the LLM', async () => {
+  let calls = 0;
+  const askAI = createAIService({ config: {}, provider: { async generate() { calls += 1; throw new Error('must not call'); } } });
+  const result = await askAI('hey can you help me in something', { orgId: 'org-a', userId: 'user-a' });
+  assert.match(result.reply, /Hi! Of course\. What would you like help with\?/);
+  assert.equal(result.route, 'code');
+  assert.equal(result.reason, 'friendly_greeting');
+  assert.deepEqual(result.usage, { model: null, inputTokens: 0, outputTokens: 0 });
+  assert.equal(calls, 0);
+});
+
 test('AI sanitizer handles empty reply', () => {
   assert.deepEqual(sanitizeAIResponse('{"reply":"  ","evidence":["known"]}', { transactions: [{ id: 'known' }] }), { reply: EMPTY_REPLY, evidence: [], proposal: null });
 });
