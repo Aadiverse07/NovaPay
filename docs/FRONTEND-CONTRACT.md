@@ -170,39 +170,31 @@ Trial-balance rows include account code/name/type, debit, credit, and balance mi
 
 ### `GET /api/invoices`
 
-The Invoices view must render only these organization-scoped API rows; do not show hard-coded sample rows in authenticated mode. After a document-confirmation response, refresh this list and link to the returned draft ID. Show a live empty state when no rows exist.
-
-Available to all organization roles. Optional `limit` (default 50, max 100), `offset` (default 0), and `state=draft|reviewed|sent|paid|void`. Returns `{ "invoices": [<invoice>], "page": { "limit": 50, "offset": 0 } }`.
+Available to all organization roles. Optional `limit` (default 50, max 100), `offset` (default 0), and `state=draft|reviewed|sent|paid|void`. Returns `{ "invoices": [...], "page": { "limit": 50, "offset": 0 }, "role": "owner" }`. The authenticated view renders only these organization-scoped rows and shows a live empty state. Viewer and resident roles have no write controls.
 
 ### `POST /api/invoices`
 
-Allowed roles: `owner`, `admin`, `accountant`. Request:
-
-```json
-{"invoiceNumber":"INV-1001","customerName":"Avery Customer","customerEmail":"avery@example.test","currency":"USD","lines":[{"description":"Consulting","quantity":"2","unitPrice":"50.00","taxRate":"0.0825"}],"total":"1.00"}
-```
-
-`invoiceNumber` is limited to 25 characters to match PayPal Invoicing. Client totals/amounts are ignored and recalculated from line quantity, unit price, and tax rate. The response is HTTP 201 `{ "invoice": <invoice> }`; the invoice contains server-computed `subtotal`, `tax`, `total` and their minor-unit values, `state: "draft"`, and computed lines. Invalid required fields or line amounts return HTTP 400 `VALIDATION_ERROR`; invoice-number conflicts return HTTP 409.
+Allowed roles: `owner`, `admin`, `accountant`. Requires a UUID `Idempotency-Key` header. The body requires `invoiceNumber`, `customerName`, `customerEmail`, `currency`, `issueDate`, `dueDate`, and one or more lines with `description`, `quantity`, `unitPrice`, and decimal fraction `taxRate` (for example `0.1` means 10%); `notes` is optional. The server recomputes every line, tax and invoice total; client totals are ignored. A successful response is HTTP 201 `{ "invoice": <invoice>, "replayed": false }`; repeating the same key returns the same invoice and no second audit record. Validation returns HTTP 400 with safe field paths/messages.
 
 ### `GET /api/invoices/:invoiceId`
 
-Available to all organization roles. Returns `{ "invoice": <invoice> }`; missing or cross-tenant ID returns HTTP 404 `INVOICE_NOT_FOUND`.
+Available to all member roles. Returns `{ "invoice": <invoice> }`; missing or cross-tenant IDs return HTTP 404 `INVOICE_NOT_FOUND`.
 
-### `POST /api/invoices/:invoiceId/review`
+### `PATCH /api/invoices/:invoiceId`
 
-Allowed roles: `owner`, `admin`, `approver`. No request body. Changes a draft to reviewed and returns `{ "invoice": <invoice> }`. Other state transitions return HTTP 400.
+Allowed roles: `owner`, `admin`, `accountant`. Replaces the editable fields and line items of a draft; totals are recomputed server-side and the action is audited. A reviewed invoice must first be reopened. Sent, paid and void invoices return HTTP 409 and are read-only.
+
+### `POST /api/invoices/:invoiceId/review` and `/reopen`
+
+Allowed roles: `owner`, `admin`, `accountant`. Review moves `draft` to `reviewed`; reopen moves `reviewed` back to `draft`. Invalid state changes return HTTP 409. Successful state changes are audited.
 
 ### `POST /api/invoices/:invoiceId/send-approval`
 
-Allowed roles: `owner`, `admin`, `accountant`. No request body. Registers or reuses a pending `send-invoice` approval and returns HTTP 201 `{ "approval": <approval> }`. The invoice must already be reviewed.
+Allowed roles: `owner`, `admin`, `accountant`. Only a reviewed invoice can enter the Approvals queue. This path is always SIMULATED: approval records local state only and never creates or sends a PayPal invoice or delivers email. UI must say “SIMULATED, not delivered.” An approval record is required before its decision endpoint can update invoice state.
 
-### `POST /api/approvals/:approvalId/decision` for `send-invoice`
+### `DELETE /api/invoices/:invoiceId` and `POST /api/invoices/:invoiceId/void`
 
-Uses the existing approval endpoint and request `{ "decision": "approve", "note": "Reviewed" }` or `{ "decision": "reject", "note": "Needs changes" }`. Allowed roles remain `owner`, `admin`, `approver`. A rejection returns `{ "approvalId": "APR-INV-...", "status": "rejected", "reviewerId": "<uuid>", "decisionNote": "Needs changes" }`. This deployment uses `PAYPAL_INVOICE_SEND_MODE=simulated` by default after the Sandbox create response could not be parsed safely. Approval still gates the action; the backend records the local invoice/approval state and returns `{ "approvalId": "APR-INV-...", "status": "completed", "invoiceId": "<uuid>", "paypalInvoiceId": null, "state": "sent", "sendMode": "SIMULATED", "simulated": true }`. This does not create or send a PayPal invoice and does not notify the recipient. Live sending is available only when the operator explicitly configures `PAYPAL_INVOICE_SEND_MODE=live`; do not represent simulated state as a real PayPal delivery. A missing send approval cannot reach either path.
-
-### `POST /api/invoices/:invoiceId/void`
-
-Allowed roles: `owner`, `admin`. No request body. Only a draft or reviewed invoice can be voided. Returns `{ "invoice": <invoice> }`.
+Allowed roles: `owner`, `admin`, `accountant`. Delete requires a UUID `Idempotency-Key`, is allowed only for drafts, removes invoice lines, leaves a linked document intact, and clears the document link through the existing `ON DELETE SET NULL` foreign key. Reviewed or sent invoices must be voided; paid and void invoices cannot be changed here. Void is permitted only from reviewed or sent. Delete and state changes are audited; repeated delete with the same key is idempotent. Illegal transitions return HTTP 409. Invoice mutation RPCs are executable only by `service_role`.
 
 ### Invoice payment updates
 

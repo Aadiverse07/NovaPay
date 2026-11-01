@@ -31,6 +31,7 @@ function mapApproval(row) {
 function mapInvoice(row, lines = []) {
   return row && ({ id: row.id, orgId: row.org_id, invoiceNumber: row.invoice_number, state: row.state,
     customerName: row.customer_name, customerEmail: row.customer_email, currency: row.currency,
+    issueDate: row.issue_date, dueDate: row.due_date, notes: row.notes || '',
     subtotalMinor: Number(row.subtotal_minor), taxMinor: Number(row.tax_minor), totalMinor: Number(row.total_minor),
     subtotal: minorToMoney(row.subtotal_minor), tax: minorToMoney(row.tax_minor), total: minorToMoney(row.total_minor),
     paypalInvoiceId: row.paypal_invoice_id || null, paypalCaptureId: row.paypal_capture_id || null,
@@ -215,6 +216,21 @@ export function createPostgresRepositories(database) {
     async createDraft(orgId,invoice,lines) {
       const row=await database.rpc('create_invoice_draft',{p_org:orgId,p_invoice:invoice,p_lines:lines});
       return this.get(orgId,row.id);
+    },
+    async createDraftIdempotent(orgId,requestKey,invoice,lines,actorId,requestId) {
+      const result=await database.rpc('create_invoice_draft_idempotent',{p_org:orgId,p_request_key:requestKey,p_invoice:invoice,p_lines:lines,p_actor:actorId,p_request_id:requestId});
+      return {invoice:await this.get(orgId,result.invoice?.id),replayed:Boolean(result.replayed)};
+    },
+    async updateDraft(orgId,id,invoice,lines,actorId,requestId) {
+      await database.rpc('update_invoice_draft',{p_org:orgId,p_invoice_id:id,p_invoice:invoice,p_lines:lines,p_actor:actorId,p_request_id:requestId});
+      return this.get(orgId,id);
+    },
+    async reopenDraft(orgId,id,actorId,requestId) {
+      await database.rpc('reopen_invoice_draft',{p_org:orgId,p_invoice_id:id,p_actor:actorId,p_request_id:requestId});
+      return this.get(orgId,id);
+    },
+    async deleteDraftIdempotent(orgId,id,requestKey,actorId,requestId) {
+      return database.rpc('delete_invoice_draft_idempotent',{p_org:orgId,p_invoice_id:id,p_request_key:requestKey,p_actor:actorId,p_request_id:requestId});
     },
     async setState(orgId,id,state,actorId,details={}) {
       const row=await database.rpc('set_invoice_state',{p_org:orgId,p_invoice_id:id,p_state:state,p_actor:actorId,p_details:details});

@@ -10,6 +10,7 @@
     error.code = (body && body.code) || (detail && typeof detail === "object" && detail.code) || "API_ERROR";
     error.retryBlocked = Boolean(body && body.retryBlocked);
     error.body = body;
+    error.fields = body && Array.isArray(body.fields) ? body.fields : [];
     return error;
   }
 

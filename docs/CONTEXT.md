@@ -1,62 +1,66 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-11-01 11:45 IST
-- Branch: `fix-ai-assistant`, based on `origin/main` at `b21c442` (PR #10 merge); local checkpoint `8b6f734`, no push.
-- Phase/task: AI Assistant money-unit evidence formatting repair; code checkpoint `5e11456`.
+- Date/time: 2026-11-01 Asia/Kolkata
+- Branch: `fix-invoices-crud`, created from `origin/main` at `a226d59`; current changes are not committed or pushed yet.
+- Phase/task: invoice create, update, review, delete and void repair.
 
 ## DONE
-- `src/assistant-client.js` maps backend answer/route/reason/citations and makes message-only calls through the auth-aware API client.
-- `src/novapay-live.js`, `src/dashboard.js`, and `dashboard.html` now use the authenticated API in session mode; local fallback is explicitly labelled and gated to demo mode only.
-- Removed transaction DOM context and browser file-text ingestion from assistant requests. File button opens Documents.
-- Backend greets vague help requests deterministically without LLM tokens; UI shows route labels, hover reason, citation IDs, empty-evidence and user-safe errors.
-- Tests cover message-only request, demo gate, errors, route/citations, no browser context, greetings, currency exponents and labeled invoice/transaction/fee/ledger evidence.
-- Currency formatter derives minor-unit exponents from ISO currency metadata; deterministic SQL and FX answers return formatted amounts with currency codes.
+- Traced nonresponsive Create invoice button: modal opener accessed issue/due date controls absent from the form, throwing before any API call. Form now contains both controls and resets into create mode.
+- Removed the client-only invoice row submit path; authenticated invoice writes go through the org-scoped API.
+- Added API support for create (UUID idempotency key), draft update, review, reviewed-to-draft reopen, draft delete and reviewed/sent void; server computes totals from line items.
+- Added migration 0018 for issue/due dates, notes, mutation/idempotency RPCs, service-role-only grants and audit rows. It is NOT applied.
+- Added owner/admin/accountant gating, viewer/resident hidden writes, inline field error paths, loading/empty/error states and an always-SIMULATED invoice approval request.
+- Added route and migration tests covering totals, tampered totals, roles, tenant isolation, lifecycle, audit expectations and create/delete idempotency.
+- Files edited: `dashboard.html`; `src/modules.js`, `src/invoices-live.js`, `src/api-client.js`; `server/src/routes/invoices.js`, `server/src/routes/approvals.js`, `server/src/services/invoices.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`; `server/test/invoices-crud.test.js`, `server/test/invoice-crud-migration.test.js`, `server/test/phase3-services.test.js`; `supabase/migrations/0018_invoice_crud.sql`; `docs/API.md`, `docs/FRONTEND-CONTRACT.md`, `docs/CONTEXT.md`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
 
 ## IN PROGRESS
-- Money-unit changes and tests are committed locally as `5e11456` (`WIP-BROKEN:`) due the known no-store test failure. No push or LLM calls.
+- Full test suite and final static checks; live CRUD and browser flows depend on migration 0018 and a signed-in owner session.
 
 ## NEXT STEPS
-1. Review `git status --short` and stop; no live or LLM verification was requested for this change. Never push.
+1. Run `npm test`, `npm run check:migrations`, `node --check` for changed JS, `git diff --check`, and protected-file diff.
+2. Inspect the final diff; record each real test result in TEST-REPORT.md.
+3. Commit locally on `fix-invoices-crud`; never push.
+4. Human applies migration 0018, then verifies live create/edit/review/reopen/delete/create/void and browser clicks.
 
 ## USER ACTIONS PENDING
-- None for this task.
+- In Supabase Dashboard → SQL Editor → New query, paste the full contents of `supabase/migrations/0018_invoice_crud.sql`, click Run, confirm success, and reply `applied`. Do not run live invoice CRUD before then.
+- Browser: sign in as fixed owner; open Invoices; create a draft; edit; review; move back to draft; delete; create another; review; add Send to Approvals (verify SIMULATED copy only); void; verify sent/paid read-only cases if records are available. Repeat viewer role and confirm no write controls.
 
 ## LIVE STATE
-- `/api/status`: HTTP 200, server reports authenticated mode, Supabase configured, AI configured.
-- Unauthenticated `POST /api/ai/chat` with only a harmless greeting: HTTP 401, `AUTH_REQUIRED`; this was a route probe, not a fixed-owner check.
-- No signed-in browser request log was available; current server process is listening on port 3000.
-- No users created; no LLM calls made; no `.env` values recorded.
+- Migration 0017 is previously user-confirmed applied; 0018 is new and unapplied.
+- No live invoice CRUD was attempted; no new users or records created. No Gemini or PayPal calls made.
+- Fixed-owner live API verification: UNVERIFIED pending migration 0018 and authenticated session availability.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused assistant/evidence/FX/router/cache/injection suite | PASS | 51/51 |
-| `npm test` | FAIL | 189/190; known `authenticated API client bypasses conditional HTTP caching` no-store assertion |
-| `npm run check:migrations` | PASS | 17/17 parsed |
-| `node --check` changed JS | PASS | 8 files |
+| Focused invoice CRUD, migration and document-confirm tests | PASS | 5/5; local API/fake repositories and SQL static assertions |
+| `npm run check:migrations` | PASS | 18/18 parsed; 0018 syntax only, not applied |
+| Full `npm test` | FAIL | 193/194; known `authenticated API client bypasses conditional HTTP caching` no-store assertion only |
+| `node --check` changed JavaScript | PASS | all 11 changed JS files |
 | `git diff --check` | PASS | clean |
-| Protected-file diff vs origin/main | PASS | empty (67 protected paths) |
-| Currency exponent formatting (INR/JPY/KWD) | PASS | 13750 minor => 137.50 INR / 13750 JPY / 13.750 KWD |
-| Invoice evidence minor labels and formatting | PASS | `*_minor` plus `*_formatted`; no unlabelled total field |
-| Owner live questions | UNVERIFIED | not run; no LLM calls made |
+| Protected-file diff vs `origin/main` | PASS | empty |
+| Live owner CRUD/status counts | UNVERIFIED | migration 0018 not applied; no live writes made |
+| Browser checks | UNVERIFIED | human checklist above |
 
 ## KNOWN ISSUES AND RISKS
-- Full suite still has the previously known API no-store header test failure; this task did not alter that code.
-- Full suite retains the known API no-store header failure; money-unit changes do not touch that path.
+- Migration 0018 must be applied before invoice create/update/delete RPCs work against Supabase.
+- Live CRUD and visual/browser behavior have not been verified; 0018 is not applied.
+- Full suite retains the known no-store header failure (193/194).
+- Invoice send remains simulated: approval records local state only and never calls PayPal Invoicing.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll back everything. Never edit an applied migration; add a numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only service_role; verify ordinary-user JWT receives 403.
-- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
-- Audit log is insert-only with ON DELETE RESTRICT; cleanup journal entries, audit log, organizations, auth users in that order via the approved script.
-- PayPal Sandbox buyer must be US Personal; seller USD; use Visa; webhook ends `/api/webhook` and ID must match.
-- PayPal signature verification needs the raw body.
+- Supabase SQL Editor runs inside one transaction; syntax/runtime errors roll back. Never edit an applied migration; add a numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; verify ordinary JWT gets 403.
+- PostgREST embeds need explicit FK names when multiple relationships exist.
+- `audit_log` is insert-only with ON DELETE RESTRICT; clean journal entries before audit_log/org/auth-user test data.
+- PayPal Sandbox buyer must be a US Personal account; seller USD; webhook URL ends `/api/webhook`; webhook ID must match.
+- PayPal signature verification requires the raw body.
 - Never print `.env` values; use key names only.
 
 ## DO NOT
-- Do not push, force-push, touch main, create users, call Gemini directly, or alter protected design files.
-- Do not weaken tests or commit `.env`.
+- Never push, force-push, or switch to main for commits. Do not create users, call Gemini/PayPal, edit protected design files, weaken tests, or commit `.env`.
 
 ## RESUME COMMANDS
 - `git status --short`

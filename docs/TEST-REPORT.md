@@ -1316,3 +1316,17 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 11:53 IST | `node --check` branch JS | PASS | exit=0.
 2026-11-01 11:54 IST | `git diff --check` | PASS | exit=0.
 2026-11-01 11:54 IST | protected-file diff | PASS | empty.
+2026-11-01 | `node --test server/test/invoices-crud.test.js server/test/document-invoice-migration.test.js` | PASS | 4/4 tests; computed totals, idempotency, roles, tenant scope, transitions and audit behavior verified with fake repositories; no live invoice writes.
+2026-11-01 | `npm run check:migrations` | PASS | 18/18 SQL migrations parsed; 0018 syntax only, not applied to Supabase.
+2026-11-01 | `node --test server/test/invoices-crud.test.js server/test/invoice-crud-migration.test.js server/test/document-invoice-migration.test.js` | PASS | 5/5; field-path validation, server totals, tampered totals ignored, viewer 403, cross-org 404, lifecycle 409/200 cases, idempotency and SQL grants/audit assertions.
+2026-11-01 | `npm test` | FAIL | 193 passed, 1 failed of 194; only failure is pre-existing `authenticated API client bypasses conditional HTTP caching` because a response lacks `Cache-Control: no-store`; invoice CRUD and Phase 3 tests pass.
+2026-11-01 | `npm run check:migrations` | PASS | 18/18 migrations parse as PostgreSQL 17; 0018 remains unapplied remotely.
+2026-11-01 | `node --check` on 11 changed JS files | PASS | All server, UI and test files parse.
+2026-11-01 | `git diff --check` | PASS | No whitespace errors.
+2026-11-01 | `git diff --stat origin/main -- <protected paths>` | PASS | Empty; no protected design files changed.
+2026-11-01 | First `npm test` run | FAIL | 192/194; known no-store assertion plus outdated Phase 3 test fixture lacking required issue/due dates and idempotency header; fixture updated to new contract, no assertions weakened.
+2026-11-01 | Final `npm test` | FAIL | 193 passed, 1 failed of 194; only failure remains `authenticated API client bypasses conditional HTTP caching` (`server/test/api-client.test.js`) because `Cache-Control` was undefined instead of `no-store`; invoice CRUD tests pass.
+2026-11-01 | Final `npm run check:migrations` | PASS | 18/18 PostgreSQL migrations parse.
+2026-11-01 | Final `node --check` on 11 changed JS files | PASS | All parse successfully.
+2026-11-01 | Final `git diff --check` | PASS | Clean.
+2026-11-01 | Final protected-file diff vs `origin/main` | PASS | Empty.
