@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: diagnose/fix silent speech synthesis for tap-to-talk; branch codex/voice-assistant; implementation checkpoint a4b245d committed locally; never push.
+- Current task: make assistant replies audible through one synthesis owner; branch codex/voice-assistant; implementation checkpoint 40a8cf7 committed locally; never push.
 - Done: one reusable, one-shot en-IN SpeechRecognition instance; tap toggles listening, interim text appears, final/silence submits once; tapping while TTS is active no longer cancels it; no startup or continuous listening.
 - Removed wake matching/state and changed intro copy. Floating pill forwards to the same AI mic. Transaction dictation now uses the authenticated transcription API, not another recognizer. Hold the same main mic for transcription fallback when recognition is unavailable.
 - Spoken and typed prompts share handleQuery; quick navigation/help/stop/repeat remain deterministic; authenticated quick commands also send one background chat POST. Tiered, allowlisted server actions remain enabled.
@@ -4888,3 +4888,4 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 00:54 IST | ABOUT TO: Append final test and browser verification status to TEST-REPORT/DECISIONS; WHY: preserve exact evidence and remaining manual checks for continuation.
 2026-11-02 00:56 IST | ABOUT TO: Run final npm test and syntax/whitespace checks after the Test voice handler assertion; WHY: verify the finished patch exactly as it will be checkpointed.
 2026-11-02 00:56 IST | RESULT: npm test 292/293, sole known api-client.test.js no-store assertion; changed JS syntax and git diff --check PASS. NEXT: append the final run to TEST-REPORT, verify protected paths, and create a local WIP-BROKEN checkpoint; never push.
+2026-11-02 00:57 IST | ABOUT TO: Commit the corrected resume pointer and final checkpoint reference; WHY: keep continuity docs consistent with implementation commit 40a8cf7.
