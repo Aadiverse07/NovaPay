@@ -4226,3 +4226,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: create local WIP-BROKEN commit; why: preserve the SQLSTATE 42501 repair and migration steps without pushing.
 2026-11-02 | Before: verify branch, commit, clean status and .env tracking; why: confirm local checkpoint completed without staging secrets.
 2026-11-02 | Before: stage resume pointer and continuity context, then make local docs-only checkpoint; why: preserve actual implementation commit and pending live migration accurately.
+2026-11-02 | Result: PASS; docs-only handoff commit `1411ddc` created locally on `fix-download-campaigns`; no push; next action: human applies migration 0019, then repeat live PDF download.
+2026-11-02 | Before: checkpoint the post-commit result line and confirm the branch/worktree; why: keep the append-only journal synchronized with the actual commit.
