@@ -11,6 +11,7 @@ const campaignBody = z.object({
   title: z.string().trim().min(1).max(160),
   purpose: z.string().trim().min(1).max(2000),
   targetMinor: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  currency: z.literal('USD').default('USD'),
   deadline: z.string().date().nullable().optional(),
   organiser: z.string().trim().min(1).max(160),
   status: z.enum(['draft','active']).default('active'),
@@ -80,7 +81,7 @@ export function fundRoutes({ config, paypal, repos }) {
   router.get('/funds/campaigns', async (req, res, next) => {
     try {
       const rows = await repos.funds.listCampaigns(req.orgId);
-      return res.json({ campaigns: (rows || []).map(mapCampaign) });
+      return res.json({ campaigns: (rows || []).map(mapCampaign), role: req.orgRole });
     } catch (error) { return next(error); }
   });
 

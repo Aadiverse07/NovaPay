@@ -99,7 +99,11 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
     async insert(table, payload, prefer = 'return=representation') {
       if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
       const result = await request(`/rest/v1/${table}`, { method: 'POST', body: payload, prefer });
-      if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
+      if (result.error) {
+        const rawMessage = typeof result.data?.message === 'string' ? result.data.message : '';
+        const safeMessage = /^(permission denied for (?:table|schema|sequence) [a-z0-9_.]+|new row violates row-level security policy for table [a-z0-9_.]+)$/i.test(rawMessage) ? rawMessage : null;
+        throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null, databaseMessage: safeMessage });
+      }
       return result.data;
     },
     async upsert(table, payload, onConflict) {

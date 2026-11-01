@@ -73,7 +73,11 @@ export function invoiceRoutes({ repos }) {
       res.setHeader('Content-Length', pdf.length);
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).send(pdf);
-    } catch (error) { return next(error); }
+    } catch (error) {
+      const auditFailure = error?.code === 'INVOICE_AUDIT_WRITE_FAILED';
+      console.error(JSON.stringify({ level: 'error', event: 'invoice_pdf_download_failed', requestId: req.id, status: error?.statusCode || 500, errorName: error?.name || 'Error', code: error?.code || error?.databaseCode || 'INTERNAL_ERROR', databaseCode: error?.databaseCode || null, databaseMessage: error?.databaseMessage || null, message: auditFailure ? 'Invoice download audit insert failed.' : 'Invoice PDF generation failed.' }));
+      return next(error);
+    }
   });
   router.post('/invoices', rbac(writers), validateInvoiceBody, async (req, res, next) => {
     const key = uuid.safeParse(req.get('Idempotency-Key') || '');

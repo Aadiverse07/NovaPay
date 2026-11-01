@@ -217,7 +217,11 @@ export function createPostgresRepositories(database) {
       return { ...mapInvoice(rows[0],lines||[]), events:(events||[]).map((event)=>({type:event.event_type,occurredAt:event.created_at})) };
     },
     async auditDownload(orgId,actorId,invoiceId,requestId) {
-      await database.insert('audit_log',{org_id:orgId,actor_id:actorId,action:'invoice.downloaded',entity:'invoice',entity_id:invoiceId,metadata:{},request_id:requestId});
+      try {
+        await database.insert('audit_log',{org_id:orgId,actor_id:actorId,action:'invoice.downloaded',entity:'invoice',entity_id:invoiceId,metadata:{},request_id:requestId});
+      } catch (error) {
+        throw Object.assign(new Error('Invoice download audit insert failed.'), { statusCode: 503, code: 'INVOICE_AUDIT_WRITE_FAILED', databaseCode: error?.databaseCode || null, databaseMessage: error?.databaseMessage || null });
+      }
     },
     async createDraft(orgId,invoice,lines) {
       const row=await database.rpc('create_invoice_draft',{p_org:orgId,p_invoice:invoice,p_lines:lines});
