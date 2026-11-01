@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: diagnose/fix voice no-response on `codex/voice-assistant`; root code path fixed; code checkpoint `766df4d`; never push.
-- Last finished: lazy dashboard loading calls permission-aware `enableVoice()`; activity polling now uses authenticated `NovaPayApi.request` to avoid `/api/events` 401s.
-- Evidence: user log had zero `/api/ai/chat` calls, repeated `/api/events` 401s, and no browser-side speech error output. This establishes no query reached the AI backend but not the exact browser mic/service state.
-- Checks: focused voice/indicator 21/21; `npm test` 283/284 (known no-store assertion only); changed JS syntax and `git diff --check` pass. Browser verification remains UNVERIFIED because local browser use is disabled.
-- Next: checkpoint `766df4d` recorded; user should reload dashboard in Chrome, sign in, click Voice, permit mic, say “Hey NovaPay, open ledger,” and confirm listening, `/api/ai/chat`, ledger change and spoken reply.
-- Pending human action: run that Chrome check; no new user needed. Do not push.
+- Current task: stop intermittent/no-response voice on `codex/voice-assistant`; restart accounting fixed; local checkpoint pending; never push.
+- Latest fixes: dashboard's lazy-load click now uses permission-aware `enableVoice`; same-session SpeechRecognition `onerror` + `onend` counts as one failure; `/api/events` polling uses authenticated API client.
+- Evidence: attached server output had zero `/api/ai/chat` requests and repeated `/api/events` 401s. Video files are unavailable at their supplied paths; browser SpeechRecognition error itself remains unverified.
+- Checks: voice/indicator 23/23; final `npm test` 285/286 (sole known `api-client.test.js` no-store assertion); changed JS syntax and diff whitespace PASS. No browser verification possible in this environment.
+- Next: local WIP-BROKEN checkpoint; user reloads Chrome, signs in, taps Voice/grants mic, says “Hey NovaPay, open ledger,” and checks `/api/ai/chat`, module navigation and TTS reply.
+- Pending human action: run Chrome recording check. Do not push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4739,3 +4739,19 @@ ABOUT TO stage only task files; no .env path is included.
 - RESULT: PASS; checkpoint `766df4d` created locally on `codex/voice-assistant`; includes voice permission startup correction, authenticated activity poll, regression tests and handoff updates. `.env` is not tracked; no push.
 - NEXT: refresh the RESUME POINTER/CONTEXT header with `766df4d`, commit the pointer-only update, then wait for the user's Chrome verification.
 - 2026-11-01 23:14 IST — ABOUT TO: Update the handoff checkpoint hash to `766df4d` and commit that pointer-only documentation change. WHY: ensure the repo-only resume point names the latest code checkpoint.
+- 2026-11-01 23:30 IST — ABOUT TO: Check current branch/status and inspect both user-provided screen recordings plus the committed voice startup changes. WHY: identify the observed disconnect/listening transition directly instead of repeating the prior unverified diagnosis.
+- RESULT: UNVERIFIED; recording paths supplied by the UI are not present in the local filesystem and ffprobe/ffmpeg are unavailable, so video frames cannot be inspected here. Code audit found a concrete restart defect: one SpeechRecognition session can increment the failure count in both `onerror` and `onend`, pausing Voice after only a few network/short-session cycles.
+- NEXT: deduplicate failures per recognition session; add a regression that emits network error then immediate end and proves only one failure is counted, while clean/no-speech sessions remain active.
+- RESULT: PASS; patched per-session restart failure accounting and updated cap coverage to count five distinct failed sessions; added regression for network error plus end from one session.
+- NEXT: run focused voice/indicator tests and full test suite, then syntax/diff checks; only address failures caused by these changes.
+- 2026-11-01 23:42 IST — ABOUT TO: Run voice controller/indicator regressions after per-session failure deduplication. WHY: verify intermittent shutdown is prevented without allowing genuine instant restart loops.
+- 2026-11-01 23:55 IST — ABOUT TO: Run focused voice tests and full suite after per-session error dedupe. WHY: confirm the new pause regression is closed and retain exact baseline failure details.
+- RESULT: PASS; final focus 22/22, full suite 284/285 with only known no-store assertion, syntax and whitespace checks clean. Recording attachments are missing from the local filesystem, so no frame-by-frame browser diagnosis was possible.
+- NEXT: add one end-to-end fake-controller regression proving a recognized wake+query reaches `onQuery` and speaks its answer; rerun focused tests, then update handoff and commit locally.
+- 2026-11-01 23:58 IST — ABOUT TO: Add an end-to-end voice controller regression from recognized query through spoken response. WHY: verify that the input path now produces an answer, not merely that recognition callbacks are configured.
+- RESULT: PASS; voice/indicator suite 23/23, including recognized query → assistant callback → spoken answer; changed voice/dashboard JS syntax and `git diff --check` pass.
+- NEXT: run full `npm test` on final source, append results and video/browser limitations to reports, update context pointer, then local WIP-BROKEN checkpoint.
+- 2026-11-02 00:05 IST — ABOUT TO: Run final full suite after the end-to-end fake voice regression. WHY: record exact repository status before checkpointing fixes.
+- RESULT: PASS; documented 23/23 targeted voice tests, 285/286 full suite with known no-store failure, missing video/browser verification, root cause and next user check. JS syntax, whitespace and `.env` tracked checks pass.
+- NEXT: stage and locally WIP-BROKEN commit this fix plus continuity docs, then refresh the pointer with its commit hash. No push.
+- 2026-11-02 00:15 IST — ABOUT TO: Create a local WIP-BROKEN checkpoint for the voice restart fix. WHY: full npm test retains one verified unrelated failure; commit must state it accurately.

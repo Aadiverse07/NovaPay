@@ -43,6 +43,7 @@ export function createVoiceController(options = {}) {
   let restartDelay = 200;
   let failedRestarts = [];
   let restartHadResult = true;
+  let sessionFailureCounted = false;
   let currentSpeech = '';
   let speechQueue = [];
   let spokenOffset = 0;
@@ -64,7 +65,7 @@ export function createVoiceController(options = {}) {
     recognizer.lang = 'en-IN';
     recognizer.continuous = true;
     recognizer.interimResults = true;
-    recognizer.onstart = () => { sessionStartedAt = now(); setState(state === 'capturing' ? 'capturing' : 'idle', state === 'capturing' ? 'Listening…' : "Listening for ‘Hey NovaPay’"); };
+    recognizer.onstart = () => { sessionStartedAt = now(); sessionFailureCounted = false; setState(state === 'capturing' ? 'capturing' : 'idle', state === 'capturing' ? 'Listening…' : "Listening for ‘Hey NovaPay’"); };
     recognizer.onresult = handleResult;
     recognizer.onerror = (event) => {
       const code = event?.error;
@@ -88,6 +89,8 @@ export function createVoiceController(options = {}) {
     return recognizer;
   };
   function recordRestartFailure() {
+    if (sessionFailureCounted) return enabled;
+    sessionFailureCounted = true;
     const cutoff = now() - 30000;
     failedRestarts = failedRestarts.filter((stamp) => stamp >= cutoff);
     failedRestarts.push(now());
@@ -243,7 +246,7 @@ export function createVoiceController(options = {}) {
     if (!Recognition) { setState('unsupported', 'Voice wake word is not supported here. Type your question instead.'); return; }
     enabled = true;
     setState('idle', "Listening for ‘Hey NovaPay’");
-    restartHadResult = false; sessionStartedAt = now();
+    restartHadResult = false; sessionFailureCounted = false; sessionStartedAt = now();
     try { createRecognizer().start(); } catch { if (recordRestartFailure()) scheduleRestart(); }
   }
   function stop() {

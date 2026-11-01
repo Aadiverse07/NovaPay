@@ -29,8 +29,8 @@
 ## TEST STATE
 | Check | Status | Date | Command/details |
 |---|---|---|---|
-| Focused voice/action/client/routes | PASS | 2026-11-01 | Voice/indicator root-cause regressions 21/21; earlier action suite 33/33 |
-| Full suite | FAIL | 2026-11-01 | `npm test` 283/284 after voice fix; known `api-client.test.js` no-store assertion only |
+| Focused voice/action/client/routes | PASS | 2026-11-02 | Voice/indicator root-cause regressions 23/23; earlier action suite 33/33 |
+| Full suite | FAIL | 2026-11-02 | `npm test` 285/286; known `api-client.test.js` no-store assertion only |
 | Migration parser | PASS | 2026-11-01 | `npm run check:migrations`, 21/21 through 0021 |
 | Modified JS syntax | PASS | 2026-11-01 | `node --check` on changed JS/test files |
 | Whitespace/protected diff | PASS | 2026-11-01 | `git diff --check`; protected-file diff empty |

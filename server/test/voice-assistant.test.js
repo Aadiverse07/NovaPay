@@ -61,6 +61,17 @@ test('dashboard activity poll uses the authenticated API client', async () => {
   assert.match(live, /NovaPayApi\?window\.NovaPayApi\.request\("\/api\/events"\)/);
 });
 
+test('recognized wake query reaches assistant callback and speaks its answer', async () => {
+  const state = setup({ muted: false }); state.controller.start();
+  state.recognition().onresult({ resultIndex: 0, results: [result('Hey NovaPay, open ledger')] });
+  assert.equal(state.timers.runDelay(1200), true);
+  await settle();
+  assert.deepEqual(state.queries.map((item) => item.message), ['open ledger']);
+  assert.equal(state.utterances[0].text, 'A short answer.');
+  assert.equal(state.controller.getState(), 'speaking');
+  state.controller.destroy();
+});
+
 test('long speech is split into bounded TTS utterances and returns to listening', async () => {
   const state = setup({ muted: false }); state.controller.start();
   state.controller.speak(('NovaPay can help with your records and reports. ').repeat(12));
@@ -119,11 +130,26 @@ test('spoken confirmation accepts only explicit yes/confirm and expires in 15 se
 
 test('failed speech restarts are bounded and stop after five failures in 30 seconds', () => {
   let clock = 1000; const state = setup({ now: () => clock }); state.controller.start();
-  for (let index = 0; index < 5; index += 1) { clock += 100; state.recognition().onerror({ error: 'network' }); }
+  let delay = 200;
+  for (let index = 0; index < 5; index += 1) {
+    clock += 100; state.recognition().onerror({ error: 'network' });
+    if (index < 4) { state.recognition().onend(); assert.equal(state.timers.runDelay(delay), true); delay *= 2; }
+  }
   assert.equal(state.controller.isEnabled(), false);
   assert.equal(state.controller.getState(), 'paused');
   assert.equal(FakeRecognition.instances.length, 1);
   assert.match(state.states.at(-1).message, /Voice paused/);
+});
+
+test('one failed session is counted once across error plus end events', () => {
+  const state = setup(); state.controller.start();
+  state.recognition().onerror({ error: 'network' });
+  state.recognition().onend();
+  assert.equal(state.controller.isEnabled(), true);
+  assert.equal(state.controller.getState(), 'idle');
+  assert.equal(state.timers.runDelay(200), true);
+  assert.equal(state.controller.isEnabled(), true, 'a single browser session error cannot exhaust the restart cap');
+  state.controller.destroy();
 });
 
 test('recognizer restart uses backoff and stop/destroy remove active behavior', () => {
