@@ -1,9 +1,9 @@
 ## RESUME POINTER
 - Current task: publish only the invoice PDF audit repair into `main`; isolated branch `codex/publish-invoice-pdf-fix`, based on `origin/main` `1ec11fd`.
-- User explicitly authorized pushing these fixes into `main`; do not force-push.
-- Staged files contain only PDF audit repair code, tests, migration 0021 and handoff docs; Maintenance changes/migration 0020 are excluded.
-- Verification: npm test 206/207 (known no-store assertion only); migrations 20 files PASS; changed-JS syntax/diff/protected checks PASS; staged secret scan PASS, 0 files/0 matches; `.env` not tracked/staged.
-- NEXT: commit the staged patch locally, push this fast-forward-only branch to `origin/main`, then report pushed commit. Live downloads remain pending migration 0021 application and owner retest.
+- User explicitly authorized pushing these fixes into `main`; no force-push.
+- Local implementation commit: `62e6177`; includes only PDF audit repair code, regression tests, migration 0021 and handoff records. Maintenance changes/migration 0020 are excluded.
+- `npm test` 206/207 (known no-store assertion only); migrations: 20 present files PASS; JS syntax, whitespace, protected-file and staged-secret checks PASS (0 match lines); `.env` not tracked/staged.
+- NEXT: verify remote main still at `1ec11fd`, then push this fast-forward to `origin/main`. Live endpoint still needs migration 0021 applied and owner retest.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4253,3 +4253,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 | Before: repeat secret scan against final staged diff and confirm base ancestry; why: validate the exact commit payload and ensure it remains fast-forwardable to main.
 2026-11-02 | Result: PASS; final staged secret scan found 0 files/0 lines; origin/main is ancestor of HEAD; no force operation is needed. NEXT: create the local WIP-BROKEN commit, then push only its fast-forward to origin/main as authorized.
 2026-11-02 | Before: commit the isolated PDF repair on `codex/publish-invoice-pdf-fix`; why: preserve the verified patch before publishing it to main.
+2026-11-02 | Result: PASS; isolated implementation commit `62e6177` created on `codex/publish-invoice-pdf-fix`; it contains only requested PDF repair files/migration/docs; no push yet.
+2026-11-02 | Before: update RESUME POINTER for committed publish branch and record the pre-push checkpoint; why: preserve exact scope and test caveat before updating origin/main.
