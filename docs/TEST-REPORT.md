@@ -1286,3 +1286,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 10:32 IST | Live confirmation of existing Invoice_D_TEST-001.pdf | UNVERIFIED | No invoice row queried/created because migration 0017 is unapplied; no upload or Gemini request made.
 2026-11-01 10:33 IST | `npm test` (final rerun) | FAIL | 177 passed, 1 failed of 178; only known `authenticated API client bypasses conditional HTTP caching` no-store assertion.
 2026-11-01 10:33 IST | `node --check` all changed JS; `git diff --check`; protected-file diff vs origin/main | PASS | Syntax/whitespace clean; protected diff empty.
+2026-11-01 | `npm test` on `fix-documents-confirm` | FAIL | 177 passed, 1 failed of 178; known `authenticated API client bypasses conditional HTTP caching` expects missing `Cache-Control: no-store`; parser passed 17/17.
+2026-11-01 | `npm run check:migrations` | PASS | 17/17 migrations parsed.
+2026-11-01 | `node --check` changed JS; `git diff --check origin/main...HEAD`; protected-file diff vs `origin/main` | PASS | Changed JS parses, whitespace clean, protected-file diff empty.
