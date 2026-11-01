@@ -1,4 +1,4 @@
-import { moneyToMinor, minorToMoney } from '../repos/postgres.js';
+import { currencyMinorUnitExponent, decimalAmountToMinor, formatMinorAmount } from '../ai/money-units.js';
 
 export const FX_LABEL = 'indicative, not a guaranteed settlement rate';
 const RATE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -11,11 +11,14 @@ function decimalParts(value) {
   return { numerator: BigInt(whole + fraction), denominator: 10n ** BigInt(fraction.length) };
 }
 
-export function convertMinorUnits(amountMinor, rateText) {
-  if (!Number.isSafeInteger(amountMinor) || amountMinor < 0) throw new Error('Invalid amount.');
+export function convertMinorUnits(amountMinor, rateText, baseExponent = 2, quoteExponent = 2) {
+  if (!/^-?\d+$/.test(String(amountMinor)) || BigInt(amountMinor) < 0n || !Number.isInteger(baseExponent) || !Number.isInteger(quoteExponent) || baseExponent < 0 || quoteExponent < 0) throw new Error('Invalid amount.');
   const { numerator, denominator } = decimalParts(rateText);
-  const product = BigInt(amountMinor) * numerator;
-  const rounded = (product + denominator / 2n) / denominator;
+  const quoteScale = 10n ** BigInt(quoteExponent);
+  const baseScale = 10n ** BigInt(baseExponent);
+  const scaledDenominator = denominator * baseScale;
+  const product = BigInt(amountMinor) * numerator * quoteScale;
+  const rounded = (product + scaledDenominator / 2n) / scaledDenominator;
   const result = Number(rounded);
   if (!Number.isSafeInteger(result)) throw new Error('Converted amount is too large.');
   return result;
@@ -60,13 +63,15 @@ export function createFxService({ rates, fetchImpl = fetch, now = () => Date.now
   }
 
   async function convert({ orgId, amount, base, quote }) {
-    const amountMinor = moneyToMinor(amount);
+    const amountMinor = decimalAmountToMinor(amount, base);
     if (amountMinor <= 0) throw Object.assign(new Error('Amount must be greater than zero.'), { statusCode: 400, code: 'FX_AMOUNT_INVALID' });
     const rate = await rateFor(orgId, base, quote);
-    const convertedMinor = convertMinorUnits(amountMinor, rate.rate);
+    const baseExponent = currencyMinorUnitExponent(base);
+    const quoteExponent = currencyMinorUnitExponent(quote);
+    const convertedMinor = convertMinorUnits(amountMinor, rate.rate, baseExponent, quoteExponent);
     return {
-      amount: minorToMoney(amountMinor), baseCurrency: base,
-      convertedAmount: minorToMoney(convertedMinor), quoteCurrency: quote,
+      amount: formatMinorAmount(amountMinor, base), baseCurrency: base,
+      convertedAmount: formatMinorAmount(convertedMinor, quote), quoteCurrency: quote,
       rate: rate.rate, source: rate.source, timestamp: rate.timestamp, label: FX_LABEL,
       fees: [],
     };

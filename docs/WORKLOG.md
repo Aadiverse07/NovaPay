@@ -1,12 +1,9 @@
 ## RESUME POINTER
-- Current task: fix document confirm, invoice draft persistence, and field confidence on `fix-documents-confirm`.
-- Last completed: code/tests/docs locally committed as `e9081de` (WIP-BROKEN due the known no-store test); no push.
-- Root cause: required Supplier email was blank; UI silently exited client-side before any request. Previous confirm route only marked confirmation.
-- State: migration 0017 created but NOT applied; live invoice row count UNVERIFIED; no document upload/Gemini call/live confirm.
-- Checks: focused 33/33 PASS; `npm test` 177/178 (known no-store failure); migrations 17/17 parse; changed JS syntax/diff/protected diff PASS.
-- Next: apply migration 0017; restart server; browser-test blank email error then confirm already processed sample once; verify one linked draft and invoices refresh; check retry idempotency/theme.
-- Pending human action: Supabase Dashboard → SQL Editor → New query → paste `supabase/migrations/0017_document_invoice_confirmation.sql` → Run → reply `applied`.
-- Do not push, merge, upload, or call Gemini.
+- Current task: fix minor-unit money values in assistant evidence and deterministic answers on `fix-ai-assistant`.
+- Last finished: exponent-aware amount formatter; invoice, transaction, refund, fee and ledger evidence now pairs labeled `*_minor` integers with `*_formatted` currency strings; prompt documents the convention; SQL and FX answers use the same formatter.
+- Current state: code/tests/docs checkpointed locally as `5e11456`; no LLM call, no push, no `.env` tracked.
+- Tests: focused AI/evidence/FX/router/cache/injection 51/51 PASS; `npm test` 189/190, only known no-store header failure; migrations 17/17; `node --check` 8 JS files PASS; `git diff --check` PASS; protected-file diff empty across 67 paths.
+- Next: inspect `git status --short`; report result and stop. Do not push or call an LLM.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -3743,3 +3740,206 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 | ABOUT TO inspect remote `fix-documents-confirm` ref, branch/status, tracked `.env`, and final commit list; no push in this action.
 2026-11-01 | RESULT: PASS; remote branch does not yet exist; tracked `.env` empty; only the journal was modified by the preflight record. NEXT: commit this WORKLOG-only update and list branch commits ahead of origin/main.
 2026-11-01 | ABOUT TO commit the sole WORKLOG modification and then inspect local commits that would be pushed.
+2026-11-01 | RESULT: PASS; local branch is 8 commits ahead of origin/main, including requested fix and preflight journal checkpoints. NEXT: confirm clean status and `.env` exclusion, then run the authorized push of `fix-documents-confirm` only.
+2026-11-01 | ABOUT TO verify clean worktree/no tracked `.env` and push exactly `fix-documents-confirm` as authorized.
+2026-11-01 | RESULT: PASS; `git push -u origin fix-documents-confirm` created the remote branch at commit `9486011`; the push output showed no `.env` path. NEXT: create the requested PR into main; do not push further commits.
+2026-11-01 | ABOUT TO create the PR from `fix-documents-confirm` to `main` with the requested title and summary; pushing is complete.
+2026-11-01 | RESULT: PASS; PR #10 opened at https://github.com/Aadiverse07/NovaPay/pull/10. NEXT: update the current branch handoff pointer and CONTEXT.md with pushed hash, PR link, test result, and pending browser checks; then commit locally without another push.
+2026-11-01 | ABOUT TO read the current handoff sections in CONTEXT.md and the top RESUME POINTER so I can update only the status fields made stale by pushing/opening the PR.
+2026-11-01 | RESULT: PASS; latest handoff confirmed previous context was stale (branch/push/PR state). NEXT: update RESUME POINTER and CONTEXT.md to reflect pushed `9486011`, open PR #10, and pending human browser checks.
+2026-11-01 | ABOUT TO update the top RESUME POINTER and CONTEXT.md after remote push/PR creation; no code changes and no further push.
+2026-11-01 | RESULT: PASS; RESUME POINTER and CONTEXT now show pushed hash, PR #10, prerequisites merged, test mismatch, user-reported migration status and pending browser checks. NEXT: review docs diff and commit locally without pushing again.
+2026-11-01 | ABOUT TO review only the handoff diff and status; verify final local checkpoint scope before committing.
+2026-11-01 | RESULT: PASS; only docs/CONTEXT.md and docs/WORKLOG.md differ; diff-check clean; branch is fix-documents-confirm; remote pushed HEAD `9486011`; tracked `.env` empty. NEXT: local-only WIP commit of handoff updates, then stop.
+2026-11-01 | ABOUT TO commit only CONTEXT/WORKLOG handoff updates locally; explicitly no second push.
+2026-11-01 | ABOUT TO record completion of local handoff update and verify final status; preserve the no-second-push boundary.
+2026-11-01 | RESULT: PASS; local handoff commit  created after push; pre-commit status was:  M docs/WORKLOG.md. NEXT: commit this final journal result locally and stop; do not push.
+2026-11-01 | ABOUT TO commit the final WORKLOG result entry locally; no remote update.
+2026-11-01 | ABOUT TO correct a missing commit hash in the final journal line; shell interpreted backticks during the prior append, while the actual commit completed successfully.
+2026-11-01 | RESULT: PASS; local handoff update commit is 4dc0383; final journal commit is 6cf0617; remote pushed branch stays at 9486011; worktree was clean after the final commit. NEXT: checkpoint this correction locally, then stop without pushing.
+2026-11-01 | ABOUT TO orient the new AI-assistant fix task by checking repository path, current branch and status. WHY: ensure work stays in the requested repository and preserve existing user changes.
+2026-11-01 | RESULT: PASS; correct repository; branch is `fix-documents-confirm`; only current modification is this WORKLOG. NEXT: fetch origin and determine whether fix-documents-confirm is merged into origin/main.
+2026-11-01 | ABOUT TO fetch origin and inspect main/PR ancestry. WHY: user specified origin/main as preferred base, otherwise use fix-documents-confirm.
+2026-11-01 | RESULT: PASS; origin/main includes merge commit PR #10 and PR #9, so requested base is origin/main despite squash ancestry check. NEXT: create fix-ai-assistant from origin/main and verify branch.
+2026-11-01 | ABOUT TO create `fix-ai-assistant` from `origin/main`. WHY: document-confirm PR is merged and user specified main as preferred base.
+2026-11-01 | RESULT: FAIL; branch switch was refused because WORKLOG.md has local journal edits that checkout would overwrite. NEXT: stash only docs/WORKLOG.md, create fix-ai-assistant from origin/main, then restore the journal edits.
+2026-11-01 | ABOUT TO stash only the WORKLOG.md journal edits. WHY: preserve continuity notes while switching to the required new branch from origin/main.
+2026-11-01 | RESULT: FAIL; branch creation succeeded on origin/main, but `git stash pop` produced a WORKLOG.md content conflict because main advanced. Stash was retained. NEXT: reconcile main journal with the current task entries, keeping main pointer/history.
+2026-11-01 | ABOUT TO inspect only the WORKLOG conflict boundaries and stash diff. WHY: preserve both the updated main handoff and task-specific continuity entries.
+2026-11-01 | RESULT: PASS; resolved journal by retaining origin/main content and appended local task history; conflict markers absent and file is staged. NEXT: read main's RESUME POINTER/CONTEXT and locate assistant UI, dashboard script includes, API route and log source.
+2026-11-01 | ABOUT TO read the current handoff pointer and identify the AI Assistant UI code/route wiring. WHY: resume current repo state and establish the real fallback path before fixing it.
+2026-11-01 | RESULT: PASS; stale context read; assistant handler and canned localAnswer found in `src/dashboard.js`; user wants its API fallback diagnosis before edits. NEXT: inspect handler, NovaLive assistant client, dashboard view markup, backend chat route and available server logs.
+2026-11-01 | ABOUT TO read exact assistant call chain and inspect running server/log locations. WHY: report observed route/status behavior, not infer from the symptom.
+2026-11-01 | RESULT: PASS; UI path found: `src/dashboard.js` calls `NovaLive.assistantChat(q, records)` only when `NovaLive.live.ai`; otherwise or on rejected API call it renders `localAnswer`. `src/novapay-live.js` posts message plus scraped context. Server is listening on :3000; no log file found by filename. NEXT: inspect safe status/events output and chat route response/logging to determine actual runtime status.
+2026-11-01 | ABOUT TO inspect `/api/status`, event route definition and `/api/ai/chat` response using status metadata only. WHY: task explicitly asks for observed API/runtime/server-log evidence and forbids guessing.
+2026-11-01 | RESULT: UNVERIFIED for the observed chat failure status; `/api/status` reports authenticated mode, Supabase configured, AI configured, and `/api/events` currently returns no entries, so no chat request/error is present in server activity. Source still proves the UI can locally answer if AI status is false or the API rejects. NEXT: inspect precise readiness race, request client semantics, greetings classification and route response shape.
+2026-11-01 | ABOUT TO read the `NovaLive` readiness lifecycle, assistant call code, page script order and server AI response contract. WHY: isolate why authenticated chat is being treated as unavailable despite status reporting configured.
+2026-11-01 | RESULT: PASS; root cause traced: authenticated live call posts `{message, context}` and client expects `d.reply`, but backend returns `{answer, route, reason, citations}`; that mismatch throws and `ask()` catches every failure into `localAnswer`. A readiness race also routes pre-status messages local. `/api/status` is configured; `/api/events` empty, no chat status recorded. NEXT: inspect auth/session lifecycle and test patterns, then implement message-only API wiring and explicit error states.
+2026-11-01 | ABOUT TO inspect auth session API, dashboard AI event/listener flow, DOM loading order, and tests for dashboard/AI client. WHY: wire authenticated calls through the JWT/org-aware API client without breaking demo-only behavior.
+2026-11-01 | RESULT: PASS; `NovaPayAuth.currentSession()` is available; dashboard loads auth and API client before dashboard.js; current NovaLive API helper is bare fetch without Authorization or X-Org-Id, and request body includes DOM-scraped context. NEXT: check route authentication and issue one unauthenticated synthetic POST to obtain exact rejection status/log without invoking AI.
+2026-11-01 | ABOUT TO inspect API middleware mount and make a single unauthenticated synthetic `/api/ai/chat` request. WHY: prove the current unauthed client path's HTTP behavior without any JWT, user creation, or provider call.
+2026-11-01 | RESULT: PASS; authenticated API middleware requires JWT and organization context; bare chat fetch would be rejected 401 AUTH_REQUIRED. No signed-in request/log event is present, so historical status remains unavailable. NEXT: add a small testable frontend assistant client for message-only requests, response normalization, error categories and demo-mode gate.
+2026-11-01 | ABOUT TO add `src/assistant-client.js` and unit tests. WHY: isolate the authenticated message-only contract and ensure only explicit demo/no-session mode can reach local fallback.
+2026-11-01 | RESULT: PASS; added a small assistant-client helper that injects no credentials itself, relies on NovaPayApi, normalizes backend `answer`/`route`/`reason`/`citations`, categorizes errors, and gates demo fallback to demo mode without a session. NEXT: add script include and tests for the request shape, gate and error messages.
+2026-11-01 | ABOUT TO add the helper script before dashboard.js and add unit tests using a VM harness. WHY: ensure browser loads the helper and verify the exact request payload without a browser dependency.
+2026-11-01 | RESULT: PASS; dashboard will load helper before UI; tests cover exact message-only API payload, auth/demo fallback gate, response mapping, and errors. NEXT: teach the backend router/service to answer greetings deterministically without LLM usage, with router/service tests.
+2026-11-01 | ABOUT TO add a deterministic friendly greeting classification/response and tests. WHY: vague greetings must not be summarized as transaction records or spend LLM tokens.
+2026-11-01 | RESULT: PASS; deterministic greeting route added to router/service with zero usage and test coverage. NEXT: wire dashboard ask to auth-aware helper, render route/citation ids, gate sample status/fallback, and replace live assistant API helper's context payload.
+2026-11-01 | ABOUT TO edit `src/dashboard.js` and `src/novapay-live.js`. WHY: authenticated requests must use only `{message}` via JWT/org-aware API client, while errors display explicitly and sample fallback remains demo-only.
+2026-11-01 | RESULT: PASS; `NovaLive.assistantChat` and transaction-detail AI now use NovaPayApi with `{message}` only, no scraped context; non-demo AI-unavailable labels no longer advertise local fallback. NEXT: replace dashboard assistant banner/call/citation/error handling so auth mode never scrapes rows or answers locally.
+2026-11-01 | ABOUT TO rewire `src/dashboard.js` assistant status and ask/render functions. WHY: eliminate all authenticated DOM context and canned fallback, render backend metadata/citations, and show clear errors.
+2026-11-01 | RESULT: PASS; dashboard asks via NovaLive's auth-aware client, renders route/reason/citation IDs, shows explicit errors/no-live-records, and scrapes rows only inside the explicit demo branch. NEXT: inspect remaining static AI sample labels and validate JS syntax before tests.
+2026-11-01 | ABOUT TO inspect AI view initial banner/labels and run syntax checks on changed JavaScript. WHY: prevent an authenticated initial render from flashing illustrative data and catch code errors early.
+2026-11-01 | ABOUT TO update the assistant's static first-paint copy. WHY: avoid implying sample or transaction records are already present before authenticated mode initialization.
+2026-11-01 | RESULT: PASS; initial assistant banner now says checking mode and welcome copy no longer claims sample activity. NEXT: run focused tests for assistant client, AI router/service and existing cache/prompt-injection paths.
+2026-11-01 | ABOUT TO run focused assistant and AI regression tests. WHY: validate auth payload, demo gate, errors, greetings, route classifications, prompt-injection and caching behavior.
+2026-11-01 | RESULT: FAIL; focused assistant/AI suite 29/30; the message-only request test compared cross-VM realm objects with deepStrictEqual, which rejects their differing prototypes despite identical shape. NEXT: compare serialized request arguments and rerun.
+2026-11-01 | ABOUT TO fix the VM test assertion to compare JSON values and rerun the focused assistant/AI suite. WHY: preserve exact payload coverage while avoiding realm prototype artifacts.
+2026-11-01 | RESULT: PASS; focused suite 30/30 across assistant client, greeting/router, injection safety, AI routing, cache and budgets. NEXT: append both actual focused run outcomes to TEST-REPORT, then inspect final assistant diff for remaining context/local-fallback paths.
+2026-11-01 | ABOUT TO append focused test outcomes (including the corrected harness failure) to append-only TEST-REPORT. WHY: preserve real run history and exact results.
+2026-11-01 | ABOUT TO review the assistant-specific diff and search remaining chat requests/local fallback references. WHY: verify no authenticated path still posts browser context or silently uses the local canned response.
+2026-11-01 00:00 IST | Result: PASS, focused diff/grep inspection ran but output was truncated; no files changed by inspection; NEXT: inspect changed assistant code and request-shape references.
+2026-11-01 00:03 IST | Before: inspect current assistant UI/helper/router diffs and journal/test entries; why: verify the auth-only path and locate any remaining canned fallback or sample-data leakage before final checks.
+2026-11-01 10:36 IST | Result: PASS, branch is fix-ai-assistant; request helper is message-only, auth path no longer uses DOM records, and demo copy is explicitly labelled; NEXT: inspect API error contract, greeting/error path and resume pointer.
+2026-11-01 10:36 IST | Before: inspect API client error shape, assistant ask handler and current resume pointer; why: ensure status/code mapping matches actual API errors and handoff state stays accurate.
+2026-11-01 10:38 IST | Result: PASS, API client attaches bearer JWT plus X-Org-Id and normalizes legacy/structured errors; auth helper maps real backend answer/route/reason/citations; greeting route is deterministic; RESUME POINTER is stale and needs replacement; NEXT: capture safe local server status and unauthenticated route status, without body or secrets.
+2026-11-01 10:38 IST | Before: query only localhost status and AI endpoint HTTP/code metadata, and locate server process/log destination; why: satisfy trace evidence without revealing credentials or calling an LLM.
+2026-11-01 10:39 IST | Result: PASS, localhost `/api/status` 200 (authenticated config; Supabase and AI configured); unauthenticated `/api/ai/chat` returns 401 AUTH_REQUIRED; server PID 73320 is listening on 3000; no server request log captured for a signed-in browser request; NEXT: inspect exact assistant submission path and tests, and record live owner checks UNVERIFIED if no session is available.
+2026-11-01 10:39 IST | Before: inspect assistant submit handler and tests for attachments, vague prompts, errors and demo gate; why: ensure no user/browser context reaches authenticated API except the message field.
+2026-11-01 10:41 IST | Result: REVIEW FOUND one remaining browser-context path: the composer appended file contents directly into the message; this contradicts the no-browser-supplied-context requirement; NEXT: stop attaching local file text to chat and direct file review to Documents.
+2026-11-01 10:41 IST | Before: remove local attachment ingestion from assistant composer while retaining ordinary typed/voice message input; why: document content must come from org-scoped backend retrieval, not browser-supplied context.
+2026-11-01 10:42 IST | Result: FAIL, first HTML patch did not apply because the minified markup differed from the copied context; no file was changed; NEXT: patch exact substrings in HTML and replace the file-reader block safely.
+2026-11-01 10:42 IST | Before: extract only the assistant file-input markup and file-reader setup snippets for exact targeted edits; why: avoid broad edits to the team's minified dashboard markup.
+2026-11-01 10:43 IST | Result: PASS, exact substrings identified: composer adds attachment text and FileReader stores it locally; NEXT: remove that transfer path and point the existing attachment control to Documents.
+2026-11-01 10:43 IST | Before: edit only the AI composer markup and setup in dashboard.html/src/dashboard.js; why: prevent arbitrary browser file text from being sent as model input and use the existing server-side Documents pipeline.
+2026-11-01 10:45 IST | Result: PASS, local file-reading and file-content injection removed; paperclip now opens Documents and the prompt placeholder refers to the organization; files touched dashboard.html, src/dashboard.js; NEXT: add integration assertions for demo-only local fallback and no browser context.
+2026-11-01 10:45 IST | Before: add static dashboard contract regression checks; why: ensure future edits cannot reintroduce FileReader/context submission or invoke localAnswer outside the explicit demo gate.
+2026-11-01 10:48 IST | Result: PASS, focused assistant/router/cache/security suite 31/31; WORKLOG.md and server/test/assistant-client.test.js updated; NEXT: run full npm test and append its actual result.
+2026-11-01 10:48 IST | Before: run `npm test`; why: verify full regression suite after assistant wiring and browser-context removal.
+2026-11-01 10:49 IST | Result: FAIL, `npm test` exit=1; 295:ℹ tests 184;297:ℹ pass 183;298:ℹ fail 1;; TEST-REPORT.md appended; NEXT: run migration check, syntax and diff audits.
+2026-11-01 10:50 IST | Result: FAIL, full suite has the existing cache/no-store assertion failure (`Cache-Control` undefined vs `no-store`); TEST-REPORT.md records actual summary; NEXT: read summary then run migration/syntax/diff checks.
+2026-11-01 10:50 IST | Before: extract only npm test totals and failure title from captured output; why: report exact suite counts without rerunning or overstating the known failure.
+2026-11-01 10:52 IST | Result: FAIL, `npm test` totals are 184 tests, 183 pass, 1 fail; single failure is `authenticated API client bypasses conditional HTTP caching` (`Cache-Control` undefined); NEXT: run each required static check.
+2026-11-01 10:52 IST | Before: run `npm run check:migrations`; why: verify migration set remains valid after assistant-only changes.
+2026-11-01 10:53 IST | Result: PASS, check:migrations exit=0; TEST-REPORT.md appended; NEXT: node --check all changed JS.
+2026-11-01 10:53 IST | Result: PASS, migrations 17/17 parsed; TEST-REPORT.md appended; NEXT: syntax-check all changed JavaScript.
+2026-11-01 10:53 IST | Before: run `node --check` on each changed JavaScript source and test file; why: ensure all assistant edits parse under Node.
+2026-11-01 10:54 IST | Result: FAIL, initial node --check loop passed the whole filenames string as one argument because of quoting; no source issue established; NEXT: rerun with a bash array and document the result.
+2026-11-01 10:54 IST | Before: rerun `node --check` using individually quoted file arguments; why: correct the shell invocation so each changed JavaScript file is independently parsed.
+2026-11-01 10:55 IST | Result: PASS, node syntax check exit=0 across 8 files; TEST-REPORT.md appended; NEXT: run git diff --check.
+2026-11-01 10:56 IST | Result: PASS, node --check passed across all 8 changed JavaScript files; NEXT: run whitespace validation.
+2026-11-01 10:56 IST | Before: run `git diff --check`; why: catch whitespace errors in the current patch.
+2026-11-01 10:56 IST | Result: PASS, whitespace audit exit=0; TEST-REPORT.md appended; NEXT: check protected-file diff against origin/main.
+2026-11-01 10:57 IST | Result: PASS, `git diff --check` clean; TEST-REPORT.md appended; NEXT: compare protected files with origin/main.
+2026-11-01 10:57 IST | Before: run protected-file diff stat against origin/main for the exact protected paths; why: confirm no design assets or protected styling were changed.
+2026-11-01 10:58 IST | Result: PASS, protected-file diff check exit=0; TEST-REPORT.md appended; NEXT: record live checks as UNVERIFIED and update handoff docs.
+2026-11-01 10:58 IST | Result: PASS, protected diff is empty across 67 tracked protected paths; NEXT: inspect continuity doc structure before appending live UNVERIFIED results and current task pointer.
+2026-11-01 10:58 IST | Before: read only the headers/current pointer of CONTEXT.md and recent DECISIONS.md format; why: update handoff without rewriting unrelated history.
+2026-11-01 10:59 IST | Result: PASS, CONTEXT.md has a stale document-confirmation header and WORKLOG RESUME POINTER is stale; DECISIONS.md uses dated question/choice/reason/source entries; NEXT: replace current handoff block and append assistant live UNVERIFIED results.
+2026-11-01 10:59 IST | Before: record each requested live route check as UNVERIFIED, add the assistant wiring decision, and update current handoff state; why: owner browser session is inaccessible and no live AI calls were made.
+2026-11-01 11:00 IST | Before: confirm branch, base commit, pending paths, and tracked .env status; why: prepare accurate handoff and safe local-only WIP checkpoint.
+2026-11-01 11:01 IST | Result: PASS, branch `fix-ai-assistant` at baseline `b21c442` (PR #10 merge); .env is not tracked; no other secrets surfaced in status; NEXT: rewrite handoff and append route-check UNVERIFIED entries.
+2026-11-01 11:01 IST | Before: update CONTEXT.md and WORKLOG RESUME POINTER; append live-check results and decision; why: preserve exact code root cause, test state and owner-session blocker before checkpoint.
+2026-11-01 11:02 IST | Result: PASS, handoff rewrite completed; verify line endings and appended entries before staging; NEXT: inspect tails for literal escapes and check whitespace.
+2026-11-01 11:02 IST | Before: inspect the rewritten context and newest append-only entries; why: catch journal formatting errors before commit.
+2026-11-01 11:03 IST | Result: FAIL, four TEST-REPORT entries and one DECISIONS entry contain literal `\\n` separators; context length is 68 lines; NEXT: replace only trailing literal separators with real newlines and rerun diff check.
+2026-11-01 11:03 IST | Before: repair escaped newline formatting in the newly appended report/decision entries only; why: keep append-only logs readable and valid.
+2026-11-01 11:04 IST | Result: PARTIAL, the newly appended decision is fixed but TEST-REPORT still displays escaped `\\n`; inspect exact bytes and normalize only that suffix; NEXT: replace its literal characters and recheck.
+2026-11-01 11:04 IST | Before: inspect repr of TEST-REPORT final entries; why: distinguish an actual line break from one or more literal backslashes.
+2026-11-01 11:05 IST | Result: PASS, last matching entry was already normalized; earlier same-timestamp lines still have literal separators; NEXT: normalize the complete suffix from the first timestamp.
+2026-11-01 11:05 IST | Before: replace literal separators across only the new TEST-REPORT suffix; why: earlier patch targeted the last duplicate timestamp instead of the start of the four-line append.
+2026-11-01 11:06 IST | Result: PASS, TEST-REPORT now has four separate, correctly separated lines; DECISIONS entry is one line; NEXT: final diff/secret/status audit before WIP commit.
+2026-11-01 11:06 IST | Before: run `git diff --check` including staged and unstaged changes and inspect status/stat only; why: verify docs formatting and confirm the exact local commit contents without printing secrets.
+2026-11-01 11:07 IST | Result: PASS, staged/unstaged paths are assistant code and continuity docs only; `.env` is not tracked; first diff check clean; NEXT: record final diff check and locally checkpoint.
+2026-11-01 11:07 IST | Before: rerun `git diff --check` after the final report edits; why: verify whitespace immediately before the checkpoint commit.
+2026-11-01 11:07 IST | Result: PASS, final staged/unstaged diff check exit=0; TEST-REPORT.md appended; NEXT: stage intended assistant/docs files and commit locally.
+2026-11-01 11:08 IST | Before: stage only the assistant implementation, tests and continuity files; why: prepare a local WIP-BROKEN checkpoint for the requested fix while preserving the known suite failure accurately.
+2026-11-01 11:09 IST | Result: PASS, staged only 12 intended assistant/docs files; `.env` absent from tracked and staged paths; NEXT: create local WIP-BROKEN checkpoint (known no-store suite failure).
+2026-11-01 11:09 IST | Before: commit assistant wiring, tests and handoff locally; why: preserve completed work on fix-ai-assistant without pushing.
+2026-11-01 11:10 IST | Result: PASS, local checkpoint `8b6f734` created on fix-ai-assistant; no push; NEXT: refresh pointer to identify checkpoint and verify final status.
+2026-11-01 11:10 IST | Before: update CONTEXT and RESUME POINTER with commit `8b6f734`; why: make the repository handoff match the actual local checkpoint and its pending browser verification.
+2026-11-01 11:11 IST | Result: PASS, pointer refresh committed as `db51a65`; code checkpoint remains `8b6f734`; no push; NEXT: verify final branch/status and locally checkpoint the status result.
+2026-11-01 11:11 IST | Before: check final branch, working-tree paths, HEAD and tracked `.env`; why: ensure the requested local-only fix is on fix-ai-assistant and no environment file is part of the work.
+2026-11-01 11:11 IST | Result: PASS, on fix-ai-assistant at `db51a65`; no `.env` tracked; only this final journal result is pending; NEXT: commit the journal checkpoint locally and stop for human browser verification.
+2026-11-01 11:11 IST | Before: commit final work journal status locally; why: retain the latest exact handoff state without pushing.
+2026-11-01 | Before: verify branch/worktree and read current RESUME POINTER; why: start the minor-unit evidence fix on the requested branch and preserve continuation state.
+2026-11-01 11:12 IST | Result: PASS, correct repo and branch; worktree had only the live WORKLOG entry; RESUME POINTER read; NEXT: trace targeted AI evidence construction and amount-formatting utilities.
+2026-11-01 11:12 IST | Before: inspect only AI service, SQL route/repo and money helpers for invoice/transaction/refund/fee/ledger formatting; why: find raw minor-unit exposure across model and deterministic answer paths.
+2026-11-01 11:13 IST | Result: PARTIAL, evidence builders live in `server/src/services/ai.js` and SQL rows in repos; first rg included nonexistent `server/src/lib` and returned a path error; NEXT: inspect exact AI service/repo functions and currency sources.
+2026-11-01 11:13 IST | Before: read AI context construction, prompt header, SQL refund path and repo money columns; why: identify all money fields before adding a shared exponent-aware formatter.
+2026-11-01 11:14 IST | Result: PASS, AI evidence path calls `buildAIEvidence`; repo rows retain *_minor raw values; legacy formatter evidenceNumbers hardcodes /100; SQL answers use deterministicCodeResult; NEXT: inspect those exact implementations and existing currency metadata.
+2026-11-01 11:14 IST | Before: read buildAIEvidence, deterministicCodeResult, currency metadata and ledger repo methods; why: implement one formatter that correctly handles 0/2/3 minor-unit exponents.
+2026-11-01 11:15 IST | Result: PASS, `transactionEvidence`, `invoiceEvidence`, `feeEvidence`, and ledger summary emit raw amountMinor fields; deterministic SQL reply code hardcodes `/100`; NEXT: inspect exact function boundaries and available currency support.
+2026-11-01 11:15 IST | Before: inspect the relevant evidence functions and SQL answer branches in small ranges; why: establish a safe shared formatted representation for every persisted money field.
+2026-11-01 11:16 IST | Result: PASS, builders are in `server/src/ai/evidence.js`; deterministic SQL formatter (`moneyText`) hardcodes 2 decimals; currency tools can derive exponents with Intl; NEXT: map internal field usages and choose snake-case evidence fields while preserving deterministic arithmetic.
+2026-11-01 11:16 IST | Before: find every consumer of evidence minor fields; why: add labeled amounts without breaking deterministic SQL calculations or ungrounded-number checks.
+2026-11-01 11:18 IST | Result: PASS, only deterministic SQL handlers consume evidence minor fields; numeric grounding guard currently also treats raw minor values as valid claims; invoice evidence test fixtures available; NEXT: inspect FX code route formatting and tests.
+2026-11-01 11:18 IST | Before: inspect FX formatter/route and evidence tests; why: align code-route conversion formatting with currency exponents and avoid touching unrelated money paths.
+2026-11-01 11:19 IST | Result: PASS, FX code route currently uses repo fixed-2 money helpers; will share formatter and exponent-aware conversion only within FX/AI path; NEXT: inspect FX tests and create the shared currency money utility.
+2026-11-01 11:19 IST | Before: read FX unit tests and package conventions; why: preserve existing conversion behavior while supporting currencies with zero/three minor-unit digits.
+2026-11-01 11:22 IST | Result: PASS, shared exponent-aware formatter added; evidence uses labeled *_minor plus *_formatted fields; grounding guard no longer permits raw minor integers; SQL and FX format currency-aware values; files changed include ai evidence/service and FX; NEXT: add zero/two/three-decimal and invoice evidence regression tests.
+2026-11-01 11:22 IST | Before: inspect existing AI evidence test fixture and prompt tests before extending; why: keep test setup narrow and ensure regression checks exercise the actual model evidence payload.
+2026-11-01 11:24 IST | Result: PASS, added tests for INR/JPY/KWD formatting, invoice labeled minor fields, transaction/fee/ledger pairs, SQL refunds, and FX exponents; NEXT: check FX route allowed currencies and deterministic route selection before focused tests.
+2026-11-01 11:24 IST | Before: inspect FX route currency validation and AI FX intent allow-list; why: ensure zero/three-decimal currencies can reach code-route formatting where supported.
+2026-11-01 11:28 IST | Result: PASS, FX request classifier/API validation now accept ISO currency precision and convert base/quote scales; formatter tests cover JPY/KWD; NEXT: run focused evidence, SQL/FX, router/cache/injection tests.
+2026-11-01 11:28 IST | Before: run focused AI evidence, AI service, FX service, router, cache and injection tests; why: verify formatting changes and ensure no LLM provider is called by deterministic test cases.
+2026-11-01 11:28 IST | Result: FAIL, focused suite exit=1; ℹ tests 51;ℹ pass 48;ℹ fail 3;; TEST-REPORT.md appended; NEXT: fix any focused failure, then full checks.
+2026-11-01 11:29 IST | Result: FAIL, focused suite includes one existing FX endpoint expectation that omitted the now-required currency suffix (`1.00` vs `1.00 USD`); other results need count extraction; NEXT: update the assertion to the explicit currency contract and rerun.
+2026-11-01 11:29 IST | Before: inspect focused test summary and endpoint assertion; why: adjust only the expected output for the new explicit amount format.
+2026-11-01 11:30 IST | Result: FAIL, focused suite 48/51; besides endpoint currency suffix, two failures require inspection; NEXT: list failing test names and error headlines.
+2026-11-01 11:30 IST | Before: extract focused failure titles and concise assertions from saved test output; why: distinguish expected-contract changes from implementation defects.
+2026-11-01 11:32 IST | Result: REVIEW, failures were expected response-contract adjustments plus duplicated code-route currency suffix; service output now carries currency once and tests expect explicit currency; NEXT: rerun focused suite.
+2026-11-01 11:32 IST | Before: rerun focused evidence, AI, FX, router, cache and injection tests after correcting outputs; why: confirm implementation and updated response contract.
+2026-11-01 11:32 IST | Result: FAIL, focused suite rerun exit=1; ℹ tests 51;ℹ pass 50;ℹ fail 1;; TEST-REPORT.md appended; NEXT: inspect remaining failures if any, otherwise full checks.
+2026-11-01 11:33 IST | Result: FAIL, focused rerun exposed one stale FX mock: test stub returns bare amounts while production formatter now includes currency; NEXT: update fixture and assertion to realistic formatted strings, then rerun.
+2026-11-01 11:33 IST | Before: inspect the structured FX unit test around its stub and assertions; why: align the fixture contract with the currency-bearing FX response.
+2026-11-01 11:34 IST | Result: PASS, FX mock now returns explicit formatted amounts and test asserts both currencies; NEXT: rerun focused suite.
+2026-11-01 11:34 IST | Before: rerun focused evidence, AI, FX, router, cache and injection tests; why: verify updated fixtures and all unit conversions after the correction.
+2026-11-01 11:34 IST | Result: PASS, focused suite exit=0; ℹ tests 51;ℹ pass 51;ℹ fail 0;; TEST-REPORT.md appended; NEXT: complete full requested checks.
+2026-11-01 11:35 IST | Result: PASS, focused suite 51/51; test includes injection/router/cache/budget and deterministic no-provider behavior; NEXT: run full npm test and record exact result.
+2026-11-01 11:35 IST | Before: run full `npm test`; why: check all regressions after the money unit changes.
+2026-11-01 11:35 IST | Result: FAIL, npm test exit=1; ℹ tests 190;ℹ pass 189;ℹ fail 1;; TEST-REPORT.md appended; NEXT: run migration check.
+2026-11-01 11:36 IST | Result: FAIL, full npm suite retains the known `authenticated API client bypasses conditional HTTP caching` failure (`Cache-Control` undefined); TEST-REPORT contains test/pass/fail counts; NEXT: run migration parser.
+2026-11-01 11:36 IST | Before: run `npm run check:migrations`; why: verify all migration files remain parseable after backend-only formatting changes.
+2026-11-01 11:36 IST | Result: PASS, check:migrations exit=0; TEST-REPORT.md appended; NEXT: node --check changed JavaScript.
+2026-11-01 11:37 IST | Result: PASS, full suite 190 tests: 189 pass/1 known no-store failure; migrations 17/17 parse; NEXT: syntax-check all changed JS.
+2026-11-01 11:37 IST | Before: run `node --check` on every changed/new JavaScript file; why: catch parse errors in formatter, evidence, FX route and tests.
+2026-11-01 11:37 IST | Result: PASS, node --check exit=0 for 8 changed files; TEST-REPORT.md appended; NEXT: run git diff --check.
+2026-11-01 11:38 IST | Result: PASS, all 8 changed JS files pass syntax check; TEST-REPORT appended; NEXT: whitespace and protected-file audits.
+2026-11-01 11:38 IST | Before: run `git diff --check` across current changes; why: ensure patch and docs have no whitespace errors before final review.
+2026-11-01 11:38 IST | Result: PASS, diff check exit=0; TEST-REPORT appended; NEXT: verify protected-file diff is empty.
+2026-11-01 11:39 IST | Result: PASS, `git diff --check` clean; TEST-REPORT append succeeded; NEXT: compare all tracked protected paths with origin/main.
+2026-11-01 11:39 IST | Before: run protected-file diff stat vs origin/main; why: verify no protected styling, animation or asset files changed.
+2026-11-01 11:39 IST | Result: PASS, protected diff exit=0; TEST-REPORT appended; NEXT: refresh handoff and record currency-formatting decision.
+2026-11-01 11:40 IST | Result: PASS, protected diff empty across 67 tracked protected paths; NEXT: update CONTEXT, RESUME POINTER and DECISIONS for the currency minor-unit fix.
+2026-11-01 11:40 IST | Before: refresh current handoff and append currency decision; why: make the next continuation point describe this task and the exact remaining known test failure.
+2026-11-01 11:42 IST | Result: PASS, CONTEXT/RESUME POINTER updated for money-unit fix; DECISIONS appended; TEST-REPORT has focused/full results; NEXT: final whitespace/protected/status checks before WIP-BROKEN commit.
+2026-11-01 11:42 IST | Before: rerun `git diff --check` after continuity edits; why: validate final docs and code formatting before checkpoint.
+2026-11-01 11:42 IST | Result: PASS, final whitespace check; TEST-REPORT updated; NEXT: confirm protected diff and staged/env status.
+2026-11-01 11:42 IST | Result: 0, final whitespace check; TEST-REPORT updated; NEXT: confirm protected diff and staged/env status.
+2026-11-01 11:43 IST | Result: PASS, final whitespace check clean; NEXT: confirm branch, staged paths, `.env` tracking and protected-file diff.
+2026-11-01 11:43 IST | Before: run final branch/status/env and protected-file audit; why: ensure local WIP includes only intended files and protected paths remain untouched.
+2026-11-01 11:44 IST | Result: PASS, branch fix-ai-assistant; no staged paths before staging; .env tracked count 0; protected-file diff empty; NEXT: stage the intended money-unit code/tests/docs and commit locally.
+2026-11-01 11:44 IST | Before: stage and locally commit the money-unit evidence fix; why: checkpoint completed work while recording the known no-store test failure; never push.
+2026-11-01 11:45 IST | Result: PASS, commit `5e11456` created locally on fix-ai-assistant; no push; NEXT: refresh RESUME POINTER and CONTEXT to record checkpoint and known test state.
+2026-11-01 11:45 IST | Before: update handoff pointer with commit `5e11456`; why: leave a fresh continuation point after the code checkpoint.
+2026-11-01 11:50 IST | Before: verify repository path, requested branch, current status, and tracked `.env`; why: establish the authorized push preconditions.
+2026-11-01 11:51 IST | Result: PASS, branch `fix-ai-assistant`; status clean; tracked `.env` count 0; origin fetch completed; NEXT: scan pushed diff for secrets without printing values.
+2026-11-01 11:51 IST | Before: scan additions in `git diff origin/main..HEAD` for key-like strings and non-empty named secret assignments; why: block push if any credential value is present.
+2026-11-01 11:51 IST | Result: PASS, secret scan exit=0; TEST-REPORT appended; NEXT: run tests, migrations, syntax, diff and protected-file checks.
+2026-11-01 11:52 IST | Result: PASS, secret scan found 0 matching files/lines; TEST-REPORT appended; NEXT: run requested regression checks.
+2026-11-01 11:52 IST | Before: run `npm test`; why: verify suite before the one authorized branch push; known no-store assertion may remain.
+2026-11-01 11:52 IST | Result: FAIL, npm test exit=1; ℹ tests 190;ℹ pass 189;ℹ fail 1;; NEXT: check migrations.
+2026-11-01 11:53 IST | Before: run `npm run check:migrations`; why: verify migration parser before push.
+2026-11-01 11:53 IST | Result: PASS, migration check exit=0; NEXT: syntax-check changed JavaScript.
+2026-11-01 11:53 IST | Before: run `node --check` on changed JavaScript in the branch diff; why: verify JS syntax before push.
+2026-11-01 11:53 IST | Result: PASS, node syntax check exit=0; NEXT: diff and protected-file checks.
+2026-11-01 11:54 IST | Before: run `git diff --check` against origin/main and current worktree; why: detect whitespace errors in pushed content and journal entries.
+2026-11-01 11:54 IST | Result: PASS, diff check exit=0; NEXT: verify protected-file diff is empty.
+2026-11-01 11:54 IST | Before: compare protected paths against origin/main; why: ensure this PR contains no protected design or asset changes.
+2026-11-01 11:54 IST | Result: PASS, protected diff exit=0; NEXT: commit test/journal updates and confirm clean push state.
+2026-11-01 11:55 IST | Result: PASS/EXPECTED, test suite 189/190 with only known no-store failure; migration 17/17; node check 14 JS PASS; diff check PASS; protected diff empty; NEXT: commit test results locally, then verify final push diff.
+2026-11-01 11:55 IST | Before: checkpoint the fresh verification log locally; why: retain actual test results before the authorized push.
+2026-11-01 11:56 IST | Result: PASS, verification log checkpoint `fbabe10`; NEXT: scan exact post-checkpoint branch diff and confirm no tracked/staged environment file before push.
+2026-11-01 11:56 IST | Before: repeat secret scan across committed and working diff, then checkpoint only the scan result; why: verify the exact branch content to be pushed remains credential-free.
+2026-11-01 11:56 IST | Final secret scan | PASS | 0 matching files/lines.

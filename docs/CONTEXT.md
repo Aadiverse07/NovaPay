@@ -1,59 +1,64 @@
 # NovaPay Continuity Context
 
 ## HEADER
-- Date/time: 2026-11-01 10:32 IST
-- Branch: `fix-documents-confirm`, based on unmerged `fix-ocr-validation` (PR #9 remains open); no push authorized.
-- Task: document confirmation, confidence, and live invoice view repair.
+- Date/time: 2026-11-01 11:45 IST
+- Branch: `fix-ai-assistant`, based on `origin/main` at `b21c442` (PR #10 merge); local checkpoint `8b6f734`, no push.
+- Phase/task: AI Assistant money-unit evidence formatting repair; code checkpoint `5e11456`.
 
 ## DONE
-- Root cause: blank required Supplier email causes client validation to return before any HTTP request; prior validation only showed a generic status message.
-- Confirmation now sends one request. Additive migration 0017 links one org-scoped invoice draft to the source document, confirms and audits atomically, and returns the same draft on retry.
-- Server recomputes subtotal/tax/total in integer minor units and rejects mismatches. UI shows inline field errors/toast, a draft link, and refreshes Invoices.
-- Invoices view no longer shows seed rows; it loads `/api/invoices` and saves its existing draft form through the API.
-- Confidence display is code-derived: arithmetic can verify amount fields; date/currency and OCR text matches are labelled; model-only values are capped and labelled unverified.
-- Field review uses existing theme tokens, with one field per row.
+- `src/assistant-client.js` maps backend answer/route/reason/citations and makes message-only calls through the auth-aware API client.
+- `src/novapay-live.js`, `src/dashboard.js`, and `dashboard.html` now use the authenticated API in session mode; local fallback is explicitly labelled and gated to demo mode only.
+- Removed transaction DOM context and browser file-text ingestion from assistant requests. File button opens Documents.
+- Backend greets vague help requests deterministically without LLM tokens; UI shows route labels, hover reason, citation IDs, empty-evidence and user-safe errors.
+- Tests cover message-only request, demo gate, errors, route/citations, no browser context, greetings, currency exponents and labeled invoice/transaction/fee/ledger evidence.
+- Currency formatter derives minor-unit exponents from ISO currency metadata; deterministic SQL and FX answers return formatted amounts with currency codes.
 
 ## IN PROGRESS
-- Local code and migration 0017 complete; migration is not applied. No live invoice row was created or verified.
+- Money-unit changes and tests are committed locally as `5e11456` (`WIP-BROKEN:`) due the known no-store test failure. No push or LLM calls.
 
 ## NEXT STEPS
-1. Apply `supabase/migrations/0017_document_invoice_confirmation.sql` in the Supabase SQL Editor and confirm `applied`.
-2. Restart `npm start`; sign in as the fixed owner and open Documents.
-3. Open existing processed `Invoice_D_TEST-001.pdf`, fill Supplier email and review fields, click Confirm once; verify one draft appears in Invoices and linked document state.
-4. Repeat-click/retry the same confirmation and verify invoice row count stays one.
-5. Complete browser checks listed in the current task; do not upload or invoke Gemini.
+1. Review `git status --short` and stop; no live or LLM verification was requested for this change. Never push.
 
 ## USER ACTIONS PENDING
-- Apply migration 0017: Supabase Dashboard → project → SQL Editor → New query → paste the full contents of `supabase/migrations/0017_document_invoice_confirmation.sql` → Run → confirm `applied`.
-- Browser verification after apply: sign in as fixed owner; Dashboard → Documents → open already processed Invoice_D_TEST-001.pdf; leave Supplier email blank and click Confirm to verify inline error/toast without a request; enter a valid email and click once; open Invoices and verify one live draft; return and repeat confirmation only if it is available; verify count remains one. Check both light and dark themes.
+- None for this task.
 
 ## LIVE STATE
-- No Gemini requests, uploads, or live invoice confirmations performed.
-- Migration 0017 pending human application; migrations 0001–0016 previously applied.
-- No secrets or environment values recorded.
+- `/api/status`: HTTP 200, server reports authenticated mode, Supabase configured, AI configured.
+- Unauthenticated `POST /api/ai/chat` with only a harmless greeting: HTTP 401, `AUTH_REQUIRED`; this was a route probe, not a fixed-owner check.
+- No signed-in browser request log was available; current server process is listening on port 3000.
+- No users created; no LLM calls made; no `.env` values recorded.
 
 ## TEST STATE
 | Check | Status | Evidence |
 |---|---|---|
-| Focused confirmation/OCR/invoice tests | PASS | 33/33 |
-| Full `npm test` | FAIL | 177/178; known authenticated client no-store failure |
-| Migration syntax | PASS | 17/17 parsed; 0017 not live-applied |
-| Changed JS syntax | PASS | `node --check` all changed JS |
+| Focused assistant/evidence/FX/router/cache/injection suite | PASS | 51/51 |
+| `npm test` | FAIL | 189/190; known `authenticated API client bypasses conditional HTTP caching` no-store assertion |
+| `npm run check:migrations` | PASS | 17/17 parsed |
+| `node --check` changed JS | PASS | 8 files |
 | `git diff --check` | PASS | clean |
-| Protected-file diff vs origin/main | PASS | empty |
-| Existing sample confirmation and invoice row count | UNVERIFIED | Requires migration 0017 and browser action; no live mutation performed |
+| Protected-file diff vs origin/main | PASS | empty (67 protected paths) |
+| Currency exponent formatting (INR/JPY/KWD) | PASS | 13750 minor => 137.50 INR / 13750 JPY / 13.750 KWD |
+| Invoice evidence minor labels and formatting | PASS | `*_minor` plus `*_formatted`; no unlabelled total field |
+| Owner live questions | UNVERIFIED | not run; no LLM calls made |
 
 ## KNOWN ISSUES AND RISKS
-- Migration 0017 must be applied before the new confirmation endpoint can work against Supabase.
-- Full suite retains the known unrelated API `Cache-Control: no-store` failure.
-- Browser checks are pending; no visual/browser run was performed.
+- Full suite still has the previously known API no-store header test failure; this task did not alter that code.
+- Full suite retains the known API no-store header failure; money-unit changes do not touch that path.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; syntax/runtime errors roll back. Never edit an applied migration; add a new numbered file.
-- SECURITY DEFINER/posting RPCs must revoke execution from public, anon, authenticated and grant only service_role.
-- Never print `.env` values, keys, JWTs, or document content.
-- Never claim PASS for an unrun check.
+- Supabase SQL Editor runs inside one transaction; errors roll back everything. Never edit an applied migration; add a numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only service_role; verify ordinary-user JWT receives 403.
+- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
+- Audit log is insert-only with ON DELETE RESTRICT; cleanup journal entries, audit log, organizations, auth users in that order via the approved script.
+- PayPal Sandbox buyer must be US Personal; seller USD; use Visa; webhook ends `/api/webhook` and ID must match.
+- PayPal signature verification needs the raw body.
+- Never print `.env` values; use key names only.
 
 ## DO NOT
-- Do not push, merge, upload documents, or call Gemini in this task.
-- Do not edit protected design files or weaken tests.
+- Do not push, force-push, touch main, create users, call Gemini directly, or alter protected design files.
+- Do not weaken tests or commit `.env`.
+
+## RESUME COMMANDS
+- `git status --short`
+- `npm test`
+- `npm run check:migrations`

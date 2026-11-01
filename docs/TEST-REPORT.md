@@ -1289,3 +1289,30 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-01 | `npm test` on `fix-documents-confirm` | FAIL | 177 passed, 1 failed of 178; known `authenticated API client bypasses conditional HTTP caching` expects missing `Cache-Control: no-store`; parser passed 17/17.
 2026-11-01 | `npm run check:migrations` | PASS | 17/17 migrations parsed.
 2026-11-01 | `node --check` changed JS; `git diff --check origin/main...HEAD`; protected-file diff vs `origin/main` | PASS | Changed JS parses, whitespace clean, protected-file diff empty.
+2026-11-01 | Focused assistant/AI suite (first run) | FAIL | 29 passed, 1 failed; VM cross-realm deepStrictEqual mismatch in request-shape assertion; implementation payload shape matched.
+2026-11-01 | `node --test server/test/assistant-client.test.js server/test/ai.test.js server/test/ai-router.test.js server/test/ai-control.test.js server/test/ai-cache.test.js` | PASS | 30 passed, 0 failed; auth-aware payload `{message}` only, explicit demo fallback gate, errors, greetings, prompt-injection, routing, cache and budgets.
+2026-11-01 10:49 IST | `npm test` | FAIL | 295:ℹ tests 184;297:ℹ pass 183;298:ℹ fail 1;
+2026-11-01 10:53 IST | `npm run check:migrations` | PASS | exit=0; 0015_documents_rag.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK;0016_document_search_and_delete.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK;0017_document_invoice_confirmation.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK;
+2026-11-01 10:55 IST | `node --check` changed JS | PASS | 8 files; exit=0.
+2026-11-01 10:56 IST | `git diff --check` | PASS | exit=0.
+2026-11-01 10:58 IST | protected-file diff vs origin/main | PASS | empty.
+2026-11-01 11:01 IST | Live `/api/status` and unauthenticated `/api/ai/chat` probe | PASS | status 200; unauthenticated chat 401 AUTH_REQUIRED; no owner token used.
+2026-11-01 11:01 IST | Fixed-owner FX question (`Convert 5000 INR to USD`) and `ai_usage` zero-LLM check | UNVERIFIED | browser session unavailable; request not sent.
+2026-11-01 11:01 IST | Fixed-owner SQL question (`Show refunds this month`) and `ai_usage` zero-LLM check | UNVERIFIED | browser session unavailable; request not sent.
+2026-11-01 11:01 IST | Optional single LLM question | UNVERIFIED | not called; owner session unavailable.
+2026-11-01 11:07 IST | `git diff --check` final | PASS | staged and unstaged clean.
+2026-11-01 11:28 IST | Focused AI/evidence/FX/router/cache/injection tests | FAIL | ℹ tests 51;ℹ pass 48;ℹ fail 3;
+2026-11-01 11:32 IST | Focused AI/evidence/FX/router/cache/injection tests (rerun) | FAIL | ℹ tests 51;ℹ pass 50;ℹ fail 1;
+2026-11-01 11:34 IST | Focused AI/evidence/FX/router/cache/injection tests (final) | PASS | ℹ tests 51;ℹ pass 51;ℹ fail 0;
+2026-11-01 11:35 IST | `npm test` | FAIL | ℹ tests 190;ℹ pass 189;ℹ fail 1;
+2026-11-01 11:36 IST | `npm run check:migrations` | PASS | 0017_document_invoice_confirmation.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+2026-11-01 11:37 IST | `node --check` money/evidence/FX JS | PASS | 8 files; exit=0.
+2026-11-01 11:38 IST | `git diff --check` | PASS | exit=0.
+2026-11-01 11:39 IST | protected-file diff vs origin/main | PASS | empty across tracked protected paths.
+2026-11-01 11:42 IST | final `git diff --check` | PASS | exit=0.
+2026-11-01 11:51 IST | Secret scan `origin/main..HEAD` | PASS | 0 matching files/lines.
+2026-11-01 11:52 IST | `npm test` | FAIL | ℹ tests 190;ℹ pass 189;ℹ fail 1;
+2026-11-01 11:53 IST | `npm run check:migrations` | PASS | 0017_document_invoice_confirmation.sql: PostgreSQL 17 SQL and PL/pgSQL syntax OK
+2026-11-01 11:53 IST | `node --check` branch JS | PASS | exit=0.
+2026-11-01 11:54 IST | `git diff --check` | PASS | exit=0.
+2026-11-01 11:54 IST | protected-file diff | PASS | empty.

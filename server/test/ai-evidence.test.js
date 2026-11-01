@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildAIEvidence, createReadOnlyAITools, planEvidenceTools } from '../src/ai/evidence.js';
+import { currencyMinorUnitExponent, decimalAmountToMinor, formatMinorAmount } from '../src/ai/money-units.js';
+
+test('minor-unit formatting uses ISO currency exponents for two-, zero-, and three-decimal currencies', () => {
+  assert.equal(formatMinorAmount(13750, 'INR'), '137.50 INR');
+  assert.equal(formatMinorAmount(13750, 'JPY'), '13750 JPY');
+  assert.equal(formatMinorAmount(13750, 'KWD'), '13.750 KWD');
+  assert.equal(currencyMinorUnitExponent('JPY'), 0);
+  assert.equal(currencyMinorUnitExponent('KWD'), 3);
+  assert.equal(String(decimalAmountToMinor('1.234', 'KWD')), '1234');
+  assert.throws(() => decimalAmountToMinor('1.234', 'USD'), /precision/);
+});
 
 function makeRepos() {
   const calls = [];
@@ -80,6 +91,43 @@ test('invoice evidence drops names, emails, free-text descriptions, and model in
   assert.doesNotMatch(text, /José Núñez|jose@example|ignore previous instructions|refund everything/);
   assert.equal(result.ids.includes('invoice-a-1'), true);
   assert.equal(repos.calls[0].orgId, 'org-a');
+});
+
+test('invoice evidence labels integer minor units and includes formatted totals without a bare total field', async () => {
+  const repos = makeRepos();
+  repos.invoices.list = async () => [{ id: 'invoice-inr', state: 'draft', currency: 'INR', subtotalMinor: 12500, taxMinor: 1250, totalMinor: 13750 }];
+  const result = await buildAIEvidence({ repos, orgId: 'org-a', intent: 'invoice_status', message: 'show invoices' });
+  const invoice = result.records[0];
+  assert.equal(invoice.subtotal_minor, '12500');
+  assert.equal(invoice.subtotal_formatted, '125.00 INR');
+  assert.equal(invoice.tax_minor, '1250');
+  assert.equal(invoice.tax_formatted, '12.50 INR');
+  assert.equal(invoice.total_minor, '13750');
+  assert.equal(invoice.total_formatted, '137.50 INR');
+  assert.equal(Object.hasOwn(invoice, 'total'), false);
+  for (const [key, value] of Object.entries(invoice)) {
+    if (value === '13750') assert.equal(key, 'total_minor');
+  }
+});
+
+test('transaction, fee, and ledger evidence pairs labeled minors with formatted currency amounts', async () => {
+  const repos = makeRepos();
+  const tools = createReadOnlyAITools({ repos, orgId: 'org-a' });
+  const result = await tools.execute([
+    { name: 'get_transactions', args: {} },
+    { name: 'get_fee_breakdown', args: {} },
+    { name: 'get_ledger_summary', args: {} },
+  ]);
+  const transaction = result.results[0].result[0];
+  const fee = result.results[1].result[0];
+  const ledger = result.results[2].result;
+  assert.equal(transaction.amount_minor, '5000');
+  assert.equal(transaction.amount_formatted, '50.00 USD');
+  assert.equal(transaction.fee_minor, '100');
+  assert.equal(transaction.fee_formatted, '1.00 USD');
+  assert.equal(fee.fee_formatted, '1.00 USD');
+  assert.equal(ledger.debit_formatted, '50.00 USD');
+  assert.equal(ledger.accounts[0].debit_formatted, '50.00 USD');
 });
 
 test('explanation evidence uses static allow-listed tools and extracts period filters', () => {
