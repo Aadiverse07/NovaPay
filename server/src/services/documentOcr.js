@@ -43,6 +43,39 @@ function cents(value) {
   return negative ? -minor : minor;
 }
 
+function evidenceKey(value) {
+  return String(value ?? '').normalize('NFKC').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+export function computeDocumentFieldConfidence(fields) {
+  const text = evidenceKey(fields.documentText || '');
+  const hasEvidence = (value) => Boolean(value) && evidenceKey(value).length > 0 && text.includes(evidenceKey(value));
+  const model = fields.confidence || {};
+  const confidence = {};
+  for (const key of ['vendorName', 'invoiceNumber']) {
+    const present = typeof fields[key] === 'string' && fields[key].trim().length > 0;
+    const matched = present && hasEvidence(fields[key]);
+    confidence[key] = { score: matched ? 0.9 : present ? Math.min(model[key] || 0, 0.7) : 0,
+      basis: matched ? 'present and matched in OCR text; model-reported, unverified' : 'model-reported, unverified' };
+  }
+  const arithmeticPassed = fields.subtotal !== null && fields.tax !== null && fields.total !== null
+    && cents(fields.subtotal) + cents(fields.tax) === cents(fields.total);
+  for (const key of ['subtotal', 'tax', 'total']) {
+    const value = fields[key];
+    const checked = arithmeticPassed && value !== null;
+    confidence[key] = { score: checked ? 1 : value !== null && hasEvidence(value) ? Math.min(model[key] || 0, 0.7) : 0,
+      basis: checked ? 'verified by arithmetic' : 'model-reported, unverified' };
+  }
+  const date = fields.invoiceDate;
+  const dateValid = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && isCalendarDate(date);
+  confidence.invoiceDate = { score: dateValid && hasEvidence(date) ? 0.9 : dateValid ? Math.min(model.invoiceDate || 0, 0.7) : 0,
+    basis: dateValid && hasEvidence(date) ? 'calendar date matched in OCR text' : 'model-reported, unverified' };
+  const currencyValid = typeof fields.currency === 'string' && supportedCurrencies.has(fields.currency);
+  confidence.currency = { score: currencyValid && hasEvidence(fields.currency) ? 0.9 : currencyValid ? Math.min(model.currency || 0, 0.7) : 0,
+    basis: currencyValid && hasEvidence(fields.currency) ? 'ISO currency matched in OCR text' : 'model-reported, unverified' };
+  return confidence;
+}
+
 function isCalendarDate(value) {
   if (value === null) return true;
   const [year, month, day] = value.split('-').map(Number);
@@ -211,6 +244,7 @@ export function validateDocumentExtraction(value) {
   }
   return {
     fields,
+    confidenceReview: computeDocumentFieldConfidence(fields),
     validation: {
       fields: 'valid',
       arithmetic: checks.length === 0 ? 'unverified' : checks.every((check) => check.passed) ? 'passed' : 'warning',

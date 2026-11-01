@@ -52,18 +52,30 @@ test('document OCR reports field type and rule without including the rejected va
 
 test('document OCR normalizes harmless JSON wrappers, amount formatting, rupee markers, and month dates', () => {
   const wrapped = `OCR result follows:\n\`\`\`json\n${JSON.stringify({
-    ...valid, invoiceDate: '02 Oct 2026', currency: null, subtotal: '₹32,500.00', tax: '₹0.00', total: '₹32,500.00', lineItems: [],
+    ...valid, documentText: 'Sample Vendor invoice INV-100 02 Oct 2026 INR 32500.00 0.00 32500.00', invoiceDate: '02 Oct 2026', currency: null, subtotal: '₹32,500.00', tax: '₹0.00', total: '₹32,500.00', lineItems: [],
   })}\n\`\`\`\nEnd of result.`;
   const result = validateDocumentExtraction(wrapped);
   assert.equal(result.fields.invoiceDate, '2026-10-02');
   assert.equal(result.fields.currency, 'INR');
   assert.equal(result.fields.subtotal, '32500.00');
   assert.equal(result.fields.total, '32500.00');
+  assert.equal(result.confidenceReview.total.score, 1);
+  assert.equal(result.confidenceReview.total.basis, 'verified by arithmetic');
+  assert.ok(result.confidenceReview.vendorName.score <= 0.9);
+  assert.match(result.confidenceReview.currency.basis, /matched in OCR text/);
 
   const numeric = validateDocumentExtraction({ ...valid, subtotal: 12, tax: 1, total: 13, lineItems: [{ description: 'Item', quantity: 2, unitPrice: 6, amount: 12 }] });
   assert.equal(numeric.fields.subtotal, '12');
   assert.equal(numeric.fields.lineItems[0].amount, '12');
   assert.equal(numeric.validation.arithmetic, 'passed');
+});
+
+test('OCR model confidence is capped when code cannot verify field evidence or arithmetic', () => {
+  const result = validateDocumentExtraction({ ...valid, total: '14.00', invoiceNumber: 'NOT-IN-TEXT', confidence: { ...valid.confidence, invoiceNumber: 1, total: 1 } });
+  assert.ok(result.confidenceReview.total.score <= 0.7);
+  assert.equal(result.confidenceReview.total.basis, 'model-reported, unverified');
+  assert.ok(result.confidenceReview.invoiceNumber.score <= 0.7);
+  assert.equal(result.confidenceReview.invoiceNumber.basis, 'model-reported, unverified');
 });
 
 test('document OCR keeps invalid currency and mismatched rupee marker visible for review', () => {

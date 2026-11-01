@@ -47,6 +47,14 @@ async function setup(t, overrides = {}) {
       if (name === 'reserve_ai_usage') return overrides.reservation || { allowed: true, usageId: 'usage-test-1' };
       if (name === 'complete_ai_usage') return true;
       if (name === 'search_document_chunks') return [];
+      if (name === 'confirm_document_invoice') {
+        if (!doc.extraction.confirmation) {
+          doc.extraction = { ...doc.extraction, confirmation: { confirmedBy: args.p_actor, invoiceDraftId: 'a0000000-0000-4000-8000-000000000303' } };
+          audit.push({ action: 'document.confirmed', entityId: documentId });
+          return { invoice_id: 'a0000000-0000-4000-8000-000000000303', state: 'draft', already_confirmed: false };
+        }
+        return { invoice_id: doc.extraction.confirmation.invoiceDraftId, state: 'draft', already_confirmed: true };
+      }
       if (name === 'delete_document' && overrides.deleteError) throw Object.assign(new Error('delete unavailable'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE' });
       if (name === 'delete_document') { const path = doc.storage_path; doc.status = 'deleted'; return path; }
       throw new Error(`unexpected rpc ${name}`);
@@ -205,15 +213,30 @@ test('viewer cannot process documents and malformed provider output stores safe 
   assert.equal(currencyBody.document.extraction.validation.arithmetic, 'passed');
 });
 
-test('accountant confirmation and rejection are org-scoped, state-checked, and audited; viewer cannot review', async (t) => {
+test('document confirmation creates one org-scoped invoice draft atomically and is idempotent; viewer cannot review', async (t) => {
   const confirm = await setup(t);
   confirm.doc.status = 'processed';
   assert.equal((await confirm.request('POST', '/confirm', 'viewer-token')).status, 403);
   assert.equal((await confirm.request('POST', '/confirm', 'accountant-token', {}, 'a0000000-0000-4000-8000-000000000099')).status, 403);
-  assert.equal((await confirm.request('POST', '/confirm', 'accountant-token', { invoiceDraftId: 'a0000000-0000-4000-8000-000000000303' })).status, 200);
+  const draftInput = { invoiceNumber: 'INV-100', customerName: 'Sample Vendor', customerEmail: 'ap@example.com', currency: 'USD', subtotal: '12.00', tax: '1.00', total: '13.00' };
+  const first = await confirm.request('POST', '/confirm', 'accountant-token', draftInput);
+  assert.equal(first.status, 200);
+  const firstBody = await first.json();
+  assert.equal(firstBody.invoice.id, 'a0000000-0000-4000-8000-000000000303');
+  assert.equal(firstBody.invoice.state, 'draft');
+  assert.equal(firstBody.alreadyConfirmed, false);
+  const second = await confirm.request('POST', '/confirm', 'accountant-token', draftInput);
+  assert.equal(second.status, 200);
+  assert.equal((await second.json()).alreadyConfirmed, true);
+  assert.equal(confirm.audit.filter((event) => event.action === 'document.confirmed').length, 1);
   assert.equal(confirm.doc.extraction.confirmation.confirmedBy, actorId);
   assert.equal(confirm.doc.extraction.confirmation.invoiceDraftId, 'a0000000-0000-4000-8000-000000000303');
-  assert.equal(confirm.audit.at(-1).action, 'document.confirmed');
+
+  const missingEmail = await setup(t); missingEmail.doc.status = 'processed';
+  const invalid = await missingEmail.request('POST', '/confirm', 'accountant-token', { ...draftInput, customerEmail: '' });
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json()).error.message, 'customerEmail is required or invalid.');
+  assert.equal(missingEmail.calls.some((call) => call.name === 'confirm_document_invoice'), false);
 
   const reject = await setup(t);
   const response = await reject.request('POST', '/reject', 'accountant-token', { reason: 'Unreadable scan' });

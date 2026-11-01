@@ -23,6 +23,28 @@
     return node;
   }
   function canWrite() { return roleLoaded && ["owner", "admin", "accountant"].includes(role); }
+  function reviewConfidence(fields, key) {
+    var model = fields.confidence && typeof fields.confidence[key] === "number" ? fields.confidence[key] : 0;
+    var normalize = function (value) { return String(value == null ? "" : value).normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""); };
+    var text = normalize(fields.documentText || "");
+    var value = fields[key], present = value != null && String(value).trim() !== "";
+    var inText = present && normalize(value) && text.includes(normalize(value));
+    if (["subtotal", "tax", "total"].includes(key)) {
+      var nums = [fields.subtotal, fields.tax, fields.total].map(Number);
+      var arithmetic = nums.every(Number.isFinite) && Math.round((nums[0] + nums[1]) * 100) === Math.round(nums[2] * 100);
+      if (arithmetic) return { score: 1, basis: "Verified by arithmetic" };
+    }
+    if (key === "invoiceDate" && present) {
+      var date = /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && new Date(value + "T00:00:00Z").toISOString().slice(0, 10) === value;
+      if (date && inText) return { score: 0.9, basis: "Calendar date matched in OCR text" };
+    }
+    if (key === "currency" && present) {
+      var known = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("currency") : ["USD", "EUR", "GBP", "INR", "CAD", "AUD", "JPY", "CHF", "SGD", "NZD"];
+      if (/^[A-Z]{3}$/.test(value) && known.includes(value) && inText) return { score: 0.9, basis: "ISO currency matched in OCR text" };
+    }
+    if ((key === "vendorName" || key === "invoiceNumber") && inText) return { score: 0.9, basis: "Matched in OCR text; model-reported, unverified" };
+    return { score: present && inText ? Math.min(model, 0.7) : 0, basis: "Model-reported, unverified" };
+  }
   function renderList() {
     var list = el("documents-list");
     var count = el("documents-count");
@@ -52,7 +74,7 @@
   }
   function field(panel, label, value, confidence, key, type) {
     var wrap = document.createElement("label");
-    wrap.className = "module-field";
+    wrap.className = "document-field-review";
     addText(wrap, "span", label);
     var input = document.createElement("input");
     input.type = type || "text";
@@ -60,7 +82,13 @@
     input.value = value == null ? "" : String(value);
     if (key === "total") { input.inputMode = "decimal"; input.required = true; }
     wrap.appendChild(input);
-    if (typeof confidence === "number") addText(wrap, "small", "OCR confidence " + Math.round(confidence * 100) + "%");
+    if (confidence) {
+      var badge = addText(wrap, "small", "Review confidence " + Math.round(confidence.score * 100) + "% · " + confidence.basis);
+      badge.className = "document-confidence";
+      badge.title = confidence.basis;
+      badge.setAttribute("aria-label", "Review confidence " + Math.round(confidence.score * 100) + " percent; " + confidence.basis);
+    }
+    var error = document.createElement("small"); error.className = "document-field-error"; error.dataset.errorFor = key; error.setAttribute("aria-live", "polite"); wrap.appendChild(error);
     panel.appendChild(wrap);
   }
   function renderReview(doc) {
@@ -70,7 +98,8 @@
     panel.replaceChildren();
     var extraction = doc.extraction || {};
     var fields = extraction.fields || extraction;
-    var confidence = fields.confidence || {};
+    var confidence = {};
+    ["vendorName", "invoiceNumber", "invoiceDate", "currency", "subtotal", "tax", "total"].forEach(function (key) { confidence[key] = reviewConfidence(fields, key); });
     addText(panel, "p", (doc.status || "unknown").toUpperCase() + " · review extracted fields before confirming.", "module-status");
     if (doc.duplicate_of || extraction.duplicateOf) addText(panel, "p", "Possible duplicate detected. Review the matching document before proceeding.", "status warn");
     var warnings = extraction.validation && extraction.validation.warnings || [];
@@ -80,6 +109,8 @@
     else if (extraction.validation && extraction.validation.arithmetic === "unverified") addText(panel, "p", "Arithmetic could not be verified from the extracted fields.", "status info");
     if (extraction.confirmation) {
       addText(panel, "p", "Confirmed · invoice draft created. Nothing was sent.", "status success");
+      var draftId = extraction.confirmation.invoiceDraftId;
+      if (draftId) { var link = document.createElement("a"); link.href = "#invoices"; link.className = "btn btn--ghost document-draft-link"; link.textContent = "Open invoice draft"; link.addEventListener("click", function () { document.dispatchEvent(new CustomEvent("novapay:invoice-created", { detail: { invoiceId: draftId } })); }); panel.appendChild(link); }
       return;
     }
     if (doc.status !== "processed" || !canWrite()) {
@@ -98,7 +129,7 @@
     actions.className = "module-inline";
     var confirm = document.createElement("button");
     confirm.type = "button"; confirm.className = "btn btn--primary"; confirm.textContent = "Confirm and create invoice draft";
-    confirm.addEventListener("click", function () { confirmDocument(doc, panel); });
+    confirm.addEventListener("click", function () { confirmDocument(doc, panel, confirm); });
     var reject = document.createElement("button");
     reject.type = "button"; reject.className = "btn btn--ghost"; reject.textContent = "Reject document";
     reject.addEventListener("click", function () { rejectDocument(doc); });
@@ -147,23 +178,36 @@
       await load();
     } finally { busy = false; }
   }
-  async function confirmDocument(doc, panel) {
+  async function confirmDocument(doc, panel, button) {
     if (busy || createdDraftId) return;
     var value = function (key) { return panel.querySelector('[data-field="' + key + '"]').value.trim(); };
-    var total = value("total"), currency = value("currency").toUpperCase(), invoiceNumber = value("invoiceNumber");
-    if (!/^[A-Z]{3}$/.test(currency) || !/^\d{1,10}(?:\.\d{1,2})?$/.test(total) || Number(total) <= 0 || !invoiceNumber || !value("vendorName") || !value("customerEmail")) {
-      status("Review supplier, invoice number, currency, positive total, and supplier email before confirming.", "warn"); return;
-    }
+    var names = { vendorName: "Supplier", invoiceNumber: "Invoice number", currency: "Currency", subtotal: "Subtotal", tax: "Tax", total: "Invoice total", customerEmail: "Supplier email" };
+    var errors = [];
+    Object.keys(names).forEach(function (key) {
+      var input = panel.querySelector('[data-field="' + key + '"]'), error = panel.querySelector('[data-error-for="' + key + '"]');
+      if (error) error.textContent = "";
+      var current = input.value.trim(), invalid = !current;
+      if (key === "customerEmail" && current) invalid = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(current);
+      if (key === "currency" && current) { var supported = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("currency") : ["USD", "EUR", "GBP", "INR", "CAD", "AUD", "JPY", "CHF", "SGD", "NZD"]; invalid = !/^[A-Za-z]{3}$/.test(current) || !supported.includes(current.toUpperCase()); }
+      if (["subtotal", "tax", "total"].includes(key) && current) invalid = !/^\d{1,10}(?:\.\d{1,2})?$/.test(current);
+      if (key === "total" && current && Number(current) <= 0) invalid = true;
+      if (invalid) { if (error) error.textContent = names[key] + (current ? " is invalid." : " is required."); input.setAttribute("aria-invalid", "true"); errors.push(names[key]); }
+      else input.removeAttribute("aria-invalid");
+    });
+    if (errors.length) { status(errors[0] + (errors.length === 1 ? " needs attention." : " and " + (errors.length - 1) + " other field(s) need attention."), "warn"); var toastNode = el("dashboard-toast"); if (toastNode) { toastNode.textContent = names[Object.keys(names).find(function (key) { return panel.querySelector('[data-error-for="' + key + '"]').textContent; })] + " is required or invalid."; toastNode.classList.add("show"); setTimeout(function () { toastNode.classList.remove("show"); }, 3200); } return; }
+    var currency = value("currency").toUpperCase(), invoiceNumber = value("invoiceNumber");
     busy = true;
+    if (button) button.disabled = true;
     try {
-      var draft = await api.request("/api/invoices", { method: "POST", body: { invoiceNumber: invoiceNumber.slice(0, 25), customerName: value("vendorName"), customerEmail: value("customerEmail"), currency: currency, lines: [{ description: ("Invoice " + invoiceNumber).slice(0, 200), quantity: "1", unitPrice: total, taxRate: "0" }] } });
-      createdDraftId = draft.invoice && draft.invoice.id || "created";
-      await api.request("/api/documents/" + encodeURIComponent(doc.id) + "/confirm", { method: "POST", body: { invoiceDraftId: createdDraftId } });
+      var result = await api.request("/api/documents/" + encodeURIComponent(doc.id) + "/confirm", { method: "POST", body: { invoiceNumber: invoiceNumber.slice(0, 25), customerName: value("vendorName"), customerEmail: value("customerEmail"), currency: currency, subtotal: value("subtotal"), tax: value("tax"), total: value("total") } });
+      createdDraftId = result.invoice && result.invoice.id || "";
+      if (!createdDraftId) throw new Error("The server did not return the invoice draft.");
+      document.dispatchEvent(new CustomEvent("novapay:invoice-created", { detail: { invoiceId: createdDraftId } }));
       status("Invoice draft created and document confirmed. Nothing was sent.", "success");
       await load();
     } catch (error) {
-      status((createdDraftId ? "Draft created; document confirmation did not finish. Do not retry draft creation. " : "Could not create a draft. ") + (error.message || ""), "warn");
-    } finally { busy = false; }
+      status((error.message || "Could not create the invoice draft.") + " Nothing was sent.", "warn");
+    } finally { busy = false; if (button) button.disabled = false; }
   }
   async function rejectDocument(doc) {
     if (busy) return;

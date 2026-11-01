@@ -1,10 +1,13 @@
 ## RESUME POINTER
-- Current task: pushed login/OCR fix on `fix-ocr-validation`; PR #9 is OPEN into `main`. Pushed head `3e0ff49`; no merge and no further push authorized/performed.
-- DONE: Supabase login/session workspace restore/fresh Documents role; OCR field/rule diagnostics; safe JSON/amount/date normalization; missing currency is review warning; invalid currency and wrong totals remain flagged; failed same-hash rows no longer block upload, rejected rows still count.
-- TESTS: focused OCR/document suite 18/18 PASS; `npm test` 174/175 with known API no-store failure; migrations 16/16 and JS/diff/protected checks PASS.
-- LIVE C: read-only finding was `currency: required_when_amounts_present`; row remains failed because user prohibited uploads. No upload or reprocess was performed. Re-upload after PR review should process with currency warning; reviewer must choose currency before invoice draft.
-- NEXT: review PR #9. Later, if desired, re-upload existing C once and verify warning. Keep no-push instruction until separately authorized.
-- PENDING: human review of PR; optional browser verification/re-upload after review.
+- Current task: fix document confirm, invoice draft persistence, and field confidence on `fix-documents-confirm`.
+- Last completed: code/tests/docs updated; local commit pending; no push.
+- Root cause: required Supplier email was blank; UI silently exited client-side before any request. Previous confirm route only marked confirmation.
+- State: migration 0017 created but NOT applied; live invoice row count UNVERIFIED; no document upload/Gemini call/live confirm.
+- Checks: focused 33/33 PASS; `npm test` 177/178 (known no-store failure); migrations 17/17 parse; changed JS syntax/diff/protected diff PASS.
+- Next: apply migration 0017; restart server; browser-test blank email error then confirm already processed sample once; verify one linked draft and invoices refresh; check retry idempotency/theme.
+- Pending human action: Supabase Dashboard → SQL Editor → New query → paste `supabase/migrations/0017_document_invoice_confirmation.sql` → Run → reply `applied`.
+- Do not push, merge, upload, or call Gemini.
+
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
 - T1: added `supabase/migrations/0006_fund_transparency.sql`; static checks and docs; commits `92525db`, `0a0ab25`. User confirmed 0006 applied; ordinary owner JWT reads of 11 tables returned 200 and direct writes returned 403.
@@ -3625,3 +3628,88 @@ ABOUT TO commit the post-push journal result locally so the resume log remains c
 RESULT: local worklog checkpoint committed. NEXT: verify final status and hashes; no push.
 ABOUT TO finalize the last journal line in a local-only checkpoint; branch push is already complete.
 RESULT: final journal update recorded. NEXT: commit WORKLOG.md and verify clean status.
+2026-11-01 00:00 IST | RESULT: PASS; cwd is NovaPay, current branch fix-ocr-validation, worktree clean, branch is not merged into origin/main; fetched origin. NEXT: log intent and create fix-documents-confirm from fix-ocr-validation.
+2026-11-01 00:00 IST | ABOUT TO create fix-documents-confirm from unmerged fix-ocr-validation, as requested; preserve existing branch commits.
+2026-11-01 00:00 IST | RESULT: PASS; created and switched to fix-documents-confirm. NEXT: inspect docs pointer and locate confirmation/confidence files.
+ABOUT TO inspect the resume pointer and locate document confirm, invoice, and confidence code before editing.
+RESULT: inspection complete. NEXT: read only the matching UI and route/service sections.
+ABOUT TO inspect focused Documents UI and server confirm/invoice code; avoid provider calls and document content.
+RESULT: focused files located/read. NEXT: inspect invoice service/repository and styles/tests to identify minimal safe implementation.
+ABOUT TO read invoice route/repository schemas, docs tests, and existing module styling selectors.
+RESULT: invoice schema, tests and styles inspected. NEXT: inspect exact invoice builder and routes test doubles, then implement draft creation atomically/idempotently.
+ABOUT TO inspect invoice persistence and migrations for a document link or idempotent RPC; this determines the smallest safe backend change.
+RESULT: persistence inspection complete. NEXT: inspect migration and route harness details, then implement tests and transaction/RPC if schema supports it.
+ABOUT TO inspect invoice table/RPC SQL and document test fixture dependencies to design an additive transaction-safe migration.
+RESULT: schema and test fixture inspection complete. NEXT: implement backend confirm RPC migration, route, UI inline validation/confidence/styling, and tests.
+ABOUT TO inspect audit_log schema, migrations parser numbering, and invoice tests before writing additive migration 0017.
+RESULT: audit schema and migration tooling located. NEXT: review exact audit columns and route test invocation, then implement.
+ABOUT TO read audit schema and document delete RPC to ensure source-document foreign key will not break the existing cascade.
+RESULT: schema read complete. NEXT: append 0017 linking invoice drafts to documents with delete-safe nulling and atomic audited confirmation.
+ABOUT TO inspect invoice response mapper and repository test harness; then edit implementation and tests.
+RESULT: mapper/harness inspected. NEXT: implement server-confirmed draft flow and confidence computation.
+ABOUT TO read fixture setup and app route assembly plus module CSS tokens for precise patches.
+RESULT: patch context gathered. NEXT: edit route/repository/migration/UI/confidence/tests/docs/styles.
+ABOUT TO inspect Documents and Invoices view refresh wiring and migration parser conventions before implementation.
+RESULT: view and parser patterns checked. NEXT: edit.
+ABOUT TO inspect invoice view refresh trigger and API client event contract.
+RESULT: invoice view refresh pattern identified. NEXT: make source changes.
+ABOUT TO locate invoice module source through file inventory; previous guessed path does not exist.
+RESULT: invoice module source located from inventory/search. NEXT: read exact refresh functions.
+ABOUT TO read invoice load/refresh implementation in src/modules.js for the post-confirm refresh.
+RESULT: invoice view uses live API in module bundle. NEXT: wire refresh to confirmed draft event.
+ABOUT TO inspect invoice data initialization in src/modules.js to verify whether rows are seed or API-backed.
+RESULT: invoice data source checked. NEXT: replace seed persistence only if API path is absent.
+ABOUT TO read invoice HTML rows and relevant module initialization boundaries for replacing demo rows with live API data.
+RESULT: invoice table is static markup and module currently adds local rows. NEXT: replace with API render/loading/empty states.
+ABOUT TO inspect currency validation and OCR normalization output to add code-derived confidence without trusting model scores.
+RESULT: OCR normalizer read. NEXT: implement backend confidence helper and coverage tests.
+ABOUT TO read validateDocumentExtraction return shape and the end of document OCR tests.
+RESULT: confidence insertion points known. NEXT: implement.
+ABOUT TO reread exact confirm route text after patch context mismatch; no files changed by the failed patch.
+RESULT: exact patch context collected. NEXT: apply the confirm route change.
+ABOUT TO inspect phase3 service tests import and end sections for the server-side totals builder test.
+RESULT: test insertion point found. NEXT: add totals and confidence coverage.
+ABOUT TO inspect invoice modal markup and script order before replacing sample rows with API-rendered rows.
+RESULT: invoice modal markup and script order checked. NEXT: patch HTML and add live invoice module.
+ABOUT TO locate existing document confirmation and invoice contract docs for targeted updates.
+RESULT: documentation sections located. NEXT: update confirmation semantics and draft link contract.
+ABOUT TO read surrounding API and frontend contract paragraphs before replacing outdated two-call behavior.
+RESULT: docs text read. NEXT: write current one-call confirmation and confidence contract.
+ABOUT TO run focused document/OCR/invoice tests after the confirm and confidence changes; no live API or Gemini calls.
+RESULT: focused test command finished; inspect test output above for failures. NEXT: fix failures, then run migration parser and complete suite.
+RESULT: PASS; focused suite 33/33, covering atomic confirm route, missing-email response, idempotent retry, computed confidence, migration text, and server totals. NEXT: run full npm test and migration syntax check.
+ABOUT TO run npm test and npm run check:migrations after focused tests; tests use fixtures only and make no Gemini/live calls.
+RESULT: npm test command completed; record exact totals/failure from output above. NEXT: run the explicit migration check, JS syntax checks, whitespace, and protected-file diff.
+RESULT: FAIL as expected; npm test 177/178, single known failure server/test/api-client.test.js: missing Cache-Control no-store. NEXT: run explicit migration parser, syntax, whitespace, protected diff checks.
+ABOUT TO run npm run check:migrations for all numbered SQL files, including new 0017.
+RESULT: migration parser command completed; 0017 included. NEXT: node --check changed JavaScript.
+ABOUT TO run node --check on every changed JavaScript file.
+RESULT: PASS; node --check succeeded for all changed JS files. NEXT: whitespace and protected-file diff checks.
+ABOUT TO run git diff --check and compare protected files against origin/main.
+RESULT: PASS; whitespace clean and protected-file diff empty. NEXT: document results, inspect final diff, then local WIP commit.
+ABOUT TO inspect current context and append-only log tails plus changed-file summary before documenting and committing.
+RESULT: continuity files and diff inventory inspected. NEXT: append test/decision records and rewrite concise CONTEXT/RESUME POINTER.
+ABOUT TO update append-only test/decision logs and rewrite CONTEXT plus the WORKLOG RESUME POINTER with actual test outcomes and migration status.
+
+2026-11-01 10:32 IST | RESULT: PASS; TEST-REPORT/DECISIONS appended; CONTEXT rewritten; RESUME POINTER updated. NEXT: inspect final diff, run final checks if edits require them, then WIP-commit locally.
+ABOUT TO rerun npm test after final confidence label/calculation adjustment.
+RESULT: npm test rerun complete; inspect exact pass/fail totals above. NEXT: rerun explicit migration parser, syntax, whitespace, and protected-file checks.
+ABOUT TO rerun npm run check:migrations after final changes.
+RESULT: migration check complete. NEXT: run node --check changed JS and final diff checks.
+RESULT: FAIL; rerun remained 177/178 with the single known no-store assertion; all migration files parse. NEXT: run final syntax/diff checks and review files before commit.
+ABOUT TO run final node --check, git diff --check, protected diff, and inspect the changed-file summary.
+RESULT: PASS; final JS syntax and whitespace checks clean; protected diff empty. NEXT: append final test record, review sensitive paths/staged state, then WIP-commit only task files.
+ABOUT TO review the confirmation RPC, route response, and browser form wiring for idempotence and payload alignment.
+RESULT: final implementation review complete. NEXT: record final test rerun, stage only explicit project files, commit locally, and report migration/browser pending.
+ABOUT TO read the remaining stale API contract line before correcting it.
+RESULT: exact paragraph read. NEXT: replace it with current server-atomic confirmation behavior.
+ABOUT TO run the required final full suite after the last form, contract and validation edits.
+RESULT: final suite complete; record exact totals and known failure from output above. NEXT: final explicit migration, syntax and diff checks, then update log and commit.
+ABOUT TO run final JS syntax and whitespace checks after the last live-invoice view adjustment.
+RESULT: PASS; all changed JS syntax valid, diff whitespace clean, protected-file diff empty. NEXT: append latest run record, verify secret staging by filenames only, commit locally.
+ABOUT TO run npm test once more after final invoices-live.js behavior change; this makes the recorded suite match the committed code.
+RESULT: latest npm test complete; record exact summary above. NEXT: append final test record and commit the implementation locally.
+ABOUT TO append the latest full-suite result and perform final syntax/whitespace/protected checks before the local checkpoint.
+RESULT: PASS; final changed-JS syntax and whitespace checks clean, protected diff empty. NEXT: verify branch, no staged/tracked .env, then stage explicit files and local WIP commit.
+ABOUT TO verify branch and secret-safe staging state; stage only the named implementation/docs/test files and create a local WIP-BROKEN checkpoint because npm test retains one known failure.
+ABOUT TO stage only task files; no .env path is included.

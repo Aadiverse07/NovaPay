@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { convertMinorUnits, createFxService } from '../src/services/fx.js';
-import { buildInvoiceDraft, decideInvoiceSend, extractPayPalInvoiceId } from '../src/services/invoices.js';
+import { buildDocumentInvoiceDraft, buildInvoiceDraft, decideInvoiceSend, extractPayPalInvoiceId } from '../src/services/invoices.js';
 import { reportCsvCell, reportTotals } from '../src/routes/reports.js';
 import { createApp } from '../src/app.js';
 import { createRepositories } from '../src/repos/memory.js';
@@ -9,6 +9,13 @@ import { createRepositories } from '../src/repos/memory.js';
 test('FX conversion uses decimal integer arithmetic and half-up minor-unit rounding',()=>{
   assert.equal(convertMinorUnits(1001,'1.2345'),1236);
   assert.throws(()=>convertMinorUnits(100,'1e2'));
+});
+
+test('document invoice draft computes totals on the server and rejects a mismatched total',()=>{
+  const draft=buildDocumentInvoiceDraft({invoiceNumber:'INV-100',customerName:'Sample Vendor',customerEmail:'ap@example.com',currency:'USD',subtotal:'12.00',tax:'1.00',total:'13.00'},'actor');
+  assert.equal(draft.invoice.subtotal_minor,1200);assert.equal(draft.invoice.tax_minor,100);assert.equal(draft.invoice.total_minor,1300);
+  assert.equal(draft.lines.reduce((sum,line)=>sum+line.line_total_minor,0),1300);
+  assert.throws(()=>buildDocumentInvoiceDraft({invoiceNumber:'INV-100',customerName:'Sample Vendor',customerEmail:'ap@example.com',currency:'USD',subtotal:'12.00',tax:'1.00',total:'14.00'},'actor'),(error)=>error.code==='DOCUMENT_TOTAL_MISMATCH');
 });
 
 test('FX service caches provider rates and returns source, timestamp, label, and separate fees',async()=>{
