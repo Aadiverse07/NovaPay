@@ -143,6 +143,7 @@ test('Phase 3 routes return tenant-scoped FX, report, and recalculated invoice s
   const repos=createRepositories();
   repos.reports.rows=async()=>[{org_id:'a0000000-0000-4000-8000-000000000001',period:'2026-10-01',currency:'USD',code:'4000',name:'Sales Revenue',account_type:'revenue',amount_minor:'10000'}];
   repos.invoices.createDraft=async(_org,invoice,lines)=>({id:'00000000-0000-4000-8000-000000000001',...invoice,subtotalMinor:invoice.subtotal_minor,taxMinor:invoice.tax_minor,totalMinor:invoice.total_minor,lines});
+  repos.invoices.createDraftIdempotent=async(orgId,_key,invoice,lines)=>({invoice:await repos.invoices.createDraft(orgId,invoice,lines),replayed:false});
   const config={PORT:3000,STATIC_DIR:process.cwd(),hasPayPal:true,hasAI:false,hasSupabase:true,SUPABASE_URL:'https://example.supabase.co',SUPABASE_ANON_KEY:'test-public',SUPABASE_SERVICE_ROLE_KEY:'test-server'};
   const org='a0000000-0000-4000-8000-000000000001';
   const identity={async verifyToken(token){return ['ok','viewer'].includes(token)?{id:token==='viewer'?'viewer-user':'owner'}:null;},async membership(userId,orgId){return orgId===org&&['owner','viewer-user'].includes(userId)?{role:userId==='viewer-user'?'viewer':'owner',org_id:org,user_id:userId}:null;}};
@@ -159,8 +160,8 @@ test('Phase 3 routes return tenant-scoped FX, report, and recalculated invoice s
     const invalidReport=await call('/api/reports/profit-and-loss?from=2026-11-01&to=2026-10-01');assert.equal(invalidReport.status,400);
     const viewerInvoice=await call('/api/invoices',{method:'POST',token:'viewer',body:JSON.stringify({})});assert.equal(viewerInvoice.status,403);
     const invalidInvoice=await call('/api/invoices',{method:'POST',body:JSON.stringify({invoiceNumber:'bad',lines:[]})});assert.equal(invalidInvoice.status,400);
-    const invoice=await call('/api/invoices',{method:'POST',body:JSON.stringify({invoiceNumber:'INV-T',customerName:'Test Customer',customerEmail:'customer@example.test',currency:'USD',subtotalMinor:1,totalMinor:1,lines:[{description:'Service',quantity:'1',unitPrice:'12.00'}]})});
+    const invoice=await call('/api/invoices',{method:'POST',headers:{'Idempotency-Key':'c0000000-0000-4000-8000-000000000003'},body:JSON.stringify({invoiceNumber:'INV-T',customerName:'Test Customer',customerEmail:'customer@example.test',currency:'USD',issueDate:'2026-11-01',dueDate:'2026-11-15',subtotalMinor:1,totalMinor:1,lines:[{description:'Service',quantity:'1',unitPrice:'12.00'}]})});
     const invoiceBody=await invoice.json();assert.equal(invoice.status,201);assert.equal(invoiceBody.invoice.totalMinor,1200);
-    const tooLong=await call('/api/invoices',{method:'POST',body:JSON.stringify({invoiceNumber:'X'.repeat(26),customerName:'Test Customer',customerEmail:'customer@example.test',currency:'USD',lines:[{description:'Service',quantity:'1',unitPrice:'1.00'}]})});assert.equal(tooLong.status,400);
+    const tooLong=await call('/api/invoices',{method:'POST',headers:{'Idempotency-Key':'c0000000-0000-4000-8000-000000000004'},body:JSON.stringify({invoiceNumber:'X'.repeat(26),customerName:'Test Customer',customerEmail:'customer@example.test',currency:'USD',issueDate:'2026-11-01',dueDate:'2026-11-15',lines:[{description:'Service',quantity:'1',unitPrice:'1.00'}]})});assert.equal(tooLong.status,400);
   }finally{await new Promise((resolve)=>server.close(resolve));}
 });

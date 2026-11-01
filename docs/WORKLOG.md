@@ -1,9 +1,9 @@
 ## RESUME POINTER
-- Current task: fix minor-unit money values in assistant evidence and deterministic answers on `fix-ai-assistant`.
-- Last finished: exponent-aware amount formatter; invoice, transaction, refund, fee and ledger evidence now pairs labeled `*_minor` integers with `*_formatted` currency strings; prompt documents the convention; SQL and FX answers use the same formatter.
-- Current state: code/tests/docs checkpointed locally as `5e11456`; no LLM call, no push, no `.env` tracked.
-- Tests: focused AI/evidence/FX/router/cache/injection 51/51 PASS; `npm test` 189/190, only known no-store header failure; migrations 17/17; `node --check` 8 JS files PASS; `git diff --check` PASS; protected-file diff empty across 67 paths.
-- Next: inspect `git status --short`; report result and stop. Do not push or call an LLM.
+- Current task: invoice detail View and PDF download on `fix-invoice-view`, based on `fix-invoices-crud` at `f113f54`; local commit `da8e4a7`; no push.
+- Last finished: org-scoped read-only invoice detail, server-generated PDF download, status history, invoice-ID-only audit, per-user rate limit and authenticated blob save; no migration or dependency change.
+- Checks: focused PDF/repository tests 18/18 PASS; `npm test` 200/201 (sole known no-store assertion failure); migrations 18/18, changed JS syntax 10/10, `git diff --check` PASS, protected-file diff empty.
+- Human pending: run the browser checks below for View, keyboard close/focus, PDF contents/download and viewer access.
+- NEXT: commit this handoff update locally; then stop. Never push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -3943,3 +3943,165 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-01 11:56 IST | Result: PASS, verification log checkpoint `fbabe10`; NEXT: scan exact post-checkpoint branch diff and confirm no tracked/staged environment file before push.
 2026-11-01 11:56 IST | Before: repeat secret scan across committed and working diff, then checkpoint only the scan result; why: verify the exact branch content to be pushed remains credential-free.
 2026-11-01 11:56 IST | Final secret scan | PASS | 0 matching files/lines.
+
+## Invoice CRUD task journal
+2026-11-01 | Before: record invoice CRUD task start, verify current branch/status, preserve journal, fetch origin and create `fix-invoices-crud` from `origin/main`; why: obey requested base and keep continuity across checkout.
+2026-11-01 | Result: FAIL, fetch succeeded but branch switch was blocked by the required modified WORKLOG.md; stayed on main; NEXT: stash only WORKLOG.md, create requested branch from origin/main, restore journal.
+2026-11-01 | Before: stash only the saved WORKLOG.md, create `fix-invoices-crud` from origin/main, and restore the journal; why: preserve the log while satisfying the required base branch.
+2026-11-01 | Result: PASS, branch `fix-invoices-crud` created from origin/main; restored full WORKLOG.md; NEXT: trace invoice click handler and routes, read-only.
+2026-11-01 | Before: read Invoices view markup/handlers and invoice routes without edits; why: diagnose the inert Create invoice button before implementation.
+2026-11-01 | Result: PARTIAL, invoice routes expose GET, POST create, POST review, POST send-approval and POST void; first broad search had a zsh unmatched-glob error for a nonexistent test path; no code changed; NEXT: inspect exact invoice handlers, button markup and logs.
+2026-11-01 | Before: search invoice handlers and log destinations with valid paths; why: distinguish missing event listener from form/API errors without modifying files.
+2026-11-01 | Result: PARTIAL, markup contains a modal and button but handler module path guess was absent; no server log files were found; local server PID 79811 is listening; NEXT: locate actual invoice UI module and server route placement.
+2026-11-01 | Before: locate invoice-related JS files and inspect event delegation/API mounting; why: trace whether the button listener is actually bound.
+2026-11-01 | Result: PASS, found `src/modules.js` event delegation; create form submit mutates DOM only; no POST is issued; invoice server API currently GET/POST/review/send-approval/void, no PATCH or DELETE; NEXT: read exact UI module, route and invoice schema/RPC state rules before designing fix.
+2026-11-01 | Before: inspect exact create handler, live invoice module, route auth order and migration constraints; why: finish requested read-only diagnostic before changing code.
+2026-11-01 | Result: PASS, event delegation is loaded and button matches `invoice-create`; report fixture suggests missing date fields make `openInvoiceForm` throw before showing modal; next: confirm exact markup, live module and route schema before reporting trace.
+2026-11-01 | Before: inspect compact exact ranges for invoice form, live rendering and API route validation; why: finish six-line read-only diagnosis with verified source evidence.
+2026-11-01 | Result: PASS, six-line read-only diagnostic delivered; NEXT: inspect invoice table/RPC constraints, current live list module and form listeners before implementing CRUD.
+2026-11-01 | Before: read invoice schema/state RPCs and existing UI submit handlers; why: design CRUD changes around existing audit and document-confirm semantics.
+2026-11-01 | Result: PASS, modal missing issueDate/dueDate; client module submit duplicates API module on bubbling if reached; no RLS block at click. NEXT: inspect exact RPC transitions/schema columns and repository contracts for migration 0018.
+2026-11-01 | Before: read migration 0003 RPCs/table fields, 0017 confirm transaction, and Postgres/memory invoice repository signatures; why: preserve current audited draft-confirm path while adding CRUD safely.
+2026-11-01 | Result: PARTIAL, invoices table lacks issue/due dates and notes; `create_invoice_draft` verifies supplied totals against line totals and writes invoice_events, while direct API create lacks request idempotency; NEXT: inspect exact state RPC transition and audit behavior.
+2026-11-01 | Before: read the full state RPC and existing audit trigger/function; why: define legal transitions and draft delete/reopen behavior without editing applied migrations.
+2026-11-01 | Result: PASS, state RPC permits only draft→reviewed and draft/reviewed→void; no reopen or sent→void; create writes invoice_events but not audit_log; NEXT: inspect exact audit helper and line mapping, then implement additive migration and service changes.
+2026-11-01 | Before: read invoice mapping and audit insert schema; why: ensure manual CRUD adds audit_log entries without changing applied migrations.
+2026-11-01 | Result: PASS, database transition/audit design understood; new RPCs need service_role-only grants and 0018 remains unapplied; NEXT: inspect auth role exposure and API validation formatting for role-hidden controls.
+2026-11-01 | Before: inspect frontend auth role access and validation middleware; why: hide write actions for viewer/resident and map server errors to named fields.
+2026-11-01 | Result: PASS, role isn't exposed synchronously by auth object; documents module fetches it from session endpoint; validateBody errors lack field paths; NEXT: use same role endpoint and implement explicit per-field client validation.
+2026-11-01 | Before: inspect role endpoint used by Documents and its response; why: reuse an existing membership lookup rather than trust client role state.
+2026-11-01 | Result: PASS, 0018 added issue/due/notes, idempotency, update/delete/reopen/state RPCs and service_role-only grants; NEXT: wire Node service/routes/repository with validation and org checks.
+2026-11-01 | Before: extend invoice mapping and repository methods to invoke 0018 RPCs; why: keep persistent operations org-scoped and compatible with current API models.
+2026-11-01 | Result: PASS, invoice modal now has customer, dates, currency, line-item template, tax, notes and hidden create control; NEXT: wire modal API and remove stale local-only submit handler.
+2026-11-01 | Before: inspect only invoice modal functions and local-only submit listener in modules.js; why: preserve open/close behavior while routing all writes through invoices-live.
+2026-11-01 | Result: PASS, modules.js has a second client-only submit handler and stale field names; modal opener can be reused after updating focus and exposing open/close; NEXT: remove local row insertion and keep the API module as sole writer.
+2026-11-01 | Before: update modules.js invoice modal opener and delete the local-only create handler; why: ensure no invoice is represented as saved before the server confirms it.
+2026-11-01 | Result: PASS, workspace on fix-invoices-crud with invoice CRUD edits pending; NEXT: inspect form markup, handlers and approval send path.
+2026-11-01 | Before: read invoice form markup and approval/send route behavior; why: close wiring gaps and ensure send remains simulated through approval only.
+2026-11-01 | Result: PASS, form includes issue/due/hidden invoiceNumber and novalidate; Send UI only posts to approval queue with SIMULATED label; NEXT: inspect test structure and SQL/error handling to add reliable coverage.
+2026-11-01 | Before: inspect invoice route/repository tests and database error mappings; why: ensure new API contracts and idempotency are testable without live writes.
+2026-11-01 | Result: PASS, generic invoice route errors now forward safely; delete retries can reach idempotency RPC; modal dispatch resets form; invoice approvals force SIMULATED; NEXT: add route and service tests for invoice CRUD, roles, tenancy, totals and transitions.
+2026-11-01 | Before: add isolated API tests using a fake org-scoped invoice repository and pure total tests; why: prove behavior without creating live invoices or calling PayPal/Gemini.
+2026-11-01 | Result: PASS, API tests cover computed totals despite tampering, role and tenant isolation, create/delete idempotency, review/reopen/void states and audit events without live data; NEXT: run focused invoice tests and migration parser to identify issues.
+2026-11-01 | Before: execute only invoice CRUD and migration check tests; why: validate new endpoints and unapplied 0018 syntax before broader suite.
+2026-11-01 | Result: PASS, focused invoice tests 4/4 and migration parser 18/18; 0018 remains unapplied; NEXT: fix inline line-item validation and document the API/state-machine contract.
+2026-11-01 | Before: fix line-item validation feedback and review UI state actions; why: ensure missing fields are visible inline and users cannot mistake simulated send for delivery.
+2026-11-01 | Result: FAIL, first combined patch did not apply because its context was stale; no files changed by that patch; NEXT: read exact validation handler lines and apply the field-path change in smaller edits.
+2026-11-01 | Before: inspect current setError and validation middleware contexts; why: make a minimal patch that returns field paths without exposing submitted values.
+2026-11-01 | Result: PASS, server now returns safe invoice field paths and api-client forwards them for inline form errors; line-item errors render beside the specific control; NEXT: add contract assertions for field errors and document migration-backed CRUD routes.
+2026-11-01 | Before: add missing/invalid field response test and update API.md plus FRONTEND-CONTRACT.md for all invoice CRUD endpoints and simulated send; why: keep consumers aligned with the new state machine.
+2026-11-01 | Result: PASS, delete requests reuse the same per-invoice idempotency UUID after network retry; NEXT: rerun focused tests and inspect API/UI requirements before final checks.
+2026-11-01 | Before: rerun invoice CRUD route, SQL contract and document-confirm tests; why: verify the completed validation and UI changes still preserve related invoice flows.
+2026-11-01 | Result: PASS, focused API/migration/doc-confirm suite 5/5; create/modify/review/reopen/void/delete, tampered totals, forbidden roles, tenant isolation, replay-safe delete and SQL grants checked with fakes/static migration assertions.
+2026-11-01 | Before: compare saved pre-branch journal with base history to preserve append-only continuity while retaining origin/main's later records; why: avoid dropping any existing journal entries in the task commit.
+2026-11-01 | Result: PASS, compared historical journals: origin/main contains 3,945 lines; only task-start records are unique in the saved pre-branch journal; NEXT: preserve origin/main history and append task records without stale pointers.
+2026-11-01 | Before: inspect the existing invoice contract section for conflicting role/state claims; why: make the API contract internally consistent after adding CRUD.
+2026-11-01 | Result: PASS, frontend contract now has one consistent CRUD/state/role description and explicitly states invoice sending never delivers; NEXT: restore append-only continuity on origin/main and then run full checks.
+2026-11-01 | Before: append an accurate invoice CRUD handoff to CONTEXT/RESUME and preserve the origin/main WORKLOG history; why: record migration dependency, unverified live/browser checks and safe next steps.
+2026-11-01 | Result: PASS, restored full origin/main journal history (3,945 baseline lines) and appended this task's unique action records; CONTEXT and RESUME POINTER now say 0018 unapplied and live/browser checks pending.
+2026-11-01 | Before: record invoice CRUD decisions and focused verification evidence in append-only docs; why: document why new migration is required and how simulated send is constrained.
+2026-11-01 | Before: run `npm test`; why: catch regressions across invoices, approvals, document confirmation, isolation and existing API behavior.
+2026-11-01 | Before: collect the running full-suite result; why: capture final count and any regression details after the requested `npm test`.
+2026-11-01 | Result: FAIL, `npm test` 192/194; expected known no-store failure plus existing Phase 3 invoice create test now fails 400 because it omits dates/idempotency key required by new route; NEXT: restore backward-compatible API defaults while preserving browser idempotency, then rerun.
+2026-11-01 | Before: inspect existing invoice route test payload and input handling; why: preserve legacy API behavior without weakening the new UI idempotency guarantee.
+2026-11-01 | Result: PASS, existing Phase 3 invoice test now supplies migration-0018 fields and idempotency key and adapts its fake repository to the new RPC contract; no assertion was removed or relaxed; NEXT: rerun full test suite.
+2026-11-01 | Before: rerun `npm test` after updating the legacy invoice test fixture; why: verify all tests except the known no-store assertion pass on the new contract.
+2026-11-01 | Before: collect the rerun full-suite exit and test totals; why: record an accurate final PASS/FAIL status.
+2026-11-01 | Result: FAIL, full suite 193/194; only remaining failure is the known unrelated no-store response header assertion; invoice/create suite is green; NEXT: run standalone migrations, syntax, whitespace and protected-file checks.
+2026-11-01 | Before: run standalone migration check; why: explicitly validate the new unapplied migration and numbered migration set.
+2026-11-01 | Result: PASS, migration check parses 18/18 including 0018; NEXT: check syntax for every changed JavaScript file.
+2026-11-01 | Before: run `node --check` across changed application and test JavaScript; why: catch syntax errors without executing live integrations.
+2026-11-01 | Result: PASS, `node --check` succeeded on 11 changed JavaScript files; NEXT: run whitespace and protected-file diff checks.
+2026-11-01 | Before: run `git diff --check` and compare protected paths with `origin/main`; why: confirm patch hygiene and no protected design files changed.
+2026-11-01 | Result: PASS, `git diff --check` clean and protected-file diff empty; NEXT: inspect status and diff, finalize docs/CONTEXT and TEST state, then make a local WIP-BROKEN checkpoint because npm test has the unrelated no-store failure.
+2026-11-01 | Before: inspect the complete invoice change summary and `git status`; why: verify only requested files are changed and no secret file is staged before local commit.
+2026-11-01 | Result: PASS, clean status lists only requested invoice route/service/repository/UI/docs/tests/migration files; `.env` is not tracked; no secret values printed.
+2026-11-01 | Before: finalize CONTEXT and RESUME POINTER with actual suite/static results and exact edited files; why: leave an accurate handoff before the local commit.
+2026-11-01 | Result: PASS, CONTEXT/RESUME now record base, changed paths, live migration dependency and actual verification counts.
+2026-11-01 | Before: record the first full-suite failure and tighten delete/link lifecycle assertions without changing implementation; why: preserve every test run and verify paid/void delete protection plus document FK behavior.
+2026-11-01 | Result: PASS, added assertions that paid/void invoices cannot be edited/deleted and the existing document FK clears links without deleting documents; no implementation changed.
+2026-11-01 | Before: rerun `npm test` after final lifecycle assertions; why: verify all test assertions and record final suite count.
+2026-11-01 | Before: collect the final `npm test` result; why: record the completed rerun, including the known no-store assertion.
+2026-11-01 | Result: FAIL, final `npm test` is 193/194; only failure is the pre-existing `Cache-Control: no-store` assertion; invoice CRUD and adjusted Phase 3 tests pass; NEXT: rerun standalone migrations, JS syntax, diff hygiene and protected-file check, then commit WIP-BROKEN.
+2026-11-01 | Before: run final migration parser, changed-JS syntax, whitespace and protected-file checks; why: ensure final worktree meets all requested static checks before checkpoint commit.
+2026-11-01 | Result: PASS, final migrations 18/18, node syntax 11/11, diff check clean, protected-file diff empty; NEXT: verify no .env is tracked/staged and make local WIP-BROKEN commit.
+2026-11-01 | Before: verify branch/status and `.env` tracking, then stage only intended files; why: ensure no secret file enters the local checkpoint.
+2026-11-01 | Result: PASS, staged only the 19 intended files; `.env` is absent from tracked and staged paths; NEXT: commit local WIP-BROKEN with exact known test failure in the message/context.
+2026-11-01 | Before: commit the invoice CRUD checkpoint locally; why: preserve completed work despite the unrelated known no-store test failure.
+2026-11-01 | Result: PASS, local WIP-BROKEN checkpoint `4622169` created on fix-invoices-crud; no push; NEXT: record checkpoint hash and confirm clean status.
+2026-11-01 | Before: update CONTEXT and RESUME POINTER with checkpoint hash and pending migration/browser steps; why: make the repository handoff accurate after commit.
+2026-11-01 | Result: PASS, handoff now points to local implementation checkpoint `4622169`; documentation follow-up commit is `ca54539`; next action is final clean-status verification.
+2026-11-01 | Before: verify final branch, HEAD and worktree cleanliness; why: confirm the task ended with committed local work and no push.
+2026-11-01 | Before: fetch origin and check whether fix-invoices-crud is already merged to main; why: choose the requested branch base before editing.
+2026-11-01 | Result: PASS, origin/fix-invoices-crud is not merged into origin/main; only WORKLOG.md is dirty; NEXT: create fix-invoice-view from fix-invoices-crud.
+2026-11-01 | Before: create and verify fix-invoice-view from fix-invoices-crud; why: preserve the invoice CRUD work as its base.
+2026-11-01 | Result: PASS, created fix-invoice-view and verified branch name; NEXT: trace View, invoice detail modal and invoice repository GET shape.
+2026-11-01 | Before: read the invoice table renderer, action handler, detail markup, and GET route; why: identify the minimal reason View appears inactive.
+2026-11-01 | Result: PASS, View handler requests invoice then toast-only; modal existed but its opener excluded buttons; GET route is org-scoped and no request failure is implicated; NEXT: inspect existing audit insert API, rate limits and PDF dependency details.
+2026-11-01 | Before: verify the installed PDF library API and Supabase insert usage; why: use the already pinned package and existing audit table without adding a migration.
+2026-11-01 | Result: PASS, `pdf-lib` 1.17.1 is already pinned; Supabase repositories support service-role inserts; generic API/user limits exist, adding a route-specific limit; NEXT: build server PDF renderer and org-scoped audited download route.
+2026-11-01 | Before: implement invoice PDF generation with stored minor-unit amounts, safe text, pagination and route-level audit/rate limits; why: serve authenticated PDF bytes without new dependencies or schema migration.
+2026-11-01 | Result: PASS, added server PDF renderer using pinned pdf-lib, org-scoped rate-limited download route, invoice event reads and audit insert keyed only by invoice ID; no migration required.
+2026-11-01 | Before: extend the auth API client for blobs and add a keyboard-accessible detail panel driven by server data; why: View and Download need authenticated headers and safe text rendering.
+2026-11-01 | Result: PASS, added authenticated blob flow, detail view renders via textContent and status history, modal close/escape/focus restore, minor-unit formatting and per-row/detail downloads.
+2026-11-01 | Before: add API/PDF tests for headers, tenancy, viewer access, audit, currency exponents, valid PDF bytes, long text and pagination; why: verify server-generated output without users or external providers.
+2026-11-01 | Result: PASS, added tests for PDF header/filename, viewer and tenant access, audit privacy, ISO exponent formatting, special text and multi-page output.
+2026-11-01 | Before: inspect the new route, PDF service and static UI assertions for test mismatches, then run focused tests; why: catch contract defects before broader checks.
+2026-11-01 | Result: PASS, focused PDF/download and invoice CRUD suite passed 7/7; PDF parses, uses exponent-aware formatted amounts, handles long special text with pagination, viewer downloads and cross-org receives 404.
+2026-11-01 | Before: inspect the existing API-client and PostgREST repository tests for focused auth-header/blob and audit insert coverage; why: prove the browser's download path keeps JWT/org headers and the real repository writes invoice-ID-only audit metadata.
+2026-11-01 | Result: PASS, added unit coverage for JWT/X-Org-Id blob calls and Postgres audit payload containing only invoice identity; detail loading clears stale record content.
+2026-11-01 | Before: run focused PDF, blob-auth and audit tests; why: verify the newly added coverage before the full suite.
+2026-11-01 | Result: PASS, focused PDF/blob/auth/audit tests 6/6; only targeted tests ran, no full-suite result yet.
+2026-11-01 | Before: add coverage that invoice detail GET exposes scoped status events; why: make the new detail panel's history source explicit and organization-limited.
+2026-11-01 | Result: PASS, detail GET route and Postgres tests now verify invoice_events are retrieved with both org and invoice scope.
+2026-11-01 | Before: document the invoice detail/download contract and update API.md, FRONTEND-CONTRACT.md, CONTEXT and RESUME POINTER; why: specify authenticated PDF download, audit, pagination and browser verification.
+2026-11-01 | Result: PASS, API docs and frontend contract describe detail history, org-scoped PDF, auditing/rate limit and blob headers; CONTEXT/RESUME updated for this branch.
+2026-11-01 | Before: rerun focused invoice download, API-client blob and Postgres repository tests including scoped status events; why: validate the latest test assertions before full verification.
+2026-11-01 | Result: FAIL, focused combined test files 19/20 because the known unrelated no-store assertion ran; all PDF/download/status-history/audit and blob-auth tests passed.
+2026-11-01 | Before: run only invoice download and Postgres repository suites; why: isolate invoice-specific tests from the unrelated conditional-cache assertion.
+2026-11-01 | Result: PASS, invoice download and Postgres repository suites 18/18, including scoped event history and privacy-safe audit insert.
+2026-11-01 | Before: run `npm test`; why: verify invoice view/download changes alongside existing invoice CRUD, approvals, tenant and assistant tests.
+2026-11-01 | Before: collect full `npm test` exit and totals; why: report actual suite count and any known failure.
+2026-11-01 | Result: FAIL, full suite 200/201; only unrelated known no-store header test fails; invoice/PDF/tenant/status/audit tests pass.
+2026-11-01 | Before: run standalone migration parser; why: verify no migration changes and report complete migration count.
+2026-11-01 | Result: PASS, `npm run check:migrations` parses 18/18 files; no migration was added.
+2026-11-01 | Before: run `node --check` on every changed JavaScript file; why: catch syntax errors across route, PDF, UI and tests.
+2026-11-01 | Result: PASS, `node --check` succeeded for 10 changed JavaScript files.
+2026-11-01 | Before: run `git diff --check` and protected-file diff against `origin/main`; why: verify whitespace and confirm no protected design files changed.
+2026-11-01 | Result: PASS, diff check clean and protected-file diff empty.
+2026-11-01 | Before: inspect final status, changed-file list and whether `.env` is tracked/staged; why: stage only intended invoice detail/download files and continuity docs.
+2026-11-01 | Before: make row download control icon-only with an accessible label; why: follow the requested compact icon button while retaining screen-reader text.
+2026-11-01 | Result: PASS, download row button now uses only the inline download icon and accessible aria-label.
+2026-11-01 | Before: run final full suite, standalone migration/parser, syntax, whitespace and protected-path checks after UI adjustment; why: report final verified state before WIP commit.
+2026-11-01 | Before: collect final `npm test` result after the icon-only UI change; why: verify final suite count.
+2026-11-01 | Result: FAIL, final npm test 200/201; known unrelated no-store assertion only.
+2026-11-01 | Before: run final standalone migrations, JavaScript syntax, diff hygiene and protected-file check; why: capture final statuses before local checkpoint.
+2026-11-01 | Result: PASS, final migrations 18/18, syntax 10/10, diff check clean, protected-file diff empty.
+2026-11-01 | Before: finalize CONTEXT and RESUME POINTER with actual test results and human browser checklist; why: prepare accurate local handoff before checkpoint commit.
+2026-11-01 | Result: FAIL, CONTEXT test states updated successfully but RESUME POINTER update stopped on a missing Python `re` import; NEXT: update only the pointer and verify it.
+2026-11-01 | Before: rewrite the RESUME POINTER with final test statuses and browser handoff; why: finish continuity state after the partial documentation script.
+2026-11-01 | Result: FAIL, accidental full test invocation completed with 200/201 and only known no-store failure; a quoted search expression then failed, no source files changed; NEXT: verify CONTEXT test state and proceed to safe commit.
+2026-11-01 | Before: inspect only current CONTEXT status lines without shell interpolation; why: ensure final handoff reflects the latest test run.
+2026-11-01 | Result: PASS, CONTEXT reports the known full-suite failure and passing status-history/protected checks; its progress and next-step paragraphs still need replacing.
+2026-11-01 | Before: correct stale CONTEXT progress and next-step text; why: align handoff with completed full checks and local commit work remaining.
+2026-11-01 | Result: PASS, CONTEXT now says static verification is complete and the local WIP-BROKEN checkpoint is next.
+2026-11-01 | Before: verify branch/status and `.env` tracking one last time; why: ensure only invoice view/download changes and docs are committed.
+2026-11-01 | Result: PASS, branch is fix-invoice-view, status contains only requested app/docs/tests; `.env` is neither tracked nor staged; diff check clean.
+2026-11-01 | Before: stage only invoice detail/download source, tests, API docs and handoff files; why: create the local checkpoint without touching secrets or unrelated work.
+2026-11-01 | Result: PASS, staged 17 intended files only; `.env` absent; NEXT: commit local WIP-BROKEN because full suite retains the known no-store failure.
+2026-11-01 | Before: make a local WIP-BROKEN commit on fix-invoice-view; why: preserve the verified feature while recording the unrelated failing test in the commit message.
+2026-11-01 | Before: inspect current branch, latest local commit, worktree status and tracked `.env` path; why: confirm checkpoint state without exposing credentials.
+2026-11-01 | Result: PASS, branch `fix-invoice-view`, commit `da8e4a7`, only WORKLOG.md remains modified, `.env` is untracked by Git; NEXT: finalize RESUME POINTER and CONTEXT with committed checkpoint and browser checks pending.
+2026-11-01 | Before: update the RESUME POINTER and task status to reflect commit `da8e4a7` and pending browser verification; why: leave an accurate continuation handoff.
+2026-11-01 | Result: PASS, RESUME POINTER and CONTEXT now identify commit `da8e4a7`, finished checks and pending browser verification; NEXT: commit documentation handoff locally.
+2026-11-01 | Result: PASS, handoff commit `b86f66d` created after feature commit `da8e4a7`; NEXT: verify branch, clean worktree and no tracked `.env`.
+2026-11-01 | Before: verify final branch/status and confirm `.env` is not tracked; why: ensure the local task checkpoint is clean and safe.
+2026-11-01 | Result: PASS, branch is `fix-invoice-view`; `.env` is not tracked; only this journal has an expected handoff update; NEXT: commit the final verification record.
+2026-11-01 | Before: commit the final WORKLOG verification record locally; why: preserve the clean-state confirmation with the task handoff.
+2026-11-01 | Before: compare fix-invoices-crud ancestry with origin/main and scan outgoing diff for secrets; why: determine PR scope and prevent secret exposure before publish.
+2026-11-01 | Result: PASS, fix-invoices-crud base commit is not merged into origin/main; outgoing diff scan found 0 secret-like added lines; NEXT: run full test and static checks.
+2026-11-01 | Before: run npm test, migration check, JS syntax checks, whitespace check and protected-file diff; why: validate the exact outgoing branch before push.
+2026-11-01 | Result: PASS with known failure, npm test 200/201 (no-store assertion only); migrations 18/18, JS syntax 16/16, diff check clean, protected-file diff empty; NEXT: commit the sole WORKLOG preflight change before pushing.
+2026-11-01 | Before: commit only docs/WORKLOG.md; why: keep the authorized outgoing branch checkpointed and ensure there are no unrelated edits.
+2026-11-01 | Result: PASS, only WORKLOG.md had been modified and it is committed as `a1cd9ba`; NEXT: push `fix-invoice-view` to origin as explicitly authorized.
+2026-11-01 | Before: push `fix-invoice-view` to origin; why: publish the verified branch for its requested PR, without pushing another branch.

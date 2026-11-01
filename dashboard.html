@@ -245,7 +245,7 @@
       <div class="view" id="view-invoices" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/invoices.png" alt="" width="64" height="64"><h2>Invoices</h2><p>Create and track invoices with totals calculated from line items. Sending an invoice should require approval.</p></div>
         <div class="module-kpis"><article class="dash-card"><small>Organization invoices</small><strong id="invoice-count">—</strong><span>Live Supabase records</span></article><article class="dash-card"><small>Paid</small><strong id="invoice-paid-count">—</strong><span>Live Supabase records</span></article><article class="dash-card"><small>Drafts</small><strong id="invoice-draft-count">—</strong><span>Ready for review</span></article></div>
-        <article class="dash-card module-card"><div class="card-heading"><div><h3>Invoice workspace</h3><p>Draft totals are calculated by the server. Sending remains disabled.</p></div><button class="btn btn--primary" data-ui-action="invoice-create">＋ New invoice</button></div><div class="module-toolbar"><input type="search" id="invoice-search" placeholder="Search invoices or customers" aria-label="Search invoices"><select id="invoice-filter" aria-label="Filter invoices"><option value="">All statuses</option><option>Draft</option><option>Awaiting approval</option><option>Sent</option><option>Paid</option><option>Overdue</option></select></div><div class="module-table-wrap"><table class="module-table" id="invoice-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Created</th><th>Due date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div><div class="module-foot"><span id="invoice-live-status" role="status">Loading live invoices…</span></div></article>
+        <article class="dash-card module-card"><div class="card-heading"><div><h3>Invoice workspace</h3><p>Draft totals are calculated by the server. Sending is SIMULATED and requires approval.</p></div><button class="btn btn--primary" id="invoice-create-button" data-ui-action="invoice-create" hidden>＋ New invoice</button></div><div class="module-toolbar"><input type="search" id="invoice-search" placeholder="Search invoices or customers" aria-label="Search invoices"><select id="invoice-filter" aria-label="Filter invoices"><option value="">All statuses</option><option>Draft</option><option>Awaiting approval</option><option>Sent</option><option>Paid</option><option>Void</option></select></div><div class="module-table-wrap"><table class="module-table" id="invoice-table"><thead><tr><th>Invoice</th><th>Customer</th><th>Issue date</th><th>Due date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div><div class="module-foot"><span id="invoice-live-status" role="status">Loading live invoices…</span></div></article>
       </div>
       <div class="invoice-modal" id="invoice-create-modal" hidden aria-hidden="true">
         <button class="invoice-modal-backdrop" type="button" data-invoice-close aria-label="Close new invoice form"></button>
@@ -253,14 +253,19 @@
           <button class="modal-close" type="button" data-invoice-close aria-label="Close">×</button>
           <span class="section-kicker">INVOICE DRAFT</span><h2 id="invoice-dialog-title">Create new invoice</h2>
           <p id="invoice-dialog-description">Add the customer and line item details. This creates a draft for review; it does not send the invoice.</p>
-          <form id="invoice-create-form">
+          <form id="invoice-create-form" novalidate>
+            <input type="hidden" name="invoiceNumber" value="">
             <div class="invoice-form-grid">
-              <label class="invoice-field invoice-field--wide">Customer or business<input name="customer" required maxlength="100" autocomplete="organization" placeholder="e.g. Northstar Studio"></label>
-              <label class="invoice-field invoice-field--wide">Customer email<input name="customerEmail" type="email" required maxlength="254" autocomplete="email" placeholder="accounts@example.com"></label>
-              <label class="invoice-field invoice-field--wide">Description<input name="description" required maxlength="140" placeholder="Services or products provided"></label>
-              <label class="invoice-field">Quantity<input name="quantity" type="number" min="1" step="1" value="1" required></label>
-              <label class="invoice-field">Rate (₹)<input name="rate" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
+              <label class="invoice-field invoice-field--wide">Customer or business<input name="customerName" required maxlength="160" autocomplete="organization" placeholder="e.g. Northstar Studio"><small class="invoice-field-error" data-invoice-error="customerName"></small></label>
+              <label class="invoice-field invoice-field--wide">Customer email<input name="customerEmail" type="email" required maxlength="254" autocomplete="email" placeholder="accounts@example.com"><small class="invoice-field-error" data-invoice-error="customerEmail"></small></label>
+              <label class="invoice-field">Currency<select name="currency" required><option value="INR">INR</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
+              <label class="invoice-field">Issue date<input name="issueDate" type="date" required><small class="invoice-field-error" data-invoice-error="issueDate"></small></label>
+              <label class="invoice-field">Due date<input name="dueDate" type="date" required><small class="invoice-field-error" data-invoice-error="dueDate"></small></label>
             </div>
+            <h3>Line items</h3><div id="invoice-line-items"></div>
+            <template id="invoice-line-template"><div class="invoice-form-grid invoice-line-row" data-invoice-line><label class="invoice-field invoice-field--wide">Description<input name="description" required maxlength="200" placeholder="Services or products provided"><small class="invoice-field-error" data-invoice-error="description"></small></label><label class="invoice-field">Quantity<input name="quantity" type="number" min="0.001" step="0.001" value="1" required><small class="invoice-field-error" data-invoice-error="quantity"></small></label><label class="invoice-field">Unit price<input name="unitPrice" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0.00"><small class="invoice-field-error" data-invoice-error="unitPrice"></small></label><label class="invoice-field">Tax rate (%)<input name="taxRate" type="number" min="0" max="100" step="0.01" value="0" required><small class="invoice-field-error" data-invoice-error="taxRate"></small></label><button class="btn btn--ghost" type="button" data-invoice-remove-line>Remove line</button></div></template>
+            <div class="invoice-form-actions"><button class="btn btn--ghost" id="invoice-add-line" type="button">Add line item</button></div>
+            <label class="invoice-field invoice-field--wide">Notes<textarea name="notes" maxlength="2000" rows="3" placeholder="Optional invoice notes"></textarea></label>
             <div class="invoice-total"><span>Invoice total</span><strong id="invoice-form-total">₹0.00</strong></div>
             <p class="invoice-form-error" id="invoice-form-error" role="alert" aria-live="polite"></p>
             <div class="invoice-form-actions"><button class="btn btn--ghost" type="button" data-invoice-close>Cancel</button><button class="btn btn--primary" type="submit">Create draft</button></div>
@@ -526,7 +531,7 @@
 <div class="approval-modal" id="invoice-detail-modal" hidden aria-hidden="true">
   <div class="approval-modal-backdrop" data-close-invoice-detail></div>
   <section class="approval-dialog transaction-dialog" role="dialog" aria-modal="true" aria-labelledby="invoice-detail-title">
-    <button class="modal-close" type="button" data-close-invoice-detail aria-label="Close invoice details">×</button><span class="section-kicker">INVOICE DETAIL</span><h2 id="invoice-detail-title">Invoice</h2><p id="invoice-detail-subtitle">Invoice record</p><dl id="invoice-detail-fields" class="approval-detail-fields transaction-detail-grid"></dl><p class="approval-detail-effect detail-note">Review invoice details before requesting approval or sending. No invoice is sent from this preview.</p><button class="btn btn--ghost" type="button" data-close-invoice-detail>Close</button>
+    <button class="modal-close" type="button" data-close-invoice-detail aria-label="Close invoice details">×</button><span class="section-kicker">INVOICE DETAIL</span><h2 id="invoice-detail-title">Invoice</h2><p id="invoice-detail-subtitle">Live organization invoice</p><p id="invoice-detail-status" role="status" aria-live="polite"></p><dl id="invoice-detail-fields" class="approval-detail-fields transaction-detail-grid"></dl><div class="module-table-wrap"><table class="module-table"><thead><tr><th>Description</th><th>Quantity</th><th>Unit price</th><th>Line total</th></tr></thead><tbody id="invoice-detail-lines"></tbody></table></div><p id="invoice-detail-totals" class="module-foot"></p><h3>Notes</h3><p id="invoice-detail-notes"></p><h3>Status history</h3><ul id="invoice-detail-history"></ul><div class="agent-actions"><button class="btn btn--primary" type="button" data-invoice-detail-download hidden disabled>⇩ Download PDF</button><button class="btn btn--ghost" type="button" data-close-invoice-detail>Close</button></div>
   </section>
 </div>
 <div class="approval-modal" id="approval-confirm-modal" hidden aria-hidden="true">
@@ -585,6 +590,7 @@
 <script src="src/ai-fullscreen.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
+<script src="src/invoice-detail.js"></script>
 <script src="src/invoices-live.js"></script>
 <script src="src/documents.js"></script>
 <script src="src/transaction-effects.js"></script>

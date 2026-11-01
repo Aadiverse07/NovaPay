@@ -67,6 +67,7 @@ export function buildInvoiceDraft(input,userId) {
   const computed=computeInvoice(input.lines);
   return {
     invoice:{invoice_number:input.invoiceNumber,customer_name:input.customerName,customer_email:input.customerEmail,currency:input.currency,
+      issue_date:input.issueDate,due_date:input.dueDate,notes:input.notes||'',
       subtotal_minor:computed.subtotalMinor,tax_minor:computed.taxMinor,total_minor:computed.totalMinor,created_by:userId},
     lines:computed.lines,
   };

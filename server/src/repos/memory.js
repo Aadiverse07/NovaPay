@@ -378,7 +378,12 @@ export function createRepositories() {
     async put(row) { storedRates.set(`${row.org_id}:${row.base_currency}:${row.quote_currency}`,row); return row; },
   };
   repos.invoices = {
+    downloadAudits: [], async auditDownload(orgId, actorId, invoiceId, requestId) { this.downloadAudits.push({ orgId, actorId, invoiceId, requestId, action: 'invoice.downloaded' }); },
     async list() { return []; }, async get() { return null; }, async createDraft() { throw Object.assign(new Error('Invoice persistence requires Supabase.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'}); },
+    async createDraftIdempotent() { throw Object.assign(new Error('Invoice persistence requires Supabase.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'}); },
+    async updateDraft() { throw Object.assign(new Error('Invoice persistence requires Supabase.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'}); },
+    async reopenDraft() { throw Object.assign(new Error('Invoice persistence requires Supabase.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'}); },
+    async deleteDraftIdempotent() { throw Object.assign(new Error('Invoice persistence requires Supabase.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'}); },
     async setState() { return null; }, async setPayPalDraft() { return null; }, async requestSendApproval() { return null; }, async completeSend() { return null; }, async failSend() { return null; }, async markPaid() { return {updated:false}; },
   };
   repos.approvals.decideInvoiceSend = async () => ({result:'missing',approval:null});
