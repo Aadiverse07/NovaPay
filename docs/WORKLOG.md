@@ -4862,3 +4862,6 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 00:17:45 IST | RESULT: PASS; on codex/voice-assistant, expected task files only modified/untracked, tracked .env empty, git diff --check clean, protected-file diff empty, no wake-word references found in app/test targets. NEXT: make a local WIP-BROKEN checkpoint (full suite has the documented no-store assertion failure).
 2026-11-02 00:18:02 IST | ABOUT TO: Record checkpoint commit and verify repository state. WHY: leave an accurate resume point after the local commit.
 2026-11-02 00:18:02 IST | RESULT: PASS; local checkpoint f3fac73 created on codex/voice-assistant; no push performed. NEXT: hand off implementation and verification summary; Chrome/Brave manual checks remain for the user.
+2026-11-02 00:21 IST | ABOUT TO: Fetch remote refs and compare PR scope against origin/main; WHY: local main diff spans unrelated historic files, so inspect actual PR delta before publishing.
+2026-11-02 00:22 IST | ABOUT TO: Run npm test on the PR branch; WHY: validate before any push.
+2026-11-02 00:22 IST | RESULT: npm test completed: 284 passed, 1 failed; sole failure is known api-client.test.js no-store assertion (header was undefined). Migration syntax checks: 21/21. NEXT: record result locally, run final safety/cleanliness checks, then push only codex/voice-assistant and open PR if clean.
