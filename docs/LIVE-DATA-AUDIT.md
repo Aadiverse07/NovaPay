@@ -8,8 +8,8 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| KPI cards, health score, recent activity, chart ranges | Static HTML INR values plus hard-coded arrays and renderers in `src/dashboard.js` | `/api/reports/cash-movement`, `/api/reports/profit-and-loss`, `/api/transactions`, ledger reports | No new route proven necessary; need a dashboard aggregation contract or compute from verified API rows | High: fabricated values and health score appear as organization performance | Convert to org-scoped API data; empty org shows zero/empty states |
-| Top banner and illustrative assessment copy | Static HTML | None needed | None | High: implies PayPal history is present | Remove claim or keep only in explicitly labeled demo mode |
+| KPI cards, organization status, recent activity, cash movement | Dashboard uses `src/dashboard-live-data.js` and `src/dashboard-data.js`; calls report endpoints after auth is ready; recent rows are API-loaded | `/api/reports/profit-and-loss`, `/api/reports/fees`, `/api/reports/refunds`, `/api/reports/cash-movement`, `/api/transactions` | No new route identified; disputes metric remains unavailable because no disputes report endpoint exists | Medium: runtime tenant rows are not verified; currency rows must remain separate | Convert implemented; disputed amount removed; runtime check UNVERIFIED |
+| Home illustration | Static decorative HTML with non-monetary example labels | None needed | None | Low: illustration is explicitly marked illustrative | Keep as labeled illustration; no monetary sample values |
 
 ## Transactions
 
@@ -98,5 +98,5 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 ## Phase 1 summary
 
 - Static inspection found existing server endpoints for most financial modules; the primary gaps are frontend wiring and removal/isolation of sample values, not proven backend route absence.
-- No authenticated network response or matching database rows were inspected in this audit. Therefore every claim of live data remains **UNVERIFIED** pending Phase 3 browser checks with an empty organization and an existing organization.
+- No authenticated network response or matching database rows were inspected. Dashboard data wiring now exists, but its live tenant rows remain **UNVERIFIED** pending Phase 3 browser checks with an empty organization and an existing organization.
 - Before Phase 2 starts, keep the no-code checkpoint and backup branch. Convert in the user's priority order, one module per local commit. Do not merge until the full live-data checklist is acceptable.

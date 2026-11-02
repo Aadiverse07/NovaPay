@@ -4,21 +4,23 @@
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
 - Last commit: `79ccc6f` (pre-audit checkpoint; audit documentation is pending local commit)
-- Current phase/task: Live-data integrity, Phase 1 audit complete; Phase 2 not started.
+- Current phase/task: Live-data integrity, Phase 2 Dashboard module checkpoint complete; next is Transactions.
 
 ## Done
 - Read prior CONTEXT and WORKLOG tail before work.
 - Created local checkpoint `79ccc6f` and backup branch `backup/live-data-audit-2026-11-02` at that commit.
-- Completed static module/source/route audit in [LIVE-DATA-AUDIT.md](LIVE-DATA-AUDIT.md). No application code changed in Phase 1.
+- Completed static module/source/route audit in [LIVE-DATA-AUDIT.md](LIVE-DATA-AUDIT.md).
+- Dashboard authenticated view now loads report KPIs and cash movement plus recent transactions from org-scoped APIs; removed static money/score values and added currency-safe mapping in `src/dashboard-data.js`, `src/dashboard-live-data.js`, `src/dashboard.js`, and `dashboard.html`.
+- Focused dashboard tests: 4/4 pass (`node --test server/test/dashboard-live-data.test.js`). Live tenant rows remain UNVERIFIED.
 
 ## In Progress
-- Audit documentation and handoff updates; next is the first Phase 2 module (Dashboard KPIs/charts) after committing the audit checkpoint.
+- Phase 2 Dashboard source changes and docs are ready for a local module commit; then convert Transactions sample/live mixing.
 - Phase 1 inspected source only. No authenticated browser or database verification was available, so live-data status remains UNVERIFIED.
 
 ## Next Steps
-1. Review `git diff --check` and the audit document; commit the Phase 1 docs locally.
-2. Start Phase 2 with Dashboard KPIs/charts. Fetch only authenticated org-scoped API rows after auth/org readiness; remove static KPI/chart values from authenticated mode; zero/empty/error/retry states.
-3. Add module-level mapping/empty/error/tenant-isolation tests, run `npm test`, and append the exact result to TEST-REPORT.md.
+1. Review and commit the Dashboard module checkpoint locally.
+2. Convert Transactions: remove sample rows from authenticated mode while preserving AG Grid and API hydration; add loading/empty/error states.
+3. Add module-level mapping/empty/error/tenant-isolation tests, run tests, and append exact results to TEST-REPORT.md.
 4. Continue in user priority order, one local commit per module; keep AG Grid, PayPal sandbox, OTP/auth, voice, AI memory and Gemini pool untouched.
 5. Phase 3: browser-walk empty and existing orgs, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
 6. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
@@ -37,11 +39,13 @@
 | Check | Status | Date | Command/reason |
 |---|---|---|---|
 | Phase 1 source audit | PASS | 2026-11-02 | Read-only inspection; endpoint existence is not treated as runtime proof |
+| Dashboard data mapping | PASS | 2026-11-02 | `node --test server/test/dashboard-live-data.test.js`: 4/4 |
+| Dashboard authenticated network and tenant rows | UNVERIFIED | 2026-11-02 | Browser/login and matching Supabase rows unavailable |
 | Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Browser unavailable and no test JWT used |
 | npm test | UNVERIFIED | 2026-11-02 | Not run in this documentation-only audit step |
 
 ## Known Issues and Risks
-- Dashboard KPIs/charts/health, report values/exports, approvals queue/badge, notification popover/count, transaction sample rows, and ledger sample rows contain or retain demo content in authenticated rendering paths.
+- Reports values/exports, approvals queue/badge, notification popover/count, transaction sample rows, and ledger sample rows still contain or retain demo content in authenticated rendering paths. Dashboard is converted in source; its runtime API check is pending.
 - The existing transaction and ledger hydration code can combine API data with samples; empty orgs can display nonzero demo values.
 - API routes exist for most modules, but authenticated data and DB rows have not been verified in this audit.
 - Existing known suite issue: `api-client.test.js` no-store assertion was previously reported; current suite not rerun here.
