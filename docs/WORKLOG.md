@@ -1,11 +1,10 @@
 ## RESUME POINTER
-- Current task: restore persisted PayPal Sandbox transactions and ledger entries after refresh; branch codex/voice-assistant; pre-change rollback checkpoint d8bfd80; no push.
-- Verified root cause: Transactions populated only from novapay-live addCapture DOM insertion; AG Grid mirrored that DOM. Ledger panel was static illustrative HTML. Backend authenticated GET endpoints and record_paypal_capture persistence RPC exist.
-- DONE in code: API-backed paginated transactions and ledger reads; mapped fields and capture/refund dedupe; currency-exponent formatting and per-currency ledger KPIs; sample fallback, retry/error state, refresh on view/focus/visibility and after successful capture/refund.
-- Tests: focused grid+financial suite 9/9 PASS; full npm test 318 pass / 1 known fail / 319 total; only api-client.test.js:29 no-store assertion. Syntax and diff checks PASS.
-- LIVE: local /api/status responds backend=true and PayPal connected. Authenticated responses and same-org table counts UNVERIFIED: browser control is disabled in Work settings; no fixed test-user credentials are configured.
-- IN PROGRESS: implementation/docs are not yet committed after pre-change rollback checkpoint d8bfd80; keep branch codex/voice-assistant, never push.
-- NEXT: inspect changed files, checkpoint locally (WIP-BROKEN prefix for known suite failure), then human browser flow: sign in; PayPal Sandbox; create 10.00 USD order; approve in PayPal tab; capture; verify transaction; hard-refresh; verify Transactions and Ledger; sign out/in and verify persistence.
+- Current task: restore saved PayPal Sandbox transactions and ledger after refresh; branch codex/voice-assistant; implementation checkpoint f9e3709; pre-change rollback checkpoint d8bfd80; no push.
+- Root cause verified: transactions came only from current-session DOM insertion; AG Grid mirrored that DOM; Ledger was static illustrative HTML. Backend endpoints and atomic capture posting exist.
+- DONE: paginated authenticated transactions/ledger loads; API field mapping and capture/refund dedupe; per-currency ledger KPIs; labeled sample fallback, Retry/error messages, view/focus/visibility and capture/refund refetch. Commit f9e3709.
+- TESTS: focused grid+financial tests 9/9 PASS; npm test 318 pass / 1 known fail / 319 total (api-client.test.js:29 missing Cache-Control no-store); syntax and diff checks PASS.
+- LIVE UNVERIFIED: local /api/status reports backend=true and PayPal connected; authenticated GET responses and Supabase row counts could not be checked because browser control is disabled and no fixed-user credentials are configured.
+- NEXT: human: sign in; open PayPal Sandbox; create a 10.00 USD order; approve in PayPal tab; capture; verify Supabase transactions and journal_entries; hard-refresh and check Transactions/Ledger; sign out/in and verify persistence.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5145,3 +5144,11 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 15:56:38 IST | AFTER | Updated final handoff/test report with 9/9 focused result and live checks UNVERIFIED; files touched: docs/WORKLOG.md, docs/CONTEXT.md, docs/TEST-REPORT.md; next: final syntax/diff/protected-path and env check.
 2026-11-02 15:56:49 IST | AFTER | Final syntax checks, git diff --check and protected/env checks passed; worktree contains only intended financial view, tests and continuity docs; next: checkpoint locally with WIP-BROKEN for the known no-store test.
 2026-11-02 15:56:49 IST | BEFORE | Stage and commit the financial view implementation, tests and continuity records; full suite is 318/319 due only to the pre-existing no-store assertion; no push.
+2026-11-02 15:56:49 IST | AFTER | Financial view checkpoint exited 0; next: update RESUME POINTER with commit and final live-test limitation.
+2026-11-02 15:57:02 IST | BEFORE | Refresh handoff with financial-view commit f9e3709 and final browser steps/UNVERIFIED status; next: verify only journal/context pointer updates remain.
+2026-11-02 15:57:02 IST | AFTER | RESUME POINTER and CONTEXT now reference f9e3709 and specify the exact pending human live flow; files touched: docs/WORKLOG.md, docs/CONTEXT.md; next: final status check and report.
+2026-11-02 15:59:42 IST | BEFORE | Read required CONTEXT and WORKLOG tail before starting the module audit; next: inspect branch/status and checkpoint the current tree.
+2026-11-02 15:59:42 IST | AFTER | Required handoff documents read; next: inspect branch/status and verify no secret files are pending before checkpoint.
+2026-11-02 15:59:49 IST | BEFORE | Inspect and checkpoint the current tree before audit/code changes; verify only intended handoff docs are modified and no .env is tracked.
+2026-11-02 15:59:49 IST | AFTER | Pre-audit status inspected; next: commit the current worktree as a rollback checkpoint before any audit edits.
+2026-11-02 15:59:54 IST | BEFORE | Commit the current pre-audit worktree as a rollback checkpoint; no implementation changes have been made.

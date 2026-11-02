@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; latest local checkpoint: 9a504bf (PayPal API fix); Part B implementation commit: a03f85f; Part A commit: 58035b5; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; latest local checkpoint: f9e3709 (financial views); Part B implementation commit: a03f85f; Part A commit: 58035b5; no push.
 
 ## DONE
 - Part A (commit 58035b5): lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.
@@ -17,7 +17,7 @@
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- Transactions and Ledger now load organization-scoped API data after view activation, recover on focus/visibility and refresh after successful capture/refund. Work is uncommitted after pre-change checkpoint d8bfd80.
+- Transactions and Ledger now load organization-scoped API data after view activation, recover on focus/visibility and refresh after successful capture/refund. Implementation is committed locally as f9e3709; pre-change rollback checkpoint is d8bfd80.
 - Backend code uses record_paypal_capture to atomically persist capture-related records; the two read endpoints are org-filtered. Actual authenticated responses and same-org live table counts are UNVERIFIED because browser automation is disabled and no fixed-user credentials are configured.
 - Existing full-suite failure remains `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`). No push.
 - Preserve auth/OTP/session handling, `server/src/services/geminiKeyPool.js`, voice files/speech output, and Tier 0/1/2 validation. Keep money units unchanged.
