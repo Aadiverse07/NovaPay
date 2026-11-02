@@ -4,22 +4,22 @@
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
 - Last commit: `79ccc6f` (pre-audit checkpoint; audit documentation is pending local commit)
-- Current phase/task: Live-data integrity, Phase 2 Dashboard module checkpoint complete; next is Transactions.
+- Current phase/task: Live-data integrity, Phase 2 Transactions module checkpoint complete; next is Ledger.
 
 ## Done
 - Read prior CONTEXT and WORKLOG tail before work.
 - Created local checkpoint `79ccc6f` and backup branch `backup/live-data-audit-2026-11-02` at that commit.
 - Completed static module/source/route audit in [LIVE-DATA-AUDIT.md](LIVE-DATA-AUDIT.md).
-- Dashboard authenticated view now loads report KPIs and cash movement plus recent transactions from org-scoped APIs; removed static money/score values and added currency-safe mapping in `src/dashboard-data.js`, `src/dashboard-live-data.js`, `src/dashboard.js`, and `dashboard.html`.
-- Focused dashboard tests: 4/4 pass (`node --test server/test/dashboard-live-data.test.js`). Live tenant rows remain UNVERIFIED.
+- Dashboard authenticated view loads report KPIs/cash movement and recent transactions from org-scoped APIs; static money/score values removed. Files: `src/dashboard-data.js`, `src/dashboard-live-data.js`, `src/dashboard.js`, `dashboard.html`. Focused test 4/4.
+- Transactions now wait for Supabase auth, replace sample DOM rows with API rows, and show explicit empty/error states. AG Grid internals unchanged. Focused tests: 6/6 (`node --test server/test/transactions-ledger-live.test.js`). Live tenant rows remain UNVERIFIED.
 
 ## In Progress
-- Phase 2 Dashboard source changes and docs are ready for a local module commit; then convert Transactions sample/live mixing.
+- Phase 2 Transactions source changes and docs are ready for a local module commit; then remove Ledger sample rows and nonzero empty-org fallback values.
 - Phase 1 inspected source only. No authenticated browser or database verification was available, so live-data status remains UNVERIFIED.
 
 ## Next Steps
-1. Review and commit the Dashboard module checkpoint locally.
-2. Convert Transactions: remove sample rows from authenticated mode while preserving AG Grid and API hydration; add loading/empty/error states.
+1. Review and commit the Transactions module checkpoint locally.
+2. Convert Ledger: remove hard-coded sample entries and nonzero empty-org fallback; preserve currency-separated API totals and Retry state.
 3. Add module-level mapping/empty/error/tenant-isolation tests, run tests, and append exact results to TEST-REPORT.md.
 4. Continue in user priority order, one local commit per module; keep AG Grid, PayPal sandbox, OTP/auth, voice, AI memory and Gemini pool untouched.
 5. Phase 3: browser-walk empty and existing orgs, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
@@ -40,12 +40,14 @@
 |---|---|---|---|
 | Phase 1 source audit | PASS | 2026-11-02 | Read-only inspection; endpoint existence is not treated as runtime proof |
 | Dashboard data mapping | PASS | 2026-11-02 | `node --test server/test/dashboard-live-data.test.js`: 4/4 |
+| Transactions mapping and API-only source | PASS | 2026-11-02 | `node --test server/test/transactions-ledger-live.test.js`: 6/6 |
+| Transactions live tenant/network rows | UNVERIFIED | 2026-11-02 | Browser/login unavailable |
 | Dashboard authenticated network and tenant rows | UNVERIFIED | 2026-11-02 | Browser/login and matching Supabase rows unavailable |
 | Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Browser unavailable and no test JWT used |
 | npm test | UNVERIFIED | 2026-11-02 | Not run in this documentation-only audit step |
 
 ## Known Issues and Risks
-- Reports values/exports, approvals queue/badge, notification popover/count, transaction sample rows, and ledger sample rows still contain or retain demo content in authenticated rendering paths. Dashboard is converted in source; its runtime API check is pending.
+- Reports values/exports, approvals queue/badge, notification popover/count, and ledger sample rows still contain or retain demo content in authenticated paths. Dashboard and Transactions are converted in source; runtime checks are pending.
 - The existing transaction and ledger hydration code can combine API data with samples; empty orgs can display nonzero demo values.
 - API routes exist for most modules, but authenticated data and DB rows have not been verified in this audit.
 - Existing known suite issue: `api-client.test.js` no-store assertion was previously reported; current suite not rerun here.

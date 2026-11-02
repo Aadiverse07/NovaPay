@@ -1487,3 +1487,5 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-02 | Authenticated live GET /api/transactions, GET /api/ledger/entries, and same-org Supabase row counts | UNVERIFIED | browser control disabled by Work settings; no fixed test-user credentials configured; /api/status alone returned backend and PayPal connected.
 
 2026-11-02 | node --test server/test/dashboard-live-data.test.js | PASS |  tests,  passed,  failed | dashboard data mapping, empty/multicurrency handling, and source wiring.
+
+2026-11-02 | node --test server/test/transactions-ledger-live.test.js | PASS |  tests,  passed,  failed | API row mapping, dedupe, currency-grouped ledger totals, authenticated-only transaction hydration, and AG Grid sync.

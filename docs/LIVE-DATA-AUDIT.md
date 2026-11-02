@@ -15,8 +15,8 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| Table rows and source note | Static demo rows in `dashboard.html`; `src/financial-live.js` loads `/api/transactions` and appends live rows while retaining samples | `GET /api/transactions` | Route exists; no additional work identified before runtime verification | High: sample and live records mix in one grid and totals | Convert; remove sample rows in authenticated mode; optional dismissible Sample only for empty org |
-| Grid, filters, detail and export | AG Grid/table hydration and DOM-derived rows | `GET /api/transactions` | Verify pagination and all downstream grid behavior with tenant data | Medium: source rows may be mislabeled or double-counted | Keep AG Grid; hydrate only live rows in authenticated mode |
+| Table rows and source note | `src/financial-live.js` waits for authenticated Supabase state, calls the API client, replaces tbody with API rows, and shows explicit empty/error rows; static sample transaction rows were removed | `GET /api/transactions` | No route gap identified; authenticated network and DB row still unverified | Medium: API mapping and tenant query have source tests, but runtime still unverified | Converted to API-only in source; no sample rows in this module |
+| Grid, filters, detail and export | Existing AG Grid keeps DOM hydration; API rows retain identifiers/data attributes; API refresh replaces rows and observer syncs changes | `GET /api/transactions` | Browser grid filters/detail/export remain for Phase 3 verification | Medium: browser behavior not checked in this turn | Keep AG Grid and hydrate only API rows |
 
 ## AI Assistant
 

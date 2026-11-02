@@ -8,6 +8,7 @@ const data = require('../../src/financial-data.js');
 const liveSource = await readFile(new URL('../../src/financial-live.js', import.meta.url), 'utf8');
 const html = await readFile(new URL('../../dashboard.html', import.meta.url), 'utf8');
 const dataSource = await readFile(new URL('../../src/financial-data.js', import.meta.url), 'utf8');
+const gridSource = await readFile(new URL('../../src/transactions-grid.js', import.meta.url), 'utf8');
 
 test('API transaction rows map saved amount, fee, net, date, status and capture id', () => {
   const row = data.transactionRow({ id: 'row-1', type: 'capture', sourceId: 'CAP-1', captureId: 'CAP-1', status: 'COMPLETED', amount: '10.00', fee: '0.59', net: '9.41', currency: 'USD', occurredAt: '2026-11-01T12:00:00Z' });
@@ -57,4 +58,16 @@ test('live views fetch saved transaction and ledger pages and refresh on focus/v
   assert.match(liveSource, /root\.addEventListener\("focus", refreshVisible\)/);
   assert.match(html, /src="src\/financial-live\.js"/);
   assert.match(html, /data-ledger-sample/);
+});
+
+test('authenticated transactions wait for Supabase auth and render API-only rows', () => {
+  assert.match(liveSource, /if \(auth && auth\.ready\) await auth\.ready/);
+  assert.match(liveSource, /auth\.mode !== "supabase" \|\| !auth\.isAuthenticated\(\)/);
+  assert.match(liveSource, /body\.replaceChildren\(\)/);
+  assert.match(liveSource, /No transactions yet\. Create a sandbox payment to get started\./);
+  assert.match(liveSource, /Couldn't load saved transactions\./);
+  assert.match(liveSource, /return root\.NovaPayApi\.request\(path\)/);
+  assert.match(gridSource, /MutationObserver/);
+  const transactionsPanel = html.split('id="view-transactions"')[1].split('id="view-ai-assistant"')[0];
+  for (const sampleId of ['PAY-1001', 'PAY-1002', 'REF-1003', 'PAY-28491', 'DSP-1004', 'PAY-1005']) assert.ok(!transactionsPanel.includes(sampleId));
 });

@@ -57,14 +57,29 @@
     if (!body) return;
     transactionBusy = true; setNote("Loading saved PayPal Sandbox transactions…");
     try {
+      var auth = root.NovaPayAuth;
+      if (auth && auth.ready) await auth.ready;
+      if (!auth || auth.mode !== "supabase" || !auth.isAuthenticated()) {
+        body.replaceChildren();
+        setNote("Sign in to load organization transactions.");
+        clearError(error);
+        return;
+      }
       var rows = data.dedupeTransactions(await pages("/api/transactions", "transactions"));
-      Array.from(body.querySelectorAll('tr[data-source="paypal-sandbox"]')).forEach(function (row) { row.remove(); });
+      body.replaceChildren();
       rows.forEach(function (row) { body.appendChild(makeTransactionNode(row)); });
-      setNote(rows.length ? "Saved PayPal Sandbox transactions loaded from this organization; labeled sample rows remain for preview." : "No saved PayPal Sandbox transactions yet. Labeled sample rows are shown for preview.");
+      if (!rows.length) {
+        var emptyRow = root.document.createElement("tr"), emptyCell = root.document.createElement("td");
+        emptyRow.dataset.txEmpty = "true"; emptyCell.colSpan = 8; emptyCell.textContent = "No transactions yet. Create a sandbox payment to get started."; emptyRow.appendChild(emptyCell); body.appendChild(emptyRow);
+      }
+      setNote(rows.length ? "Saved transactions loaded from this organization." : "No transactions yet. Create a sandbox payment to get started.");
       clearError(error);
     } catch (cause) {
       root.console.error("Could not load saved transactions", cause);
-      setNote("Illustrative sample rows remain visible while saved transactions are unavailable.");
+      body.replaceChildren();
+      var failedRow = root.document.createElement("tr"), failedCell = root.document.createElement("td");
+      failedRow.dataset.txEmpty = "true"; failedCell.colSpan = 8; failedCell.textContent = "Couldn't load saved transactions."; failedRow.appendChild(failedCell); body.appendChild(failedRow);
+      setNote("Couldn't load saved transactions.");
       showError(error, "transactions", loadTransactions);
     } finally { transactionBusy = false; if (transactionQueued) { transactionQueued = false; loadTransactions(); } }
   }
