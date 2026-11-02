@@ -3,7 +3,7 @@
 ## Header
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
-- Last commit: `d90cdb0` (Documents auth/reason/delete wiring)
+- Last commit: `25659b1` (local Phase 2 live-data checkpoint; not pushed)
 - Current phase/task: Phase 2 source conversions complete; full test and migration checks run; Phase 3 browser/live-tenant verification pending.
 
 ## Done
@@ -21,11 +21,11 @@
 - Settings role comes from onboarding membership, profile name updates through Supabase Auth metadata, password updates use the existing Auth method, and account deletion is unavailable in signed-in mode because no deletion endpoint exists. Preferences remain browser-local.
 
 ## In Progress
-- Phase 2 source conversions are complete; final local checkpoint is pending. Full focused live-data suite passed 32/32. `npm test` ran 342 tests: 341 passed, with only the known api-client no-store assertion failing.
+- Phase 2 source conversions are committed locally in `25659b1`; not pushed. Full focused live-data suite passed 32/32. `npm test` ran 342 tests: 341 passed, with only the known api-client no-store assertion failing.
 - Chrome is present but browser use is disabled in Work settings; no authenticated browser or live Supabase DB verification was performed. Every live-row claim remains UNVERIFIED.
 
 ## Next Steps
-1. Review and commit the remaining Phase 2 source, tests, and docs locally; do not push.
+1. Review the local Phase 2 checkpoint `25659b1`; do not push until Phase 3 passes.
 2. Human runs the judge browser checklist with a fixed empty org and an existing org; capture API/DB evidence.
 3. Phase 3: browser-walk both orgs, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
 4. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
