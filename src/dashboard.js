@@ -21,7 +21,7 @@
   $("user-name").textContent=user.name||"NovaPay User";
   $("user-email").textContent=user.email||"user@novapay.app";
   $("user-avatar").textContent=(user.name||"F").trim().charAt(0).toUpperCase();
-  if(window.NovaPayAuth){Promise.resolve(NovaPayAuth.ready).then(function(){if(NovaPayAuth.mode!=="supabase")return;return NovaPayAuth.currentSession().then(function(s){if(!s||!s.user)return;var m=s.user.user_metadata||{},n=m.full_name||m.name||(s.user.email||"").split("@")[0]||"NovaPay User";$("user-name").textContent=n;$("user-email").textContent=s.user.email||"";$("user-avatar").textContent=n.trim().charAt(0).toUpperCase();});}).catch(function(){});}
+  if(window.NovaPayAuth){Promise.resolve(NovaPayAuth.ready).then(function(){if(NovaPayAuth.mode!=="supabase")return;return NovaPayAuth.currentSession().then(function(s){if(!s||!s.user)return;var m=s.user.user_metadata||{},n=m.full_name||m.name||(s.user.email||"").split("@")[0]||"NovaPay User";$("user-name").textContent=n;$("user-email").textContent=s.user.email||"";$("user-avatar").textContent=n.trim().charAt(0).toUpperCase();if($("set-name"))$("set-name").value=n;if($("set-email"))$("set-email").value=s.user.email||"";return window.NovaPayApi?window.NovaPayApi.request("/api/onboarding",{requiresOrg:false}).then(function(data){var org=NovaPayAuth.currentOrgId(s.user.id),membership=(data.organizations||[]).find(function(row){return row.organizationId===org}),labels={owner:"Owner",admin:"Admin",accountant:"Accountant",approver:"Approver",viewer:"Viewer",donor:"Donor",resident:"Resident"},role=membership&&labels[membership.role]||"Role unavailable";if($("set-role"))$("set-role").value=role;if($("pm-role"))$("pm-role").textContent=role;var modalRole=$("pm-role-value");if(modalRole)modalRole.textContent=role;}):null;});}).catch(function(error){if(window.console)console.error("Could not load current workspace role",error);if($("set-role"))$("set-role").value="Role unavailable";});}
 
   var sessionMemoryStorage=null;try{sessionMemoryStorage=window.sessionStorage}catch(e){}
   var assistantConversation=window.NovaPayAssistantConversation&&window.NovaPayAssistantConversation.create(sessionMemoryStorage),conversationScope="";
@@ -300,6 +300,7 @@
   });
   approve.addEventListener("click",function(){agentStatus.hidden=true;openAction();});
   function addDemoRecords(){
+    if(!window.NovaPayAuth||window.NovaPayAuth.mode!=="demo")return;
     var tb=$("transactions-table-body");
     if(tb&&!tb.querySelector('[data-tx-id="REF-28491"]')){
       var r=document.createElement("tr");r.className="transaction-row";r.tabIndex=0;r.dataset.txId="REF-28491";r.dataset.type="Refund";r.dataset.status="Refunded (Simulated)";r.dataset.amount="2000";r.dataset.currency="INR";r.dataset.source="demo";r.dataset.buyer="Unavailable";
@@ -309,6 +310,7 @@
     }
   }
   confirm.addEventListener("click",function(){
+    if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){closeAction();showToast("This local refund simulation is available only in demo mode. Use the PayPal Sandbox and Approvals flow for a real sandbox refund.");return;}
     if(processing)return;
     processing=true;
     var buttons=document.querySelectorAll("#action-modal .action-modal-buttons button");buttons.forEach(function(b){b.disabled=true});
@@ -374,10 +376,10 @@
     var navCount=$("nav-approvals-count");if(navCount)navCount.classList.toggle("is-muted",!prefs.notif||!prefs.approvalAlerts);
     if(qa)qa.hidden=!prefs.aiSuggestions;
     var visible=0;
-    document.querySelectorAll(".notification-item").forEach(function(it){var kind=it.dataset.notifKind,show=kind==="approvals"?!!prefs.approvalAlerts:kind==="ai"?!!prefs.aiAlerts:true;it.hidden=!show;if(show)visible++;});
-    var badge=$("notif-count");if(badge)badge.textContent=visible?visible+" new":"All clear";
-    var dot=document.querySelector(".notification-dot");if(dot)dot.hidden=!visible;
-    var empty=$("notif-empty");if(empty)empty.hidden=visible>0;
+    document.querySelectorAll(".notification-item").forEach(function(it){var kind=it.dataset.notifKind,show=kind==="approvals"?!!prefs.approvalAlerts:kind==="ai"?!!prefs.aiAlerts:!!prefs.notif;it.hidden=!show;if(show&&((it.dataset.notificationStatus||"unread")==="unread"))visible++;});
+    var badge=$("notif-count");if(badge&&window.NovaPayAuth&&window.NovaPayAuth.mode!=="supabase")badge.textContent=visible?visible+" new":"All clear";
+    var dot=document.querySelector(".notification-dot");if(dot&&(!window.NovaPayAuth||window.NovaPayAuth.mode!=="supabase"))dot.hidden=!visible;
+    var empty=$("notif-empty");if(empty)empty.hidden=document.querySelectorAll(".notification-item:not([hidden])").length>0;
     ["set-approval-alerts","set-ai-alerts"].forEach(function(id){var el=$(id);if(el)el.disabled=!prefs.notif;});
     scheduleIdle();
   }
@@ -433,16 +435,25 @@
   if(setName)setName.value=user.name&&!/^novapay (demo )?user$/i.test(user.name)?user.name:"";
   if(setEmail)setEmail.value=user.email||"user@novapay.app";
   if($("set-tz"))$("set-tz").value=(Intl.DateTimeFormat().resolvedOptions().timeZone)||"Local";
-  function saveProfile(){
+  async function saveProfile(){
     var n=setName.value.trim().replace(/\s+/g," ");
     if(!n){showToast("Please enter a display name.");setName.focus();return;}
+    var auth=window.NovaPayAuth;
+    if(auth&&auth.mode==="supabase"){
+      var client=auth.client,button=$("set-save-profile");
+      if(!client||!client.auth||typeof client.auth.updateUser!=="function"){showToast("Supabase profile updates are unavailable in this session.");return;}
+      if(button){button.disabled=true;button.textContent="Saving…";}
+      try{var updated=await client.auth.updateUser({data:{full_name:n}});if(updated.error)throw updated.error;user.name=n;if(setName)setName.value=n;$("user-name").textContent=n;$("user-avatar").textContent=n.charAt(0).toUpperCase();var greeting=$("greeting-name");if(greeting)greeting.textContent=n.split(/\s+/)[0];if($("pm-title")){$("pm-title").textContent=n;$("pm-name").textContent=n;$("pm-avatar").textContent=n.charAt(0).toUpperCase();}showToast("Supabase profile updated.");}
+      catch(error){showToast("Profile update failed. Check your session and try again.");if(window.console)console.error("Could not update Supabase profile metadata",error);}
+      finally{if(button){button.disabled=false;button.textContent="Save profile";}}
+      return;
+    }
     user.name=n;try{localStorage.setItem("novapay-demo-user",JSON.stringify(user))}catch(e){}
-    /* Keep the name after the next sign-in: the sign-in page rebuilds the user from the saved account. */
     var accts=getAccts();if(accts[acctEmail]||acctEmail===DEMO_EMAIL){accts[acctEmail]=Object.assign({},accts[acctEmail],{name:n});putAccts(accts);}
     $("user-name").textContent=n;$("user-avatar").textContent=n.charAt(0).toUpperCase();
     var g=$("greeting-name");if(g)g.textContent=n.split(/\s+/)[0];
     if($("pm-title")){$("pm-title").textContent=n;$("pm-name").textContent=n;$("pm-avatar").textContent=n.charAt(0).toUpperCase();}
-    showToast("Profile saved.");
+    showToast("Profile saved in this browser.");
   }
   if($("set-save-profile"))$("set-save-profile").addEventListener("click",saveProfile);
   if(setName)setName.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();saveProfile();}});
@@ -455,11 +466,17 @@
     $("set-pw-username").value=user.email||"";
     if(storedPassword()===null){
       pwForm.querySelectorAll("input[type=password],button").forEach(function(el){el.disabled=true;});
-      pwSay("This account signs in with Google, so there is no NovaPay password to change.","");
+      Promise.resolve(window.NovaPayAuth&&NovaPayAuth.ready).then(function(){if(!window.NovaPayAuth||NovaPayAuth.mode!=="supabase"){pwSay("Password changes are not available for this demo sign-in method.","");return;}var current=$("set-pw-current"),currentLabel=current&&current.closest("label");if(currentLabel){currentLabel.hidden=true;currentLabel.style.display="none";}if(current)current.disabled=true;["set-pw-new","set-pw-confirm","set-pw-submit"].forEach(function(id){if($(id))$(id).disabled=false});pwSay("Password updates use Supabase Auth for this signed-in account.","");});
     }
     pwForm.addEventListener("submit",function(e){
       e.preventDefault();
       var cur=$("set-pw-current").value,next=$("set-pw-new").value,again=$("set-pw-confirm").value,real=storedPassword();
+      if(window.NovaPayAuth&&NovaPayAuth.mode==="supabase"){
+        if(next.length<8){pwSay("Use at least 8 characters for the new password.","error");$("set-pw-new").focus();return;}
+        if(!/[A-Za-z]/.test(next)||!/\d/.test(next)){pwSay("Include at least one letter and one number.","error");$("set-pw-new").focus();return;}
+        if(next!==again){pwSay("The new passwords do not match.","error");$("set-pw-confirm").focus();return;}
+        $("set-pw-submit").disabled=true;NovaPayAuth.updatePassword(next).then(function(){pwForm.reset();$("set-pw-username").value=user.email||"";pwSay("Password updated with Supabase Auth.","ok");showToast("Password updated.");}).catch(function(error){pwSay("Supabase could not update the password. Check your session and try again.","error");if(window.console)console.error("Could not update Supabase password",error);}).finally(function(){$("set-pw-submit").disabled=false;});return;
+      }
       if(real===null)return;
       if(!cur){pwSay("Enter your current password.","error");$("set-pw-current").focus();return;}
       if(cur!==real){pwSay("Current password is incorrect.","error");$("set-pw-current").focus();return;}
@@ -506,7 +523,7 @@
     showToast((rows.length-1)+" transaction"+(rows.length===2?"":"s")+" exported.");
   });
   if($("set-export-data"))$("set-export-data").addEventListener("click",function(){
-    var data={exportedAt:new Date().toISOString(),profile:{name:user.name||"",email:user.email||"",role:"Business Owner"},preferences:Object.assign({},prefs,{theme:savedTheme()||"system"}),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||"",currency:"INR"};
+    var data={exportedAt:new Date().toISOString(),profile:{name:user.name||"",email:user.email||"",role:"Not included in browser export"},preferences:Object.assign({},prefs,{theme:savedTheme()||"system"}),timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone||"",currencyDisplay:"per-record"};
     downloadFile("novapay-my-data.json",JSON.stringify(data,null,2),"application/json");showToast("Your data was downloaded.");
   });
 
@@ -528,8 +545,9 @@
     });
   });
   if($("set-delete"))$("set-delete").addEventListener("click",function(){
+    if(window.NovaPayAuth&&NovaPayAuth.mode==="supabase"){showToast("Account deletion is not available in this preview. Contact support for an account deletion request.");return;}
     var builtIn=acctEmail===DEMO_EMAIL;
-    confirmDialog({title:"Delete your account?",text:builtIn?"This signs you out and erases all NovaPay data saved in this browser, including your preferences and any password you set. The built-in demo login will still work with its default password.":"This permanently removes your account and all NovaPay data saved in this browser, then signs you out. You will need to sign up again.",confirm:"Delete account"},function(){
+    confirmDialog({title:"Delete demo profile?",text:builtIn?"This removes the demo profile and NovaPay data saved in this browser. It does not delete server-side organization data.":"This removes this demo profile and its browser-local data. It does not delete a Supabase account or organization records.",confirm:"Delete demo profile"},function(){
       var accts=getAccts();delete accts[acctEmail];putAccts(accts);
       try{
         var keys=[],i,k;for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf("novapay-")===0&&k!==ACCT_KEY)keys.push(k);}
@@ -540,6 +558,7 @@
       endSession().then(function(){window.location.href="preview.html";});
     });
   });
+  Promise.resolve(window.NovaPayAuth&&NovaPayAuth.ready).then(function(){var button=$("set-delete"),row=button&&button.closest(".set-row"),demo=!!(window.NovaPayAuth&&NovaPayAuth.mode==="demo");if(!button)return;button.hidden=!demo;if(row){var small=row.querySelector("small");if(small)small.textContent=demo?"Removes this demo profile and browser-local data only.":"Account deletion is not available from this preview; contact support.";}});
 
   /* Keep other open tabs in step: settings, theme and sign-out. */
   window.addEventListener("storage",function(e){
@@ -552,8 +571,14 @@
   function fillProfile(){
     var n=$("user-name").textContent;
     $("pm-title").textContent=n;$("pm-name").textContent=n;$("pm-avatar").textContent=n.charAt(0).toUpperCase();
-    $("pm-email").textContent=user.email||"user@novapay.app";
+    $("pm-email").textContent=$("user-email").textContent||user.email||"Signed-in account";
     $("pm-tz").textContent=Intl.DateTimeFormat().resolvedOptions().timeZone||"Local";
+    var auth=window.NovaPayAuth,workspace=$("pm-workspace"),account=$("pm-account-type");
+    if(auth&&auth.mode==="supabase"){
+      if(account)account.textContent="Supabase account";
+      Promise.resolve(auth.currentSession()).then(function(session){var org=session&&session.user&&auth.currentOrgId(session.user.id);if(workspace)workspace.textContent=org||"No active organization";}).catch(function(){if(workspace)workspace.textContent="Organization unavailable";});
+    }else{if(workspace)workspace.textContent="Demo workspace";if(account)account.textContent=auth&&auth.mode==="demo"?"Demo account":"Account unavailable";}
+    var role=$("set-role")&&$("set-role").value||"Role unavailable";if($("pm-role"))$("pm-role").textContent=role;if($("pm-role-value"))$("pm-role-value").textContent=role;
     $("pm-theme").textContent=currentTheme()==="dark"?"Dark":"Light";
     var t=0;try{t=parseInt(localStorage.getItem("novapay-session-start")||"0",10)}catch(e){}
     if(!t){t=Date.now();try{localStorage.setItem("novapay-session-start",String(t))}catch(e){}}
@@ -572,7 +597,7 @@
   var greetingHour=new Date().getHours(),greetingPrefix=greetingHour<12?"Good morning":greetingHour<18?"Good afternoon":"Good evening";
   var greeting=$("dashboard-subtitle");if(greeting&&greeting.firstChild)greeting.firstChild.textContent=greetingPrefix+", ";
   $("user-name").textContent=displayName;
-  $("user-email").textContent="Business Owner";
+  $("user-email").textContent=user.email||"Demo account";
   $("user-avatar").textContent=displayName.charAt(0).toUpperCase();
 
   var notifications=$("notifications"), notificationPopover=$("notification-popover"), calendarButton=$("calendar-button"), calendarPopover=$("calendar-popover"), moreButton=$("more-button"), morePopover=$("more-popover");
@@ -755,7 +780,7 @@
   };
   var txModal=$("transaction-modal"),lastFocus=null,selectedTransaction=null;
   function openTx(id){
-    var row=document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(id)+'"]'), d=row?{type:row.dataset.type,ref:row.dataset.txId,amount:row.cells[3].textContent,fee:row.cells[4].textContent,net:row.cells[5].textContent,status:row.dataset.status,time:row.cells[0].textContent,date:row.dataset.date,buyer:row.dataset.buyer,currency:row.dataset.currency,source:row.dataset.source,related:row.dataset.related,ledger:row.dataset.ledger,note:row.dataset.note}:txData[id]; if(!txModal)return;
+    var row=document.querySelector('#transactions-table-body tr[data-tx-id="'+CSS.escape(id)+'"]'), d=row?{type:row.dataset.type,ref:row.dataset.txId,amount:row.cells[3].textContent,fee:row.cells[4].textContent,net:row.cells[5].textContent,status:row.dataset.status,time:row.cells[0].textContent,date:row.dataset.date,buyer:row.dataset.buyer,currency:row.dataset.currency,source:row.dataset.source,related:row.dataset.related,ledger:row.dataset.ledger,note:row.dataset.note}:window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"?txData[id]:null; if(!txModal)return;
     if(!d){showToast("Couldn't load that transaction. Please try again.");return;}
     selectedTransaction=d;
     lastFocus=document.activeElement;
@@ -817,8 +842,8 @@
     if(txModal)new MutationObserver(function(){if(txModal.hidden)cancelRecording()}).observe(txModal,{attributes:true,attributeFilter:["hidden"]});
     window.addEventListener("pagehide",cancelRecording);
   })();
-  $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction,context=["ID: "+d.ref,"type: "+d.type,"status: "+d.status,"gross: "+d.amount,"fee: "+d.fee,"net: "+d.net,"currency: "+(d.currency||"Unavailable"),"buyer: "+(d.buyer||"Unavailable"),"source: "+(d.source==="paypal-sandbox"?"PayPal Sandbox":"Illustrative sample data")].join("; ");$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.live.ai&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply;$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(){$("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context});else $("tx-ai-answer").textContent="AI backend unavailable. Available transaction data: "+context;});
-  $("tx-send-approval").addEventListener("click",function(){if(!selectedTransaction)return;var answer=$("tx-ai-answer"),reason=answer.textContent.trim();if(!reason||reason.indexOf("Thinking")===0){showToast("Ask the AI and review its finding first.");return}if(window.NovaLive&&NovaLive.addTransactionFinding){var p=null;try{p=JSON.parse(answer.dataset.proposal||"null")}catch(e){}if(p&&["refund","dispute-evidence","hold-payout"].indexOf(p.type)>-1){p.reason=p.reason||reason;p.txId=selectedTransaction.ref;p.display=selectedTransaction.amount;p.source=p.source||"NovaPay AI";p.simulatedOnly=true;NovaLive.addProposal(p)}else NovaLive.addTransactionFinding(selectedTransaction,reason);closeTx();location.hash="#approvals";showToast("Finding sent to Approvals for human review.")}else showToast("Approvals service is unavailable.")});
+  $("tx-ai-ask").addEventListener("click",function(){var q=$("tx-ai-question").value.trim();if(!q||!selectedTransaction)return;var d=selectedTransaction;$("tx-ai-answer").textContent="Thinking…";$("tx-ai-answer").dataset.proposal="";if(window.NovaLive&&NovaLive.askTransaction)NovaLive.askTransaction(d,q).then(function(result){$("tx-ai-answer").textContent=result.reply||"No answer was returned.";$("tx-ai-answer").dataset.proposal=result.proposal?JSON.stringify(result.proposal):""},function(error){$("tx-ai-answer").textContent="AI service unavailable. Please retry. ("+((error&&error.code)||"API_ERROR")+")"});else $("tx-ai-answer").textContent="AI service unavailable. Please retry.";});
+  $("tx-send-approval").addEventListener("click",function(){if(!selectedTransaction)return;var answer=$("tx-ai-answer"),reason=answer.textContent.trim();if(!reason||reason.indexOf("Thinking")===0){showToast("Ask the AI and review its finding first.");return}var p=null;try{p=JSON.parse(answer.dataset.proposal||"null")}catch(e){}if(!p||["refund","dispute-evidence","hold-payout"].indexOf(p.type)<0){showToast("There is no actionable AI finding to send.");return}if(window.NovaLive&&NovaLive.addProposal){p.reason=p.reason||reason;p.txId=selectedTransaction.ref;p.display=selectedTransaction.amount;p.source=p.source||"NovaPay AI";p.simulatedOnly=true;NovaLive.addProposal(p);closeTx();location.hash="#approvals";showToast("Finding sent to Approvals for human review.")}else showToast("Approvals service is unavailable.")});
   document.addEventListener("keydown",function(e){
     if(!txModal||txModal.hidden)return;
     if(e.key==="Escape")closeTx();

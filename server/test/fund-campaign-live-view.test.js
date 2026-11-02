@@ -51,6 +51,10 @@ test('dashboard loads live fund views; campaign create uses API with field valid
   assert.match(views, /NovaPayApi\.request\("\/api\/funds\/campaigns"/);
   assert.match(views, /result\.role/);
   assert.match(views, /transparency\?campaignId=/);
+  assert.match(views, /Transparency and spending · read only/);
+  assert.match(views, /No completion evidence/);
+  assert.match(views, /Download audit CSV/);
+  assert.match(views, /novapay:financial-refresh/);
   assert.match(views, /No campaigns yet/);
   assert.match(html, /data-fund-sample hidden/);
   assert.match(views, /node\.style\.display = "none"/);

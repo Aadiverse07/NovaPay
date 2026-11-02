@@ -11,3 +11,16 @@ Status column is intentionally left for manual results. Use only the fixed exist
 | OTP panel, dark comparison | Click the theme toggle to dark before opening **Get Started**. Compare the same controls/panel against Login and Sign Up; confirm labels/errors remain readable and the transition works. Switch back to light. | UNVERIFIED |
 | Recovery | On the preview modal, select **Login → Forgot Password?** and enter the controlled test inbox. Open the recovery OTP panel, enter the emailed code, set matching 8+ character passwords, click **Update password**, then sign in with the new password. | UNVERIFIED |
 | Narrow window | Resize browser to about 375 px wide; open Login, Sign Up and OTP/recovery panels. Verify only the active form is visible, no horizontal scrolling/clipping, code input can be focused, close X and Escape work, and focus returns to the opener. | UNVERIFIED |
+
+
+## Judge live-data walkthrough (manual; not yet run)
+
+| Check | Exact steps | Result |
+| --- | --- | --- |
+| Empty organization baseline | Start `npm start`; sign in as the fixed existing owner for the approved empty organization; open Dashboard, Transactions, Ledger, Approvals, Invoices, Reports, Documents, Community Funds, Maintenance and the notification bell. Verify zero/empty states, no sample money rows, Retry on an offline API, then hard-refresh and repeat. Capture Network status and verify requests carry the current org scope. | UNVERIFIED |
+| Existing organization hydration | Sign in as the fixed owner for the existing organization; open each same view and verify displayed rows match `/api/*` responses for that organization. Hard-refresh each view and confirm rows persist; do not count sample/demo values. | UNVERIFIED |
+| Sandbox capture to reporting | Open **PayPal Sandbox** → enter `10.00 USD` → **Create test order** → approve in the PayPal Sandbox tab → return → **I approved the order · Capture payment**. Verify capture appears in **Transactions**, **Ledger**, **Dashboard** KPIs/cash movement and **Reports**, and verify matching transaction/journal rows in Supabase. | UNVERIFIED |
+| Invoice flow | Open **Invoices** → **Create invoice** → enter clearly marked sample customer/test line item → save draft. Verify one org-scoped draft appears after refresh and **View** shows it. Do not send it. | UNVERIFIED |
+| Approval flow | Open **Approvals** → verify live pending badge and API row count → open one existing eligible test approval → review its evidence and decision → verify server decision and updated badge after refresh. Do not approve a live-money action. | UNVERIFIED |
+| AI uses new data | Open **AI Assistant** → ask “Show transactions from this month” and a question about the test capture → verify answer cites the real test transaction ID and the Network tab shows one authenticated `POST /api/ai/chat`; no sample fallback text. | UNVERIFIED |
+| Notification bell | Click the bell → verify count and rows match `GET /api/notifications`; click one row and verify it navigates and marks read; refresh and confirm unread count updates. | UNVERIFIED |

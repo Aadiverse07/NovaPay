@@ -38,14 +38,16 @@
   };
 
   function labelSampleViews() {
-    var fundsPanel = $("#view-community-funds");
-    if (fundsPanel) { fundsPanel.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = false; node.style.display = ""; }); var copy = $(".page-intro p", fundsPanel); if (copy) copy.textContent = "Manage campaign goals and review community progress. All amounts shown are illustrative sample data."; }
+    var fundsPanel = $("#view-community-funds"), hidden = false;
+    try { hidden = sessionStorage.getItem("novapay-fund-samples-hidden") === "1"; } catch (_) {}
+    if (fundsPanel) { fundsPanel.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = hidden; node.style.display = hidden ? "none" : ""; }); var copy = $(".page-intro p", fundsPanel); if (copy) copy.textContent = hidden ? "DEMO MODE · sample fund data is hidden for this session." : "DEMO MODE · all campaign and transparency amounts are illustrative sample data."; }
     ["community-funds", "maintenance"].forEach(function (name) {
-      var intro = $("#view-" + name + " .page-intro");
-      if (!intro || $("[data-sample-view-label]", intro)) return;
-      var badge = make("span", "status warn", "Sample data · Demo workspace");
-      badge.setAttribute("data-sample-view-label", "");
-      intro.appendChild(badge);
+      var intro = $("#view-" + name + " .page-intro"); if (!intro) return;
+      var badge = $("[data-sample-view-label]", intro);
+      if (!badge) { badge = make("span", "status warn", "Sample data · Demo workspace"); badge.setAttribute("data-sample-view-label", ""); intro.appendChild(badge); }
+      var dismiss = $("[data-sample-dismiss]", intro);
+      if (!dismiss && !hidden) { dismiss = make("button", "btn btn--ghost", "Hide sample data"); dismiss.type = "button"; dismiss.setAttribute("data-sample-dismiss", ""); dismiss.addEventListener("click", function () { try { sessionStorage.setItem("novapay-fund-samples-hidden", "1"); } catch (_) {} ["community-funds", "maintenance"].forEach(function (view) { var section = $("#view-" + view); if (section) section.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = true; node.style.display = "none"; }); var label = $("[data-sample-view-label]", $("#view-" + view)); if (label) label.textContent = "Sample data hidden"; }); if (copy) copy.textContent = "DEMO MODE · sample fund data is hidden for this session."; dismiss.hidden = true; }); intro.appendChild(dismiss); }
+      if (hidden && dismiss) dismiss.hidden = true;
     });
   }
 
@@ -61,17 +63,19 @@
     panel.appendChild(root);
     var roleNote = "";
 
-    function showMessage(kind, message) {
+    function showMessage(kind, message, retryable) {
       root.textContent = "";
       var box = make("div", "empty-state");
       box.setAttribute("role", kind === "error" ? "alert" : "status");
       box.appendChild(make("h3", "", kind === "error" ? "Fundraising data unavailable" : "No live campaigns yet"));
       box.appendChild(make("p", "", message));
       root.appendChild(box);
+      if (retryable) { var retry = make("button", "btn btn--ghost", "Retry"); retry.type = "button"; retry.addEventListener("click", load); root.appendChild(retry); }
       if (roleNote) root.appendChild(make("p", "module-foot", roleNote));
     }
 
-    function render(campaigns, summaries, contributions, receiptError, role) {
+    function render(campaigns, summaries, transparency, receiptError, role) {
+      var contributions = Array.isArray(transparency.contributions) ? transparency.contributions : [];
       root.textContent = "";
       var header = make("article", "dash-card module-card");
       header.appendChild(make("div", "card-heading"));
@@ -202,6 +206,31 @@
       });
       if (receiptError) receiptsCard.appendChild(make("p", "module-foot", "Receipt list could not be refreshed: " + receiptError));
       root.appendChild(receiptsCard);
+      var transparencyCard = make("article", "dash-card module-card");
+      transparencyCard.appendChild(make("h3", "", "Transparency and spending · read only"));
+      transparencyCard.appendChild(make("p", "module-foot", transparency.legalCaution || "PayPal Sandbox only. SIMULATED payments do not move money."));
+      transparencyCard.appendChild(make("small", "", "Donor names and private evidence paths are withheld by the API."));
+      var expenses = Array.isArray(transparency.expenses) ? transparency.expenses : [];
+      if (!expenses.length) transparencyCard.appendChild(make("p", "empty-state", "No maintenance expenses are recorded for this organization."));
+      expenses.forEach(function (expense) {
+        var detail = make("section", "transparency-row");
+        detail.appendChild(make("b", "", expense.title || "Maintenance expense"));
+        detail.appendChild(make("span", "", "State · " + String(expense.status || "unknown").replace(/_/g, " ")));
+        detail.appendChild(make("span", "", "Amount · " + (expense.amountMinor == null ? "Not recorded" : amount(expense.amountMinor, expense.currency))));
+        var approvals = Array.isArray(expense.approvals) ? expense.approvals : [];
+        detail.appendChild(make("small", "", approvals.length ? "Approvals · " + approvals.map(function (a) { return String(a.decision || a.status || "pending"); }).join(", ") : "No approval record returned"));
+        detail.appendChild(make("small", "", "Quotation · " + (expense.quotation ? amount(expense.quotation.amountMinor, expense.currency) : "No quotation")));
+        var payment = expense.payment || {};
+        detail.appendChild(make("small", "", "Payment · " + (payment.mode === "SIMULATED" ? "SIMULATED · no money sent" : payment.status || "No payment record")));
+        detail.appendChild(make("small", "", "Payment reference · " + (expense.paymentReference || "No payment reference")));
+        detail.appendChild(make("small", "", "Ledger entry · " + (expense.ledgerEntryId || "No ledger entry")));
+        var evidence = Array.isArray(expense.completionEvidence) ? expense.completionEvidence : [];
+        detail.appendChild(make("small", "", evidence.length ? "Completion evidence · " + evidence.length + " record(s)" : "No completion evidence"));
+        (Array.isArray(expense.gaps) ? expense.gaps : []).forEach(function (gap) { detail.appendChild(make("small", "", gap.gap || String(gap))); });
+        transparencyCard.appendChild(detail);
+      });
+      if (["owner", "admin"].indexOf(role) >= 0) { var exportButton = make("button", "btn btn--ghost", "Download audit CSV"); exportButton.type = "button"; exportButton.addEventListener("click", async function () { exportButton.disabled = true; try { var csv = await window.NovaPayApi.request("/api/funds/transparency/audit.csv", { responseType: "text" }); var url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })), link = make("a"); link.href = url; link.download = "fund-audit.csv"; link.hidden = true; document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000); } catch (error) { transparencyCard.appendChild(make("p", "module-foot", "Audit export failed: " + (error.message || "Request unavailable."))); } finally { exportButton.disabled = false; } }); transparencyCard.appendChild(exportButton); }
+      root.appendChild(transparencyCard);
     }
 
     async function load() {
@@ -212,7 +241,7 @@
         var campaigns = Array.isArray(result.campaigns) ? result.campaigns : [];
         var pair = await Promise.all([
           Promise.all(campaigns.map(function (campaign) { return window.NovaPayApi.request("/api/funds/campaigns/" + encodeURIComponent(campaign.id) + "/summary"); })),
-          window.NovaPayApi.request("/api/funds/transparency").then(function (data) { return { data: data, error: "" }; }, function (error) { return { data: { contributions: [] }, error: error.message || "Receipt list unavailable." }; })
+          window.NovaPayApi.request("/api/funds/transparency").then(function (data) { return { data: data, error: "" }; }, function (error) { return { data: { contributions: [], expenses: [] }, error: error.message || "Receipt list unavailable." }; })
         ]);
         var session = await auth.currentSession();
         var role = String(result.role || trustedRole(session) || "").toLowerCase();
@@ -220,12 +249,16 @@
           ? "Read-only access for your organization role."
           : role ? "Organization role: " + role + ". API permissions are enforced by the server."
             : "Organization role is not available in trusted browser metadata; write controls are hidden until the role is resolved.";
-        render(campaigns, pair[0], Array.isArray(pair[1].data.contributions) ? pair[1].data.contributions : [], pair[1].error, role);
+        render(campaigns, pair[0], pair[1].data, pair[1].error, role);
       } catch (error) {
-        showMessage("error", error.message || "Live fundraising data could not be loaded.");
+        showMessage("error", error.message || "Live fundraising data could not be loaded.", true);
       }
     }
     document.addEventListener("novapay:funds-campaign-created", load);
+    document.addEventListener("novapay:financial-refresh", load);
+    window.addEventListener("focus", load);
+    window.addEventListener("hashchange", function () { if (location.hash === "#community-funds") load(); });
+    window.NovaPayFundViews = window.NovaPayFundViews || {}; window.NovaPayFundViews.refreshCampaigns = load;
     load();
   }
 
@@ -307,6 +340,7 @@
       state.appendChild(make("h3", "", title));
       state.appendChild(make("p", "", copy));
       root.appendChild(state);
+      if (isError) { var retry = make("button", "btn btn--ghost", "Retry"); retry.type = "button"; retry.addEventListener("click", refresh); root.appendChild(retry); }
     }
 
     function replaceRequest(item, result) {
@@ -460,10 +494,11 @@
         currentRole = String(results[0].role || currentRole || "").toLowerCase();
         campaigns = Array.isArray(results[1].campaigns) ? results[1].campaigns : [];
         render();
-      } catch (error) { message("Maintenance data unavailable", error.message || "Maintenance records could not be loaded.", true); }
+      } catch (error) { message("Maintenance data unavailable", error.message || "Maintenance records could not be loaded.", true); if (window.console) console.error("Could not load organization maintenance records", error); }
     }
     window.NovaPayFundViews = window.NovaPayFundViews || {};
     window.NovaPayFundViews.refreshMaintenance = refresh;
+    document.addEventListener("novapay:financial-refresh", refresh); window.addEventListener("focus", refresh); window.addEventListener("hashchange", function () { if (location.hash === "#maintenance") refresh(); });
     window.NovaPayFundViews.submitMaintenance = async function (form, closeForm) {
       if (maintenanceSubmitting) return;
       var status = $("#maintenance-form-status"), fieldNames = ["title", "description", "location", "category", "priority"];
@@ -502,6 +537,8 @@
       state.appendChild(make("h3", "", "Transparency data unavailable"));
       state.appendChild(make("p", "", error.message || "The organization transparency view could not be loaded."));
       root.appendChild(state);
+      var retry = make("button", "btn btn--ghost", "Retry"); retry.type = "button"; retry.addEventListener("click", load); root.appendChild(retry);
+      if (window.console) console.error("Could not load organization fund transparency", error);
     }
 
     function value(label, text) {
@@ -595,13 +632,13 @@
         render(data);
       } catch (error) { showError(error); }
     }
-    load();
+    load(); document.addEventListener("novapay:financial-refresh", load); window.addEventListener("focus", load); window.addEventListener("hashchange", function () { if (location.hash === "#community-funds") load(); });
   }
 
   auth.ready.then(async function () {
     if (auth.mode === "demo") { labelSampleViews(); return; }
     if (auth.mode !== "supabase") return;
-    try { await waitForDashboard(); startFundraising(); startMaintenance(); }
+    try { await waitForDashboard(); startFundraising(); startMaintenance(); startTransparency(); }
     catch (error) {
       var panel = $("#view-community-funds");
       if (panel) {

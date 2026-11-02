@@ -53,6 +53,8 @@ test('authenticated dashboard activates live maintenance and prevents duplicate 
   assert.match(views, /startMaintenance\(\)/);
   assert.match(views, /NovaPayApi\.request\("\/api\/funds\/maintenance"/);
   assert.match(views, /No maintenance requests yet/);
+  assert.match(views, /if \(isError\).*Retry/);
+  assert.match(views, /novapay:financial-refresh/);
   assert.match(views, /maintenanceSubmitting/);
   assert.match(views, /majorToMinor\(estimateRaw, currency\)/);
   assert.match(views, /statusFilter/);

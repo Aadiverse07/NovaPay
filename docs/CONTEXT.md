@@ -3,8 +3,8 @@
 ## Header
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
-- Last commit: `80438ab` (organization Reports wiring); Documents changes are ready for next local commit
-- Current phase/task: Live-data integrity, Phase 2 Approvals API wiring and badge; Dashboard, Transactions, and Ledger source modules are complete.
+- Last commit: `d90cdb0` (Documents auth/reason/delete wiring)
+- Current phase/task: Phase 2 source conversions complete; full test and migration checks run; Phase 3 browser/live-tenant verification pending.
 
 ## Done
 - Read prior CONTEXT and WORKLOG tail before work.
@@ -14,17 +14,21 @@
 - Transactions wait for Supabase auth, replace sample DOM rows with API rows, and show empty/error states. AG Grid internals unchanged.
 - Ledger sample rows and fake totals removed; authenticated ledger now loads API entries, shows empty/error/retry states, keeps currency-separated totals, and exports API rows. Files: `src/financial-live.js`, `src/modules.js`, `dashboard.html`. Latest focused financial tests: 7/7. Live tenant rows remain UNVERIFIED.
 - Approvals now loads authenticated queue records and pending count from `/api/approvals` through `NovaPayApi`, paginates, refreshes on auth/view/mutation, routes persisted decisions through the server, and isolates sample proposals to explicit demo mode. Recent action list is labeled session-only. Files: `src/approvals-data.js`, `src/novapay-live.js`, `dashboard.html`; focused tests 3/3.
-- Invoices already used org API routes; list now waits for Supabase auth and failure states show Retry and unavailable KPI markers instead of zero counts. No sample invoice rows are used. Files: `src/invoices-live.js`, `dashboard.html`; source tests 2/2.
+- Invoices already used org API routes; list waits for Supabase auth and failure states show Retry/unavailable markers. No sample rows.
+- Community Funds and Maintenance use org APIs; added transparency expense evidence, retry/refresh hooks, demo sample dismissal, and hid static fundraising/maintenance cards in authenticated mode. Files: `src/fund-views.js`; focused fund/maintenance tests pass.
+- Notifications bell now fetches `/api/notifications`, renders unread counts, opens the mapped module, and marks read using the existing endpoint. Files: `src/notifications-live.js`, `dashboard.html`, `src/dashboard.js`.
+- Dashboard legacy transaction fixtures and local refund simulation are demo-only; transaction-detail AI errors no longer echo DOM fields or create fake proposals. Browser export no longer invents owner/INR values.
+- Settings role comes from onboarding membership, profile name updates through Supabase Auth metadata, password updates use the existing Auth method, and account deletion is unavailable in signed-in mode because no deletion endpoint exists. Preferences remain browser-local.
 
 ## In Progress
-- Phase 2 Reports API wiring is committed; runtime browser/DB tenant verification remains UNVERIFIED. Next module is Documents.
-- Phase 1 inspected source only. No authenticated browser or database verification was available, so live-data status remains UNVERIFIED.
+- Phase 2 source conversions are complete; final local checkpoint is pending. Full focused live-data suite passed 32/32. `npm test` ran 342 tests: 341 passed, with only the known api-client no-store assertion failing.
+- Chrome is present but browser use is disabled in Work settings; no authenticated browser or live Supabase DB verification was performed. Every live-row claim remains UNVERIFIED.
 
 ## Next Steps
-1. Convert Documents, Community Funds, Maintenance, Notifications, then Settings, one module checkpoint each.
-3. Add mapping/empty/error/tenant-source tests per module and log each actual run in TEST-REPORT.md.
-4. Phase 3: browser-walk a new empty org and an existing org, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
-5. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
+1. Review and commit the remaining Phase 2 source, tests, and docs locally; do not push.
+2. Human runs the judge browser checklist with a fixed empty org and an existing org; capture API/DB evidence.
+3. Phase 3: browser-walk both orgs, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
+4. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
 
 ## User Actions Pending
 - None for Phase 1. Browser access/test sessions will be needed for Phase 3 if the local browser surface remains unavailable.
@@ -47,16 +51,20 @@
 | Invoice API-only list/auth/error state | PASS | 2026-11-02 | `node --test server/test/invoices-live-source.test.js`: 2/2 |
 | Reports API aggregation/empty/error source | PASS | 2026-11-02 | `node --test server/test/reports-live-data.test.js`: 3/3; combined focused modules 19/19 |
 | Documents API/auth/reasons/delete source | PASS | 2026-11-02 | `node --test server/test/documents-live-source.test.js`: 3/3; combined focused modules 22/22 |
+| Fund, maintenance, notification, settings source and role tests | PASS | 2026-11-02 | `node --test server/test/dashboard-demo-isolation.test.js server/test/notifications-live-source.test.js server/test/fund-campaign-live-view.test.js server/test/maintenance-live-wiring.test.js`: 11/11 |
+| Full focused live-data suite | PASS | 2026-11-02 | 32 tests passed; see newest TEST-REPORT entry |
 | Transactions live tenant/network rows | UNVERIFIED | 2026-11-02 | Browser/login unavailable |
 | Dashboard authenticated network and tenant rows | UNVERIFIED | 2026-11-02 | Browser/login and matching Supabase rows unavailable |
-| Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Browser unavailable and no test JWT used |
-| npm test | UNVERIFIED | 2026-11-02 | Not run in this documentation-only audit step |
+| Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Chrome is present but browser use is disabled in Work settings; no live tenant rows inspected |
+| npm test | FAIL (known) | 2026-11-02 | 342 tests: 341 passed; only `server/test/api-client.test.js` no-store assertion failed (header is undefined) |
+| `npm run check:migrations` | PASS | 2026-11-02 | 21/21 migration files syntax-checked; no migration applied |
+| Changed JS syntax + `git diff --check` | PASS | 2026-11-02 | `node --check` for all changed JS/tests; whitespace check passed |
 
 ## Known Issues and Risks
-- Community Funds and Maintenance sample markup, Notifications, Settings identity placeholders, and dashboard modal/demo details still need review. Documents have no signed-original URL route in the inspected backend; a new feature endpoint was not added in this module. Dashboard, Transactions, Ledger, Approvals, Invoices, and Reports use live API paths in source; runtime checks are pending.
-- Authenticated runtime DB rows and organization scope have not been verified for converted modules; queue source correctness is covered only by code-level tests.
+- Settings display-name edits remain browser-local and profile/password functionality requires a careful auth-backed pass; do not claim shared profile persistence. Dashboard demo fixtures remain in code but are explicitly gated to demo mode. Documents have no signed-original URL route in the inspected backend; a new feature endpoint was not added in this module. Dashboard, Transactions, Ledger, Approvals, Invoices, and Reports use live API paths in source; runtime checks are pending.
+- Authenticated runtime DB rows and organization scope have not been verified for converted modules; source tests are not proof of live tenant data. Browser tool is disabled in Work settings.
 - API routes exist for most modules, but authenticated data and DB rows have not been verified in this audit.
-- Existing known suite issue: `api-client.test.js` no-store assertion was previously reported; current suite not rerun here.
+- Known suite issue: `server/test/api-client.test.js` expects `Cache-Control: no-store`, but receives `undefined`; this is the only full-suite failure (341/342).
 
 ## Lessons Learned
 - Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.

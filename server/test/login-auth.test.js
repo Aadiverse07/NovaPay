@@ -195,7 +195,7 @@ test('Documents reloads role after an auth change before allowing an owner uploa
     if (path.endsWith('/process')) return { ok: true };
     throw new Error('Unexpected Documents test request');
   } };
-  runInNewContext(documentsSource, { window: { NovaPayApi: api, NovaPayAuth: { ready: Promise.resolve() } }, document, console });
+  runInNewContext(documentsSource, { window: { NovaPayApi: api, NovaPayAuth: { ready: Promise.resolve(), mode: 'supabase', isAuthenticated: () => true } }, document, console });
   listeners.DOMContentLoaded[0]();
   await new Promise((resolve) => setTimeout(resolve, 0));
   listeners['novapay:auth'][0]({ detail: { signedIn: true } });

@@ -23,7 +23,7 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
 | Authenticated answers and citations | API request through `NovaPayApi` to `/api/ai/chat`; backend AI route exists | `POST /api/ai/chat` | No route gap established; verify returned evidence against tenant DB rows | Medium: code scrapes transaction DOM for demo/local context; DOM contains sample rows | Keep API path; authenticated evidence only from API; remove DOM-scraped sample evidence in authenticated mode |
-| Demo fallback and greeting/prompts | `localAnswer()` and static quick prompts in `src/dashboard.js` / HTML | None | None | Low if mode-gated; high if reachable while signed in | Keep only visibly labeled demo fallback; greetings may remain static copy |
+| Demo fallback and greeting/prompts | `localAnswer()` is used only by the explicitly labeled demo mode; transaction detail now calls the API and reports errors without echoing DOM rows; quick prompts are static question text | `POST /api/ai/chat` | No gap established; browser and live evidence still need verification | Low if demo mode remains labeled | Keep local sample answers only in demo mode; never present error text as evidence |
 
 ## Approvals
 
@@ -73,32 +73,33 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| Campaign list, summaries, contributions and receipts | `src/fund-views.js` loads APIs in authenticated mode; sample cards are labeled and gated to demo mode | `/api/funds/campaigns`, campaign summary/transparency/contributions/receipts routes | No route gap identified; runtime DB rows not verified | Medium: ensure demo/sample nodes are hidden after auth mode resolves | Keep labeled Sample only in explicit demo mode and only when org has no real rows; convert authenticated view |
+| Campaign list, summaries, contributions and receipts | `src/fund-views.js` hides static cards in authenticated mode, loads campaign summaries and transparency expenses via API, and labels/dismisses demo samples | `/api/funds/campaigns`, campaign summary/transparency/contributions/receipts routes | No route gap identified; runtime DB rows not verified | Medium: API/source tests pass, live tenant rows remain unverified | Keep labeled Sample only in explicit demo mode and only when org has no real rows; convert authenticated view |
 | Create campaign and maintenance/fund workflow links | API-backed handlers in `src/fund-views.js` | `/api/funds/*` | No gap identified from source | Medium | Keep API-backed; verify RBAC and tenant scope live |
 
 ## Maintenance
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| Requests, details, state machine and actions | `src/fund-views.js` loads maintenance requests and transitions through API; legacy sample HTML exists | `/api/funds/maintenance*` routes for requests and workflow | No route gap identified; runtime state transitions not verified | High: legacy samples or API errors could appear as real | Convert authenticated view exclusively to API; demo samples only labeled and dismissible |
+| Requests, details, state machine and actions | `src/fund-views.js` hides legacy sample HTML in authenticated mode, loads maintenance requests/transitions through API, and adds retry/refresh hooks | `/api/funds/maintenance*` routes for requests and workflow | No route gap identified; runtime state transitions not verified | Medium: source/API tests pass, live workflow rows remain unverified | Convert authenticated view exclusively to API; explicit demo samples are labeled and dismissible |
 
 ## Settings
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
 | Theme, density, notifications preferences, landing view, timeout | `src/dashboard.js` saves to browser `localStorage` | None required (personal browser preferences) | No server endpoint for cross-device org preferences | Low: preferences are not organization financial data | Keep as local preferences and label/save scope honestly |
-| Profile display name and email | Browser/local demo account storage; auth profile comes from Supabase session | No profile/settings API route found in inspected routes | Add profile endpoint only if shared org profile editing is required | Medium: local profile edit may look like persisted account data | Convert account fields to supported auth/profile API or make read-only; keep local UI preferences |
-| Password/account controls | Demo account logic in dashboard JS; Supabase auth session also exists | Supabase Auth is separate from app API routes | No app backend route needed if Auth is the owner | High if demo-only controls appear for Supabase users | Keep Supabase Auth controls only in authenticated mode; hide demo account controls |
+| Profile display name and email | Supabase session supplies signed-in identity; display-name edit remains local-browser only and has no profile endpoint | No profile/settings API route found in inspected routes | Add profile endpoint only if shared org profile editing is required | Medium: local profile edit may look like persisted account data | Keep display-name edit clearly local or make read-only; profile persistence across devices is an API/auth gap |
+| Password/account controls | Signed-in password update uses the existing Supabase Auth method; demo password remains browser-local; account deletion is hidden for Supabase users because no deletion endpoint exists | Supabase Auth `updatePassword` method | Account deletion service/endpoint is missing; no code path deletes Supabase users | Medium: browser verification pending | Keep demo deletion explicitly local; do not imply Supabase account deletion |
 
 ## Sidebar badges and notification bell
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| Approvals badge | Local hard-coded queue count (initially 2) | `GET /api/approvals/pending-count` | No route gap; not wired in UI | Critical: fake outstanding approvals | Convert to org-scoped pending-count; zero means no badge |
-| Notification bell/popover/count | Static notification items and count in HTML; preferences recalculate visibility, not live notification state | `GET /api/notifications`, `POST /api/notifications/:id/read|dismiss` | No route gap; frontend does not load or mutate API notifications | High: fake alerts and count | Convert to notification API; authenticated empty state “All clear” |
+| Approvals badge | Authenticated queue supplies `pendingCount`; demo count only from labeled demo queue | `GET /api/approvals` | No route gap identified; live count still needs tenant verification | Medium: browser/runtime unverified | Converted in source; zero hides badge |
+| Notification bell/popover/count | `src/notifications-live.js` fetches org notifications, renders unread count, read action, empty/error/retry; static items removed | `GET /api/notifications`, `POST /api/notifications/:id/read|dismiss` | No route gap; endpoint/source exists, but live rows remain unverified | Medium: endpoint and source checks pass; live org rows remain UNVERIFIED | Converted to notification API |
 
 ## Phase 1 summary
 
-- Static inspection found existing server endpoints for most financial modules; the primary gaps are frontend wiring and removal/isolation of sample values, not proven backend route absence.
-- No authenticated network response or matching database rows were inspected. Dashboard data wiring now exists, but its live tenant rows remain **UNVERIFIED** pending Phase 3 browser checks with an empty organization and an existing organization.
-- Before Phase 2 starts, keep the no-code checkpoint and backup branch. Convert in the user's priority order, one module per local commit. Do not merge until the full live-data checklist is acceptable.
+- Source audit found routes for most modules; recent work has wired API-backed views and isolated demo content, but this is not evidence of live DB rows.
+- Dashboard, Transactions, Ledger, Approvals, Invoices, Reports, Documents, Community Funds, Maintenance and Notifications have source tests; authenticated network and DB results remain **UNVERIFIED**.
+- No migrations identified for the frontend conversions so far. Settings preferences remain browser-local; profile edit persistence lacks a live endpoint.
+- Do not merge until browser verification passes for both empty and existing organizations.

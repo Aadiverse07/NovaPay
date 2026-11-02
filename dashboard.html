@@ -57,7 +57,7 @@
     <a class="dashboard-brand" href="preview.html#home" aria-label="Return to NovaPay home"><img src="assets/novapay-logo.png" alt="NovaPay — Smarter Payments. Powered by AI." class="dashboard-logo-full" style="width:130px;height:auto;display:block;"><img src="assets/novapay-mark-clean.png" alt="" class="dashboard-logo-mark" aria-hidden="true"></a>
     <button type="button" class="user-chip sidebar-user" id="sidebar-user" aria-haspopup="dialog" aria-label="View profile details">
       <span class="avatar" id="user-avatar">S</span>
-      <span><b id="user-name">Shikhar</b><small id="user-email">Business Owner</small></span>
+      <span><b id="user-name">Shikhar</b><small id="user-email">Loading account…</small></span>
     </button>
     <nav class="dashboard-nav" id="dashboard-nav">
       <a href="#dashboard" data-view="dashboard" aria-label="Dashboard" aria-current="page"><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/dashboard.png" alt="" width="38" height="38"></span><b>Dashboard</b></a>
@@ -94,11 +94,9 @@
         <button class="icon-button more-button" id="more-button" type="button" aria-label="More options" aria-expanded="false" aria-haspopup="menu"><svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></button>
       </div>
       <div class="popover notification-popover" id="notification-popover" hidden>
-        <div class="popover-title"><b>Notifications</b><span class="status info" id="notif-count">2 new</span></div>
-        <button type="button" class="notification-item" data-notification-view="approvals" data-notif-kind="approvals"><span class="notif-icon warn">✓</span><span><b>Proposals ready for review</b><small>Open Approvals to review suggested actions.</small></span></button>
-        <button type="button" class="notification-item" data-notification-view="ai-assistant" data-notif-kind="ai"><span class="notif-icon info"><img class="np-ai-robot" src="assets/ai-assistant-robot.png" alt="" width="16" height="16" style="width:16px;height:16px;display:block;object-fit:contain"></span><span><b>NovaPay AI insight ready</b><small>Open AI Assistant for a summary.</small></span></button>
-
-        <p class="notif-empty" id="notif-empty" hidden>You're all caught up. Turn alerts back on in Settings.</p>
+        <div class="popover-title"><b>Notifications</b><span class="status info" id="notif-count">Loading…</span></div>
+        <div id="notification-items" aria-live="polite"><p class="module-foot" id="notif-status">Loading organization notifications…</p></div>
+        <p class="notif-empty" id="notif-empty" hidden>No notifications for this organization.</p>
       </div>
       <div class="popover calendar-popover" id="calendar-popover" role="dialog" aria-label="Calendar" hidden>
         <div class="cal-head"><button type="button" class="cal-nav" id="cal-prev" aria-label="Previous month">‹</button><b id="cal-title"></b><button type="button" class="cal-nav" id="cal-next" aria-label="Next month">›</button></div>
@@ -319,7 +317,7 @@
               <div class="settings-card">
                 <label for="set-name"><span><b>Display name</b><small>Shown in the sidebar and dashboard greeting.</small></span><input type="text" id="set-name" maxlength="40" placeholder="Your name" autocomplete="name"></label>
                 <label for="set-email"><span><b>Email</b><small>Used to sign in. It cannot be changed here.</small></span><input type="text" id="set-email" readonly></label>
-                <label for="set-role"><span><b>Role</b><small>Your role in this workspace.</small></span><input type="text" id="set-role" value="Business Owner" readonly></label>
+                <label for="set-role"><span><b>Role</b><small>Your role in this workspace.</small></span><input type="text" id="set-role" value="Loading workspace role…" readonly></label>
               </div>
               <div class="settings-actions"><button class="btn btn--primary" id="set-save-profile" type="button">Save profile</button></div>
             </section>
@@ -396,17 +394,17 @@
             <header class="set-panel-head"><h3 id="settitle-workspace">Workspace</h3><p>Regional information for this workspace.</p></header>
             <section class="set-group"><h4 class="set-group-title">Region</h4>
               <div class="settings-card">
-                <label><span><b>Currency</b><small>All amounts are shown in Indian Rupees.</small></span><input type="text" value="INR (₹)" readonly></label>
+                <label><span><b>Currency display</b><small>Amounts use each record’s currency. Cross-currency totals are shown separately.</small></span><input type="text" value="Per record" readonly></label>
                 <label><span><b>Time zone</b><small>Detected from your browser.</small></span><input type="text" id="set-tz" readonly></label>
               </div>
             </section>
           </article>
           <article class="dash-card set-panel" id="setpanel-data" aria-labelledby="settitle-data" hidden>
-            <header class="set-panel-head"><h3 id="settitle-data">Data &amp; privacy</h3><p>Export your information, reset preferences or remove your account.</p></header>
+            <header class="set-panel-head"><h3 id="settitle-data">Data &amp; privacy</h3><p>Export saved transactions or browser-local profile and preferences, or reset preferences.</p></header>
             <section class="set-group"><h4 class="set-group-title">Export your data</h4>
               <div class="settings-card">
                 <div class="set-row"><span><b>Export transactions</b><small>Download all transactions in this workspace as a CSV file.</small></span><button class="btn btn--ghost" id="set-export-tx" type="button">Download CSV</button></div>
-                <div class="set-row"><span><b>Export my data</b><small>Download your profile and preferences as a JSON file.</small></span><button class="btn btn--ghost" id="set-export-data" type="button">Download JSON</button></div>
+                <div class="set-row"><span><b>Export browser profile and preferences</b><small>This does not include server-side organization records.</small></span><button class="btn btn--ghost" id="set-export-data" type="button">Download JSON</button></div>
               </div>
             </section>
             <section class="set-group"><h4 class="set-group-title">Preferences</h4>
@@ -416,7 +414,7 @@
             </section>
             <section class="set-group set-group--danger"><h4 class="set-group-title">Danger zone</h4>
               <div class="settings-card">
-                <div class="set-row set-row--danger"><span><b>Delete account</b><small>Remove your account and all NovaPay data saved in this browser. This cannot be undone.</small></span><button class="btn btn--danger" id="set-delete" type="button">Delete account</button></div>
+                <div class="set-row set-row--danger"><span><b>Delete demo profile</b><small>Remove this demo profile and its browser-local data. This does not delete a Supabase account or organization records.</small></span><button class="btn btn--danger" id="set-delete" type="button" hidden>Delete demo profile</button></div>
               </div>
             </section>
           </article>
@@ -426,7 +424,7 @@
               <div class="help-cards"><button type="button" class="help-card" data-help-view="dashboard"><span class="help-card-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><b>Getting started</b><small>See your balance, cash flow and recent activity.</small></button><button type="button" class="help-card" data-help-view="ai-assistant"><span class="help-card-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="10" rx="3"/><path d="M12 4v4M9.5 13h.01M14.5 13h.01"/></svg></span><b>Ask NovaPay AI</b><small>Ask about transactions and see the evidence.</small></button><button type="button" class="help-card" data-help-view="approvals"><span class="help-card-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></span><b>Review approvals</b><small>Check proposals before anything is confirmed.</small></button></div>
             </section>
             <section class="set-group"><h4 class="set-group-title">Frequently asked questions</h4>
-              <div class="settings-card help-faqs"><details class="help-faq"><summary><span>Is this my live PayPal data?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>The dashboard shows an illustrative sample workspace. Only actions run through the PayPal Sandbox use sandbox data, and nothing here moves real money.</p></details><details class="help-faq"><summary><span>What can NovaPay AI see?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>NovaPay AI answers only from the activity shown in this workspace and cites the records behind each answer. It makes suggestions only and never takes an action on its own.</p></details><details class="help-faq"><summary><span>How do approvals work?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Open Approvals to review each proposal and its evidence. A PayPal Sandbox action needs a second confirmation with the reference and amount before it runs; unsupported actions are simulated only.</p></details><details class="help-faq"><summary><span>Where are my settings stored?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Preferences are saved in this browser and apply immediately. Use Data &amp; privacy to export your information or reset every preference to its default.</p></details><details class="help-faq"><summary><span>How do I change my password or sign out?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Go to Security. You can update your password, set an automatic sign-out time, or end the session on this device.</p></details></div>
+              <div class="settings-card help-faqs"><details class="help-faq"><summary><span>Is this my live PayPal data?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Authenticated views use data scoped to your organization. PayPal Sandbox actions use test data only; nothing here moves real money.</p></details><details class="help-faq"><summary><span>What can NovaPay AI see?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>NovaPay AI answers only from the activity shown in this workspace and cites the records behind each answer. It makes suggestions only and never takes an action on its own.</p></details><details class="help-faq"><summary><span>How do approvals work?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Open Approvals to review each proposal and its evidence. A PayPal Sandbox action needs a second confirmation with the reference and amount before it runs; unsupported actions are simulated only.</p></details><details class="help-faq"><summary><span>Where are my settings stored?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Preferences are saved in this browser and apply immediately. Use Data &amp; privacy to export your information or reset every preference to its default.</p></details><details class="help-faq"><summary><span>How do I change my password or sign out?</span><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><p>Go to Security. You can update your password, set an automatic sign-out time, or end the session on this device.</p></details></div>
             </section>
             <section class="set-group"><h4 class="set-group-title">Contact support</h4>
               <form class="settings-card" id="help-form" novalidate>
@@ -563,13 +561,13 @@
 <div class="modal-backdrop" id="profile-modal" hidden aria-hidden="true">
   <div class="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="pm-title">
     <button class="modal-close" id="profile-modal-close" type="button" aria-label="Close">×</button>
-    <div class="pm-head"><span class="avatar pm-avatar" id="pm-avatar">S</span><div><h2 id="pm-title">User</h2><p id="pm-role">Business Owner</p><span class="status ok pm-status"><span class="session-dot"></span> Active session</span></div></div>
+    <div class="pm-head"><span class="avatar pm-avatar" id="pm-avatar">S</span><div><h2 id="pm-title">User</h2><p id="pm-role">Role loading…</p><span class="status ok pm-status"><span class="session-dot"></span> Active session</span></div></div>
     <dl class="pm-list">
       <div><dt>Full name</dt><dd id="pm-name"></dd></div>
       <div><dt>Email</dt><dd id="pm-email"></dd></div>
-      <div><dt>Role</dt><dd>Business Owner</dd></div>
-      <div><dt>Workspace</dt><dd>NovaPay Sample Workspace</dd></div>
-      <div><dt>Account type</dt><dd>Demo account</dd></div>
+      <div><dt>Role</dt><dd id="pm-role-value">Role loading…</dd></div>
+      <div><dt>Workspace</dt><dd id="pm-workspace">Loading organization…</dd></div>
+      <div><dt>Account type</dt><dd id="pm-account-type">Loading…</dd></div>
       <div><dt>Signed in</dt><dd id="pm-signed"></dd></div>
       <div><dt>Time zone</dt><dd id="pm-tz"></dd></div>
       <div><dt>Currency</dt><dd>INR (₹)</dd></div>
@@ -619,6 +617,7 @@
 <script src="src/invoice-detail.js"></script>
 <script src="src/invoices-live.js"></script>
 <script src="src/documents.js"></script>
+<script src="src/notifications-live.js"></script>
 <script src="src/transaction-effects.js"></script>
 <script src="src/transaction-premium.js?v=6"></script>
 <script src="src/tx-icons.js"></script>
