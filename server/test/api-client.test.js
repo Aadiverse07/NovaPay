@@ -28,6 +28,8 @@ test('authenticated API client bypasses conditional HTTP caching', async () => {
   await window.NovaPayApi.request('/api/events');
   assert.equal(requestOptions.cache, 'no-store');
   assert.equal(requestOptions.headers.get('X-Org-Id'), 'org-a');
+  await window.NovaPayApi.request('/api/events', { method: 'POST', body: { type: 'test' } });
+  assert.equal(requestOptions.cache, 'no-store');
 });
 
 test('authenticated blob requests retain bearer and organization headers', async () => {

@@ -124,7 +124,8 @@
         "Content-Type": "application/json",
         "Authorization": "Bearer " + authSession.access_token
       },
-      body: JSON.stringify({ organizationName: workspaceName })
+      body: JSON.stringify({ organizationName: workspaceName }),
+      cache: "no-store"
     });
     var result = await readJson(response);
     if (!result.organizationId) throw new Error("Workspace setup did not return an organization.");

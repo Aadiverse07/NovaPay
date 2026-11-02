@@ -4,7 +4,7 @@
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
 - Last commit: `25659b1` (local Phase 2 live-data checkpoint; not pushed)
-- Current phase/task: Phase 2 source conversions complete; full test and migration checks run; Phase 3 browser/live-tenant verification pending.
+- Current phase/task: Fix authenticated HTTP caching after Phase 2 source conversions; full suite now passes; Phase 3 browser/live-tenant verification pending.
 
 ## Done
 - Read prior CONTEXT and WORKLOG tail before work.
@@ -21,7 +21,7 @@
 - Settings role comes from onboarding membership, profile name updates through Supabase Auth metadata, password updates use the existing Auth method, and account deletion is unavailable in signed-in mode because no deletion endpoint exists. Preferences remain browser-local.
 
 ## In Progress
-- Phase 2 source conversions are committed locally in `25659b1`; not pushed. Full focused live-data suite passed 32/32. `npm test` ran 342 tests: 341 passed, with only the known api-client no-store assertion failing.
+- Phase 2 source conversions are committed locally in `25659b1`; not pushed. Full focused live-data suite passed 32/32. `npm test` now passes 342/342 after the shared client began forcing no-store on authenticated requests.
 - Chrome is present but browser use is disabled in Work settings; no authenticated browser or live Supabase DB verification was performed. Every live-row claim remains UNVERIFIED.
 
 ## Next Steps
@@ -56,7 +56,7 @@
 | Transactions live tenant/network rows | UNVERIFIED | 2026-11-02 | Browser/login unavailable |
 | Dashboard authenticated network and tenant rows | UNVERIFIED | 2026-11-02 | Browser/login and matching Supabase rows unavailable |
 | Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Chrome is present but browser use is disabled in Work settings; no live tenant rows inspected |
-| npm test | FAIL (known) | 2026-11-02 | 342 tests: 341 passed; only `server/test/api-client.test.js` no-store assertion failed (header is undefined) |
+| npm test | PASS | 2026-11-02 | 342/342; no-store GET assertion retained and POST assertion added |
 | `npm run check:migrations` | PASS | 2026-11-02 | 21/21 migration files syntax-checked; no migration applied |
 | Changed JS syntax + `git diff --check` | PASS | 2026-11-02 | `node --check` for all changed JS/tests; whitespace check passed |
 
