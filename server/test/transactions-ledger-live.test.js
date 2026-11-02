@@ -9,6 +9,7 @@ const liveSource = await readFile(new URL('../../src/financial-live.js', import.
 const html = await readFile(new URL('../../dashboard.html', import.meta.url), 'utf8');
 const dataSource = await readFile(new URL('../../src/financial-data.js', import.meta.url), 'utf8');
 const gridSource = await readFile(new URL('../../src/transactions-grid.js', import.meta.url), 'utf8');
+const modulesSource = await readFile(new URL('../../src/modules.js', import.meta.url), 'utf8');
 
 test('API transaction rows map saved amount, fee, net, date, status and capture id', () => {
   const row = data.transactionRow({ id: 'row-1', type: 'capture', sourceId: 'CAP-1', captureId: 'CAP-1', status: 'COMPLETED', amount: '10.00', fee: '0.59', net: '9.41', currency: 'USD', occurredAt: '2026-11-01T12:00:00Z' });
@@ -57,7 +58,7 @@ test('live views fetch saved transaction and ledger pages and refresh on focus/v
   assert.match(liveSource, /pages\("\/api\/ledger\/entries", "entries"\)/);
   assert.match(liveSource, /root\.addEventListener\("focus", refreshVisible\)/);
   assert.match(html, /src="src\/financial-live\.js"/);
-  assert.match(html, /data-ledger-sample/);
+  assert.doesNotMatch(html, /data-ledger-sample/);
 });
 
 test('authenticated transactions wait for Supabase auth and render API-only rows', () => {
@@ -70,4 +71,17 @@ test('authenticated transactions wait for Supabase auth and render API-only rows
   assert.match(gridSource, /MutationObserver/);
   const transactionsPanel = html.split('id="view-transactions"')[1].split('id="view-ai-assistant"')[0];
   for (const sampleId of ['PAY-1001', 'PAY-1002', 'REF-1003', 'PAY-28491', 'DSP-1004', 'PAY-1005']) assert.ok(!transactionsPanel.includes(sampleId));
+});
+
+test('ledger uses only saved rows, has an honest empty state, retry, and API CSV export', () => {
+  assert.match(liveSource, /auth\.mode !== "supabase" \|\| !auth\.isAuthenticated\(\)/);
+  assert.match(liveSource, /No ledger entries yet\. A saved transaction will create ledger entries\./);
+  assert.match(liveSource, /Couldn't load saved ledger\./);
+  assert.match(liveSource, /body\.replaceChildren\(\)/);
+  assert.doesNotMatch(liveSource, /₹4,86,300|Illustrative sample/);
+  const ledgerPanel = html.split('id="view-ledger"')[1].split('id="view-invoices"')[0];
+  assert.doesNotMatch(ledgerPanel, /data-ledger-sample|PAY-1001/);
+  assert.match(modulesSource, /api\.request\(path\)/);
+  assert.match(modulesSource, /data\.ledgerRows\(entries\)/);
+  assert.doesNotMatch(modulesSource, /novapay-ledger-sample\.csv|9700/);
 });

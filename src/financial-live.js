@@ -93,17 +93,19 @@
   function renderLedger(entries) {
     var body = byId("ledger-table-body"), liveStatus = byId("ledger-live-status");
     if (!body) return;
-    var filtered = data.entriesInPeriod(entries, period()), sampleRows = body.querySelectorAll("tr[data-ledger-sample]");
-    Array.from(body.querySelectorAll("tr[data-ledger-live], tr[data-ledger-empty]")).forEach(function (row) { row.remove(); });
-    if (!entries.length) {
-      Array.from(sampleRows).forEach(function (row) { row.hidden = false; });
-      if (liveStatus) liveStatus.textContent = "No saved ledger entries yet. Illustrative sample rows are shown as a fallback.";
-      setKpi("debits", "₹4,86,300", "Illustrative sample", "info");
-      setKpi("credits", "₹4,86,300", "Illustrative sample", "info");
-      setKpi("unreconciled", "1 item", "Illustrative sample", "warn");
+    var filtered = data.entriesInPeriod(entries, period());
+    body.replaceChildren();
+    if (!filtered.length) {
+      var empty = root.document.createElement("tr"); empty.dataset.ledgerEmpty = "true";
+      var emptyCell = root.document.createElement("td"); emptyCell.colSpan = 6;
+      emptyCell.textContent = entries.length ? "No ledger entries for this period." : "No ledger entries yet. A saved transaction will create ledger entries.";
+      empty.appendChild(emptyCell); body.appendChild(empty);
+      setKpi("debits", "—", "No saved entries", "info");
+      setKpi("credits", "—", "No saved entries", "info");
+      setKpi("unreconciled", "0", "No entries", "info");
+      if (liveStatus) liveStatus.textContent = entries.length ? "No saved journal entries for this period." : "No saved ledger entries in this organization.";
       return;
     }
-    Array.from(sampleRows).forEach(function (row) { row.hidden = true; });
     var summary = data.ledgerSummary(filtered);
     setKpi("debits", summary.debits, "Saved ledger totals", "info");
     setKpi("credits", summary.credits, "Saved ledger totals", "info");
@@ -124,11 +126,23 @@
     var error = byId("ledger-live-error"); ledgerBusy = true;
     var status = byId("ledger-live-status"); if (status) status.textContent = "Loading saved ledger entries…";
     try {
+      var auth = root.NovaPayAuth;
+      if (auth && auth.ready) await auth.ready;
+      if (!auth || auth.mode !== "supabase" || !auth.isAuthenticated()) {
+        ledgerCache = [];
+        renderLedger(ledgerCache);
+        if (status) status.textContent = "Sign in to view organization ledger entries.";
+        clearError(error);
+        return;
+      }
       if (force || !ledgerCache) ledgerCache = await pages("/api/ledger/entries", "entries");
       renderLedger(ledgerCache); clearError(error);
     } catch (cause) {
       root.console.error("Could not load saved ledger", cause);
-      if (status) status.textContent = "Illustrative rows remain visible while saved ledger entries are unavailable.";
+      var body = byId("ledger-table-body");
+      if (body) { body.replaceChildren(); var row = root.document.createElement("tr"), cell = root.document.createElement("td"); row.dataset.ledgerEmpty = "true"; cell.colSpan = 6; cell.textContent = "Couldn't load saved ledger."; row.appendChild(cell); body.appendChild(row); }
+      if (status) status.textContent = "Couldn't load saved ledger.";
+      setKpi("debits", "—", "Unavailable", "warn"); setKpi("credits", "—", "Unavailable", "warn"); setKpi("unreconciled", "—", "Unavailable", "warn");
       showError(error, "ledger", function () { loadLedger(true); });
     } finally { ledgerBusy = false; if (ledgerQueued) { ledgerQueued = false; loadLedger(true); } }
   }
@@ -152,6 +166,6 @@
   root.addEventListener("focus", refreshVisible);
   root.document.addEventListener("visibilitychange", function () { if (root.document.visibilityState === "visible") refreshVisible(); });
   var ledgerPeriod = byId("ledger-period"); if (ledgerPeriod) ledgerPeriod.addEventListener("change", function () { if (ledgerCache) renderLedger(ledgerCache); });
-  root.NovaPayFinancialViews = { refresh: refresh, loadTransactions: loadTransactions, loadLedger: function () { return loadLedger(true); } };
+  root.NovaPayFinancialViews = { refresh: refresh, loadTransactions: loadTransactions, loadLedger: function () { return loadLedger(true); }, getLedgerEntries: function () { return (ledgerCache || []).slice(); } };
   openView(activeView());
 }(typeof window !== "undefined" ? window : globalThis));

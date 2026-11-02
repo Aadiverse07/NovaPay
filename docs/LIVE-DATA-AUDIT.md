@@ -43,8 +43,8 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| Journal rows and KPI totals | Static sample rows and ₹4,86,300 debit/credit KPIs; `src/financial-live.js` fetches live entries but restores sample values when response is empty | `GET /api/ledger/entries`, `GET /api/ledger/trial-balance` | No route gap identified | Critical: empty organization displays nonzero sample totals; mixed presentation possible | Convert; authenticated empty state must show zero/empty values and no sample rows |
-| Period filter and balance status | Client-side calculation over fetched entries | Same ledger endpoints | Verify query/date filter semantics against server | Medium | Keep calculations only on tenant-scoped rows, grouped by currency |
+| Journal rows and KPI totals | `src/financial-live.js` waits for authenticated Supabase state, loads `/api/ledger/entries`, computes currency-separated totals, and shows an empty state without sample rows. Sample HTML and nonzero fallback KPIs removed. | `GET /api/ledger/entries`, `GET /api/ledger/trial-balance` | No route gap identified; authenticated rows still need runtime confirmation | Medium: browser tenant data not verified | Converted in source; empty org shows no fake amounts |
+| Period filter and balance status | Client-side filter/summary over fetched entries; API-backed CSV export in `src/modules.js` | `GET /api/ledger/entries` | None identified from source | Medium: browser period/filter/export behavior is unverified | Keep calculations and export on API rows only, grouped by currency |
 
 ## Invoices
 

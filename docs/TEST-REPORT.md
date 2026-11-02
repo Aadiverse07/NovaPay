@@ -1489,3 +1489,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-02 | node --test server/test/dashboard-live-data.test.js | PASS |  tests,  passed,  failed | dashboard data mapping, empty/multicurrency handling, and source wiring.
 
 2026-11-02 | node --test server/test/transactions-ledger-live.test.js | PASS |  tests,  passed,  failed | API row mapping, dedupe, currency-grouped ledger totals, authenticated-only transaction hydration, and AG Grid sync.
+
+2026-11-02 | node --test server/test/transactions-ledger-live.test.js | FAIL |  tests,  passed,  failed | API-only transactions and ledger, empty/error states, currency-separated totals, AG Grid sync and live CSV export.
+
+2026-11-02 | node --test server/test/transactions-ledger-live.test.js (rerun after Ledger conversion) | PASS |  tests,  passed,  failed | stale sample-presence assertions updated to verify samples are absent from authenticated Ledger markup.

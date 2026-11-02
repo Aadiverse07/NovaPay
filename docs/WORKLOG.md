@@ -5248,3 +5248,17 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 01:18 IST | ACTION: update audit and context for Transactions conversion | WHY: track current source, test count, live verification boundary and the next module after this commit
 2026-11-02 01:19 IST | RESULT: audit/context record Transactions source conversion and 6/6 focused test; runtime remains UNVERIFIED; NEXT: stage only Transactions module/docs and commit locally
 2026-11-02 01:20 IST | ACTION: commit Transactions API-only hydration locally | WHY: complete the second Phase 2 module checkpoint after 6/6 focused tests and syntax checks
+2026-11-02 01:21 IST | RESULT: Transactions module committed locally; API-only source tests 6/6; runtime tenant verification remains UNVERIFIED; NEXT: convert Ledger module
+2026-11-02 01:22 IST | ACTION: inspect ledger markup/export handler and live ledger error path | WHY: remove sample data throughout Ledger, including the CSV action, while preserving currency-separated totals
+2026-11-02 01:23 IST | RESULT: ledger static rows, fallback KPIs and export mapping inspected; no changes; NEXT: wire ledger CSV to loaded org rows and remove static fallback rows
+2026-11-02 01:24 IST | ACTION: remove ledger sample rows and nonzero default KPI values from dashboard markup | WHY: avoid fake records/totals during authenticated load and no-data states
+2026-11-02 01:25 IST | RESULT: Ledger markup no longer contains sample rows or nonzero defaults; API export is wired; NEXT: test ledger empty/error/API behavior and inspect changed files
+2026-11-02 01:26 IST | ACTION: run focused financial hydration and ledger export tests | WHY: verify empty/error states contain no fake values, currency grouping remains intact and CSV uses API data
+2026-11-02 01:27 IST | RESULT: focused ledger tests FAIL (/); logged in TEST-REPORT.md; NEXT: update audit/context and commit Ledger module
+2026-11-02 01:28 IST | ACTION: inspect focused-test failures precisely | WHY: update assertions to the new no-sample contract without weakening coverage
+2026-11-02 01:29 IST | RESULT: failures are stale assertions expecting ledger sample rows in HTML; test report already records the failing run; NEXT: replace those assertions with checks that sample rows/default values are absent and rerun
+2026-11-02 01:30 IST | ACTION: rerun focused transaction/ledger tests after correcting stale sample-row assertions | WHY: verify the intended API-only module behavior and record the result
+2026-11-02 01:31 IST | RESULT: Ledger focused-test rerun PASS (/); prior failing run remains logged; NEXT: update audit/context and commit Ledger module
+2026-11-02 01:32 IST | ACTION: update audit/context for Ledger conversion | WHY: capture API-only behavior, live-state limits, test results, and next module before checkpoint
+2026-11-02 01:33 IST | RESULT: audit/context reflect Ledger API-only conversion and 7/7 test rerun; earlier stale-assertion failure remains logged; NEXT: commit Ledger module locally
+2026-11-02 01:34 IST | ACTION: commit Ledger API-only conversion locally | WHY: complete the Ledger module checkpoint after the focused rerun passed 7/7
