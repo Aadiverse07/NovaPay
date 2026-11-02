@@ -1,90 +1,71 @@
 # NovaPay Context
 
-## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; latest local checkpoint: f9e3709 (financial views); Part B implementation commit: a03f85f; Part A commit: 58035b5; no push.
+## Header
+- Date: 2026-11-02
+- Branch: `codex/voice-assistant`
+- Last commit: `79ccc6f` (pre-audit checkpoint; audit documentation is pending local commit)
+- Current phase/task: Live-data integrity, Phase 1 audit complete; Phase 2 not started.
 
-## DONE
-- Part A (commit 58035b5): lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.
-- Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
-- One reusable SpeechRecognition object is configured en-IN, continuous=false, interimResults=true. It starts only after a mic tap, displays interim text, submits final/silence once, and ignores duplicate starts. A mic tap during playback no longer cancels the utterance; explicit Stop remains available.
-- Removed voice auto-resume from the floating indicator; its click activates the same AI mic. Transaction detail dictation now records audio and calls the authenticated transcription endpoint, avoiding a second recognizer. Main mic held-to-talk remains the fallback when browser recognition is unavailable.
-- Typed, spoken and transcribed queries share the dashboard handleQuery path. Deterministic navigation/help/stop/repeat remains; authenticated quick commands also issue one background chat request. Existing server action validation and Tier 0/1/2 execution remain.
-- Debug trace is gated by novapay:voiceDebug=1. Thinking times out after 15 seconds with a spoken status message.
-- Speech output now logs sanitized requested text, voice count/selection, and utterance start/end/error behind the same debug flag; it waits up to one second for voices, prefers a local voice before en-IN/en-GB/en-US/default, resumes synthesis, retains utterance references, chunks long text, retries once with the default voice, and uses a short plain-language fallback.
-- Voice mute is explicitly persisted and defaults on; the visible toggle now matches stored state, typed and spoken output share the mute control, and mic tap is recorded as the speech gesture.
-- `NovaPaySpeechOutput` is the sole owner of native synthesis and cancellation; the intro greeting and dashboard use the shared instance. Added a visible Test voice button and speech status. Mic tap during speech no longer cancels the utterance.
-- Updated files: dashboard.html; src/voice-assistant.js, assistant-client.js, dashboard.js, voice-greeting.js, voice-indicator.js; server/src/ai/actions.js; tests server/test/assistant-actions.test.js, assistant-client.test.js, voice-assistant.test.js, voice-greeting.test.js, voice-indicator.test.js; docs/VOICE-BROWSER-CHECKLIST.md and continuity docs. Earlier local transcription endpoint files remain modified from the prior task: server/src/app.js, routes/ai.js, services/llm.js and assistant-speech/llm/routes tests.
-- No animation, auth/redirect, font, or asset files were edited. No migration was applied.
+## Done
+- Read prior CONTEXT and WORKLOG tail before work.
+- Created local checkpoint `79ccc6f` and backup branch `backup/live-data-audit-2026-11-02` at that commit.
+- Completed static module/source/route audit in [LIVE-DATA-AUDIT.md](LIVE-DATA-AUDIT.md). No application code changed in Phase 1.
 
-## IN PROGRESS
-- Transactions and Ledger now load organization-scoped API data after view activation, recover on focus/visibility and refresh after successful capture/refund. Implementation is committed locally as f9e3709; pre-change rollback checkpoint is d8bfd80.
-- Backend code uses record_paypal_capture to atomically persist capture-related records; the two read endpoints are org-filtered. Actual authenticated responses and same-org live table counts are UNVERIFIED because browser automation is disabled and no fixed-user credentials are configured.
-- Existing full-suite failure remains `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`). No push.
-- Preserve auth/OTP/session handling, `server/src/services/geminiKeyPool.js`, voice files/speech output, and Tier 0/1/2 validation. Keep money units unchanged.
-- Baseline and Part A full suite each have the same single known no-store failure; Part A full result is 300/301 and migration parser is 21/21.
-- Browser rendering is UNVERIFIED.
+## In Progress
+- Audit documentation and handoff updates; next is the first Phase 2 module (Dashboard KPIs/charts) after committing the audit checkpoint.
+- Phase 1 inspected source only. No authenticated browser or database verification was available, so live-data status remains UNVERIFIED.
 
-## NEXT STEPS
-1. Human runs: sign in; open PayPal Sandbox; create a 10.00 USD test order; approve in PayPal tab; return and capture.
-2. Verify the payment in Supabase transactions and journal_entries, hard-refresh, verify Transactions and Ledger, then sign out/in and verify it persists. Do not push.
+## Next Steps
+1. Review `git diff --check` and the audit document; commit the Phase 1 docs locally.
+2. Start Phase 2 with Dashboard KPIs/charts. Fetch only authenticated org-scoped API rows after auth/org readiness; remove static KPI/chart values from authenticated mode; zero/empty/error/retry states.
+3. Add module-level mapping/empty/error/tenant-isolation tests, run `npm test`, and append the exact result to TEST-REPORT.md.
+4. Continue in user priority order, one local commit per module; keep AG Grid, PayPal sandbox, OTP/auth, voice, AI memory and Gemini pool untouched.
+5. Phase 3: browser-walk empty and existing orgs, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
+6. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
 
-## USER ACTIONS PENDING
-- In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
+## User Actions Pending
+- None for Phase 1. Browser access/test sessions will be needed for Phase 3 if the local browser surface remains unavailable.
 
-## LIVE STATE
-- Local server is running on port 3000; public /api/status reported backend=true and PayPal connected. Authenticated GET responses and same-org table counts are UNVERIFIED because browser control is disabled in Work settings and no fixed-user login credentials are configured. No live capture was created, no migration run, no push.
+## Live State
+- Supabase migration state: not checked during this audit; no migrations run.
+- Tunnel/webhook: not checked.
+- Authenticated financial API tests: none run in this phase.
+- Public server status was checked in earlier work only; it does not verify financial rows.
+- Secret handling: no .env values printed.
 
-## TEST STATE
-| Check | Status | Date | Command/details |
+## Test State
+| Check | Status | Date | Command/reason |
 |---|---|---|---|
-| Focused speech/client/controller/greeting | PASS | 2026-11-02 | 37/37: node --test server/test/assistant-speech.test.js server/test/voice-assistant.test.js server/test/voice-greeting.test.js server/test/assistant-client.test.js |
-| Full suite | FAIL | 2026-11-02 | npm test 292/293; sole failure server/test/api-client.test.js:29 expects Cache-Control no-store, actual undefined |
-| Migration syntax | PASS | 2026-11-02 | 21 static PostgreSQL migration checks ran inside npm test; none applied |
-| Changed JS syntax | PASS | 2026-11-02 | node --check on changed JavaScript files |
-| Whitespace | PASS | 2026-11-02 | git diff --check |
-| Protected paths | PASS | 2026-11-02 | changed-path filter empty for tokens, base, fonts, presets, themes, effects and assets |
-| Chrome TTS | UNVERIFIED | 2026-11-02 | browser-control API reports local use disabled in Work settings; no utterance logs, audio, tab mute, or system volume check |
-| Invoice assistant focused tests | PASS | 2026-11-02 | `node --test server/test/assistant-actions.test.js server/test/ai-router.test.js server/test/assistant-client.test.js server/test/routes.test.js` — 37/37 |
-| Full suite after invoice flow | FAIL | 2026-11-02 | `npm test` — 296/297; known `server/test/api-client.test.js:29` Cache-Control no-store assertion, 21 migration syntax checks passed |
-| Invoice browser flow and live POST | UNVERIFIED | 2026-11-02 | Chrome unavailable in Work settings; no live draft created or customer data used |
-| AG Grid/action focused tests | PASS | 2026-11-02 | `node --test server/test/transactions-grid.test.js server/test/assistant-actions.test.js` — 11/11 |
-| Part A full suite | FAIL (known) | 2026-11-02 | `npm test` — 300/301; only `server/test/api-client.test.js:29` no-store assertion; migrations 21/21 |
-| AG Grid browser rendering | UNVERIFIED | 2026-11-02 | No browser session used; manual checklist pending |
-| Part B focused tests | PASS | 2026-11-02 | Resolver/memory/cache/client/schema focused run 25/25; route compatibility rerun 16/16 |
-| Full suite after Part B | FAIL (known) | 2026-11-02 | `npm test` 307/308; sole failure server/test/api-client.test.js:29, no-store header undefined; migrations 21/21 |
-| Migrations/static syntax | PASS | 2026-11-02 | `npm run check:migrations` 21/21; changed JS `node --check` and `git diff --check` passed |
-| Part B browser follow-ups | UNVERIFIED | 2026-11-02 | No browser interaction performed; refresh, New chat, scope and voice checks pending |
-| Part B final focused tests | PASS | 2026-11-02 | `node --test server/test/ai-context.test.js server/test/ai-chat-schema.test.js server/test/postgres-repos.test.js server/test/assistant-conversation.test.js server/test/assistant-client.test.js` — 39/39 |
-| Part B final full suite | FAIL (known) | 2026-11-02 | `npm test` — 310/311; only `server/test/api-client.test.js:29` no-store assertion (actual header undefined) |
-| Part B migration check | PASS | 2026-11-02 | `npm run check:migrations` — 21/21 static migration checks; no migrations applied |
-| Part B syntax and whitespace | PASS | 2026-11-02 | `node --check` on 16 changed JS files; `git diff --check` |
+| Phase 1 source audit | PASS | 2026-11-02 | Read-only inspection; endpoint existence is not treated as runtime proof |
+| Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Browser unavailable and no test JWT used |
+| npm test | UNVERIFIED | 2026-11-02 | Not run in this documentation-only audit step |
 
-## KNOWN ISSUES AND RISKS
-- Known API no-store assertion remains the only failing test and was not changed.
-- Chrome/Brave recognition, transcript delivery, POST logs, live actions and audible TTS remain unverified.
-- The transcription fallback sends recorded audio through the authenticated Gemini transcription adapter; use non-sensitive audio only.
-- Browser ESM imports produce non-failing Node type warnings during tests.
+## Known Issues and Risks
+- Dashboard KPIs/charts/health, report values/exports, approvals queue/badge, notification popover/count, transaction sample rows, and ledger sample rows contain or retain demo content in authenticated rendering paths.
+- The existing transaction and ledger hydration code can combine API data with samples; empty orgs can display nonzero demo values.
+- API routes exist for most modules, but authenticated data and DB rows have not been verified in this audit.
+- Existing known suite issue: `api-client.test.js` no-store assertion was previously reported; current suite not rerun here.
 
-## LESSONS LEARNED
-- Supabase SQL Editor runs in one transaction; never edit an applied migration; create a new numbered file.
-- SECURITY DEFINER/posting RPCs revoke execute from public, anon, authenticated and grant only service_role; verify denial with ordinary user JWT.
-- PostgREST embeds require explicit foreign-key names when relationships are ambiguous.
-- audit_log is insert-only with ON DELETE RESTRICT; cleanup journal entries before audit rows/org/auth users.
-- PayPal Sandbox needs a US Personal buyer, USD seller, Visa checkout, matching webhook ID and `/api/webhook`; raw body is required for signature verification.
-- Never print `.env` values; report key names only.
+## Lessons Learned
+- Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT receives 403.
+- PostgREST embeds need explicit foreign-key names when two relationships exist.
+- audit_log is insert-only and ON DELETE RESTRICT; cleanup journal_entries first, then audit_log, organizations, auth.users, via `scripts/cleanup-phase2-test-data.sql`; reuse fixed named test identities.
+- PayPal sandbox buyer must be a US Personal account; seller USD only; use Visa at checkout; webhook URL ends `/api/webhook` and PAYPAL_WEBHOOK_ID matches.
+- Raw body is needed for PayPal signature verification.
+- Never print `.env` values; use key names only.
+- For data claims, distinguish source/API wiring from authenticated network and database verification.
 
-## DO NOT
-- Never push, expose secrets/JWT/OTP, call live Gemini/PayPal/Supabase, run migrations, trust model actions, let voice complete Tier 2, click arbitrary DOM, or touch protected visual/auth redirect files.
+## Do Not
+- Do not push or merge until Phase 3 is acceptable.
+- Do not touch OTP/auth, voice assistant, Gemini key pool, AI context memory, AG Grid internals, PayPal auth flow, protected design files, or assets.
+- Do not show sample amounts/rows as organization data or mix sample and live money totals.
+- Do not run migrations without documenting the exact SQL and getting the user's application confirmation.
 
-## RESUME COMMANDS
-- `git status --short`
-- `npm test`
-- `npm run check:migrations`
-
-| PayPal API structured error regression | PASS | 2026-11-02 | `node --test server/test/novapay-live-api.test.js` — 3/3 |
-| PayPal edited JS syntax | PASS | 2026-11-02 | `node --check src/novapay-live.js server/test/novapay-live-api.test.js` |
-| PayPal full suite | FAIL (known) | 2026-11-02 | `npm test` — 313/314; sole failure `server/test/api-client.test.js:29`, expected `Cache-Control: no-store`, actual undefined |
-| Financial view focused tests | PASS | 2026-11-02 | `node --test server/test/transactions-ledger-live.test.js` — 5/5 mapping, dedupe, multi-currency KPI, error and wiring tests |
-| Transactions grid plus financial view tests | PASS | 2026-11-02 | `node --test server/test/transactions-grid.test.js server/test/transactions-ledger-live.test.js` — 9/9 |
-| Financial view full suite | FAIL (known) | 2026-11-02 | `npm test` — 318/319; sole failure `server/test/api-client.test.js:29`, expected `Cache-Control: no-store`, actual undefined |
-| Financial live API/browser and Supabase row counts | UNVERIFIED | 2026-11-02 | local browser control disabled; no test-user session credentials available; public status only was checked |
+## Resume Commands
+```sh
+git status --short
+git branch --show-current
+npm test
+npm run check:migrations
+```

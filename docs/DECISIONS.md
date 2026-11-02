@@ -744,3 +744,5 @@
 - Reason: Uses existing read routes and DOM contracts without migration or grid redesign; backend capture persistence remains the atomic ledger RPC.
 - Rejected: Creating a second grid data source or summing currencies into one total.
 - Source: repository routes, capture repository and dashboard markup inspected 2026-11-02.
+
+2026-11-02 | Question: How should the live-data audit classify API-backed modules without authenticated browser and database evidence? | Choice: Mark endpoint/source wiring as confirmed by code inspection, but mark live tenant data UNVERIFIED until the network response and matching org rows are checked. | Reason: Endpoint existence alone does not prove tenant-scoped runtime data. | Source: repository source inspection, 2026-11-02. Rejected: labeling code paths as live without runtime evidence.
