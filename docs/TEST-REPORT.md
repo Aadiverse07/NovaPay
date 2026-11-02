@@ -1478,3 +1478,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-02 | `node --test server/test/novapay-live-api.test.js` | PASS | 3 passed, 0 failed; structured errors, role/org translation and authenticated endpoint routing.
 2026-11-02 | `node --check src/novapay-live.js` and `node --check server/test/novapay-live-api.test.js` | PASS | Both edited JavaScript files parsed.
 2026-11-02 | `npm test` | FAIL (known) | 313 passed / 1 failed / 314 total; sole failure `server/test/api-client.test.js:29`, expected `Cache-Control: no-store`, actual undefined.
+2026-11-02 15:53:25 IST | node --test server/test/transactions-ledger-live.test.js | FAIL | ℹ tests 4;ℹ pass 3;ℹ fail 1; exit=1
+2026-11-02 15:53:40 IST | node --test server/test/transactions-ledger-live.test.js | PASS | ℹ tests 4;ℹ pass 4;ℹ fail 0; exit=0; correction rerun after erroneous source-location assertion.
+2026-11-02 15:54:36 IST | node --test server/test/transactions-ledger-live.test.js | PASS | ℹ tests 5;ℹ pass 5;ℹ fail 0; exit=0
+2026-11-02 15:54:44 IST | npm test | FAIL | ℹ tests 319;ℹ pass 318;ℹ fail 1; exit=1
+2026-11-02 15:56:11 IST | node --test server/test/transactions-grid.test.js server/test/transactions-ledger-live.test.js | PASS | ℹ tests 9;ℹ pass 9;ℹ fail 0; exit=0
+2026-11-02 | `node --test server/test/transactions-grid.test.js server/test/transactions-ledger-live.test.js` | PASS | 9 passed, 0 failed; existing grid parsing/filter/totals and new live API mapping/KPI/error contracts.
+2026-11-02 | Authenticated live GET /api/transactions, GET /api/ledger/entries, and same-org Supabase row counts | UNVERIFIED | browser control disabled by Work settings; no fixed test-user credentials configured; /api/status alone returned backend and PayPal connected.

@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: PayPal Sandbox authenticated API/error handling; branch codex/voice-assistant; latest local fix commit 9a504bf; never push.
-- Last finished step: PayPal helper fix, regression tests, continuity records and local checkpoint are complete.
-- Root cause: src/novapay-live.js used raw fetch without Authorization/X-Org-Id and passed the structured error object to Error, producing [object Object].
-- DONE: create-order, capture, refund, approval registration and events use NovaPayApi.request; public /api/status stays on fetch; readable role/org errors; retryBlocked is preserved.
-- TESTS: focused 3/3 PASS; node --check PASS; npm test 313 pass / 1 known fail / 314 total (api-client.test.js:29 no-store assertion).
-- IN PROGRESS: none. No auth/OTP, voice, Gemini pool, or PayPal provider changes; no order created; no push.
-- NEXT: browser: sign in, open PayPal Sandbox, create a 10.00 USD order, approve in PayPal tab, return and capture, verify transaction appears.
+- Current task: restore persisted PayPal Sandbox transactions and ledger entries after refresh; branch codex/voice-assistant; pre-change rollback checkpoint d8bfd80; no push.
+- Verified root cause: Transactions populated only from novapay-live addCapture DOM insertion; AG Grid mirrored that DOM. Ledger panel was static illustrative HTML. Backend authenticated GET endpoints and record_paypal_capture persistence RPC exist.
+- DONE in code: API-backed paginated transactions and ledger reads; mapped fields and capture/refund dedupe; currency-exponent formatting and per-currency ledger KPIs; sample fallback, retry/error state, refresh on view/focus/visibility and after successful capture/refund.
+- Tests: focused grid+financial suite 9/9 PASS; full npm test 318 pass / 1 known fail / 319 total; only api-client.test.js:29 no-store assertion. Syntax and diff checks PASS.
+- LIVE: local /api/status responds backend=true and PayPal connected. Authenticated responses and same-org table counts UNVERIFIED: browser control is disabled in Work settings; no fixed test-user credentials are configured.
+- IN PROGRESS: implementation/docs are not yet committed after pre-change rollback checkpoint d8bfd80; keep branch codex/voice-assistant, never push.
+- NEXT: inspect changed files, checkpoint locally (WIP-BROKEN prefix for known suite failure), then human browser flow: sign in; PayPal Sandbox; create 10.00 USD order; approve in PayPal tab; capture; verify transaction; hard-refresh; verify Transactions and Ledger; sign out/in and verify persistence.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5089,3 +5089,59 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 15:48:24 IST | BEFORE | Read required handoff notes and inspect branch/worktree so the pre-change checkpoint captures the exact current state; next: commit the current working tree before any implementation edits.
 2026-11-02 15:48:24 IST | AFTER | Required notes and branch/status inspected; no tracked .env path reported; files touched: docs/WORKLOG.md; next: create pre-change local checkpoint commit.
 2026-11-02 15:48:32 IST | BEFORE | Checkpoint the current worktree documentation edits before any code changes, as requested; known test failure is already documented, so use WIP-BROKEN prefix.
+2026-11-02 15:48:32 IST | AFTER | Pre-change rollback checkpoint exited 0; code has not been edited; next: verify commit/status, then inspect routes and UI data sources.
+2026-11-02 15:48:40 IST | BEFORE | Re-verify the claimed API/UI wiring gap and locate transaction/ledger route implementations before deciding any change; next: determine whether live authenticated inspection is available.
+2026-11-02 15:48:40 IST | AFTER | Re-verified DOM-only transaction additions and static ledger UI; route implementations exist; files touched: docs/WORKLOG.md; next: inspect server capture persistence and auth/live-session availability.
+2026-11-02 15:49:02 IST | BEFORE | Inspect capture persistence, financial API query mapping and runtime credentials availability without exposing any values; local browser control is disabled by Work settings; next: determine safe live-test options.
+2026-11-02 15:49:02 IST | AFTER | Code inspection confirms financial routes query repositories and capture persistence paths are located; no env values printed; browser automation is unavailable; next: inspect exact capture writes and route read filters.
+2026-11-02 15:49:13 IST | BEFORE | Inspect exact capture-write code and transaction/ledger Postgres repository shapes to verify atomic persistence expectations; next: check local server status and report any live-access blocker.
+2026-11-02 15:49:14 IST | AFTER | Capture route persists through scoped repository and transaction/ledger read repositories exist; files touched: docs/WORKLOG.md; next: inspect runtime status, then implement API-backed view loading.
+2026-11-02 15:49:19 IST | BEFORE | Check whether local server already runs and read only public /api/status; next: start the server only if absent, then verify authenticated access is unavailable without browser/session credentials.
+2026-11-02 15:49:20 IST | AFTER | Local server status check completed; browser surface is unavailable and no user JWT/test credentials were found in env names; next: determine if a non-credential live inspection is possible, then code changes.
+2026-11-02 15:49:33 IST | BEFORE | Inspect view activation hooks, transaction grid core mapping and ledger markup to implement data loading without touching auth/voice/context code; next: design the smallest UI module.
+2026-11-02 15:49:33 IST | AFTER | View hooks and DOM schemas inspected; files touched: docs/WORKLOG.md; next: implement API-backed data module and focused unit tests.
+2026-11-02 15:49:54 IST | BEFORE | Inspect ledger schema and app view selector to shape currency-safe UI mapping; next: implement data helpers for transactions and journal entries.
+2026-11-02 15:49:55 IST | AFTER | Ledger money schema and view navigation sources located; files touched: docs/WORKLOG.md; next: implement pure mapping/KPI helpers and view loader.
+2026-11-02 15:50:02 IST | BEFORE | Identify the actual panel activation event and ledger export handler so fetches run on every view opening without altering dashboard auth/voice logic; next: patch the minimal event integration.
+2026-11-02 15:50:02 IST | AFTER | Navigation depends on location hash and ledger export already has a delegated handler; files touched: docs/WORKLOG.md; next: build small loader module reacting to hash and visibility events.
+2026-11-02 15:50:07 IST | BEFORE | Read dashboard view activation implementation and table/account column format helper; next: hook the live loader to the supported view event.
+2026-11-02 15:50:07 IST | AFTER | View activation is hash-driven; Transactions row IDs and currency formatting assumptions captured; files touched: docs/WORKLOG.md; next: implement pure helper plus DOM loading module.
+2026-11-02 15:50:42 IST | BEFORE | Inspect existing test imports for browser UMD helpers and sample/live row data attributes; next: implement tested pure financial data utilities.
+2026-11-02 15:50:42 IST | AFTER | Existing grid core is tested with browser-like helpers; sample rows have dataset-based IDs/source classification; next: implement API mapping utilities and loader.
+2026-11-02 15:51:40 IST | BEFORE | Add pure transaction mapping, deduplication, currency-safe ledger totals, period filtering and safe error helpers; these utilities will support the new API view loader and tests.
+2026-11-02 15:51:40 IST | AFTER | Added pure financial data utilities for API transaction mapping/deduplication, period filtering, currency-safe journal totals and stable error text; files touched: src/financial-data.js, docs/WORKLOG.md; next: wire utilities into the dashboard.
+2026-11-02 15:52:22 IST | BEFORE | Wire Transactions and Ledger panels to authenticated API reads, add retry/error surfaces and live refresh hooks after capture/refund; preserve sample rows and existing grid.
+2026-11-02 15:52:22 IST | AFTER | Added authenticated API loader for transactions/ledger, retry controls, focus/view refetch and currency-separated rendering; files touched: src/financial-live.js, docs/WORKLOG.md; next: add minimal dashboard hooks and markup IDs.
+2026-11-02 15:52:48 IST | BEFORE | Add the view loader to dashboard markup, preserve clearly marked ledger samples, ensure transaction addCapture dedupes against API rows, and refetch after capture/refund.
+2026-11-02 15:52:48 IST | AFTER | Dashboard now loads financial-live scripts, labels ledger fallback rows, provides ledger live status/retry target, and capture/refund trigger immediate refetch with dedupe; files touched: dashboard.html, src/financial-data.js, src/financial-live.js, src/novapay-live.js, docs/WORKLOG.md; next: verify edits landed in intended spots and add unit tests.
+2026-11-02 15:53:19 IST | BEFORE | Harden transaction dedupe for multiple refunds, queue refreshes that arrive during an in-flight read, and add unit tests for API mapping, dedupe, currency-safe ledger KPIs and error messaging.
+2026-11-02 15:53:19 IST | AFTER | Added queued refetch protection, refund-aware dedupe and 4 focused mapping/KPI/error tests; files touched: src/financial-data.js, src/financial-live.js, server/test/transactions-ledger-live.test.js, docs/WORKLOG.md; next: run focused tests and syntax checks.
+2026-11-02 15:53:25 IST | BEFORE | Run the four new transactions/ledger data tests and retain exact result; next: fix any assertion issues, then full suite.
+2026-11-02 15:53:25 IST | AFTER | Focused transaction/ledger tests exited 1; exact result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run full npm test after final integration checks.
+2026-11-02 15:53:35 IST | BEFORE | Correct the new error-state test to inspect the utility that owns the message string; preserve assertions that runtime shows Retry and logs the actual ledger error; next: rerun focused tests.
+2026-11-02 15:53:35 IST | AFTER | Error-state regression now tests the user-facing message helper directly and separately verifies retry and server-error logging; files touched: server/test/transactions-ledger-live.test.js, docs/WORKLOG.md; next: rerun focused tests.
+2026-11-02 15:53:40 IST | BEFORE | Rerun focused transactions/ledger tests after correcting the test target; next: record exact result and run the full suite.
+2026-11-02 15:53:40 IST | AFTER | Focused financial tests rerun exited 0; result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: inspect test output and continue.
+2026-11-02 15:53:52 IST | BEFORE | Verify code path for atomic capture persistence and what real API rows expose; next: document what is proven in code versus live UNVERIFIED.
+2026-11-02 15:53:52 IST | AFTER | Code confirms capture route calls repository persistence before responding and financial reads are org-filtered; real authenticated route/table counts remain UNVERIFIED due browser restriction and no fixed-user credentials; next: full suite and integration validation.
+2026-11-02 15:54:17 IST | BEFORE | Make the first list call match the documented GET endpoint exactly, paginate from the API's 50-row default, and add an integration-source assertion for scoped API calls; next: run focused suite.
+2026-11-02 15:54:17 IST | AFTER | First API requests are exact endpoint URLs, later pages use limit/offset, and tests assert ledger DOM wiring; files touched: src/financial-live.js, server/test/transactions-ledger-live.test.js, docs/WORKLOG.md; next: inspect test edits and rerun focused tests.
+2026-11-02 15:54:21 IST | BEFORE | Inspect the newly added loader assertions and ensure no requested integration check was missed; next: fix test coverage if source assertion wasn't inserted.
+2026-11-02 15:54:21 IST | AFTER | Inspected focused test file; next: add any missing authenticated endpoint/ledger target assertion then rerun focused suite.
+2026-11-02 15:54:30 IST | BEFORE | Add a focused integration contract assertion for authenticated API usage, pagination, view refetch hooks and dashboard module inclusion; next: rerun tests.
+2026-11-02 15:54:30 IST | AFTER | Added integration contract assertions for both API sources, paginated calls, focus refresh and labeled sample fallback; files touched: server/test/transactions-ledger-live.test.js, docs/WORKLOG.md; next: rerun focused tests.
+2026-11-02 15:54:35 IST | BEFORE | Rerun financial live-view focused tests after adding integration contract assertions; next: log result and run full npm test.
+2026-11-02 15:54:36 IST | AFTER | Focused financial tests exited 0; result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run npm test.
+2026-11-02 15:54:41 IST | BEFORE | Run full npm test for the Transactions/Ledger persistence fix; next: distinguish any new failures from the existing api-client no-store assertion.
+2026-11-02 15:54:44 IST | AFTER | Full npm test exited 1; exact counts appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: final syntax/diff checks and update handoff.
+2026-11-02 15:54:45 IST | BEFORE | Poll full npm test for completion; next: record the final total and any failing test names.
+2026-11-02 15:55:05 IST | BEFORE | Clarify ledger fallback footer for both genuinely empty orgs and API-error fallback; final code review and syntax/whitespace check follow.
+2026-11-02 15:55:05 IST | AFTER | Ledger fallback copy clarified; changed JS syntax and git diff --check exit 0; files touched: dashboard.html, docs/WORKLOG.md; next: update continuity docs and inspect the final diff.
+2026-11-02 15:55:26 IST | BEFORE | Update handoff pointer, CONTEXT/TEST STATE and append the loader design decision; mark real authenticated API/table verification UNVERIFIED due browser lock and absent test-user credentials.
+2026-11-02 15:55:26 IST | AFTER | Updated RESUME POINTER, CONTEXT, TEST STATE and DECISIONS; files touched: docs/WORKLOG.md, docs/CONTEXT.md, docs/DECISIONS.md; next: review final diff, safety and checkpoint.
+2026-11-02 15:56:11 IST | BEFORE | Verify the unchanged AG Grid table parser/filter/totals suite alongside the new API-row mapping tests; next: log exact focused result and finalize docs.
+2026-11-02 15:56:11 IST | AFTER | Grid plus financial mapping tests exited 0; exact result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: final diff and safety review.
+2026-11-02 15:56:38 IST | BEFORE | Record final 9/9 grid+financial focused check and accurate live verification limitation in the handoff before checkpointing implementation.
+2026-11-02 15:56:38 IST | AFTER | Updated final handoff/test report with 9/9 focused result and live checks UNVERIFIED; files touched: docs/WORKLOG.md, docs/CONTEXT.md, docs/TEST-REPORT.md; next: final syntax/diff/protected-path and env check.
+2026-11-02 15:56:49 IST | AFTER | Final syntax checks, git diff --check and protected/env checks passed; worktree contains only intended financial view, tests and continuity docs; next: checkpoint locally with WIP-BROKEN for the known no-store test.
+2026-11-02 15:56:49 IST | BEFORE | Stage and commit the financial view implementation, tests and continuity records; full suite is 318/319 due only to the pre-existing no-store assertion; no push.

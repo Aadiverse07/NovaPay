@@ -1,0 +1,60 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { readFile } from 'node:fs/promises';
+
+const require = createRequire(import.meta.url);
+const data = require('../../src/financial-data.js');
+const liveSource = await readFile(new URL('../../src/financial-live.js', import.meta.url), 'utf8');
+const html = await readFile(new URL('../../dashboard.html', import.meta.url), 'utf8');
+const dataSource = await readFile(new URL('../../src/financial-data.js', import.meta.url), 'utf8');
+
+test('API transaction rows map saved amount, fee, net, date, status and capture id', () => {
+  const row = data.transactionRow({ id: 'row-1', type: 'capture', sourceId: 'CAP-1', captureId: 'CAP-1', status: 'COMPLETED', amount: '10.00', fee: '0.59', net: '9.41', currency: 'USD', occurredAt: '2026-11-01T12:00:00Z' });
+  assert.equal(row.id, 'CAP-1');
+  assert.equal(row.cells[3], 'USD 10.00');
+  assert.equal(row.cells[4], 'USD 0.59');
+  assert.equal(row.cells[5], 'USD 9.41');
+  assert.equal(row.date, '2026-11-01T12:00:00Z');
+  assert.equal(row.status, 'COMPLETED');
+  assert.equal(row.source, 'paypal-sandbox');
+});
+
+test('transaction dedupe collapses live/API copies and prefers each refund id', () => {
+  const rows = data.dedupeTransactions([
+    { id: 'db1', captureId: 'CAP-1' }, { id: 'live1', captureId: 'CAP-1' },
+    { id: 'r1', captureId: 'CAP-1', refundId: 'REF-1' }, { id: 'r2', captureId: 'CAP-1', refundId: 'REF-2' }
+  ]);
+  assert.deepEqual(rows.map((row) => data.key(row)), ['CAP-1', 'REF-1', 'REF-2']);
+});
+
+test('ledger totals are grouped by currency and report imbalance without cross-currency sums', () => {
+  const entries = [
+    { id: 'j1', currency: 'USD', lines: [{ currency: 'USD', debit_minor: '1000', credit_minor: '0' }, { currency: 'USD', debit_minor: '0', credit_minor: '1000' }] },
+    { id: 'j2', currency: 'JPY', lines: [{ currency: 'JPY', debit_minor: '500', credit_minor: '0' }, { currency: 'JPY', debit_minor: '0', credit_minor: '450' }] }
+  ];
+  const summary = data.ledgerSummary(entries);
+  assert.equal(summary.debits, 'JPY 500 · USD 10.00');
+  assert.equal(summary.credits, 'JPY 450 · USD 10.00');
+  assert.equal(summary.balanced, false);
+  assert.equal(summary.unreconciledCount, 1);
+  assert.equal(data.formatMinor('12345', 'INR'), 'INR 123.45');
+});
+
+test('ledger error state uses a clear retryable message, never object coercion', () => {
+  assert.equal(data.errorMessage({ error: { code: 'ORG_FORBIDDEN', message: 'private backend detail' } }, 'ledger'), "Couldn't load ledger.");
+  assert.match(liveSource, /button\.textContent = "Retry"/);
+  assert.match(liveSource, /root\.console\.error\("Could not load saved ledger", cause\)/);
+  assert.equal(data.errorMessage(new Error('network failure'), 'transactions'), "Couldn't load saved transactions.");
+  assert.match(dataSource, /Couldn't load " \+ label/);
+});
+
+test('live views fetch saved transaction and ledger pages and refresh on focus/view changes', () => {
+  assert.match(liveSource, /return root\.NovaPayApi\.request\(path\)/);
+  assert.match(liveSource, /var pagePath = offset === 0 \? path/);
+  assert.match(liveSource, /pages\("\/api\/transactions", "transactions"\)/);
+  assert.match(liveSource, /pages\("\/api\/ledger\/entries", "entries"\)/);
+  assert.match(liveSource, /root\.addEventListener\("focus", refreshVisible\)/);
+  assert.match(html, /src="src\/financial-live\.js"/);
+  assert.match(html, /data-ledger-sample/);
+});

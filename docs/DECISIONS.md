@@ -736,3 +736,11 @@
 - Reason: The shared client supplies the user's bearer token and active organization header, preserves retryBlocked, and avoids coercing structured error objects into [object Object].
 - Rejected: Adding another local auth/header implementation or exposing raw error objects to the UI.
 - Source: repository middleware and src/api-client.js, inspected 2026-11-02.
+
+
+## 2026-11-02 — Persisted transaction and ledger view data
+- Question: How should saved Sandbox activity appear after refresh without replacing the existing grid or mixing currencies?
+- Choice: Populate the existing transaction tbody from paginated org-scoped API rows so the existing AG Grid observer remains the source; render journal lines from the ledger API and compute KPIs separately by currency. Retain labeled illustrative rows only as fallback, show retry errors, and refetch on view/focus/capture/refund.
+- Reason: Uses existing read routes and DOM contracts without migration or grid redesign; backend capture persistence remains the atomic ledger RPC.
+- Rejected: Creating a second grid data source or summing currencies into one total.
+- Source: repository routes, capture repository and dashboard markup inspected 2026-11-02.

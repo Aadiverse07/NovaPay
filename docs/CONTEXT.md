@@ -17,21 +17,22 @@
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- PayPal Sandbox API helper fix is implemented in `src/novapay-live.js`; all protected endpoints use the authenticated shared client, while `/api/status` stays public. Structured errors and role/org codes now render readable messages.
-- Part A commit 58035b5 and Part B implementation commit a03f85f are complete; no push was made. PayPal browser flow remains UNVERIFIED. The known full-suite failure is `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`).
+- Transactions and Ledger now load organization-scoped API data after view activation, recover on focus/visibility and refresh after successful capture/refund. Work is uncommitted after pre-change checkpoint d8bfd80.
+- Backend code uses record_paypal_capture to atomically persist capture-related records; the two read endpoints are org-filtered. Actual authenticated responses and same-org live table counts are UNVERIFIED because browser automation is disabled and no fixed-user credentials are configured.
+- Existing full-suite failure remains `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`). No push.
 - Preserve auth/OTP/session handling, `server/src/services/geminiKeyPool.js`, voice files/speech output, and Tier 0/1/2 validation. Keep money units unchanged.
 - Baseline and Part A full suite each have the same single known no-store failure; Part A full result is 300/301 and migration parser is 21/21.
 - Browser rendering is UNVERIFIED.
 
 ## NEXT STEPS
-1. Human runs the PayPal Sandbox browser flow: sign in, open PayPal Sandbox, create a 10.00 USD test order, approve in PayPal tab, capture, confirm the transaction appears.
-2. Earlier Transactions grid and assistant conversation browser checks remain pending in `docs/WORKLOG.md`. Do not push unless separately requested.
+1. Human runs: sign in; open PayPal Sandbox; create a 10.00 USD test order; approve in PayPal tab; return and capture.
+2. Verify the payment in Supabase transactions and journal_entries, hard-refresh, verify Transactions and Ledger, then sign out/in and verify it persists. Do not push.
 
 ## USER ACTIONS PENDING
 - In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
 
 ## LIVE STATE
-- No browser or live API checks have been performed for the AG Grid change. No secrets printed, no migration run, no push.
+- Local server is running on port 3000; public /api/status reported backend=true and PayPal connected. Authenticated GET responses and same-org table counts are UNVERIFIED because browser control is disabled in Work settings and no fixed-user login credentials are configured. No live capture was created, no migration run, no push.
 
 ## TEST STATE
 | Check | Status | Date | Command/details |
@@ -83,3 +84,7 @@
 | PayPal API structured error regression | PASS | 2026-11-02 | `node --test server/test/novapay-live-api.test.js` — 3/3 |
 | PayPal edited JS syntax | PASS | 2026-11-02 | `node --check src/novapay-live.js server/test/novapay-live-api.test.js` |
 | PayPal full suite | FAIL (known) | 2026-11-02 | `npm test` — 313/314; sole failure `server/test/api-client.test.js:29`, expected `Cache-Control: no-store`, actual undefined |
+| Financial view focused tests | PASS | 2026-11-02 | `node --test server/test/transactions-ledger-live.test.js` — 5/5 mapping, dedupe, multi-currency KPI, error and wiring tests |
+| Transactions grid plus financial view tests | PASS | 2026-11-02 | `node --test server/test/transactions-grid.test.js server/test/transactions-ledger-live.test.js` — 9/9 |
+| Financial view full suite | FAIL (known) | 2026-11-02 | `npm test` — 318/319; sole failure `server/test/api-client.test.js:29`, expected `Cache-Control: no-store`, actual undefined |
+| Financial live API/browser and Supabase row counts | UNVERIFIED | 2026-11-02 | local browser control disabled; no test-user session credentials available; public status only was checked |
