@@ -4,7 +4,7 @@
 - Date/time: 2026-11-02 17:19 IST
 - Branch: `codex/voice-assistant`
 - Pre-change checkpoint: `39a6cc9`; incident implementation is committed locally (hash recorded in WORKLOG).
-- Current phase/task: refresh stability fixes are complete; authorized main merge halted at the requested secret scan gate.
+- Current phase/task: refresh stability fixes merged into main; final documentation commit is being published.
 
 ## DONE
 - Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
@@ -15,27 +15,26 @@
 - Made IP/user/read rate budgets configurable (`RATE_LIMIT_IP=1500`, `RATE_LIMIT_USER=1200`, `RATE_LIMIT_READ_USER=2400` defaults); route-specific auth/OTP/onboarding/AI limits remain. Rate limit responses include Retry-After.
 - Added regression tests for budget/dedupe/cache/backoff, workspace 429 behavior and duplicate-workspace protection, configurable limits/headers, and persisted transaction/ledger route reads across app restart fixtures.
 - Automated verification: `npm test` PASS 352/352 (includes 21/21 migration syntax checks); changed JS `node --check` PASS; `git diff --check` PASS; protected files unchanged.
-- Pre-change checkpoint commit: `39a6cc9`; implementation committed locally as `471dd9c`; no push or merge performed.
+- Pre-change checkpoint commit: `39a6cc9`; integration merge commit: `e043aafd4bf9cf70602d2870e9984198f234ceea`; pushed to origin/main and origin/novapay-final; final docs commit follows.
 
 ## IN PROGRESS
-- Implementation is committed locally. Main merge is blocked pending review of key-shaped test fixture strings.
+- Integration merge completed with no conflicts. The strict scan found no long token patterns and no values from local `.env`; short dummy test fixtures were reviewed as test-only.
 - Live browser request counts/statuses and actual Supabase persistence after server restart/sign-out/sign-in remain unverified; automated fixture test is not a live DB check.
 
 ## NEXT STEPS
 1. Human: run the exact steps in `docs/BROWSER-CHECKLIST.md` using the existing owner and org; record Network statuses and request counts.
 2. Confirm Transactions and Ledger responses still contain the existing sandbox payment after server restart, hard refresh, and sign-out/sign-in.
-3. If browser confirms no recurring 429 and workspace restores correctly, review the local diff and decide whether to push/merge in a separate authorized task.
+3. Human: perform the browser checklist; browser and live database verification remain unverified.
 
 ## USER ACTIONS PENDING
-- Review the 4 `sb_secret_`-shaped lines in `server/test/supabase.test.js`; the requested safety gate required stopping on any key-shaped match. They appear to be test fixtures, but were not cleared for merge.
-- Start/restart the local server and perform the browser checklist with the existing owner after the merge gate is resolved.
+- Start/restart the local server and perform the browser checklist with the existing owner; record observed request counts and statuses.
 
 ## LIVE STATE
 - Migrations: no migrations run in this task; syntax check passed for 21 files.
 - Tunnel/webhook: not checked.
 - Existing Supabase transaction/ledger rows: previously reported present by user; this run did not query production Supabase.
 - Server/browser request counts and actual response codes: UNVERIFIED; the screenshot text matches the general IP limiter's configured response, but no request log from that browser session was captured.
-- Secrets: no `.env` values printed; no `.env` or secret-named path tracked. Secret scan found 4 token-shaped fixture lines in `server/test/supabase.test.js`; stopped as instructed. No push or merge.
+- Secrets: no `.env` values printed; no `.env` or secret-named path tracked. Strict scan clean; the two distinct `sb_secret_` dummy fixtures were length 20. Main and backup pushes completed without force.
 
 ## TEST STATE
 | Check | Status | Date | Command / evidence |
@@ -66,7 +65,7 @@
 - Distinguish source/test evidence from live browser and production database verification.
 
 ## DO NOT
-- Do not push or merge until the requested secret scan gate passes.
+- Do not force-push or rewrite history.
 - Do not create users/orgs or trigger PayPal/Gemini for these checks.
 - Do not weaken tests, remove abuse protection, or treat transient onboarding errors as missing organizations.
 - Do not print environment values or secrets.

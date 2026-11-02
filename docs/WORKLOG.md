@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: diagnose/fix refresh-time rate limiting and workspace restore; branch `codex/voice-assistant`; pre-change checkpoint `39a6cc9`; fixes are uncommitted; never pushed or merged.
+- Current task: refresh/rate-limit fix merged and pushed; branch `codex/voice-assistant`; integration merge `e043aafd4bf9cf70602d2870e9984198f234ceea`; final docs publication pending; no force used.
 - DONE: transient `/api/onboarding` failures no longer mean “no organization”; last org is retained, Retry-After/backoff and Retry UI added. Shared API GET cache/dedupe (20s), scoped invalidation and bounded 429 handling added. Module refreshes are active-view/visibility gated and throttled. Configurable IP/user/read budgets and Retry-After added.
 - VERIFIED: `npm test` 352/352; migration syntax 21/21; changed JS syntax and `git diff --check` pass. Modeled request-budget regression covers 11 unique endpoint reads and dedupes repeat opens. Restart persistence is a fixture test only.
 - UNVERIFIED: actual failing browser request/count and status/error code; live Supabase rows after server restart, hard refresh and re-login; manual browser checklist.
 - PENDING HUMAN: run `docs/BROWSER-CHECKLIST.md` using existing owner/org; record per-view API counts and verify Transactions/Ledger persistence after server restart and sign-out/sign-in.
-- NEXT: complete final local diff checks, commit fixes/docs locally, then hand back for browser verification. No push/merge authorized.
+- NEXT: publish final CONTEXT/WORKLOG commit to `origin/main` and `origin/novapay-final`, then hand back for browser verification.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5586,3 +5586,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 17:57 IST | About to run `git push origin codex/voice-assistant:main`. Why: publish the merged descendant using normal fast-forward semantics only. Next: if rejected, stop; if accepted, mirror the same branch head to origin/novapay-final.
 2026-11-02 17:58 IST | Result: PASS; normal push advanced `origin/main` from `f8fe676` to `742bab5` with no force. Next: push the same working-branch head to `origin/novapay-final`, then record the integration merge hash in CONTEXT and WORKLOG and push that docs commit to both refs.
 2026-11-02 17:59 IST | About to push the working branch head to `origin/novapay-final` with a normal push. Why: keep the requested backup branch aligned with the main update. Next: if accepted, record the integration merge hash in docs and fast-forward both refs to the docs commit.
+2026-11-02 18:00 IST | Result: PASS; `origin/novapay-final` advanced to working-branch head `5a6d8f9`, which contains integration merge `e043aafd4bf9cf70602d2870e9984198f234ceea`. Next: add that merge hash to CONTEXT and WORKLOG, commit the docs, then fast-forward origin/main and origin/novapay-final to the docs commit.
+2026-11-02 18:01 IST | About to update CONTEXT and the RESUME POINTER with the actual conflict-free integration merge and publication state. Why: remove stale “merge blocked” notes and persist the merge commit hash requested. Next: commit these docs, then push that docs commit fast-forward to main and novapay-final.
