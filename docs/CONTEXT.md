@@ -1,9 +1,10 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; current task: assistant invoice draft slot filling; latest committed checkpoint 01c8b43; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; current task: Part B conversation context memory; Part A ready for its own local commit; no push.
 
 ## DONE
+- Part A: lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.
 - Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
 - One reusable SpeechRecognition object is configured en-IN, continuous=false, interimResults=true. It starts only after a mic tap, displays interim text, submits final/silence once, and ignores duplicate starts. A mic tap during playback no longer cancels the utterance; explicit Stop remains available.
 - Removed voice auto-resume from the floating indicator; its click activates the same AI mic. Transaction detail dictation now records audio and calls the authenticated transcription endpoint, avoiding a second recognizer. Main mic held-to-talk remains the fallback when browser recognition is unavailable.
@@ -16,23 +17,24 @@
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- Invoice draft assistant flow is implemented in `src/dashboard.js`: deterministic intent intercept before data-answer path, role check via authenticated invoice list, one-at-a-time required slots, validation, two-minute expiry, cancel/change amount, readback/confirm card, and existing authenticated idempotent POST only after confirmation.
-- Server classifies invoice-create messages as code intent and returns a validated partial action or viewer refusal before `askAI`; no invoice action is inferred from OCR/document evidence.
-- Actual invoice route requires customerName, customerEmail, currency, issueDate, dueDate, and at least one line description/quantity/unitPrice. INR is the UI default, issue date is generated as today, quantity=1 and tax=0 follow the existing form defaults. Email and line description are asked when missing.
-- After create, the existing invoice API refreshes and opens Invoices, the row is highlighted, and “open it”/“download it” resolve to the created invoice. Sending remains unchanged.
-- Files changed in this task: `src/assistant-actions.js`, `src/dashboard.js`, `src/modules.css`, `server/src/ai/actions.js`, `server/src/ai/router.js`, `server/src/routes/ai.js`, tests `server/test/assistant-actions.test.js`, `assistant-client.test.js`, `ai-router.test.js`, `routes.test.js`, plus continuity docs.
-- Browser verification and actual invoice POST/debug/server log are UNVERIFIED; local browser control is disabled in Work settings.
+- Part A is implemented and tested; local Part A commit is the next checkpoint action.
+- Part B is not started: add short-term AI conversation memory scoped by verified org and user; resolve follow-up pronouns deterministically before route classification/evidence/cache; persist safe shared client history for typed, voice and transcription; update API contract and tests.
+- Preserve auth/OTP/session handling, `server/src/services/geminiKeyPool.js`, voice files/speech output, and Tier 0/1/2 validation. Keep money units unchanged.
+- Baseline and Part A full suite each have the same single known no-store failure; Part A full result is 300/301 and migration parser is 21/21.
+- Browser rendering is UNVERIFIED.
 
 ## NEXT STEPS
-1. In Chrome, sign in as an owner/admin/accountant, open AI Assistant, type “create an invoice for me”, then provide customer name, email, amount, line description, and a future due date one at a time; inspect the readback and click Confirm. Verify one POST `/api/invoices`, one draft row, and its invoice number.
-2. Repeat by mic; speak “create an invoice for Acme for 12000 due 15 November”. Since the route requires email and line description, answer those prompts, confirm verbally or on screen, and inspect debug plus server POST logs. Then say “download it” and “open it”.
-3. Verify viewer refusal and cancellation; report browser evidence in TEST-REPORT.md. Do not push or run migrations.
+1. Commit Part A as a standalone local commit after syntax, whitespace, and secret/status checks.
+2. Implement Part B repo/resolver, cache scoping, API history limits/context fields, and client sessionStorage conversation assembly.
+3. Add tests for follow-up resolution, user/org scope, TTL/bounds/redaction, focus-aware cache keys, client assembly, and shared request metadata.
+4. Run `npm test` before and after; record the existing no-store test failure if it remains; do not push.
+5. Commit Part B separately and provide exact manual browser checks.
 
 ## USER ACTIONS PENDING
 - In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
 
 ## LIVE STATE
-- No browser or live API checks were possible; local browser control is disabled by desktop Work settings. No secrets printed, no migration run, no push.
+- No browser or live API checks have been performed for the AG Grid change. No secrets printed, no migration run, no push.
 
 ## TEST STATE
 | Check | Status | Date | Command/details |
@@ -47,6 +49,9 @@
 | Invoice assistant focused tests | PASS | 2026-11-02 | `node --test server/test/assistant-actions.test.js server/test/ai-router.test.js server/test/assistant-client.test.js server/test/routes.test.js` — 37/37 |
 | Full suite after invoice flow | FAIL | 2026-11-02 | `npm test` — 296/297; known `server/test/api-client.test.js:29` Cache-Control no-store assertion, 21 migration syntax checks passed |
 | Invoice browser flow and live POST | UNVERIFIED | 2026-11-02 | Chrome unavailable in Work settings; no live draft created or customer data used |
+| AG Grid/action focused tests | PASS | 2026-11-02 | `node --test server/test/transactions-grid.test.js server/test/assistant-actions.test.js` — 11/11 |
+| Part A full suite | FAIL (known) | 2026-11-02 | `npm test` — 300/301; only `server/test/api-client.test.js:29` no-store assertion; migrations 21/21 |
+| AG Grid browser rendering | UNVERIFIED | 2026-11-02 | No browser session used; manual checklist pending |
 
 ## KNOWN ISSUES AND RISKS
 - Known API no-store assertion remains the only failing test and was not changed.

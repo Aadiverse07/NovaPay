@@ -69,6 +69,18 @@ export function validateAssistantActions(candidates, message, role = 'viewer') {
 
 function actionMatchesUserText(id, args, text) {
   if (id === 'nav.open') return parseNavigationCommand(text)?.view === args.view;
+  if (id === 'transactions.applyView') {
+    if (!/\b(?:show|filter|find|display|sort)\b/.test(text)) return false;
+    if (args.sortDir && !args.sortBy) return false;
+    const checks = [];
+    if (args.sortBy) checks.push(/\bsort\b/.test(text) && /\b(?:transactions?|amount|date|type|buyer|gross|fee|net|status|id)\b/.test(text));
+    if (args.type) checks.push(new RegExp(`\\b${String(args.type).toLocaleLowerCase('en-US')}s?\\b`).test(text));
+    if (args.status) checks.push(text.includes(String(args.status).toLocaleLowerCase('en-US')));
+    if (args.minAmount != null || args.maxAmount != null) checks.push(/\b(?:amount|above|over|greater than|more than|below|under|less than|between)\b/.test(text) || text.includes(String(args.minAmount ?? args.maxAmount)));
+    if (args.dateFrom || args.dateTo) checks.push(/\b(?:today|yesterday|week|month|date|from|between|since|before|after)\b/.test(text));
+    if (args.search) checks.push(text.includes(String(args.search).toLocaleLowerCase('en-US')));
+    return Boolean(checks.length && checks.every(Boolean) && /\b(?:transaction|transactions|refund|refunds|payment|payments|capture|captures|dispute|disputes|payout|payouts)\b/.test(text));
+  }
   if (id === 'assistant.stopSpeaking') return /\b(stop|cancel|be quiet|quiet)\b/.test(text);
   if (id === 'assistant.repeat') return /\b(repeat|say that again|again)\b/.test(text);
   if (id === 'assistant.help') return /\b(help|what can you do|capabilities)\b/.test(text);

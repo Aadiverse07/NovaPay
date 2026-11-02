@@ -297,3 +297,7 @@ Use the existing fixed test organization and records. This walkthrough creates n
 3. **Show both AI routes.** Ask `What is 7 + 5?` and point out the `code` route. Then ask `Is the latest PayPal capture consistent with its ledger record? Cite the records used.` and show the `llm` route and citation chips.
 4. **Follow the fund.** Open Fundraising and review the campaign summary. Open Maintenance and show the existing closed request, accepted evidence, and `SIMULATED` payment status. Open Transparency and point out the explicit gaps, including `no payment reference` and `simulated, no ledger entry`; owner/admin users can download the audit CSV.
 5. **Close with the boundary.** Captures and refunds are PayPal Sandbox operations with signed webhook verification; maintenance payouts and invoice sending are simulated. No production funds move.
+
+## Built with AG Grid
+
+The Transactions module uses AG Grid Community 33.3.2 (MIT), loaded from the locally vendored UMD bundle at `assets/vendor/ag-grid/ag-grid-community-33.3.2.min.js` only when the Transactions view first opens. It uses the v33 Theming API and Community features for sortable/filterable columns, date and amount filtering, pagination, row selection, per-currency pinned totals, and CSV export. The original table remains as an offscreen data source for existing transaction writers and detail interactions; if the bundle fails to load, the original table remains available. The assistant's `transactions.applyView` action accepts only a strict set of transaction filters and sort fields.
