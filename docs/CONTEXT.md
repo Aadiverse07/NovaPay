@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; last local commit: a03f85f (Part B); Part A commit: 58035b5; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; latest local checkpoint: f7d19fe (handoff docs); Part B implementation commit: a03f85f; Part A commit: 58035b5; no push.
 
 ## DONE
 - Part A (commit 58035b5): lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.
@@ -17,15 +17,15 @@
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- No implementation work remains for the requested Part A and Part B. Part A is committed locally as 58035b5; Part B is committed locally as a03f85f. No push was made.
-- Browser rendering and user-facing follow-up flows remain UNVERIFIED; the one known full-suite failure is `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`).
+- PayPal Sandbox API helper fix is implemented in `src/novapay-live.js`; all protected endpoints use the authenticated shared client, while `/api/status` stays public. Structured errors and role/org codes now render readable messages.
+- Part A commit 58035b5 and Part B implementation commit a03f85f are complete; no push was made. PayPal browser flow remains UNVERIFIED. The known full-suite failure is `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`).
 - Preserve auth/OTP/session handling, `server/src/services/geminiKeyPool.js`, voice files/speech output, and Tier 0/1/2 validation. Keep money units unchanged.
 - Baseline and Part A full suite each have the same single known no-store failure; Part A full result is 300/301 and migration parser is 21/21.
 - Browser rendering is UNVERIFIED.
 
 ## NEXT STEPS
-1. Human runs the browser checks listed in `docs/WORKLOG.md` and reports any failures.
-2. If browser checks pass, no further code action is needed for these two features; do not push unless separately requested.
+1. Human runs the PayPal Sandbox browser flow: sign in, open PayPal Sandbox, create a 10.00 USD test order, approve in PayPal tab, capture, confirm the transaction appears.
+2. Earlier Transactions grid and assistant conversation browser checks remain pending in `docs/WORKLOG.md`. Do not push unless separately requested.
 
 ## USER ACTIONS PENDING
 - In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
@@ -79,3 +79,7 @@
 - `git status --short`
 - `npm test`
 - `npm run check:migrations`
+
+| PayPal API structured error regression | PASS | 2026-11-02 | `node --test server/test/novapay-live-api.test.js` — 3/3 |
+| PayPal edited JS syntax | PASS | 2026-11-02 | `node --check src/novapay-live.js server/test/novapay-live-api.test.js` |
+| PayPal full suite | FAIL (known) | 2026-11-02 | `npm test` — 313/314; sole failure `server/test/api-client.test.js:29`, expected `Cache-Control: no-store`, actual undefined |

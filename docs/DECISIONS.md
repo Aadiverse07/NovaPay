@@ -729,3 +729,10 @@
 - Reason: Preserves user context across requests while keeping identity and entity scope explicit, bounding memory, and avoiding model-based query rewriting. No migration or provider call is needed for the resolver.
 - Rejected: Persisting conversations in the database (unneeded retention/schema surface), trusting client history/focus as authoritative (tenant and prompt-injection risk), or spending an LLM call to rewrite every follow-up (cost and quota).
 - Source: repository behavior and task requirements checked 2026-11-02; no third-party fact used.
+
+## 2026-11-02 — PayPal Sandbox authenticated API calls
+- Question: How should the PayPal Sandbox UI call protected routes and display structured failures?
+- Choice: Route authenticated calls through NovaPayApi.request, keep public /api/status on fetch, and normalize structured role/org errors before rendering.
+- Reason: The shared client supplies the user's bearer token and active organization header, preserves retryBlocked, and avoids coercing structured error objects into [object Object].
+- Rejected: Adding another local auth/header implementation or exposing raw error objects to the UI.
+- Source: repository middleware and src/api-client.js, inspected 2026-11-02.

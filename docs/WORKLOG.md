@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: complete the two requested NovaPay features; branch `codex/voice-assistant`; Part A commit `58035b5`; Part B commit `a03f85f`; never push.
-- Last finished step: Part B implementation and local checkpoint commit `a03f85f` are complete.
-- DONE: Part A lazy AG Grid Transactions view; Part B org/user-scoped assistant memory and deterministic follow-up context, bounded history, focus-aware evidence/cache, scoped session transcript restore, New chat, API docs and tests.
-- Tests: Part B focused suite PASS 39/39; full `npm test` 310 pass / 1 known fail / 311 total (`server/test/api-client.test.js:29`, missing `Cache-Control: no-store`); migrations PASS 21/21; changed JS syntax and `git diff --check` PASS.
-- IN PROGRESS: none in code. Browser interaction is UNVERIFIED.
-- NEXT: human checks Transactions grid search/filter/sort/paging/CSV/selection; assistant follow-ups “explain that”, “same for refunds”, “and last month?”; New chat; refresh restore; org switch/sign-out clearing; light/dark and existing auth/voice behavior.
-- USER ACTIONS PENDING: perform the browser checks above. No push or PR requested.
+- Current task: PayPal Sandbox requests use authenticated API client and readable structured errors; branch `codex/voice-assistant`; never push.
+- Last finished step: source fix and regression tests are implemented; full suite run completed.
+- Root cause verified: `src/novapay-live.js` used raw `fetch()` without auth/org headers and wrapped `d.error` directly in `Error`; structured `{error:{code,message}}` became `[object Object]` while server middleware required bearer JWT and `X-Org-Id`.
+- DONE: all protected PayPal, approval registration and events calls now use `NovaPayApi.request`; `/api/status` remains public. Role and org errors are translated to plain language; `retryBlocked` remains on the shared-client Error.
+- TESTS: new focused regression tests PASS 3/3; `node --check` PASS. `npm test` 313 pass / 1 known fail / 314 total; only `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`).
+- IN PROGRESS: none. No OTP/auth source, voice assistant or Gemini key-pool files changed. No push or live PayPal order created.
+- NEXT: browser check: sign in; open PayPal Sandbox; create test order for 10.00 USD; approve in PayPal tab; return and capture; confirm transaction appears. Report any readable role/org error.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5053,3 +5053,33 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 15:16:25 IST | BEFORE | Set final resume pointer to commit a03f85f and mark Part B implementation/checkpoint complete with browser checks pending; next: validate docs and commit the handoff update.
 2026-11-02 15:16:25 IST | AFTER | Final CONTEXT and RESUME POINTER now identify commits a03f85f/58035b5 and remaining browser checks; files touched: docs/CONTEXT.md, docs/WORKLOG.md; next: validate and checkpoint documentation.
 2026-11-02 15:16:33 IST | BEFORE | Commit final handoff documentation locally; the only known failure is the documented no-store test; next: report docs checkpoint and leave no code changes.
+2026-11-02 15:16:33 IST | AFTER | Handoff documentation commit exited 0; next: capture final status and commit hash, then stop.
+2026-11-02 15:16:59 IST | BEFORE | Correct the continuity header to distinguish the Part B implementation commit from the latest handoff commit f7d19fe; next: stop with exact local state recorded.
+2026-11-02 15:16:59 IST | AFTER | Handoff now records latest checkpoint f7d19fe and Part B implementation a03f85f; files touched: docs/CONTEXT.md, docs/WORKLOG.md; next: human browser verification only.
+2026-11-02 15:17:20 IST | BEFORE | Inspect PayPal API helper, shared API client, relevant tests and branch status to verify the reported root cause; next: implement authenticated requests and readable errors.
+2026-11-02 15:17:25 IST | BEFORE | Inspect exact helper, PayPal route call sites, API client contract and test conventions; next: patch helper and add regression coverage.
+2026-11-02 15:17:30 IST | BEFORE | Confirm the shared client method/options and all PayPal API helper callers before changing behavior; next: implement and test the exact wrapper contract.
+2026-11-02 15:17:30 IST | AFTER | Shared client accepts method/body and provides normalized structured errors/retryBlocked; all PayPal, approval, events and status calls use api(); next: replace local helper and add readable-error tests.
+2026-11-02 15:17:35 IST | BEFORE | List API helper endpoint paths and identify current status handling without dumping large minified lines; next: edit the helper and its error mapping.
+2026-11-02 15:17:35 IST | AFTER | Enumerated endpoints; /api/status is the sole public endpoint, remaining helper paths require auth and org headers; next: make helper select public fetch vs NovaPayApi.request and normalize errors.
+2026-11-02 15:17:53 IST | BEFORE | Inspect novapay-live bootstrap/export surface and browser script ordering to choose a minimal test seam; next: patch source and tests.
+2026-11-02 15:17:53 IST | AFTER | Script loads after api-client and has a safe helper export seam available; next: apply minimal authenticated API wrapper and unit test.
+2026-11-02 15:18:15 IST | BEFORE | Replace the unauthenticated PayPal helper with the shared authenticated client, preserve public status, map structured role/org errors, and expose a narrow helper seam for regression tests; next: run focused tests.
+2026-11-02 15:18:15 IST | AFTER | PayPal/auth helper updated; status remains public, authenticated paths use NovaPayApi, structured role/org errors are readable; files touched: src/novapay-live.js, docs/WORKLOG.md; next: add regression tests.
+2026-11-02 15:18:35 IST | BEFORE | Add focused regression coverage for structured PayPal errors, role/org messaging and authenticated endpoint routing; next: run that focused test.
+2026-11-02 15:18:35 IST | AFTER | Added regression tests for structured errors, role/org translation and endpoint routing; files touched: server/test/novapay-live-api.test.js, docs/WORKLOG.md; next: run the focused test and syntax check.
+2026-11-02 15:18:44 IST | BEFORE | Run the new PayPal API/error regression tests to validate structured error rendering and endpoint wiring; next: if green, run npm test.
+2026-11-02 15:18:44 IST | AFTER | Focused PayPal regression run exited 0; result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run JS syntax and inspect the patch.
+2026-11-02 15:18:59 IST | BEFORE | Run node syntax checks on the edited PayPal layer and regression test; next: run the required full npm test.
+2026-11-02 15:18:59 IST | AFTER | Edited JS syntax checks exited 0; result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run npm test.
+2026-11-02 15:18:59 IST | BEFORE | Run full npm test after the PayPal authenticated-client fix; next: append exact result and update the handoff.
+2026-11-02 15:19:01 IST | AFTER | Full npm test exited 1; exact result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: inspect final diff and refresh CONTEXT/RESUME POINTER.
+2026-11-02 15:19:03 IST | BEFORE | Poll full npm test completion; next: record the final summary and proceed to handoff update.
+2026-11-02 15:19:26 IST | AFTER | Full suite is 313 pass / 1 known fail / 314 total; known failure is api-client no-store assertion; next: refresh CONTEXT and RESUME POINTER for this PayPal task.
+2026-11-02 15:19:26 IST | BEFORE | Update continuation docs with verified PayPal auth-header root cause, fix, tests, and browser steps; next: final diff check and local checkpoint decision.
+2026-11-02 15:19:26 IST | AFTER | Updated RESUME POINTER, CONTEXT and append-only TEST-REPORT with PayPal root cause/fix and 313/314 result; files touched: docs/WORKLOG.md, docs/CONTEXT.md, docs/TEST-REPORT.md; next: review diff and run final whitespace check.
+2026-11-02 15:19:45 IST | BEFORE | Record implementation choice in append-only DECISIONS.md; prior tool input had a syntax error before execution and changed no files; next: final checks and local checkpoint.
+2026-11-02 15:19:45 IST | AFTER | Appended PayPal API decision; files touched: docs/DECISIONS.md, docs/WORKLOG.md; next: review final patch, status, env tracking and whitespace.
+2026-11-02 15:19:52 IST | BEFORE | Final review of PayPal helper/test diff, env tracking, changed paths and whitespace before checkpoint; next: commit reviewed changes locally with WIP-BROKEN prefix for the documented suite failure.
+2026-11-02 15:19:52 IST | AFTER | Final diff review clean; no tracked .env, protected paths not edited; files touched: docs/WORKLOG.md; next: local checkpoint commit, no push.
+2026-11-02 15:20:02 IST | BEFORE | Commit the PayPal client fix, regression tests and continuity records locally; full suite retains its known no-store failure, so use WIP-BROKEN prefix; never push.
