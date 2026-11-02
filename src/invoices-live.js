@@ -206,7 +206,7 @@
     window.addEventListener("hashchange", function () { if (activeView()) load(); });
     document.addEventListener("novapay:invoice-created", load);
     document.addEventListener("novapay:invoice-form-open", function () { if (form) setFormMode("create"); });
-    document.addEventListener("novapay:auth", load);
+    document.addEventListener("novapay:auth", function () { if (activeView()) load(); });
     var query = document.getElementById("invoice-search"), filter = document.getElementById("invoice-filter");
     if (query) query.addEventListener("input", applyFilters); if (filter) filter.addEventListener("change", applyFilters);
     if (form) {

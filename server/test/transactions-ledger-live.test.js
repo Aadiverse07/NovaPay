@@ -56,7 +56,9 @@ test('live views fetch saved transaction and ledger pages and refresh on focus/v
   assert.match(liveSource, /var pagePath = offset === 0 \? path/);
   assert.match(liveSource, /pages\("\/api\/transactions", "transactions"\)/);
   assert.match(liveSource, /pages\("\/api\/ledger\/entries", "entries"\)/);
-  assert.match(liveSource, /root\.addEventListener\("focus", refreshVisible\)/);
+  assert.match(liveSource, /root\.addEventListener\("focus", refreshPassive\)/);
+  assert.match(liveSource, /root\.document\.addEventListener\("visibilitychange", refreshPassive\)/);
+  assert.match(liveSource, /now - lastPassiveRefresh < 30000/);
   assert.match(html, /src="src\/financial-live\.js"/);
   assert.doesNotMatch(html, /data-ledger-sample/);
 });

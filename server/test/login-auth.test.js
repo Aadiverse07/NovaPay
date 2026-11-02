@@ -5,12 +5,13 @@ import { runInNewContext } from 'node:vm';
 
 const authSource = readFileSync(new URL('../../src/auth.js', import.meta.url), 'utf8');
 const documentsSource = readFileSync(new URL('../../src/documents.js', import.meta.url), 'utf8');
+const workspaceGuardSource = readFileSync(new URL('../../src/workspace-guard.js', import.meta.url), 'utf8');
 
 function makeSession(id = 'existing-owner') {
   return { access_token: 'test-access-token', user: { id, email: 'owner@example.test', user_metadata: { full_name: 'Existing Owner' } } };
 }
 
-function authHarness({ session = null, loginSession = makeSession(), duplicate = false, otpError = null, signInError = null, emptyWorkspace = false, freshWorkspace = false } = {}) {
+function authHarness({ session = null, loginSession = makeSession(), duplicate = false, otpError = null, signInError = null, emptyWorkspace = false, freshWorkspace = false, knownOrgId = '', workspaceFailures = [] } = {}) {
   const calls = [];
   const stored = new Map();
   const sessionStored = new Map();
@@ -18,6 +19,8 @@ function authHarness({ session = null, loginSession = makeSession(), duplicate =
     stored.set('novapay-org-id:existing-owner', 'org-existing');
     sessionStored.set('novapay-workspace-checked:existing-owner', JSON.stringify({ orgId: 'org-existing', checkedAt: Date.now() }));
   }
+  if (knownOrgId) stored.set('novapay-org-id:existing-owner', knownOrgId);
+  const timerCalls = [];
   const authClient = {
     async getSession() { return { data: { session }, error: null }; },
     onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; },
@@ -31,7 +34,7 @@ function authHarness({ session = null, loginSession = makeSession(), duplicate =
   const window = {
     location: { origin: 'https://novapay.test' },
     supabase: { createClient() { return { auth: authClient }; } },
-    setTimeout,
+    setTimeout(callback, ms) { timerCalls.push(ms); callback(); return timerCalls.length; },
     clearTimeout,
   };
   const document = { querySelectorAll() { return []; }, dispatchEvent() {} };
@@ -47,7 +50,11 @@ function authHarness({ session = null, loginSession = makeSession(), duplicate =
   };
   const fetch = async (path, options = {}) => {
     if (path === '/api/public-config') return { ok: true, async json() { return { supabaseUrl: 'https://example.supabase.co', supabaseAnonKey: 'public-test-key' }; } };
-    if (path === '/api/onboarding' && options.method !== 'POST') { calls.push({ path, method: 'GET' }); return { ok: true, async json() { return { organizations: emptyWorkspace ? [] : [{ organizationId: 'org-existing', role: 'owner' }] }; } }; }
+    if (path === '/api/onboarding' && options.method !== 'POST') {
+      calls.push({ path, method: 'GET' });
+      if (workspaceFailures.length) { const failure = workspaceFailures.shift(); return { ok: false, status: failure.status, headers: { get(name) { return name.toLowerCase() === 'retry-after' ? failure.retryAfter || null : null; } }, async json() { return { error: { code: failure.code || 'RATE_LIMITED', message: failure.message || 'Too many requests.' } }; } }; }
+      return { ok: true, async json() { return { organizations: emptyWorkspace ? [] : [{ organizationId: 'org-existing', role: 'owner' }] }; } };
+    }
     if (path === '/api/onboarding') {
       calls.push({ path, body: JSON.parse(options.body) });
       return { ok: true, async json() { return { organizationId: 'org-existing', created: false }; } };
@@ -55,8 +62,8 @@ function authHarness({ session = null, loginSession = makeSession(), duplicate =
     if (path.startsWith('/api/auth/preflight?')) { calls.push({ op: 'preflight', flow: new URLSearchParams(path.split('?')[1]).get('flow') }); return { ok: true, async json() { return { allowed: true }; } }; }
     throw new Error('Unexpected test request');
   };
-  runInNewContext(authSource, { window, document, localStorage, sessionStorage, fetch, URLSearchParams, CustomEvent: class {}, AbortController, setTimeout, clearTimeout, console });
-  return { auth: window.NovaPayAuth, calls, stored, sessionStored };
+  runInNewContext(authSource, { window, document, localStorage, sessionStorage, fetch, URLSearchParams, CustomEvent: class {}, AbortController, setTimeout: window.setTimeout, clearTimeout, console });
+  return { auth: window.NovaPayAuth, calls, stored, sessionStored, timerCalls };
 }
 
 function fakeNode() {
@@ -92,6 +99,50 @@ test('successful Supabase login restores an existing owner workspace before retu
   assert.equal(auth.currentOrgId(session.user.id), 'org-existing');
   assert.equal(calls.filter((call) => call.path === '/api/onboarding' && call.method === 'GET').length, 1);
   assert.equal(calls.filter((call) => call.op === 'signUp').length, 0);
+});
+
+test('workspace 429 retries with backoff, preserves the last org, and never offers create-workspace', async () => {
+  const session = makeSession();
+  const { auth, calls, stored, timerCalls } = authHarness({
+    session,
+    knownOrgId: 'org-existing',
+    workspaceFailures: [{ status: 429 }, { status: 429 }, { status: 429 }],
+  });
+  await auth.ready;
+  assert.equal(auth.workspaceState, 'transient');
+  assert.equal(auth.workspaceRequired, false);
+  assert.equal(auth.currentOrgId(session.user.id), 'org-existing');
+  assert.equal(stored.get('novapay-org-id:' + session.user.id), 'org-existing');
+  assert.deepEqual(timerCalls.slice(-2), [1000, 2000]);
+  assert.equal(calls.filter((call) => call.path === '/api/onboarding' && call.body).length, 0);
+});
+
+test('workspace lookup honors Retry-After before the next attempt', async () => {
+  const session = makeSession();
+  const { auth, timerCalls, calls } = authHarness({
+    session,
+    workspaceFailures: [{ status: 429, retryAfter: '3' }, { status: 429, retryAfter: '1' }, { status: 429, retryAfter: '1' }],
+  });
+  await auth.ready;
+  assert.deepEqual(timerCalls.slice(-2), [3000, 2000]);
+  assert.equal(calls.filter((call) => call.path === '/api/onboarding' && call.method === 'GET').length, 3);
+  assert.equal(auth.workspaceRequired, false);
+});
+
+test('long workspace Retry-After shows a retry state without sleeping or sending another request', async () => {
+  const session = makeSession();
+  const { auth, calls } = authHarness({ session, workspaceFailures: [{ status: 429, retryAfter: '60' }] });
+  await auth.ready;
+  const before = calls.filter((call) => call.path === '/api/onboarding' && call.method === 'GET').length;
+  assert.equal(auth.workspaceState, 'transient');
+  await assert.rejects(auth.ensureWorkspace(session), (error) => error.code === 'WORKSPACE_RETRY_BACKOFF');
+  assert.equal(calls.filter((call) => call.path === '/api/onboarding' && call.method === 'GET').length, before);
+});
+
+test('transient workspace errors show Retry and never the create-workspace screen', () => {
+  assert.match(authSource, /get workspaceRequired\(\) \{ return workspaceState === "missing"; \}/);
+  assert.match(workspaceGuardSource, /state === 'transient' \? 'Server busy, retrying…'/);
+  assert.match(workspaceGuardSource, /button\.textContent = 'Retry'/);
 });
 
 test('unconfirmed Supabase login is rejected before workspace onboarding', async () => {

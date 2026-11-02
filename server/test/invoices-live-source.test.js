@@ -8,7 +8,7 @@ test('invoice list waits for Supabase auth and loads only organization API data'
   assert.match(source, /if \(auth && auth\.ready\) await auth\.ready/);
   assert.match(source, /auth\.mode !== "supabase" \|\| !auth\.isAuthenticated\(\)/);
   assert.match(source, /api\.request\("\/api\/invoices\?limit=100"\)/);
-  assert.match(source, /document\.addEventListener\("novapay:auth", load\)/);
+  assert.match(source, /document\.addEventListener\("novapay:auth", function \(\) \{ if \(activeView\(\)\) load\(\); \}\)/);
   assert.doesNotMatch(source, /sampleInvoice|illustrativeInvoice|seedInvoices/i);
 });
 

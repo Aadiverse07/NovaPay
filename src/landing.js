@@ -145,11 +145,12 @@
     if (auth.mode === "supabase") {
       try { await auth.signIn(loginEmail.value.trim().toLowerCase(), loginPass.value); goDashboard(); }
       catch (error) {
-        var category = auth.loginErrorCategory(error), workspaceFailure = /workspace|onboarding/i.test(String(error && error.message || ""));
-        var message = workspaceFailure ? "Sign-in succeeded, but workspace setup needs attention. Use Create your workspace to continue." : category === "email_not_confirmed" ? "Confirm your email address before signing in." : category === "invalid_credentials" ? "Email or password is incorrect." : auth.loginErrorMessage(error);
+        var category = auth.loginErrorCategory(error), workspaceFailure = auth.workspaceState === "missing", workspaceTransient = auth.workspaceState === "transient" || auth.workspaceState === "unavailable";
+        var message = workspaceTransient ? "Server busy, retrying workspace access. Your existing organization has not been removed; choose Retry shortly." : workspaceFailure ? "No organization workspace was found for this account. Create one to continue." : category === "email_not_confirmed" ? "Confirm your email address before signing in." : category === "invalid_credentials" ? "Email or password is incorrect." : auth.loginErrorMessage(error);
         inlineError("login-error", message); showToast(message);
         $("login-verify").hidden = category !== "email_not_confirmed";
-        $("workspace-retry").hidden = !workspaceFailure;
+        $("workspace-retry").hidden = !workspaceFailure && !workspaceTransient;
+        if (workspaceFailure || workspaceTransient) $("workspace-retry").textContent = workspaceFailure ? "Create your workspace" : "Retry workspace";
         loginPass.focus();
       }
       return;
@@ -229,7 +230,8 @@
   });
   $("workspace-retry").addEventListener("click", function () {
     var auth = window.NovaPayAuth; if (!auth) return;
-    auth.currentSession().then(function (session) { return auth.ensureWorkspace(session); }).then(goDashboard).catch(function (error) { var message = "Create your workspace failed: " + categoryMessage(error); inlineError("login-error", message); showToast(message); });
+    var button = $("workspace-retry"); button.disabled = true;
+    auth.currentSession().then(function (session) { return auth.ensureWorkspace(session); }).then(goDashboard).catch(function (error) { var message = auth.workspaceState === "transient" ? "Server busy, retrying workspace access. Try again shortly." : "Workspace setup could not finish: " + categoryMessage(error); inlineError("login-error", message); showToast(message); }).finally(function () { button.disabled = false; });
   });
   function submitOtp() {
     if (otpBusy) return;

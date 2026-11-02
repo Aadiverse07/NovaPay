@@ -3,7 +3,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var auth = window.NovaPayAuth, data = window.NovaPayDashboardData, api = window.NovaPayApi;
   if (!auth || !data || !api) return;
-  var busy = false, queued = false;
+  var busy = false, queued = false, lastPassiveRefresh = 0;
   function periodRange(value) {
     var now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), 1), end = now;
     if (value === "last-month" || value === "30D" || !value) { start = new Date(now.getFullYear(), now.getMonth() - 1, 1); end = new Date(now.getFullYear(), now.getMonth(), 0); }
@@ -68,9 +68,13 @@
     } catch (error) { clearVisuals(); renderRecent([], true); setStatus("Couldn't load dashboard data.", true, load); console.error("Could not load organization dashboard data", error); }
     finally { busy = false; if (queued) { queued = false; load(); } }
   }
-  Promise.resolve(auth.ready).then(function () { if (auth.mode !== "supabase" || !auth.isAuthenticated()) return; document.querySelectorAll("[data-dashboard-sample]").forEach(function (node) { node.hidden = true; }); load(); });
-  document.addEventListener("novapay:dashboard-period", load);
-  document.addEventListener("novapay:financial-refresh", load);
-  window.addEventListener("hashchange", function () { if (location.hash === "#dashboard" && auth.mode === "supabase" && auth.isAuthenticated()) load(); });
-  window.addEventListener("focus", function () { if (auth.mode === "supabase" && auth.isAuthenticated()) load(); });
+  function active() { return String(location.hash || "#dashboard") === "#dashboard"; }
+  function loadIfActive() { if (active() && auth.mode === "supabase" && auth.isAuthenticated()) load(); }
+  function refreshOnFocus() { if (!active() || auth.mode !== "supabase" || !auth.isAuthenticated()) return; var now = Date.now(); if (now - lastPassiveRefresh < 30000) return; lastPassiveRefresh = now; load(); }
+  Promise.resolve(auth.ready).then(function () { if (auth.mode !== "supabase" || !auth.isAuthenticated()) return; document.querySelectorAll("[data-dashboard-sample]").forEach(function (node) { node.hidden = true; }); loadIfActive(); });
+  document.addEventListener("novapay:dashboard-period", loadIfActive);
+  document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("dashboard") !== -1) && active()) loadIfActive(); });
+  document.addEventListener("novapay:auth", loadIfActive);
+  window.addEventListener("hashchange", loadIfActive);
+  window.addEventListener("focus", refreshOnFocus);
 }());

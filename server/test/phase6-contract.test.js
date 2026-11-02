@@ -30,7 +30,7 @@ test('payment approval and fund API requests are covered by authenticated and IP
   };
   try {
     const authenticatedApp = createApp({
-      config: { ...baseConfig, hasSupabase: true, hasPayPal: false },
+      config: { ...baseConfig, RATE_LIMIT_USER: 240, RATE_LIMIT_IP: 300, hasSupabase: true, hasPayPal: false },
       identity: { async verifyToken() { return { id: 'phase6-rate-limit-approver' }; }, async membership() { return { role: 'approver' }; } },
       repos: createRepositories(),
       paypal: { async pp() { throw new Error('unexpected PayPal call'); } },
@@ -44,10 +44,11 @@ test('payment approval and fund API requests are covered by authenticated and IP
       }
       const limited = await fetch(url, { method: 'POST', headers: { authorization: 'Bearer valid', 'x-org-id': 'a0000000-0000-4000-8000-000000000001', 'content-type': 'application/json' }, body: '{}' });
       assert.equal(limited.status, 429);
+      assert.ok(Number(limited.headers.get('retry-after')) >= 1);
       assert.equal((await limited.json()).error.code, 'USER_RATE_LIMITED');
     } finally { await new Promise((resolve, reject) => authenticatedServer.close((error) => error ? reject(error) : resolve())); }
 
-    const ipApp = createApp({ config: { ...baseConfig, hasSupabase: false, hasPayPal: false }, identity: null, repos: createRepositories(), paypal: { async pp() { throw new Error('unexpected PayPal call'); } } });
+    const ipApp = createApp({ config: { ...baseConfig, RATE_LIMIT_IP: 300, hasSupabase: false, hasPayPal: false }, identity: null, repos: createRepositories(), paypal: { async pp() { throw new Error('unexpected PayPal call'); } } });
     const ipServer = await listen(ipApp);
     try {
       const url = `http://127.0.0.1:${ipServer.address().port}/api/funds/maintenance/10000000-0000-4000-8000-000000000001/payment`;
@@ -57,7 +58,29 @@ test('payment approval and fund API requests are covered by authenticated and IP
       }
       const limited = await fetch(url, { method: 'POST' });
       assert.equal(limited.status, 429);
+      assert.ok(Number(limited.headers.get('retry-after')) >= 1);
       assert.equal((await limited.json()).error.code, 'RATE_LIMITED');
     } finally { await new Promise((resolve, reject) => ipServer.close((error) => error ? reject(error) : resolve())); }
   } finally { console.log = originalLog; }
+});
+
+test('cheap authenticated reads get a higher budget while write actions stay tightly limited', async () => {
+  const originalLog = console.log; console.log = () => {};
+  const app = createApp({
+    config: { ...baseConfig, RATE_LIMIT_IP: 300, RATE_LIMIT_USER: 1, RATE_LIMIT_READ_USER: 3, hasSupabase: true },
+    identity: { async verifyToken() { return { id: 'read-budget-user' }; }, async membership(userId, orgId) { return { user_id: userId, org_id: orgId, role: 'owner' }; } },
+    repos: createRepositories(), paypal: { async pp() { throw new Error('unexpected PayPal call'); } },
+  });
+  const server = app.listen(0, '127.0.0.1'); await new Promise((resolve) => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const headers = { authorization: 'Bearer valid', 'x-org-id': 'a0000000-0000-4000-8000-000000000001' };
+  try {
+    for (let i = 0; i < 3; i++) assert.equal((await fetch(`${base}/api/transactions`, { headers })).status, 200);
+    const readLimited = await fetch(`${base}/api/transactions`, { headers });
+    assert.equal(readLimited.status, 429); assert.equal((await readLimited.json()).error.code, 'USER_RATE_LIMITED');
+    const body = JSON.stringify({});
+    assert.equal((await fetch(`${base}/api/funds/campaigns`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body })).status, 400);
+    const writeLimited = await fetch(`${base}/api/funds/campaigns`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body });
+    assert.equal(writeLimited.status, 429); assert.equal((await writeLimited.json()).error.code, 'USER_RATE_LIMITED');
+  } finally { await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); console.log = originalLog; }
 });

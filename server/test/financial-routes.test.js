@@ -48,6 +48,24 @@ test('Phase 2 read APIs validate filters, enforce tenant membership, and return 
   });
 });
 
+test('saved transactions and ledger rows remain readable after the API server restarts', async()=>{
+  const repos=createRepositories();
+  const savedTransaction={id:'CAPTURE-PERSIST-1',source_type:'capture',source_id:'CAPTURE-PERSIST-1',paypal_capture_id:'CAPTURE-PERSIST-1',status:'COMPLETED',amount_minor:1000,fee_minor:59,net_minor:941,currency:'USD',occurred_at:'2026-11-01T12:00:00.000Z'};
+  const savedLedger=[{entry_id:'JOURNAL-PERSIST-1',entry_date:'2026-11-01',reference:'CAPTURE-PERSIST-1',account_code:'1000',account_name:'Cash',currency:'USD',debit_minor:'1000',credit_minor:'0',source:'paypal-capture'}];
+  repos.listTransactions=async(orgId)=>orgId===org?[savedTransaction]:[];
+  repos.listLedgerEntries=async(orgId)=>orgId===org?savedLedger:[];
+  for(let restart=0;restart<2;restart++){
+    await withApi(repos,{},async({call})=>{
+      const [txResponse,ledgerResponse]=await Promise.all([call('/api/transactions'),call('/api/ledger/entries')]);
+      assert.equal(txResponse.status,200); assert.equal(ledgerResponse.status,200);
+      const tx=await txResponse.json(), ledger=await ledgerResponse.json();
+      assert.equal(tx.transactions.length,1); assert.equal(tx.transactions[0].captureId,'CAPTURE-PERSIST-1');
+      assert.equal(ledger.entries.length,1); assert.equal(ledger.entries[0].entry_id,'JOURNAL-PERSIST-1');
+      const other=await call('/api/transactions','other-token',otherOrg); assert.deepEqual((await other.json()).transactions,[]);
+    });
+  }
+});
+
 test('financial database failures return safe structured errors without provider details or stacks', async()=>{
   const repos=createRepositories();
   const sentinel='database-provider-secret-sentinel';

@@ -44,7 +44,5 @@
   window.NovaPayNotifications = { refresh: load };
   Promise.resolve(auth.ready).then(load);
   document.addEventListener("novapay:auth", load);
-  document.addEventListener("novapay:financial-refresh", load);
-  window.addEventListener("focus", load);
   document.getElementById("notifications").addEventListener("click", load);
 }());

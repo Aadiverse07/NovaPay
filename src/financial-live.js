@@ -1,7 +1,7 @@
 (function (root) {
   "use strict";
   var data = root.NovaPayFinancialData;
-  var transactionBusy = false, transactionQueued = false, ledgerBusy = false, ledgerQueued = false, ledgerCache = null;
+  var transactionBusy = false, transactionQueued = false, ledgerBusy = false, ledgerQueued = false, ledgerCache = null, lastPassiveRefresh = 0;
   function byId(id) { return root.document.getElementById(id); }
   function message(error, resource) { return data.errorMessage(error, resource); }
   function showError(node, resource, retry) {
@@ -152,6 +152,11 @@
     if (view === "transactions") loadTransactions();
     if (view === "ledger") loadLedger(true);
   }
+  function refreshPassive() {
+    if (root.document.visibilityState === "hidden") return;
+    var now = Date.now(); if (now - lastPassiveRefresh < 30000) return;
+    lastPassiveRefresh = now; refreshVisible();
+  }
   function refresh() { return Promise.all([loadTransactions(), loadLedger(true)]); }
   function openView(view) {
     if (view === "transactions") loadTransactions();
@@ -162,9 +167,10 @@
     if (link) root.setTimeout(function () { openView(link.dataset.view); }, 0);
   });
   root.addEventListener("hashchange", refreshVisible);
-  root.addEventListener("popstate", refreshVisible);
-  root.addEventListener("focus", refreshVisible);
-  root.document.addEventListener("visibilitychange", function () { if (root.document.visibilityState === "visible") refreshVisible(); });
+  root.addEventListener("popstate", refreshPassive);
+  root.addEventListener("focus", refreshPassive);
+  root.document.addEventListener("visibilitychange", refreshPassive);
+  root.document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if (!resources || resources.indexOf("transactions") !== -1 || resources.indexOf("ledger") !== -1) refresh(); });
   var ledgerPeriod = byId("ledger-period"); if (ledgerPeriod) ledgerPeriod.addEventListener("change", function () { if (ledgerCache) renderLedger(ledgerCache); });
   root.NovaPayFinancialViews = { refresh: refresh, loadTransactions: loadTransactions, loadLedger: function () { return loadLedger(true); }, getLedgerEntries: function () { return (ledgerCache || []).slice(); } };
   openView(activeView());

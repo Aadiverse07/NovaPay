@@ -60,7 +60,13 @@
   var period = $("report-period"), retry = $("reports-retry"); if (period) period.addEventListener("change", load); if (retry) retry.addEventListener("click", load);
   if (modal) { modal.addEventListener("click", function (event) { if (event.target.closest("[data-report-close]")) close(); }); document.addEventListener("keydown", function (event) { if (event.key === "Escape") close(); }); }
   document.addEventListener("click", function (event) { var button = event.target.closest('[data-ui-action="report-open"]'); if (button) detail(button.dataset.reportType, button); });
-  document.addEventListener("novapay:auth", load); document.addEventListener("novapay:financial-refresh", load); window.addEventListener("hashchange", function () { if (location.hash === "#reports") load(); });
+  var lastFocusRefresh = 0;
+  function active() { return location.hash === "#reports" || Boolean(document.querySelector("#view-reports:not([hidden])")); }
+  function loadIfActive() { if (active()) load(); }
+  document.addEventListener("novapay:auth", loadIfActive);
+  document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("reports") !== -1) && active()) load(); });
+  window.addEventListener("hashchange", loadIfActive);
+  window.addEventListener("focus", function () { if (document.visibilityState === "hidden" || !active() || Date.now() - lastFocusRefresh < 30000) return; lastFocusRefresh = Date.now(); loadIfActive(); });
   window.NovaPayReports = { load: load, open: detail, exportCsv: exportCsv };
-  if (location.hash === "#reports") load();
+  if (active()) load();
 })();

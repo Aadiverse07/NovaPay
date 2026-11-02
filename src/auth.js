@@ -10,9 +10,11 @@
   var session = null;
   var demoReason = "";
   var workspaceError = "";
+  var workspaceState = "idle";
+  var workspaceRetryAt = 0;
 
   function notifyAuth() {
-    document.dispatchEvent(new CustomEvent("novapay:auth", { detail: { mode: mode, signedIn: isAuthenticated(), workspaceRequired: Boolean(workspaceError) } }));
+    document.dispatchEvent(new CustomEvent("novapay:auth", { detail: { mode: mode, signedIn: isAuthenticated(), workspaceRequired: workspaceState === "missing", workspaceState: workspaceState } }));
   }
 
   function isAuthenticated() {
@@ -65,6 +67,8 @@
       var error = new Error(errorMessage(body, "The request could not be completed."));
       error.code = body && (body.code || (body.error && body.error.code));
       error.status = response.status;
+      var retryAfter = response.headers && response.headers.get("Retry-After");
+      if (retryAfter) { var seconds = Number(retryAfter), date = Date.parse(retryAfter); error.retryAfterMs = Number.isFinite(seconds) ? seconds * 1000 : Number.isFinite(date) ? Math.max(0, date - Date.now()) : 0; }
       throw error;
     }
     return body || {};
@@ -106,6 +110,13 @@
     var metadata = user && user.user_metadata || {};
     return String(metadata.full_name || metadata.name || (user && user.email ? user.email.split("@")[0] : "NovaPay User")).trim();
   }
+
+  function transientWorkspaceError(error) {
+    var status = Number(error && (error.status || error.statusCode) || 0);
+    return status === 429 || status >= 500 || error && (error.code === "API_UNAVAILABLE" || error.name === "TypeError");
+  }
+
+  function delay(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
 
   function maskEmail(email) {
     var parts = String(email || "").trim().toLowerCase().split("@");
@@ -153,8 +164,17 @@
       var verifiedOrgId = freshWorkspace(authSession);
       if (verifiedOrgId) return verifiedOrgId;
     }
+    if (workspaceRetryAt > Date.now()) {
+      var cooling = new Error("Server busy, retry workspace access shortly.");
+      cooling.status = 429; cooling.code = "WORKSPACE_RETRY_BACKOFF"; cooling.retryAfterMs = workspaceRetryAt - Date.now();
+      workspaceState = "transient"; workspaceError = "Server busy, retrying…";
+      throw cooling;
+    }
+    var lookupConfirmedEmpty = false;
     async function restore() {
-      var lookup = await fetch("/api/onboarding", { headers: { "Authorization": "Bearer " + authSession.access_token }, cache: "no-store" });
+      var lookup;
+      try { lookup = await fetch("/api/onboarding", { headers: { "Authorization": "Bearer " + authSession.access_token }, cache: "no-store" }); }
+      catch (networkError) { networkError.code = "API_UNAVAILABLE"; throw networkError; }
       var current = await readJson(lookup);
       if (Array.isArray(current.organizations) && current.organizations.length) {
         var existing = current.organizations[0];
@@ -162,22 +182,55 @@
         try { localStorage.setItem(AUTH_ORG_KEY + authSession.user.id, existing.organizationId); } catch (_) {}
         rememberWorkspace(authSession, existing.organizationId);
         workspaceError = "";
+        workspaceState = "ready";
         return existing.organizationId;
+      }
+      lookupConfirmedEmpty = true;
+      workspaceState = "missing";
+      return "";
+    }
+    async function restoreWithBackoff() {
+      var delayMs = 1000;
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try { return await restore(); }
+        catch (error) {
+          if (!transientWorkspaceError(error) || attempt === 2) throw error;
+          workspaceState = "transient";
+          workspaceError = "Server busy, retrying…";
+          notifyAuth();
+          var waitMs = Math.max(delayMs, Number(error.retryAfterMs) || 0);
+          workspaceRetryAt = Date.now() + waitMs;
+          if (waitMs > 3000) throw error;
+          await delay(waitMs);
+          workspaceRetryAt = 0;
+          delayMs = Math.min(30000, delayMs * 2);
+        }
       }
       return "";
     }
     try {
-      var existingId = await restore();
+      var existingId = await restoreWithBackoff();
       if (existingId) return existingId;
       var created = await onboard(authSession, name || displayName(authSession.user));
       workspaceError = "";
+      workspaceState = "ready";
       return created;
     } catch (error) {
       if (error && error.code === "ONBOARDING_ALREADY_COMPLETED") {
-        var restoredId = await restore();
+        var restoredId = await restoreWithBackoff();
         if (restoredId) return restoredId;
       }
-      workspaceError = error && error.message || "Workspace setup failed.";
+      if (transientWorkspaceError(error)) {
+        workspaceState = "transient";
+        workspaceError = "Server busy, retrying…";
+      } else if (lookupConfirmedEmpty) {
+        workspaceState = "missing";
+        workspaceError = "Your email is verified, but no organization workspace is available yet.";
+      } else {
+        workspaceState = "unavailable";
+        workspaceError = "Your workspace could not be verified. Retry when the service is available.";
+      }
+      notifyAuth();
       throw error;
     }
   }
@@ -314,6 +367,8 @@
     get demoReason() { return demoReason; },
     get client() { return client; },
     get workspaceError() { return workspaceError; },
+    get workspaceState() { return workspaceState; },
+    get workspaceRequired() { return workspaceState === "missing"; },
     maskEmail: maskEmail,
     normalizeOtp: normalizeOtp,
     isAuthenticated: isAuthenticated,
@@ -369,7 +424,7 @@
           session = result.data.session;
           if (session) {
             try { await ensureWorkspace(session, displayName(session.user)); }
-            catch (_) { demoReason = "The signed-in workspace could not be restored."; workspaceError = "Create your workspace to continue."; }
+            catch (error) { demoReason = "The signed-in workspace could not be restored."; if (!workspaceState) { workspaceState = transientWorkspaceError(error) ? "transient" : "unavailable"; workspaceError = transientWorkspaceError(error) ? "Server busy, retrying…" : "Your workspace could not be verified. Retry when the service is available."; } }
           }
         }
         else demoReason = "Supabase Auth could not verify the saved session.";

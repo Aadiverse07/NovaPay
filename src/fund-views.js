@@ -5,6 +5,13 @@
   var auth = window.NovaPayAuth;
   if (!auth) return;
   var $ = function (selector, root) { return (root || document).querySelector(selector); };
+  var passiveRefreshAt = Object.create(null);
+  function viewIsActive(hash, selector) { return location.hash === hash || Boolean($(selector + ":not([hidden])")); }
+  function focusRefreshDue(key, hash, selector) {
+    if (document.visibilityState === "hidden" || !viewIsActive(hash, selector)) return false;
+    var now = Date.now(); if (now - (passiveRefreshAt[key] || 0) < 30000) return false;
+    passiveRefreshAt[key] = now; return true;
+  }
   var make = function (tag, className, text) {
     var node = document.createElement(tag);
     if (className) node.className = className;
@@ -255,11 +262,11 @@
       }
     }
     document.addEventListener("novapay:funds-campaign-created", load);
-    document.addEventListener("novapay:financial-refresh", load);
-    window.addEventListener("focus", load);
-    window.addEventListener("hashchange", function () { if (location.hash === "#community-funds") load(); });
+    document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("funds") !== -1) && viewIsActive("#community-funds", "#view-community-funds")) load(); });
+    window.addEventListener("focus", function () { if (focusRefreshDue("fundraising", "#community-funds", "#view-community-funds")) load(); });
+    window.addEventListener("hashchange", function () { if (viewIsActive("#community-funds", "#view-community-funds")) load(); });
     window.NovaPayFundViews = window.NovaPayFundViews || {}; window.NovaPayFundViews.refreshCampaigns = load;
-    load();
+    if (viewIsActive("#community-funds", "#view-community-funds")) load();
   }
 
   function startMaintenance() {
@@ -498,7 +505,9 @@
     }
     window.NovaPayFundViews = window.NovaPayFundViews || {};
     window.NovaPayFundViews.refreshMaintenance = refresh;
-    document.addEventListener("novapay:financial-refresh", refresh); window.addEventListener("focus", refresh); window.addEventListener("hashchange", function () { if (location.hash === "#maintenance") refresh(); });
+    document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("maintenance") !== -1) && viewIsActive("#maintenance", "#view-maintenance")) refresh(); });
+    window.addEventListener("focus", function () { if (focusRefreshDue("maintenance", "#maintenance", "#view-maintenance")) refresh(); });
+    window.addEventListener("hashchange", function () { if (viewIsActive("#maintenance", "#view-maintenance")) refresh(); });
     window.NovaPayFundViews.submitMaintenance = async function (form, closeForm) {
       if (maintenanceSubmitting) return;
       var status = $("#maintenance-form-status"), fieldNames = ["title", "description", "location", "category", "priority"];
@@ -632,7 +641,10 @@
         render(data);
       } catch (error) { showError(error); }
     }
-    load(); document.addEventListener("novapay:financial-refresh", load); window.addEventListener("focus", load); window.addEventListener("hashchange", function () { if (location.hash === "#community-funds") load(); });
+    document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("funds") !== -1) && viewIsActive("#community-funds", "#view-community-funds")) load(); });
+    window.addEventListener("focus", function () { if (focusRefreshDue("transparency", "#community-funds", "#view-community-funds")) load(); });
+    window.addEventListener("hashchange", function () { if (viewIsActive("#community-funds", "#view-community-funds")) load(); });
+    if (viewIsActive("#community-funds", "#view-community-funds")) load();
   }
 
   auth.ready.then(async function () {
