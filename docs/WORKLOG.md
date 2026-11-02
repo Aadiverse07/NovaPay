@@ -5333,3 +5333,16 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 02:43 IST | RESULT: combined focused live-data suites PASS (19/19); Reports and prior converted modules all pass; JS syntax and whitespace checks pass; NEXT: record Reports conversion in audit/context and commit
 2026-11-02 02:44 IST | ACTION: update Reports audit/context for completed API wiring | WHY: state exact endpoints, files, test evidence and remaining runtime verification gap before module commit
 2026-11-02 02:45 IST | ACTION: replace Reports audit row and commit Reports module | WHY: reflect the completed API source conversion and checkpoint its tests and UI independently
+2026-11-02 02:46 IST | RESULT: Reports API wiring committed as 80438ab; no migration required from source audit; NEXT: inspect Documents authenticated list, sample controls, loading/error states and deletion behavior
+2026-11-02 02:47 IST | ACTION: audit Documents view and client data flow | WHY: confirm authenticated list/processing is Supabase-backed, isolate sample UI to demo mode, and inspect error/retry behavior
+2026-11-02 02:49 IST | RESULT: source inspection command failed to parse because of unmatched shell quoting; no files changed; NEXT: rerun a simpler read-only inspection without special quoted globs
+2026-11-02 02:50 IST | ACTION: read Documents render/load functions and route reason fields | WHY: surface stored failure reasons and verify deletion/review API shape before changing the UI
+2026-11-02 02:51 IST | ACTION: inspect document route row shape and deletion endpoint behavior | WHY: map stored failure reasons safely and add retry/delete controls without displaying extracted text
+2026-11-02 02:52 IST | ACTION: inspect document process failure persistence logic | WHY: identify whether the reason is in extraction.validation or failure fields exposed by the list route
+2026-11-02 02:53 IST | ACTION: check signed-original document route and failure extraction payload fields | WHY: determine existing review affordances and avoid adding unsupported endpoint assumptions
+2026-11-02 02:54 IST | ACTION: improve Documents auth readiness, stored reason review, delete control and retry states | WHY: keep signed-in document list organization-scoped, show diagnosable failed/rejected records, and expose existing server delete behavior
+2026-11-02 02:55 IST | ACTION: add duplicate/failure reason details and Documents source regression tests | WHY: ensure failed/rejected review is useful and verify auth/API/empty/error/delete paths without live tenant claims
+2026-11-02 02:56 IST | RESULT: Documents-focused tests PASS (3/3); source syntax and diff check pass; NEXT: run all focused converted-module suites and static checks before local commit
+2026-11-02 02:57 IST | ACTION: run all focused live-data source suites | WHY: verify Dashboard, Transactions, Ledger, Approvals, Invoices, Reports and Documents conversions together
+2026-11-02 02:58 IST | RESULT: combined focused suites PASS (22/22); changed JS syntax and diff check pass; NEXT: record Documents conversion and source-only verification boundary, then commit
+2026-11-02 02:59 IST | ACTION: update Documents audit/context and commit module checkpoint | WHY: document live API source, delete/reason behavior, tests, and runtime verification remaining before checkpoint

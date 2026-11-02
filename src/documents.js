@@ -63,12 +63,15 @@
       addText(details, "b", doc.filename || "Document");
       addText(details, "small", (doc.status || "unknown") + (doc.duplicate_of ? " · Possible duplicate" : ""));
       item.appendChild(details);
+      var actions = document.createElement("div"); actions.className = "module-inline";
       var action = document.createElement("button");
       action.type = "button";
       action.className = "table-action";
       action.textContent = doc.status === "processed" ? "Review extraction →" : "View status →";
       action.addEventListener("click", function () { renderReview(doc); });
-      item.appendChild(action);
+      actions.appendChild(action);
+      if (canWrite()) { var remove = document.createElement("button"); remove.type = "button"; remove.className = "btn btn--ghost"; remove.textContent = "Delete"; remove.disabled = doc.status === "processing"; remove.title = remove.disabled ? "Wait for processing to finish" : "Delete document and its search data"; remove.addEventListener("click", function () { deleteDocument(doc); }); actions.appendChild(remove); }
+      item.appendChild(actions);
       list.appendChild(item);
     });
   }
@@ -113,6 +116,16 @@
       if (draftId) { var link = document.createElement("a"); link.href = "#invoices"; link.className = "btn btn--ghost document-draft-link"; link.textContent = "Open invoice draft"; link.addEventListener("click", function () { document.dispatchEvent(new CustomEvent("novapay:invoice-created", { detail: { invoiceId: draftId } })); }); panel.appendChild(link); }
       return;
     }
+    if (doc.status === "failed" || doc.status === "rejected") {
+      var failure = extraction || {}, reasonRows = Array.isArray(failure.reasons) ? failure.reasons : [];
+      if (failure.errorMessage) addText(panel, "p", failure.errorMessage, "status warn");
+      if (failure.reason) addText(panel, "p", "Reason: " + String(failure.reason), "status warn");
+      if (doc.duplicate_of) { var match = rows.find(function (item) { return item.id === doc.duplicate_of; }); addText(panel, "p", "Possible duplicate of " + (match ? match.filename + " · " : "document ") + doc.duplicate_of + ". Review the matching record before re-uploading.", "status warn"); }
+      if (Array.isArray(failure.validationIssues)) failure.validationIssues.forEach(function (issue) { addText(panel, "p", String(issue.path || "field") + ": " + String(issue.rule || issue.message || "needs review"), "status warn"); });
+      reasonRows.forEach(function (reason) { addText(panel, "p", String(reason.message || reason.code || "Document needs review") + (reason.suggestedFix ? " Suggested fix: " + reason.suggestedFix : ""), "status warn"); });
+      if (failure.rejection && failure.rejection.reason) addText(panel, "p", "Rejection reason: " + failure.rejection.reason, "status warn");
+      if (!failure.errorMessage && !failure.reason && !failure.rejection?.reason && !doc.duplicate_of && !reasonRows.length && !(failure.validationIssues || []).length) addText(panel, "p", "No stored reason; re-upload to get details.", "status info");
+    }
     if (doc.status !== "processed" || !canWrite()) {
       addText(panel, "p", canWrite() ? "Processing state: " + (doc.status || "unknown") : "Read-only access. Your organization role cannot confirm or reject documents.");
       return;
@@ -141,7 +154,10 @@
     role = "";
     roleLoaded = false;
     status("Loading organization documents…");
+    var auth = window.NovaPayAuth, retry = el("documents-retry"); if (retry) retry.hidden = true;
     try {
+      if (auth && auth.ready) await auth.ready;
+      if (!auth || auth.mode !== "supabase" || !auth.isAuthenticated()) { rows = []; role = ""; roleLoaded = false; renderList(); status(auth && auth.mode === "demo" ? "DEMO MODE · no sample documents are shown." : "Sign in to load organization documents."); return; }
       var result = await api.request("/api/documents");
       rows = Array.isArray(result.documents) ? result.documents : [];
       role = result.role || "";
@@ -155,9 +171,23 @@
     } catch (error) {
       role = "";
       roleLoaded = false;
-      status(error.message || "Documents could not be loaded. Retry when the API is available.", "warn");
+      status(error.message || "Documents could not be loaded.", "warn");
       var list = el("documents-list"); if (list) { list.replaceChildren(); addText(list, "p", "Document data is unavailable. No sample records are shown."); }
+      if (retry) retry.hidden = false;
+      if (window.console) console.error("Could not load organization documents", error);
     }
+  }
+  async function deleteDocument(doc) {
+    if (!doc || busy || !canWrite()) return;
+    if (!window.confirm("Delete this document? Its file and search data are removed. This cannot be undone.")) return;
+    busy = true;
+    try {
+      await api.request("/api/documents/" + encodeURIComponent(doc.id), { method: "DELETE" });
+      if (selected && selected.id === doc.id) { selected = null; el("document-review-panel").replaceChildren(); addText(el("document-review-panel"), "p", "Select a document to review its status or extracted fields."); }
+      var toastNode = el("dashboard-toast"); if (toastNode) { toastNode.textContent = "Document and search data deleted."; toastNode.classList.add("show"); setTimeout(function () { toastNode.classList.remove("show"); }, 3200); }
+      await load();
+    } catch (error) { status(error.message || "Could not delete this document.", "warn"); }
+    finally { busy = false; }
   }
   async function upload(file) {
     if (!file || busy) return;
@@ -220,6 +250,7 @@
     var file = el("document-upload");
     if (file) file.addEventListener("change", function () { if (file.files && file.files[0]) return upload(file.files[0]); });
     var refresh = el("documents-refresh"); if (refresh) refresh.addEventListener("click", load);
+    var retry = el("documents-retry"); if (retry) retry.addEventListener("click", load);
     var nav = document.querySelector('[data-view="documents"], [data-view-target="documents"], [href="#documents"]');
     if (nav) nav.addEventListener("click", load);
     if (window.NovaPayAuth) Promise.resolve(window.NovaPayAuth.ready).then(function () { load(); });
