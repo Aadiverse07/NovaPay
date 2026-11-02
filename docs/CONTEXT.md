@@ -3,7 +3,7 @@
 ## Header
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
-- Last commit: `25659b1` (local Phase 2 live-data checkpoint; not pushed)
+- Last commit: `850d04b` (authenticated API no-store fix; local only)
 - Current phase/task: Fix authenticated HTTP caching after Phase 2 source conversions; full suite now passes; Phase 3 browser/live-tenant verification pending.
 
 ## Done
@@ -25,7 +25,7 @@
 - Chrome is present but browser use is disabled in Work settings; no authenticated browser or live Supabase DB verification was performed. Every live-row claim remains UNVERIFIED.
 
 ## Next Steps
-1. Review the local Phase 2 checkpoint `25659b1`; do not push until Phase 3 passes.
+1. Continue Phase 3 browser/live tenant checks; do not push until they pass.
 2. Human runs the judge browser checklist with a fixed empty org and an existing org; capture API/DB evidence.
 3. Phase 3: browser-walk both orgs, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
 4. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
