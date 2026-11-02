@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-02 17:19 IST
 - Branch: `codex/voice-assistant`
-- Last commit: `39a6cc9` (local incident checkpoint before rate-limit/refresh changes)
+- Pre-change checkpoint: `39a6cc9`; incident implementation is committed locally (hash recorded in WORKLOG).
 - Current phase/task: diagnose and stabilize live-data refresh after hard refresh; implementation complete, local verification complete, browser/live Supabase checks pending.
 
 ## DONE
@@ -15,10 +15,10 @@
 - Made IP/user/read rate budgets configurable (`RATE_LIMIT_IP=1500`, `RATE_LIMIT_USER=1200`, `RATE_LIMIT_READ_USER=2400` defaults); route-specific auth/OTP/onboarding/AI limits remain. Rate limit responses include Retry-After.
 - Added regression tests for budget/dedupe/cache/backoff, workspace 429 behavior and duplicate-workspace protection, configurable limits/headers, and persisted transaction/ledger route reads across app restart fixtures.
 - Automated verification: `npm test` PASS 352/352 (includes 21/21 migration syntax checks); changed JS `node --check` PASS; `git diff --check` PASS; protected files unchanged.
-- Pre-change checkpoint commit: `39a6cc9`. Fixes are currently uncommitted; no push or merge performed.
+- Pre-change checkpoint commit: `39a6cc9`; implementation committed locally as `471dd9c`; no push or merge performed.
 
 ## IN PROGRESS
-- No code task remains. Need final local commit after docs/checklist update.
+- No code task remains. Implementation is committed locally; final handoff metadata is being committed.
 - Live browser request counts/statuses and actual Supabase persistence after server restart/sign-out/sign-in remain unverified; automated fixture test is not a live DB check.
 
 ## NEXT STEPS
