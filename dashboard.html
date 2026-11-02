@@ -216,9 +216,9 @@
 
       <div class="view" id="view-approvals" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/approvals.png" alt="" width="64" height="64"><h2>Approval queue</h2><p>Review each proposal and its evidence. A PayPal Sandbox action requires a second confirmation with the exact capture and amount. Unsupported actions are simulated only.</p></div>
-        <article class="dash-card approval-filters"><label>Status<select id="approval-status-filter"><option value="">All statuses</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Failed</option><option>Completed</option></select></label><label>Action type<select id="approval-type-filter"><option value="">All action types</option><option value="refund">Refund</option><option value="dispute-evidence">Dispute evidence</option><option value="hold-payout">Payout hold</option><option value="review-finding">Informational finding</option></select></label><label>Source<select id="approval-source-filter"><option value="">All sources</option><option>NovaPay AI</option></select></label><span id="approval-result-count" aria-live="polite"></span></article>
-        <div class="approval-grid" id="approval-queue"></div>
-        <article class="dash-card" style="margin-top:16px"><div class="card-heading"><h3>Audit trail</h3><span>Session only · cleared when this page is reloaded</span></div><ul class="approval-audit" id="audit-log" aria-live="polite"><li class="np-empty">No decisions yet.</li></ul></article>
+        <article class="dash-card approval-filters"><label>Status<select id="approval-status-filter"><option value="">All statuses</option><option>Pending</option><option>Pending Verification</option><option>Processing</option><option>Approved</option><option>Rejected</option><option>Failed</option><option>Completed</option></select></label><label>Action type<select id="approval-type-filter"><option value="">All action types</option><option value="refund">Refund</option><option value="dispute-evidence">Dispute evidence</option><option value="hold-payout">Payout hold</option><option value="review-finding">Informational finding</option><option value="send-invoice">Invoice send</option><option value="maintenance-payment">Maintenance payment</option></select></label><label>Source<select id="approval-source-filter"><option value="">All sources</option><option>NovaPay AI</option></select></label><span id="approval-result-count" aria-live="polite"></span></article>
+        <p id="approval-live-status" class="module-foot" role="status" aria-live="polite">Loading approvals…</p><button id="approval-live-retry" class="btn btn--ghost" type="button" hidden>Retry</button><div class="approval-grid" id="approval-queue"></div>
+        <article class="dash-card" style="margin-top:16px"><div class="card-heading"><h3>Recent actions (this session)</h3><span>Session only · cleared when this page is reloaded</span></div><ul class="approval-audit" id="audit-log" aria-live="polite"><li class="np-empty">No decisions yet.</li></ul></article>
       </div>
 
       <div class="view" id="view-sandbox" data-view-panel hidden>
@@ -605,6 +605,7 @@
 <script src="src/ai-thoughts.js?v=3"></script>
 <script src="src/dashboard.js?v=6"></script>
 <script src="src/ai-fullscreen.js"></script>
+<script src="src/approvals-data.js"></script>
 <script src="src/novapay-live.js"></script>
 <script src="src/modules.js"></script>
 <script src="src/financial-data.js"></script>

@@ -29,8 +29,10 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| Queue cards and pending count | Hard-coded `PAY-28491` and `DSP-1004` queue in `src/novapay-live.js`; local rendering drives `nav-approvals-count` | `GET /api/approvals`, `GET /api/approvals/pending-count`, `POST /api/approvals/:id/decision` | No list/count route gap; frontend does not hydrate them | Critical: static pending approvals shown as real work | Convert queue and badge to API; empty state at zero |
-| Sandbox-linked approval registration | API call from local proposal flow | `POST /api/approvals/register` | Confirm data mapping and role behavior live | Medium | Keep, but only for persisted server proposals |
+| Queue cards and pending count | Authenticated source now maps `GET /api/approvals` rows and server `pendingCount`; `PAY-28491` / `DSP-1004` are loaded only when `NovaPayAuth.mode === demo` | `GET /api/approvals`, `GET /api/approvals/pending-count`, `POST /api/approvals/:id/decision` | No route gap identified; live responses and matching DB rows still require browser/runtime verification | Critical if auth/org headers are wrong; source request goes through `NovaPayApi` | Convert authenticated queue and badge; keep clearly labeled demo-only proposals |
+| Sandbox-linked approval registration | Existing demo-only local proposal path | `POST /api/approvals/register` | Authenticated AI proposals are already persisted by `/api/ai/chat`; no duplicate local proposal is inserted | Medium | Keep sandbox registration for explicit demo mode only |
+| Review and decision | Authenticated UI sends decisions for supported persisted types | `POST /api/approvals/:approvalId/decision` | No route gap identified; decision results still need live verification | High: endpoint enforces org and role; unsupported types remain read-only | Convert supported persisted decisions; identify invoice send and maintenance payouts as SIMULATED |
+| Recent action list | Browser session memory only | No audit-list endpoint in the inspected approvals router | No read endpoint for durable approval audit entries established | Medium: must not imply durable audit history | Keep clearly labeled “Recent actions (this session)”
 
 ## PayPal Sandbox
 
