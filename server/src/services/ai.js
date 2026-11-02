@@ -1,6 +1,7 @@
 import { createLLMAdapter } from './llm.js';
 import { classifyAIIntent } from '../ai/router.js';
 import { buildAIEvidence } from '../ai/evidence.js';
+import { resolveAIContext } from '../ai/contextResolver.js';
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
 import { remainingRefundable } from './paypal.js';
@@ -153,9 +154,9 @@ function safeEvidenceBlock(records) {
   return JSON.stringify(records || []).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
 }
 
-function cacheKeyFor(orgId, route, message, dataVersion) {
+export function cacheKeyFor(orgId, route, message, dataVersion, focusIds = []) {
   const normalized = String(message).normalize('NFKC').toLocaleLowerCase('en-US').replace(/\s+/g, ' ').trim();
-  return createHash('sha256').update(`${orgId}\n${route}\n${normalized}\n${dataVersion}`).digest('hex');
+  return createHash('sha256').update(`${orgId}\n${route}\n${normalized}\n${dataVersion}\n${[...focusIds].sort().join(',')}`).digest('hex');
 }
 
 const moneyText = (minor, currency) => formatMinorAmount(minor, currency) || 'unavailable';
@@ -278,7 +279,7 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
 }
 
 export function createAIService({ config, events, repos, fx, provider = createLLMAdapter({ config, events }), documentSearch }) {
-  return async function askAI(message, context, requestContext = {}) {
+  const runAI = async function askAI(message, context, requestContext = {}) {
     const fastCommand = parseFastAssistantCommand(message, context.role || 'viewer');
     if (fastCommand) return fastCommand;
     const classification = classifyAIIntent(message);
@@ -295,7 +296,7 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       return withRoute({ ...result, usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
     }
     const evidence = repos && context?.orgId && classification.route !== 'ocr'
-      ? await buildAIEvidence({ repos, orgId: context.orgId, intent: classification.intent, message })
+      ? await buildAIEvidence({ repos, orgId: context.orgId, intent: classification.intent, message, focusId: requestContext.focusId })
       : { records: [], ids: [], toolCalls: 0 };
     let safeRecords = Array.isArray(evidence.records) ? evidence.records : Array.isArray(evidence.records?.rows) ? evidence.records.rows : [];
     if (documentSearch?.search && context?.orgId && context?.userId && ['ocr', 'retrieval'].includes(classification.route)) {
@@ -307,6 +308,7 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       }
       safeRecords = [...safeRecords, ...(Array.isArray(documents?.records) ? documents.records : [])];
     }
+    if (typeof requestContext.captureEvidence === 'function') requestContext.captureEvidence(safeRecords);
     const safeContext = { records: safeRecords };
     if (classification.route === 'sql') {
       return withRoute({ ...deterministicSqlResult(classification.intent, safeRecords), usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
@@ -324,7 +326,7 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       try {
         dataVersion = await aiRepo.dataVersion(context.orgId);
         const version = dataVersion && typeof dataVersion === 'object' ? (dataVersion.version ?? dataVersion.data_version ?? JSON.stringify(dataVersion)) : dataVersion;
-        cacheKey = cacheKeyFor(context.orgId, classification.route, message, String(version));
+        cacheKey = cacheKeyFor(context.orgId, classification.route, message, String(version), requestContext.focusIds || []);
         const cached = await aiRepo.cache.get(context.orgId, cacheKey);
         if (cached?.answer && !cached.answer.proposal && !cached.answer.unavailable && !cached.answer.insufficientEvidence) {
           await aiRepo.usage?.recordCacheHit({ orgId: context.orgId, userId: context.userId, route: classification.route, model: cached.answer.model || null });
@@ -335,7 +337,7 @@ export function createAIService({ config, events, repos, fx, provider = createLL
         dataVersion = null; cacheKey = null;
       }
     }
-    const safeHistory = Array.isArray(requestContext.history) ? requestContext.history.slice(-6).map((turn) => ({ role: turn.role === 'assistant' ? 'assistant' : 'user', text: redactSensitiveText(String(turn.text || '').slice(0, 500)) })) : [];
+    const safeHistory = Array.isArray(requestContext.history) ? requestContext.history.slice(-10).map((turn) => ({ role: turn.role === 'assistant' ? 'assistant' : 'user', text: redactSensitiveText(String(turn.text || '').slice(0, 800)) })) : [];
     const interrupted = requestContext.interrupted && typeof requestContext.interrupted === 'object'
       ? { previousReply: redactSensitiveText(String(requestContext.interrupted.previousReply || '').slice(0, 1000)), spokenChars: Math.max(0, Math.min(2000, Number(requestContext.interrupted.spokenChars) || 0)) }
       : null;
@@ -391,4 +393,76 @@ export function createAIService({ config, events, repos, fx, provider = createLL
     }
     return withRoute(answer);
   };
+  return async function askAI(originalMessage, context = {}, requestContext = {}) {
+    const orgId = context?.orgId, userId = context?.userId, memoryRepo = repos?.ai?.memory;
+    let memory = orgId && userId && memoryRepo ? await memoryRepo.get(orgId, userId).catch(() => null) : null;
+    memory ||= { turns: [], focus: {} };
+    const clientTurns = Array.isArray(requestContext.history) ? requestContext.history.slice(-10).filter((turn) => turn && ['user', 'assistant'].includes(turn.role) && typeof turn.text === 'string').map((turn) => ({ role: turn.role, text: redactSensitiveText(turn.text.slice(0, 800)) })) : [];
+    if (!memory.turns?.length && clientTurns.length) {
+      memory = memoryRepo && orgId && userId
+        ? await memoryRepo.save(orgId, userId, { focus: memory.focus || {}, turns: clientTurns }).catch(() => ({ ...memory, turns: clientTurns }))
+        : { ...memory, turns: clientTurns };
+    }
+    const rawSelected = [requestContext.context?.selection, ...(requestContext.context?.selectedTransactionIds || [])].filter((id) => typeof id === 'string').slice(0, 10);
+    const rawFiltered = (requestContext.context?.filteredTransactionIds || []).filter((id) => typeof id === 'string').slice(0, 10);
+    const lookupIds = [...new Set([...rawSelected, ...rawFiltered])].slice(0, 20);
+    let foundRows = [];
+    if (orgId && lookupIds.length && repos?.getTransactionsByIds) foundRows = await repos.getTransactionsByIds(orgId, lookupIds).catch(() => []);
+    else if (orgId && repos?.getTransactionById) {
+      for (const id of lookupIds) { const row = await repos.getTransactionById(orgId, id).catch(() => null); if (row) foundRows.push(row); }
+    }
+    const foundIds = new Set(foundRows.map((row) => String(row.id)));
+    const verifiedSelection = rawSelected.filter((id) => foundIds.has(id));
+    const verifiedFiltered = rawFiltered.filter((id) => foundIds.has(id));
+    if (verifiedSelection.length) memory.focus = { ...(memory.focus || {}), recordIds: [...new Set(verifiedSelection)].slice(0, 10), lastTransactionIds: [...new Set(verifiedSelection)].slice(0, 10) };
+    if (verifiedFiltered.length) memory.focus = { ...(memory.focus || {}), filteredTransactionIds: [...new Set(verifiedFiltered)].slice(0, 10) };
+    const resolved = resolveAIContext(originalMessage, memory);
+    if (resolved.unresolved) {
+      const reply = 'Which record or time period do you mean? Select a row or tell me which one.';
+      if (memoryRepo && orgId && userId) await memoryRepo.save(orgId, userId, { focus: memory.focus || {}, turns: [
+        { role: 'user', text: redactSensitiveText(String(originalMessage || '').slice(0, 800)) },
+        { role: 'assistant', text: reply },
+      ] }).catch(() => {});
+      return { reply, speak: reply, route: 'code', reason: 'clarification_required', evidence: [], actions: [], usage: { model: null, inputTokens: 0, outputTokens: 0 }, unresolvedContext: true };
+    }
+    const priorTurns = Array.isArray(memory.turns) && memory.turns.length ? memory.turns : requestContext.history;
+    const effectiveContext = { ...context, ...(requestContext.context?.view ? { view: requestContext.context.view } : {}) };
+    let returnedRecords = [];
+    const focusIds = [...new Set([...(memory.focus?.recordIds || []), ...(memory.focus?.lastTransactionIds || []), ...(memory.focus?.filteredTransactionIds || []), memory.focus?.lastInvoiceId, memory.focus?.lastDocumentId].filter((id) => typeof id === 'string'))].slice(0, 20);
+    const entityFocusId = resolved.focusId && ![memory.focus?.lastInvoiceId, memory.focus?.lastDocumentId].includes(resolved.focusId) ? resolved.focusId : undefined;
+    const effectiveRequest = { ...requestContext, history: priorTurns, focusId: entityFocusId, focusIds, captureEvidence(records) { returnedRecords = Array.isArray(records) ? records.slice(0, 30) : []; } };
+    const result = await runAI(resolved.message, effectiveContext, effectiveRequest);
+    const citations = Array.isArray(result?.evidence) ? result.evidence.filter((id) => typeof id === 'string').slice(0, 10) : [];
+    const citedRecords = returnedRecords.filter((record) => citations.includes(String(record.id || '')) || citations.includes(String(record.sourceId || '')));
+    const focusedIds = citedRecords.map((record) => record.recordType === 'document_chunk' ? String(record.sourceId || '') : String(record.id || '')).filter(Boolean);
+    const recordIds = [...new Set(focusedIds.length ? focusedIds : citations.filter((id) => !id.startsWith('fx-rate:')))];
+    const intent = classifyAIIntent(resolved.message).intent, route = result?.route || classifyAIIntent(resolved.message).route;
+    const currency = resolved.message.match(/\b[A-Z]{3}\b/);
+    const invoiceId = citedRecords.find((record) => record.recordType === 'invoice')?.id;
+    const documentId = citedRecords.find((record) => record.recordType === 'document_chunk')?.sourceId;
+    const transactionIds = citedRecords.filter((record) => record.recordType === 'transaction').map((record) => String(record.id));
+    const nextFocus = {
+      ...(memory.focus || {}),
+      ...(recordIds.length ? { recordIds, lastRecordIds: recordIds } : {}),
+      ...(transactionIds.length ? { lastTransactionIds: transactionIds.slice(0, 10), lastTransactionId: transactionIds[0] } : intent === 'transactions' || intent === 'refunds' ? { lastTransactionIds: recordIds.slice(0, 10) } : {}),
+      ...(invoiceId ? { lastInvoiceId: String(invoiceId) } : {}),
+      ...(documentId ? { lastDocumentId: String(documentId) } : route === 'ocr' && recordIds[0] ? { lastDocumentId: recordIds[0] } : {}),
+      ...(effectiveContext.view ? { view: String(effectiveContext.view).slice(0, 40) } : {}),
+      lastIntent: intent,
+      lastRoute: route,
+      ...(PERIOD_HINT(resolved.message) ? { timeRange: PERIOD_HINT(resolved.message) } : {}),
+      ...(currency ? { currency: currency[0] } : {}),
+      ...(/\brefunds?\b/i.test(resolved.message) ? { typeFilter: 'refund' } : /\bpayments?\b/i.test(resolved.message) ? { typeFilter: 'payment' } : {}),
+      ...(/\b(?:paid|unpaid|pending|completed|failed)\b/i.test(resolved.message) ? { statusFilter: resolved.message.match(/\b(?:paid|unpaid|pending|completed|failed)\b/i)[0].toLowerCase() } : {}),
+    };
+    if (memoryRepo && orgId && userId) await memoryRepo.save(orgId, userId, { focus: nextFocus, turns: [
+      { role: 'user', text: redactSensitiveText(String(originalMessage || '').slice(0, 800)) },
+      { role: 'assistant', text: redactSensitiveText(String(result?.reply || '').slice(0, 800)) },
+    ] }).catch(() => {});
+    return result;
+  };
+}
+
+function PERIOD_HINT(message) {
+  return String(message || '').match(/\b(?:today|yesterday|this month|last month|previous month|last week|this week)\b/i)?.[0]?.toLowerCase() || '';
 }

@@ -47,6 +47,34 @@ export class AICacheRepo {
   }
 }
 
+// Short-lived conversation state is process-local and keyed by both trusted
+// identity fields. It is never persisted to the database or shared across users.
+export class AIConversationMemoryRepo {
+  constructor({ ttlMs = 30 * 60 * 1000, maxTurns = 20, maxText = 800, maxEntries = 1000, now = () => Date.now() } = {}) {
+    this.rows = new Map(); this.ttlMs = ttlMs; this.maxTurns = maxTurns; this.maxText = maxText; this.maxEntries = maxEntries; this.now = now;
+  }
+  key(orgId, userId) { return `${orgId}:${userId}`; }
+  async get(orgId, userId) {
+    if (!orgId || !userId) return null;
+    for (const [key, row] of this.rows) if (this.now() - row.updatedAt > this.ttlMs) this.rows.delete(key);
+    const key = this.key(orgId, userId), row = this.rows.get(key);
+    if (!row) return null;
+    if (this.now() - row.updatedAt > this.ttlMs) { this.rows.delete(key); return null; }
+    return structuredClone(row.value);
+  }
+  async save(orgId, userId, value) {
+    if (!orgId || !userId) return null;
+    const key = this.key(orgId, userId), prior = await this.get(orgId, userId);
+    const incoming = (Array.isArray(value.turns) ? value.turns : []).filter((turn) => turn && ['user', 'assistant'].includes(turn.role) && typeof turn.text === 'string').map((turn) => ({ role: turn.role, text: turn.text.slice(0, this.maxText) }));
+    const turns = [...(prior?.turns || []), ...incoming].slice(-this.maxTurns);
+    const next = { ...value, turns };
+    if (!this.rows.has(key) && this.rows.size >= this.maxEntries) this.rows.delete(this.rows.keys().next().value);
+    this.rows.set(key, { value: structuredClone(next), updatedAt: this.now() });
+    return structuredClone(next);
+  }
+  async clear(orgId, userId) { return this.rows.delete(this.key(orgId, userId)); }
+}
+
 export class MemoryNotificationsRepo {
   constructor() { this.rows = new Map(); this.sequence = 0; }
   key(orgId, id) { return `${orgId}:${id}`; }

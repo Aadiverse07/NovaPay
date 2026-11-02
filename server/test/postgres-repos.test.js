@@ -24,6 +24,20 @@ test('invoice download audit privilege failure stays specific and fails closed',
   await assert.rejects(repos.invoices.auditDownload('org-a','actor-a','invoice-a','request-a'),(error)=>error.statusCode===503&&error.code==='INVOICE_AUDIT_WRITE_FAILED'&&error.databaseCode==='42501'&&error.message==='Invoice download audit insert failed.');
 });
 
+test('transaction focus lookup batches IDs under an explicit organization filter', async () => {
+  const calls=[];
+  const database={async select(table,query){calls.push({table,query});return [{id:'CAP-1',org_id:'org-a'}];}};
+  const repos=createPostgresRepositories(database);
+  const rows=await repos.getTransactionsByIds('org-a',['CAP-1','CAP-2','bad),org_id.eq.org-b']);
+  assert.deepEqual(rows,[{id:'CAP-1',org_id:'org-a'}]);
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].table,'transactions');
+  const decoded=decodeURIComponent(calls[0].query);
+  assert.match(decoded,/org_id=eq\.org-a/);
+  assert.match(decoded,/id=in\.\(CAP-1,CAP-2\)/);
+  assert.doesNotMatch(decoded,/org_id\.eq\.org-b/);
+});
+
 test('invoice detail loads lines and status events only for the selected organization and invoice', async () => {
   const calls=[];
   const database={async select(table,query){calls.push({table,query});if(table==='invoices')return [{id:'invoice-a',org_id:'org-a',invoice_number:'INV-A',state:'draft',currency:'INR',subtotal_minor:13440,tax_minor:0,total_minor:13440}];if(table==='invoice_lines')return [{id:'line-a',description:'Consulting',quantity:1,unit_price_minor:13440,line_total_minor:13440}];if(table==='invoice_events')return [{event_type:'draft.created',created_at:'2026-11-01T10:00:00.000Z'}];return [];}};

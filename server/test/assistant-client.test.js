@@ -63,6 +63,16 @@ test('dashboard confines local fallback to demo mode and does not scrape or atta
   assert.doesNotMatch(dashboardSource, /Attached file content|FileReader|aiAttachmentText/);
 });
 
+test('dashboard shares scoped session history across typed/voice requests and exposes New chat', () => {
+  assert.match(dashboardSource, /NovaPayAssistantConversation\.create\(sessionMemoryStorage\)/);
+  assert.match(dashboardSource, /metadata\.history=turns\.slice\(-10\)/);
+  assert.match(dashboardSource, /grid\.getSelectedIds/);
+  assert.match(dashboardSource, /grid\.getFilteredIds/);
+  assert.match(dashboardSource, /ai-new-chat/);
+  assert.match(dashboardSource, /assistantConversation\.append\("user",q\).*assistantConversation\.append\("assistant",response\.reply\)/);
+  assert.match(dashboardSource, /if\(event\.detail&&!event\.detail\.signedIn\).*assistantConversation\.clear\(\)/);
+});
+
 test('invoice create intent uses the shared typed/voice handler, explicit confirmation, and the authenticated draft endpoint', () => {
   assert.match(dashboardSource, /return Promise\.resolve\(\)\.then\(function\(\)\{return handleInvoiceAssistant\(q\)\}\)\.then\(function\(invoiceResponseValue\)\{return invoiceResponseValue\|\|ask\(q,metadata\)/, 'invoice action interception precedes the evidence-answer path');
   assert.match(dashboardSource, /pendingInvoiceDraft\.awaitingConfirmation/);

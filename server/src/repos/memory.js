@@ -1,4 +1,4 @@
-import { AIUsageRepo, AICacheRepo, MemoryAnomaliesRepo, MemoryNotificationsRepo, makeMemoryAIVersion } from './aiMemory.js';
+import { AIUsageRepo, AICacheRepo, AIConversationMemoryRepo, MemoryAnomaliesRepo, MemoryNotificationsRepo, makeMemoryAIVersion } from './aiMemory.js';
 import { randomUUID } from 'node:crypto';
 
 const toMinor = (value) => value == null ? null : Math.round(Number(value) * 100);
@@ -348,6 +348,7 @@ export function createRepositories() {
   repos.ai = {
     usage: new AIUsageRepo(),
     cache: new AICacheRepo(),
+    memory: new AIConversationMemoryRepo(),
     async dataVersion(orgId) {
       return makeMemoryAIVersion({
         orders: [...orders.byId.values()].filter((row) => row.orgId === orgId).map(({ id, state, status, amount }) => ({ id, state, status, amount })),
@@ -375,6 +376,15 @@ export function createRepositories() {
       && (!filters.from || Date.parse(row.occurred_at) >= Date.parse(filters.from)) && (!filters.to || Date.parse(row.occurred_at) <= Date.parse(filters.to)));
     parsed.sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at));
     return parsed.slice(Number(filters.offset || 0), Number(filters.offset || 0) + Number(filters.limit || 50));
+  };
+  repos.getTransactionById = async (orgId, id) => {
+    const rows = await repos.listTransactions(orgId, { limit: 500 });
+    return rows.find((row) => row.id === id) || null;
+  };
+  repos.getTransactionsByIds = async (orgId, ids) => {
+    const wanted = new Set((ids || []).slice(0, 20));
+    const rows = await repos.listTransactions(orgId, { limit: 500 });
+    return rows.filter((row) => wanted.has(row.id));
   };
   repos.listLedgerEntries = async () => [];
   repos.trialBalance = async (orgId, currency = 'USD') => ({ currency, accounts: [], totals: { debitMinor: 0, creditMinor: 0, debits: '0.00', credits: '0.00' }, balanced: true });

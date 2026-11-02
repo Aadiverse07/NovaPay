@@ -1,4 +1,5 @@
 import { captureJournalLines, fundContributionJournalLines, refundJournalLines } from '../services/ledger.js';
+import { AIConversationMemoryRepo } from './aiMemory.js';
 
 const q = (values) => new URLSearchParams(values).toString();
 const journalLinesPayload = (lines) => lines.map((line) => ({ account_code: line.accountCode, debit_minor: line.debitMinor, credit_minor: line.creditMinor, currency: line.currency }));
@@ -273,6 +274,7 @@ export function createPostgresRepositories(database) {
   };
 
   const ai = {
+    memory: new AIConversationMemoryRepo(),
     async listOrgIds() { return database.rpc('list_anomaly_org_ids', {}); },
     async dataVersion(orgId) {
       return database.rpc('get_ai_data_version', { p_org: orgId });
@@ -430,6 +432,15 @@ export function createPostgresRepositories(database) {
       if (dates.length === 1) params.occurred_at = dates[0].slice('occurred_at.'.length);
       if (dates.length === 2) params.and = `(${dates.join(',')})`;
       return database.select('transactions', q(params));
+    },
+    async getTransactionById(orgId, id) {
+      const rows = await database.select('transactions', q({ select: '*', org_id: `eq.${orgId}`, id: `eq.${id}`, limit: '1' }));
+      return rows?.[0] || null;
+    },
+    async getTransactionsByIds(orgId, ids) {
+      const safeIds = [...new Set((ids || []).filter((id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,150}$/.test(id)))].slice(0, 20);
+      if (!safeIds.length) return [];
+      return database.select('transactions', q({ select: '*', org_id: `eq.${orgId}`, id: `in.(${safeIds.join(',')})`, limit: '20' }));
     },
     async listLedgerEntries(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(filters.limit), offset: String(filters.offset) };

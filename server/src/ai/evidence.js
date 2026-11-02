@@ -68,7 +68,7 @@ function moneyEvidenceFields(name, value, currency) {
   return { [`${name}_minor`]: minor, [`${name}_formatted`]: formatMinorAmount(minor, currency) };
 }
 
-function transactionEvidence(row) {
+export function transactionEvidence(row) {
   const id = String(row?.id || '');
   if (!id) return null;
   return {
@@ -244,10 +244,15 @@ export function planEvidenceTools({ intent, message, now = new Date() }) {
   return [{ name: 'get_transactions', args }, { name: 'get_ledger_summary', args: { currency: 'USD' } }];
 }
 
-export async function buildAIEvidence({ repos, orgId, intent, message, now, toolLimits = {} }) {
+export async function buildAIEvidence({ repos, orgId, intent, message, now, focusId, toolLimits = {} }) {
   const tools = createReadOnlyAITools({ repos, orgId, ...toolLimits });
   const toolResults = await tools.execute(planEvidenceTools({ intent, message, now }));
   const records = toolResults.results.flatMap((item) => Array.isArray(item.result) ? item.result : item.result?.rows || (item.result && !item.error ? [item.result] : []));
+  if (focusId && typeof repos.getTransactionById === 'function' && !records.some((record) => record.id === focusId)) {
+    const focused = await repos.getTransactionById(orgId, focusId);
+    const safeFocused = focused && transactionEvidence(focused);
+    if (safeFocused) records.unshift(safeFocused);
+  }
   const ids = [...new Set(records.flatMap((record) => [record.id, record.sourceId].filter((id) => typeof id === 'string' && id)))];
   return {
     records: trimResult(records, toolLimits.maxResultChars || AI_TOOL_MAX_RESULT_CHARS),

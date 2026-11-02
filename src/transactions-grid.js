@@ -124,5 +124,5 @@
     set("tx-type", args.type); set("tx-status", args.status); set("tx-from", args.dateFrom); set("tx-to", args.dateTo); set("tx-min", args.minAmount); set("tx-max", args.maxAmount); set("tx-search", args.search);
     if (api) { filtersChanged(); applyAssistantSort(args); } else pendingAssistantView = Object.assign({}, args);
   }
-  root.NovaPayTransactionsGrid = { init: init, refresh: syncRows, filtersChanged: filtersChanged, applyAssistantView: applyAssistantView, getApi: function () { return api; } };
+  root.NovaPayTransactionsGrid = { init: init, refresh: syncRows, filtersChanged: filtersChanged, applyAssistantView: applyAssistantView, getApi: function () { return api; }, getSelectedIds: function () { return api ? api.getSelectedRows().map(function (row) { return row.id; }).slice(0, 10) : []; }, getFilteredIds: function () { var ids = []; if (api) api.forEachNodeAfterFilter(function (node) { if (node.data && node.data.id && ids.length < 10) ids.push(node.data.id); }); return ids; } };
 }(typeof window !== "undefined" ? window : globalThis));

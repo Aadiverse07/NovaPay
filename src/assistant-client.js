@@ -52,13 +52,15 @@
     if (metadata.context && typeof metadata.context === "object") body.context = {
       ...(typeof metadata.context.view === "string" ? { view: metadata.context.view.slice(0, 40) } : {}),
       ...(typeof metadata.context.selection === "string" ? { selection: metadata.context.selection.slice(0, 150) } : {}),
+      ...(Array.isArray(metadata.context.selectedTransactionIds) ? { selectedTransactionIds: metadata.context.selectedTransactionIds.filter(function (id) { return typeof id === "string"; }).slice(0, 10).map(function (id) { return id.slice(0, 150); }) } : {}),
+      ...(Array.isArray(metadata.context.filteredTransactionIds) ? { filteredTransactionIds: metadata.context.filteredTransactionIds.filter(function (id) { return typeof id === "string"; }).slice(0, 10).map(function (id) { return id.slice(0, 150); }) } : {}),
     };
     if (metadata.interrupted && typeof metadata.interrupted === "object") body.interrupted = {
       previousReply: String(metadata.interrupted.previousReply || "").slice(0, 1000),
       spokenChars: Math.max(0, Math.min(2000, Number(metadata.interrupted.spokenChars) || 0)),
     };
-    if (Array.isArray(metadata.history)) body.history = metadata.history.slice(-6).map(function (turn) {
-      return { role: turn && turn.role === "assistant" ? "assistant" : "user", text: String(turn && turn.text || "").slice(0, 500) };
+    if (Array.isArray(metadata.history)) body.history = metadata.history.slice(-10).map(function (turn) {
+      return { role: turn && turn.role === "assistant" ? "assistant" : "user", text: String(turn && turn.text || "").slice(0, 800) };
     });
     var payload = await api.request("/api/ai/chat", { method: "POST", body: body });
     return normalize(payload);

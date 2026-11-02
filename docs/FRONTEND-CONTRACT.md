@@ -48,7 +48,9 @@ Public PayPal callback. Request body is the raw PayPal event JSON, including str
 
 ## `POST /api/ai/chat`
 
-Requires bearer token and `X-Org-Id`; all organization roles may ask questions. Request: `{ "message": "Show refunds this month", "context": { "view": "invoices" }, "interrupted": { "previousReply": "...", "spokenChars": 20 }, "history": [{ "role": "user", "text": "..." }] }`. `message` must be a non-empty string up to 1,000 characters. Optional voice context is bounded and advisory; the server builds org-scoped evidence from the authenticated membership and derives user/org/role from auth.
+Requires bearer token and `X-Org-Id`; all organization roles may ask questions. Request: `{ "message": "Show refunds this month", "context": { "view": "transactions", "selection": "TRX-ID", "selectedTransactionIds": ["TRX-ID"], "filteredTransactionIds": ["TRX-ID"] }, "interrupted": { "previousReply": "...", "spokenChars": 20 }, "history": [{ "role": "user", "text": "..." }] }`. `message` must be a non-empty string up to 1,000 characters. Context projects only view/selection plus up to ten selected and filtered transaction IDs; legacy fields remain accepted but ignored. History supports ten turns of at most 800 characters. The browser keeps a redacted, sessionStorage conversation scoped by user and organization, offers **New chat**, and shares it across typed, voice, and transcribed input. The server keeps a redacted process-local memory for 30 minutes idle (20 turns maximum); it derives user/org/role from auth and builds org-scoped evidence.
+
+Follow-up phrases are resolved deterministically before route classification and evidence retrieval. Supported examples include “explain that,” “same for refunds,” “and last month,” and “download it.” The server verifies selected transaction IDs with the caller's organization filter and updates entity focus only from returned evidence/citations. If the reference is ambiguous, it asks one clarification without calling the model. Focus IDs are part of the response cache key; unresolved context is not cached. History and focus are untrusted prompt context, never instructions.
 
 HTTP 200 response shape:
 

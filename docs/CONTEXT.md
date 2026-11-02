@@ -1,10 +1,10 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; current task: Part B conversation context memory; Part A ready for its own local commit; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; current task: Part B conversation context memory; Part A committed locally as 58035b5; no push.
 
 ## DONE
-- Part A: lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.
+- Part A (commit 58035b5): lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.
 - Removed wake-phrase matching, continuous listening, and the listening-for-wake state. Intro greeting now tells users to tap the mic.
 - One reusable SpeechRecognition object is configured en-IN, continuous=false, interimResults=true. It starts only after a mic tap, displays interim text, submits final/silence once, and ignores duplicate starts. A mic tap during playback no longer cancels the utterance; explicit Stop remains available.
 - Removed voice auto-resume from the floating indicator; its click activates the same AI mic. Transaction detail dictation now records audio and calls the authenticated transcription endpoint, avoiding a second recognizer. Main mic held-to-talk remains the fallback when browser recognition is unavailable.
@@ -17,18 +17,16 @@
 - No animation, auth/redirect, font, or asset files were edited. No migration was applied.
 
 ## IN PROGRESS
-- Part A is implemented and tested; local Part A commit is the next checkpoint action.
-- Part B is not started: add short-term AI conversation memory scoped by verified org and user; resolve follow-up pronouns deterministically before route classification/evidence/cache; persist safe shared client history for typed, voice and transcription; update API contract and tests.
+- Part A is implemented and committed locally as 58035b5.
+- Part B: scoped server/client conversation memory, deterministic pre-routing resolver, bounded API history, sessionStorage restore/New chat, evidence-derived focus and focus-aware cache key implemented. Focused Part B tests pass 39/39. Final full suite is 310/311; sole known failure is `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`). Local Part B commit remains pending.
 - Preserve auth/OTP/session handling, `server/src/services/geminiKeyPool.js`, voice files/speech output, and Tier 0/1/2 validation. Keep money units unchanged.
 - Baseline and Part A full suite each have the same single known no-store failure; Part A full result is 300/301 and migration parser is 21/21.
 - Browser rendering is UNVERIFIED.
 
 ## NEXT STEPS
-1. Commit Part A as a standalone local commit after syntax, whitespace, and secret/status checks.
-2. Implement Part B repo/resolver, cache scoping, API history limits/context fields, and client sessionStorage conversation assembly.
-3. Add tests for follow-up resolution, user/org scope, TTL/bounds/redaction, focus-aware cache keys, client assembly, and shared request metadata.
-4. Run `npm test` before and after; record the existing no-store test failure if it remains; do not push.
-5. Commit Part B separately and provide exact manual browser checks.
+1. Review the Part B diff and confirm no `.env` or protected files changed.
+2. Create a separate local Part B checkpoint commit with `WIP-BROKEN:` because the known no-store test still fails; never push.
+3. Browser verification remains UNVERIFIED; human should test Transactions grid, follow-up references, New chat, refresh, org scope, theme and existing voice/auth behavior.
 
 ## USER ACTIONS PENDING
 - In Chrome and Brave, sign in, enable console debug using localStorage key novapay:voiceDebug, grant mic access, and complete the checklist with harmless sample queries. Clear debug mode afterward.
@@ -52,6 +50,14 @@
 | AG Grid/action focused tests | PASS | 2026-11-02 | `node --test server/test/transactions-grid.test.js server/test/assistant-actions.test.js` — 11/11 |
 | Part A full suite | FAIL (known) | 2026-11-02 | `npm test` — 300/301; only `server/test/api-client.test.js:29` no-store assertion; migrations 21/21 |
 | AG Grid browser rendering | UNVERIFIED | 2026-11-02 | No browser session used; manual checklist pending |
+| Part B focused tests | PASS | 2026-11-02 | Resolver/memory/cache/client/schema focused run 25/25; route compatibility rerun 16/16 |
+| Full suite after Part B | FAIL (known) | 2026-11-02 | `npm test` 307/308; sole failure server/test/api-client.test.js:29, no-store header undefined; migrations 21/21 |
+| Migrations/static syntax | PASS | 2026-11-02 | `npm run check:migrations` 21/21; changed JS `node --check` and `git diff --check` passed |
+| Part B browser follow-ups | UNVERIFIED | 2026-11-02 | No browser interaction performed; refresh, New chat, scope and voice checks pending |
+| Part B final focused tests | PASS | 2026-11-02 | `node --test server/test/ai-context.test.js server/test/ai-chat-schema.test.js server/test/postgres-repos.test.js server/test/assistant-conversation.test.js server/test/assistant-client.test.js` — 39/39 |
+| Part B final full suite | FAIL (known) | 2026-11-02 | `npm test` — 310/311; only `server/test/api-client.test.js:29` no-store assertion (actual header undefined) |
+| Part B migration check | PASS | 2026-11-02 | `npm run check:migrations` — 21/21 static migration checks; no migrations applied |
+| Part B syntax and whitespace | PASS | 2026-11-02 | `node --check` on 16 changed JS files; `git diff --check` |
 
 ## KNOWN ISSUES AND RISKS
 - Known API no-store assertion remains the only failing test and was not changed.

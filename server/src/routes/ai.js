@@ -4,11 +4,18 @@ import { structuredErrorBody } from '../middleware/errorResponses.js';
 import { classifyAIIntent } from '../ai/router.js';
 import { validateAssistantActions } from '../ai/actions.js';
 
-const chatSchema = z.object({
+export const assistantContextSchema = z.object({
+  view: z.string().max(40).optional(),
+  selection: z.string().regex(/^[A-Za-z0-9_-]{1,150}$/).optional(),
+  selectedTransactionIds: z.array(z.string().regex(/^[A-Za-z0-9_-]{1,150}$/)).max(10).optional(),
+  filteredTransactionIds: z.array(z.string().regex(/^[A-Za-z0-9_-]{1,150}$/)).max(10).optional(),
+}).passthrough();
+
+export const chatSchema = z.object({
   message: z.string().trim().min(1).max(1000),
   context: z.unknown().optional(),
   interrupted: z.object({ previousReply: z.string().max(1000).optional(), spokenChars: z.number().int().min(0).max(2000).optional() }).optional(),
-  history: z.array(z.object({ role: z.enum(['user', 'assistant']), text: z.string().max(500) }).strict()).max(6).optional(),
+  history: z.array(z.object({ role: z.enum(['user', 'assistant']), text: z.string().max(800) }).strict()).max(10).optional(),
 }).passthrough();
 
 export function aiRoutes({ config, askAI, identity, transcribeAudio }) {
@@ -48,6 +55,8 @@ export function aiRoutes({ config, askAI, identity, transcribeAudio }) {
     try {
       // Legacy client context is accepted for compatibility but intentionally ignored.
       const verifiedContext = { orgId: req.orgId, role: req.orgRole, userId: req.user?.id };
+      const clientContextParsed = assistantContextSchema.safeParse(parsed.data.context);
+      const clientContext = clientContextParsed.success ? clientContextParsed.data : {};
       const classification = classifyAIIntent(parsed.data.message);
       if (classification.intent === 'invoice_create') {
         if (!['owner', 'admin', 'accountant'].includes(req.orgRole)) return res.json({ answer: "Your role can't create invoices. Ask an owner or admin, or create it manually in Invoices.", speak: "Your role can't create invoices. Ask an owner or admin, or create it manually in Invoices.", route: 'code', reason: 'invoice_create_role_refused', citations: [], actions: [], usage: { model: null, inputTokens: 0, outputTokens: 0 } });
@@ -59,7 +68,12 @@ export function aiRoutes({ config, askAI, identity, transcribeAudio }) {
         return res.json(result);
       }
       const result = await askAI(parsed.data.message, verifiedContext, {
-        context: parsed.data.context && typeof parsed.data.context === 'object' ? { view: parsed.data.context.view, selection: parsed.data.context.selection } : undefined,
+        context: {
+          ...(clientContext.view ? { view: clientContext.view } : {}),
+          ...(clientContext.selection ? { selection: clientContext.selection } : {}),
+          ...(clientContext.selectedTransactionIds ? { selectedTransactionIds: clientContext.selectedTransactionIds } : {}),
+          ...(clientContext.filteredTransactionIds ? { filteredTransactionIds: clientContext.filteredTransactionIds } : {}),
+        },
         interrupted: parsed.data.interrupted,
         history: parsed.data.history,
       });

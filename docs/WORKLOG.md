@@ -1,11 +1,12 @@
 ## RESUME POINTER
-- Current task: Part B, add org/user-scoped short-term AI conversation context after Part A AG Grid checkpoint; branch `codex/voice-assistant`; never push or touch auth/OTP/Gemini key pool/voice/action-tier validation.
-- Last finished step: Part A implementation and tests are complete locally; not yet committed. Grid is lazily loaded AG Grid Community 33.3.2 from `assets/vendor/ag-grid/`; original transaction table remains the offscreen source.
-- Test state: final `npm test` 300/301; sole baseline failure `server/test/api-client.test.js:29` expects no-store but gets undefined; 21 migration syntax checks pass. Focused grid/action tests 11/11.
-- Part A files: `dashboard.html`, `README.md`, `src/transactions-grid.js`, `src/transactions-grid-core.js`, `src/transactions-grid.css`, `src/dashboard.js`, `src/assistant-actions.js`, `server/src/ai/actions.js`, `server/test/transactions-grid.test.js`, vendor bundle/license, `docs/DECISIONS.md` and continuity docs.
-- NEXT: (1) run final changed-JS syntax and whitespace checks; (2) commit Part A alone; (3) implement Part B memory repo, resolver, cache key and history propagation, tests/API docs; (4) run final full suite and commit Part B separately.
-- Browser state: grid UI and browser follow-up behavior UNVERIFIED; no browser session used.
-- User actions pending: after implementation, run the manual checklist in final response for grid filters/sort/export/detail/AI selection and voice/auth regression.
+- Current task: Part B AI conversation context memory; branch `codex/voice-assistant`; Part A commit `58035b5`; never push.
+- Last finished step: Part B implementation and final automated checks are complete; Part B is not committed yet.
+- DONE: scoped follow-up resolver, expiring org/user server memory, bounded conversation history, evidence-derived focus and cache separation, session-scoped transcript restore, New chat, and API contract/docs/tests.
+- Latest tests: focused Part B tests 39/39 PASS; `npm test` 310 pass / 1 known fail / 311 total (`api-client.test.js:29`, missing `Cache-Control: no-store`); migrations 21/21 PASS; changed JS syntax and `git diff --check` PASS.
+- IN PROGRESS: final diff review and local Part B checkpoint commit. No migration, live API, Gemini, PayPal, or browser use.
+- NEXT: verify intended file list and no `.env`; commit Part B separately with a `WIP-BROKEN:` prefix because the known suite failure remains; refresh this pointer with the commit hash.
+- Browser verification: UNVERIFIED. Human should open Transactions, test grid search/filter/sort/paging/CSV and selection; ask AI “explain that”, “same for refunds”, “and last month?”; test New chat, refresh restore, org switch and sign-out; check light/dark and existing voice/auth behavior.
+- Pending human actions: perform the browser checks above. No push or PR requested.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -4949,3 +4950,101 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 IST | ABOUT TO: Remove the extra trailing blank line from `docs/CONTEXT.md` and rerun Part A static checks. WHY: keep the continuity docs clean before the checkpoint commit.
 2026-11-02 IST | RESULT: PASS; changed JS `node --check`, `git diff --check`, bundle/license presence checks passed; `git ls-files .env` is empty. NEXT: stage only Part A feature files and create the first local commit.
 2026-11-02 IST | ABOUT TO: Stage Part A files and commit them as a standalone local checkpoint. WHY: keep AG Grid work separate from the upcoming conversation-memory implementation.
+2026-11-02 IST | RESULT: PASS; Part A committed locally as `58035b5` (`Part A: AG Grid transactions`); no push. NEXT: inspect AI repo conventions, cache tests, client query paths and API docs before Part B implementation.
+2026-11-02 IST | ABOUT TO: Inspect server repository/service dependency wiring, AI cache tests, assistant-client/dashboard history paths, and API docs. WHY: design the org/user-scoped memory and follow-up resolver against current contracts without changing voice or action tier behavior.
+2026-11-02 14:58 IST | ABOUT: Record resume timestamp and inspect git branch/status/log. WHY: Confirm Part B checkpoint and avoid overwriting unrelated work.
+2026-11-02 14:58 IST | RESULT: Branch/status/log inspection completed; next action: read resume pointer and relevant AI memory/client code.
+2026-11-02 14:59 IST | ABOUT: Read resume pointer, recent journal, and targeted AI/client source ranges. WHY: Restore exact Part B scope and inspect existing interfaces before editing.
+2026-11-02 14:59 IST | RESULT: Targeted source locations and journal read; next action: inspect implementations and test harness shapes.
+2026-11-02 15:00 IST | ABOUT: Read task handoff, server AI route/service/repository shapes, and client/dashboard query flow. WHY: confirm exact contracts and whether scoped in-memory conversation memory can be wired safely.
+2026-11-02 15:00 IST | RESULT: Core contract read; next action: inspect existing AI/client tests, repo interfaces and relevant evidence query helpers before implementation.
+2026-11-02 15:01 IST | ABOUT: Inspect focused service, evidence, repository, client and tests ranges. WHY: identify minimal safe APIs for scoped memory and deterministic follow-up handling.
+2026-11-02 15:01 IST | RESULT: Focused interfaces and current test patterns identified; next action: inspect data repo methods and API docs to implement resolver without trusting client IDs.
+2026-11-02 15:02 IST | ABOUT: Inspect exact transaction/invoice lookup repo APIs, memory ownership and client request assembly. WHY: avoid resolving follow-ups from unverified or cross-tenant IDs.
+2026-11-02 15:02 IST | RESULT: Scoped lookup APIs and request limits confirmed; next action: implement independently testable memory store/resolver helpers, then wire service and client.
+2026-11-02 15:03 IST | ABOUT: Inspect org-scoped transaction filtering and server memory factory wiring. WHY: determine whether focus IDs can be independently revalidated before being used as evidence.
+2026-11-02 15:03 IST | RESULT: Lookup review complete; next action: add a scoped short-term conversation repository and pure follow-up resolver with unit tests.
+2026-11-02 15:04 IST | ABOUT: Inspect memory transaction repo and service exact control boundaries. WHY: define small changes without running broad unrelated test suites repeatedly.
+2026-11-02 15:04 IST | RESULT: Service boundaries confirmed; next action: add repository-scoped expiring memory API and follow-up resolver helper with focused tests.
+2026-11-02 15:05 IST | ABOUT: Read transaction memory filters, client module helper exports and AI response/cache tail. WHY: implement entity focus using authoritative repository rows and avoid caching contextual follow-ups incorrectly.
+2026-11-02 15:05 IST | RESULT: Repository filter supports org and type/date but not ID; next action: implement a dedicated org-scoped exact transaction lookup in both repos, then resolver/service integration.
+2026-11-02 15:06 IST | ABOUT: Check script inclusion order and helper module APIs. WHY: add session-only memory without changing auth/session code or voice paths.
+2026-11-02 15:06 IST | RESULT: Assistant client loads before dashboard and authenticated API has org context; next action: add a standalone sessionStorage conversation helper and testable server memory/resolver.
+2026-11-02 15:08 IST | ABOUT: Journal the initial Part B code additions and inspect exact git diff. WHY: preserve an accurate checkpoint before wiring the new helpers into runtime paths.
+2026-11-02 15:08 IST | RESULT: New memory repository/resolver and client session-store helper are present; no tests yet. NEXT: wire server repo lookup, service history/resolution, route bounds, and dashboard history flow.
+2026-11-02 15:09 IST | ABOUT: Read the original two-feature task brief for exact acceptance requirements. WHY: ensure the implementation matches the supplied request rather than only the summary.
+2026-11-02 15:09 IST | RESULT: Original brief read; next action: finish server memory/resolution wiring against its exact requirements.
+2026-11-02 15:10 IST | ABOUT: Inspect auth event dispatch shape and assistant panel controls for safe memory clearing/UI. WHY: implement New chat and scoped client state without changing session flows.
+2026-11-02 15:10 IST | RESULT: Auth event contract and assistant toolbar reviewed; next action: add standalone resolver and tests, then wire service wrapper.
+2026-11-02 15:11 IST | ABOUT: Remove the duplicate preliminary resolver now superseded by the dedicated AI context module. WHY: keep a single testable implementation and avoid divergent follow-up behavior.
+2026-11-02 15:11 IST | RESULT: Duplicate resolver removed; next action: wire the canonical resolver through askAI with org-scoped selection validation and server-owned history.
+2026-11-02 15:12 IST | ABOUT: Inspect transaction grid public API and dashboard assistant initializer. WHY: include bounded selected/filtered IDs in every assistant request as required by Part B.
+2026-11-02 15:12 IST | RESULT: Grid API and assistant flow inspected; next action: extend client request assembly and persist shared turns in the common typed/voice handleQuery path.
+2026-11-02 15:13 IST | ABOUT: Read assistant bubble markup/styles and add client conversation metadata. WHY: restore prior turns safely and include grid selection without adding DOM scraping.
+2026-11-02 15:13 IST | RESULT: Existing bubble roles/classes identified; next action: implement helper loading and share context/history through handleQuery for typed, voice and transcribed requests.
+2026-11-02 15:14 IST | ABOUT: Read exact assistant header line after a patch context mismatch. WHY: make a minimal markup edit without reformatting teammate HTML.
+2026-11-02 15:14 IST | RESULT: Header source inspected; prior patch made no file change. NEXT: apply a narrower insertion for New chat and the conversation helper script.
+2026-11-02 15:15 IST | RESULT: Dashboard now scopes and persists shared turns, restores safely with textContent, includes grid selected/filtered IDs and adds New chat. NEXT: add tests for client store, bounded request assembly, resolver/memory behavior and API schema limits.
+2026-11-02 15:16 IST | ABOUT: Read exact handleQuery source for a surgical replacement after the scripted match missed. WHY: avoid changing unrelated voice pipeline code.
+2026-11-02 15:16 IST | RESULT: Exact handler text extracted; previous script wrote no dashboard changes. NEXT: apply insertion and replace only the handleQuery function by source boundaries.
+2026-11-02 15:17 IST | RESULT: Dashboard handler and safe restoration wired; node --check passed. NEXT: audit auth event behavior and test assistant history/context assembly and session-store scoping.
+2026-11-02 15:19 IST | ABOUT: Record Part B initial test additions and syntax-check touched server/client modules. WHY: establish an early checkpoint before executing focused tests.
+2026-11-02 15:19 IST | RESULT: All touched JavaScript syntax checks passed. NEXT: run focused Part B tests and fix any behavior/test issues before broader suite.
+2026-11-02 15:20 IST | ABOUT: Run focused conversation, schema, service, client and cache tests. WHY: verify resolver, memory scoping, bounds and follow-up evidence before full regression.
+2026-11-02 15:20 IST | RESULT: Focused Part B tests completed; next action: review failures and refine behavior, then record exact counts.
+2026-11-02 15:21 IST | ABOUT: Re-run focused Part B tests after supporting more natural follow-ups and adding bounded repository lookups. WHY: confirm the revised resolver and session history path.
+2026-11-02 15:21 IST | RESULT: Focused tests completed; next action: inspect result counts, fix any failures, then integrate API documentation and continuity records.
+2026-11-02 15:22 IST | ABOUT: Inspect org-scoped invoice/document getters to store typed focus from records actually supplied to the model. WHY: enable safe invoice/document follow-ups without trusting model claims.
+2026-11-02 15:22 IST | RESULT: Getter scan complete; next action: add typed evidence-focus capture and route resolver behavior only where authoritative org-scoped lookups exist.
+2026-11-02 15:24 IST | ABOUT: Run the focused Part B tests after typed entity focus and follow-up expansion. WHY: validate exact lookup and citation-derived transaction/invoice/document focus.
+2026-11-02 15:24 IST | RESULT: Focused test run completed; next action: capture exact outcome and address any mismatches before updating docs.
+2026-11-02 15:26 IST | ABOUT: Run the complete npm test suite after Part B implementation. WHY: verify new context memory alongside the Part A grid and all existing auth, voice, assistant and action-tier tests.
+2026-11-02 15:26 IST | RESULT: Full npm test completed; next action: record exact pass/fail counts in TEST-REPORT.md and inspect any failure before final checks.
+2026-11-02 15:27 IST | ABOUT: Inspect two failing legacy route tests and their context payloads after full suite. WHY: preserve backwards compatibility while keeping the new typed memory context bounded.
+2026-11-02 15:27 IST | RESULT: Failures stem from strict nested context rejecting legacy advisory fields; no new feature tests failed. NEXT: accept legacy context, explicitly project bounded allowed fields, and rerun focused route/schema tests.
+2026-11-02 15:29 IST | ABOUT: Run the AI route compatibility and new context-schema tests. WHY: ensure old advisory context remains accepted and new known fields remain bounded.
+2026-11-02 15:29 IST | RESULT: Focused route/schema/context tests completed; next action: review counts and re-run the full suite after compatibility correction.
+2026-11-02 15:31 IST | ABOUT: Inspect continuity file header/line count and API contract paragraph anchors. WHY: update Part B docs while preserving append-only logs and compact handoff structure.
+2026-11-02 15:31 IST | RESULT: Documentation anchors and current handoff length checked; next action: update AI contract, decision log, test report, and Part B resume pointer.
+2026-11-02 15:33 IST | ABOUT: Record Part B implementation decisions and replace stale resume status after the Part A commit. WHY: keep repo continuity aligned with current code and the one known baseline failure.
+2026-11-02 15:33 IST | RESULT: API/Frontend contracts and DECISIONS now document bounded scoped memory; CONTEXT now reflects Part A commit and Part B implementation. NEXT: inspect the top WORKLOG pointer and exact diff, then update it and run final tests.
+2026-11-02 15:35 IST | RESULT: RESUME POINTER now reflects Part A commit and Part B state/failures accurately; next action: run full npm test again after the route compatibility fix.
+2026-11-02 15:36 IST | ABOUT: Re-run the full npm test suite after restoring legacy route context compatibility. WHY: verify all 308 tests with only the known baseline no-store issue allowed.
+2026-11-02 15:36 IST | RESULT: Full npm test completed after the compatibility fix; next action: inspect summary, run migration/static checks, and append the exact test result.
+2026-11-02 15:38 IST | ABOUT: Run migration syntax checks, syntax-check every changed JS file, and verify whitespace. WHY: final static gate after the full suite; migrations must remain unchanged.
+2026-11-02 15:38 IST | RESULT: Migration syntax/static changed-JS syntax and git diff --check completed; next action: append exact TEST-REPORT entries and inspect Part B diff/scope.
+2026-11-02 15:39 IST | ABOUT: Inspect newest test-report format and current Part B diff summary. WHY: append accurate records for every run and verify implementation file scope before checkpoint.
+2026-11-02 15:39 IST | RESULT: Test report uses append-only dated entries; current changes are limited to Part B code/tests/docs. NEXT: append all Part B test results and refresh the final resume pointer.
+2026-11-02 15:41 IST | ABOUT: Append Part B test results and update CONTEXT test state. WHY: preserve every real run, the corrected compatibility failures, and the remaining known baseline failure.
+2026-11-02 15:41 IST | RESULT: Part B reports now record both focused passes, the corrected intermediate test failures, final 307/308 and browser UNVERIFIED. NEXT: review service/repo diff for security and scope issues, then final diff/syntax checks.
+2026-11-02 15:45 IST | ABOUT: Run focused Part B security/scoping tests after batching and filtering client-selected IDs. WHY: verify one tenant-filtered lookup, selection resolution, foreign selection refusal, and core resolver/cache behavior.
+2026-11-02 15:45 IST | RESULT: Focused tests completed after scope tightening; next action: record counts and rerun full suite because implementation code changed.
+2026-11-02 15:47 IST | ABOUT: Run npm test after final scoped-selection and New chat changes. WHY: establish the exact Part B final result before checkpoint.
+2026-11-02 15:47 IST | RESULT: Final full test run completed; next action: append exact 309-test result and run final migration/syntax/whitespace checks.
+2026-11-02 15:50 IST | ABOUT: Run focused Part B tests after adding explicit dashboard history/New chat coverage. WHY: verify the shared client flow and scoping contract before the final full suite.
+2026-11-02 15:50 IST | RESULT: Focused tests completed; next action: capture counts and rerun full npm test after the new assertion.
+2026-11-02 15:14:10 IST | BEFORE | Inspect branch, status and latest commit to resume Part B safely; next: run the pending focused tests.
+2026-11-02 15:14:10 IST | AFTER | Inspection complete; captured branch/status/latest commit; files touched: docs/WORKLOG.md; next: rerun focused Part B tests with concise output.
+2026-11-02 15:14:15 IST | BEFORE | Run focused Part B context, schema, repository and UI tests; next: record exact focused result in TEST-REPORT.md.
+2026-11-02 15:14:15 IST | AFTER | Focused Part B test command exited 0; concise TAP tail recorded in tool output; files touched: docs/WORKLOG.md; next: run full npm test.
+2026-11-02 15:14:22 IST | BEFORE | Run full npm test after the latest Part B test addition; next: log exact counts and run migration validation.
+2026-11-02 15:14:24 IST | AFTER | Full npm test completed with exit 1; result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run migration validation.
+2026-11-02 15:14:27 IST | BEFORE | Poll the ongoing full npm test process for completion; next: inspect its result and continue checks.
+2026-11-02 15:14:34 IST | AFTER | npm test result is 310 pass / 1 fail / 311 total; known failure is api-client no-store assertion; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run migration validation.
+2026-11-02 15:14:34 IST | BEFORE | Run migration consistency check for Part B; next: record exact result, then syntax and diff checks.
+2026-11-02 15:14:34 IST | AFTER | Migration check completed with exit 0; result appended to docs/TEST-REPORT.md; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: run syntax and diff checks.
+2026-11-02 15:14:43 IST | BEFORE | Check all changed and new Part B JavaScript syntax plus whitespace; also capture migration-count summary from the completed check; next: inspect source diff and finalize docs.
+2026-11-02 15:14:44 IST | AFTER | JS syntax and diff checks completed; files touched: docs/WORKLOG.md, docs/TEST-REPORT.md; next: inspect final diff, update CONTEXT/RESUME POINTER, then checkpoint commit.
+2026-11-02 15:14:50 IST | BEFORE | Review current diff summary and continuity docs before final Part B handoff update; next: refresh resume state and stage the local checkpoint.
+2026-11-02 15:14:50 IST | AFTER | Diff and handoff documents reviewed; files touched: docs/WORKLOG.md; next: update RESUME POINTER and CONTEXT with final test counts and outstanding browser verification.
+2026-11-02 15:15:17 IST | BEFORE | Refresh Part B handoff docs with final focused/full test totals, migration and syntax results, and browser UNVERIFIED status; next: review and commit locally.
+2026-11-02 15:15:17 IST | AFTER | Updated CONTEXT/RESUME POINTER and appended focused/migration/syntax results; files touched: docs/CONTEXT.md, docs/WORKLOG.md, docs/TEST-REPORT.md; next: inspect exact final diff and stage the Part B checkpoint.
+2026-11-02 15:15:24 IST | BEFORE | Validate documentation placement, protected-file diff and final changed-file inventory before committing; next: correct any handoff formatting issue.
+2026-11-02 15:15:24 IST | AFTER | Final inventory checked; protected-file diff is empty and whitespace is clean; files touched: docs/WORKLOG.md; next: fix TEST STATE table placement if needed, then commit.
+2026-11-02 15:15:33 IST | BEFORE | Move the newly appended Part B results into the existing TEST STATE table for valid handoff formatting; next: inspect implementation diff before checkpoint.
+2026-11-02 15:15:33 IST | AFTER | TEST STATE rows moved into the table; files touched: docs/CONTEXT.md, docs/WORKLOG.md; next: review implementation diff for correctness and unintended edits.
+2026-11-02 15:15:38 IST | BEFORE | Review Part B server memory/resolution, route, UI persistence, and contracts for scope and accidental changes; next: commit if review is clean.
+2026-11-02 15:15:38 IST | AFTER | Reviewed Part B code and contracts; changes remain scoped to assistant context memory and Transactions focus; files touched: docs/WORKLOG.md; next: final safety check and local checkpoint commit.
+2026-11-02 15:15:53 IST | BEFORE | Confirm the Part B worktree has no tracked/staged , secrets, protected-file edits, or whitespace errors before committing; next: create the required local WIP-BROKEN checkpoint.
+2026-11-02 15:15:53 IST | AFTER | Safety check: no tracked/staged env files or protected-path changes; diff whitespace clean; files touched: docs/WORKLOG.md; next: commit Part B locally with WIP-BROKEN prefix.
+2026-11-02 15:16:01 IST | BEFORE | Commit reviewed Part B implementation and continuity records; known suite failure is documented as the no-store assertion; next: create the local checkpoint only, then record its hash.

@@ -722,3 +722,10 @@
 
 ## 2026-11-02 — Transactions grid and assistant view action
 - Question: How should the Transactions view add meaningful AG Grid capability without making startup heavier or discarding existing table integrations? Choice: keep the existing table as an inert offscreen data source; lazily load a locally vendored AG Grid Community 33.3.2 UMD bundle on first Transactions activation; use the v33 Theming API and strict `transactions.applyView` filters. Reason: existing writers/modal/effect scripts keep their row DOM contract; the grid provides sorting, filtering, pagination, row selection, currency-separated totals and CSV. Community package metadata identifies MIT licensing, checked 2026-11-02; AG Grid v33 documents Theming API. Sources: https://www.npmjs.com/package/ag-grid-community?activeTab=versions and https://www.ag-grid.com/javascript-data-grid/theming-migration/. Rejected: `@latest`/runtime CDN (not reproducible/offline dependent), Enterprise features/license, and accepting raw AG Grid filter models from the model.
+
+## 2026-11-02 — AI conversation context memory
+- Question: How should assistant follow-ups preserve context without extra LLM calls or cross-tenant focus?
+- Choice: Keep redacted, process-local memory keyed by authenticated org+user (30-minute idle TTL, 20 turns, 800 chars/turn, 1,000-entry cap); keep a scoped sessionStorage transcript for refresh; resolve supported ellipsis deterministically before routing; verify transaction focus with org-filtered reads; clarify ambiguous references; include resolved focus IDs in cache keys.
+- Reason: Preserves user context across requests while keeping identity and entity scope explicit, bounding memory, and avoiding model-based query rewriting. No migration or provider call is needed for the resolver.
+- Rejected: Persisting conversations in the database (unneeded retention/schema surface), trusting client history/focus as authoritative (tenant and prompt-injection risk), or spending an LLM call to rewrite every follow-up (cost and quota).
+- Source: repository behavior and task requirements checked 2026-11-02; no third-party fact used.
