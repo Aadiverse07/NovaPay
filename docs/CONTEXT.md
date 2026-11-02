@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date: 2026-11-02; branch codex/voice-assistant; latest local checkpoint: f7d19fe (handoff docs); Part B implementation commit: a03f85f; Part A commit: 58035b5; no push.
+- Date: 2026-11-02; branch codex/voice-assistant; latest local checkpoint: 9a504bf (PayPal API fix); Part B implementation commit: a03f85f; Part A commit: 58035b5; no push.
 
 ## DONE
 - Part A (commit 58035b5): lazy local AG Grid Community 33.3.2 Transactions view, preserving the original table as a hidden DOM source; searchable/filterable/sortable/pageable grid, column menu, selection, CSV, currency-separated totals, live-row flashes, strict assistant `transactions.applyView` action, tests and README documentation.

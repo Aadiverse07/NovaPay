@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: PayPal Sandbox requests use authenticated API client and readable structured errors; branch `codex/voice-assistant`; never push.
-- Last finished step: source fix and regression tests are implemented; full suite run completed.
-- Root cause verified: `src/novapay-live.js` used raw `fetch()` without auth/org headers and wrapped `d.error` directly in `Error`; structured `{error:{code,message}}` became `[object Object]` while server middleware required bearer JWT and `X-Org-Id`.
-- DONE: all protected PayPal, approval registration and events calls now use `NovaPayApi.request`; `/api/status` remains public. Role and org errors are translated to plain language; `retryBlocked` remains on the shared-client Error.
-- TESTS: new focused regression tests PASS 3/3; `node --check` PASS. `npm test` 313 pass / 1 known fail / 314 total; only `server/test/api-client.test.js:29` (missing `Cache-Control: no-store`).
-- IN PROGRESS: none. No OTP/auth source, voice assistant or Gemini key-pool files changed. No push or live PayPal order created.
-- NEXT: browser check: sign in; open PayPal Sandbox; create test order for 10.00 USD; approve in PayPal tab; return and capture; confirm transaction appears. Report any readable role/org error.
+- Current task: PayPal Sandbox authenticated API/error handling; branch codex/voice-assistant; latest local fix commit 9a504bf; never push.
+- Last finished step: PayPal helper fix, regression tests, continuity records and local checkpoint are complete.
+- Root cause: src/novapay-live.js used raw fetch without Authorization/X-Org-Id and passed the structured error object to Error, producing [object Object].
+- DONE: create-order, capture, refund, approval registration and events use NovaPayApi.request; public /api/status stays on fetch; readable role/org errors; retryBlocked is preserved.
+- TESTS: focused 3/3 PASS; node --check PASS; npm test 313 pass / 1 known fail / 314 total (api-client.test.js:29 no-store assertion).
+- IN PROGRESS: none. No auth/OTP, voice, Gemini pool, or PayPal provider changes; no order created; no push.
+- NEXT: browser: sign in, open PayPal Sandbox, create a 10.00 USD order, approve in PayPal tab, return and capture, verify transaction appears.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5083,3 +5083,9 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 15:19:52 IST | BEFORE | Final review of PayPal helper/test diff, env tracking, changed paths and whitespace before checkpoint; next: commit reviewed changes locally with WIP-BROKEN prefix for the documented suite failure.
 2026-11-02 15:19:52 IST | AFTER | Final diff review clean; no tracked .env, protected paths not edited; files touched: docs/WORKLOG.md; next: local checkpoint commit, no push.
 2026-11-02 15:20:02 IST | BEFORE | Commit the PayPal client fix, regression tests and continuity records locally; full suite retains its known no-store failure, so use WIP-BROKEN prefix; never push.
+2026-11-02 15:20:02 IST | AFTER | PayPal fix checkpoint exited 0; next: capture hash and update continuation pointer to the new checkpoint.
+2026-11-02 15:20:12 IST | BEFORE | Refresh the RESUME POINTER and CONTEXT header with PayPal fix commit 9a504bf before stopping; next: final status check and return browser checklist.
+2026-11-02 15:20:12 IST | AFTER | RESUME POINTER and CONTEXT now reference 9a504bf; files touched: docs/WORKLOG.md, docs/CONTEXT.md; next: check final status and stop.
+2026-11-02 15:48:24 IST | BEFORE | Read required handoff notes and inspect branch/worktree so the pre-change checkpoint captures the exact current state; next: commit the current working tree before any implementation edits.
+2026-11-02 15:48:24 IST | AFTER | Required notes and branch/status inspected; no tracked .env path reported; files touched: docs/WORKLOG.md; next: create pre-change local checkpoint commit.
+2026-11-02 15:48:32 IST | BEFORE | Checkpoint the current worktree documentation edits before any code changes, as requested; known test failure is already documented, so use WIP-BROKEN prefix.
