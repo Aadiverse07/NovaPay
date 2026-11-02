@@ -5307,3 +5307,29 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-02 02:17 IST | RESULT: focused Invoices and Approvals tests PASS (5/5); invoice JS syntax and diff check pass; NEXT: update audit and context with invoice error-state changes, then commit
 2026-11-02 02:18 IST | ACTION: update audit/context for invoice module and prepare checkpoint commit | WHY: record verified source wiring, runtime verification gap and next module before this module checkpoint
 2026-11-02 02:19 IST | ACTION: commit invoice auth-ready loading and retry state locally | WHY: checkpoint the invoice module after focused tests passed
+2026-11-02 02:20 IST | RESULT: invoice list checkpoint committed as 6123148; no migration, push, or merge; NEXT: audit Reports static metrics, chart, exports and report API contract
+2026-11-02 02:21 IST | ACTION: audit Reports view, source module, API routes, and static money labels | WHY: find authenticated-path demo values and decide which report endpoints can replace them without mixing currencies
+2026-11-02 02:22 IST | RESULT: initial Reports search used an unmatched `src/reports*` glob and returned no source results; no files changed; NEXT: locate report files with `rg --files` and inspect only matching source/route files
+2026-11-02 02:23 IST | ACTION: locate Reports sources and inspect report route plus dashboard markup | WHY: avoid broad scans and identify exact static reporting UI and available API endpoints
+2026-11-02 02:24 IST | RESULT: Reports view uses hard-coded INR definitions in modules.js and a hard-coded sample CSV; GET reports endpoints exist; NEXT: read report view markup and reports route response shapes
+2026-11-02 02:25 IST | ACTION: read Reports view markup and route JSON response shape | WHY: wire controls to actual endpoint fields and retain period/currency filters without hard-coded totals
+2026-11-02 02:26 IST | ACTION: inspect report panel markup and route implementation | WHY: confirm endpoint semantics and exact UI elements targeted for the live conversion
+2026-11-02 02:27 IST | ACTION: inspect report modal definitions and report repository fields | WHY: replace hard-coded summary/details with endpoint payloads and compute safe currency-separated totals
+2026-11-02 02:28 IST | ACTION: inspect reports repository selection and trial-balance endpoint response | WHY: implement report rows based on actual ledger views and avoid assumptions about account field names
+2026-11-02 02:29 IST | ACTION: inspect report SQL views for columns and totals logic | WHY: ensure client aggregation uses server view fields correctly and groups by currency
+2026-11-02 02:30 IST | RESULT: SQL inspection targeted absent `server/migrations`; no changes; NEXT: locate migrations directory with `rg --files` and read relevant view definitions
+2026-11-02 02:31 IST | ACTION: locate migration files containing report view definitions | WHY: use actual persisted report schema rather than inferring field columns
+2026-11-02 02:32 IST | ACTION: read report views in migration 0003 | WHY: confirm report field names and currency grouping before replacing sample content
+2026-11-02 02:33 IST | RESULT: SQL view schemas confirmed (`period`, `currency`, `amount_minor`/fee_minor/refund_minor and debit_minor/credit_minor); route tenant scope via req.orgId; NEXT: replace static Reports cards/modal/export with API-driven values and currency-safe aggregation
+2026-11-02 02:34 IST | ACTION: replace hard-coded Reports panel values and summaries with live placeholders | WHY: remove sample amounts from authenticated Reports before binding API data
+2026-11-02 02:35 IST | ACTION: remove static report definitions/export and delegate report actions to live module | WHY: ensure no report action path can generate sample financial figures
+2026-11-02 02:36 IST | ACTION: implement live report aggregation, modal data, CSV and retry logic | WHY: bind Reports UI to org-scoped report views and compute values without cross-currency summation
+2026-11-02 02:37 IST | ACTION: load live report scripts and add report mapping/empty/currency tests | WHY: connect new report behavior in dashboard and validate zero/multi-currency calculations without live claims
+2026-11-02 02:38 IST | ACTION: run Reports mapping/source tests and syntax/whitespace checks | WHY: verify real report endpoints, no static totals, error retry and currency-separated integer calculations
+2026-11-02 02:39 IST | RESULT: Reports-focused tests PASS (3/3); all three JS syntax checks and diff check pass; NEXT: inspect remaining report sample text/export formatting before commit
+2026-11-02 02:40 IST | ACTION: align report net activity with ledger P&L and format CSV amounts | WHY: include contra-revenue and all posted expenses without double-subtracting fee/refund summaries
+2026-11-02 02:41 IST | RESULT: report aggregation correction PASS (3/3); net summary now follows ledger revenue less contra-revenue/expenses and CSV values are formatted by currency; NEXT: run combined focused source suites and syntax/diff checks
+2026-11-02 02:42 IST | ACTION: run combined live-data source suites and static checks | WHY: check Reports work alongside Dashboard, Transactions, Ledger, Approvals and invoice module contracts before commit
+2026-11-02 02:43 IST | RESULT: combined focused live-data suites PASS (19/19); Reports and prior converted modules all pass; JS syntax and whitespace checks pass; NEXT: record Reports conversion in audit/context and commit
+2026-11-02 02:44 IST | ACTION: update Reports audit/context for completed API wiring | WHY: state exact endpoints, files, test evidence and remaining runtime verification gap before module commit
+2026-11-02 02:45 IST | ACTION: replace Reports audit row and commit Reports module | WHY: reflect the completed API source conversion and checkpoint its tests and UI independently

@@ -59,7 +59,7 @@ Date: 2026-11-02. Branch: `codex/voice-assistant`. Scope: static inspection of `
 
 | UI element | current source (static / sample JS / API) | live endpoint that exists | missing backend work | risk | decision (convert / keep as labelled sample / remove) |
 |---|---|---|---|---|---|
-| P&L cards, chart bars, report export | Static sample HTML and sample arrays / CSV in `src/modules.js` | `/api/reports/profit-and-loss`, `/api/reports/trial-balance`, `/api/reports/fees`, `/api/reports/refunds`, `/api/reports/cash-movement` | No report route gap identified; UI is not consuming report routes | Critical: fabricated report totals and exports | Convert all reports/exports to API; no sample totals in authenticated mode |
+| P&L summary, currency-separated chart, P&L/trial-balance detail and CSV | `src/reports-live.js` renders API rows; old static INR cards and sample CSV removed | `/api/reports/profit-and-loss`, `/api/reports/trial-balance`, `/api/reports/fees`, `/api/reports/refunds`, `/api/reports/cash-movement` | No report route gap identified; live tenant rows still require runtime verification | High: per-currency series are scaled separately and never summed together | Convert summaries/details/exports to organization API rows; empty period shows no activity |
 | FX conversion widget | API-backed currencies and convert, with demo-only rates fallback | `GET /api/fx/currencies`, `POST /api/fx/convert` | None identified | Low if fallback stays demo-only | Keep API-backed; label indicative result/source |
 
 ## Documents
