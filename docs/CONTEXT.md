@@ -4,7 +4,7 @@
 - Date/time: 2026-11-02 17:19 IST
 - Branch: `codex/voice-assistant`
 - Pre-change checkpoint: `39a6cc9`; incident implementation is committed locally (hash recorded in WORKLOG).
-- Current phase/task: diagnose and stabilize live-data refresh after hard refresh; implementation complete, local verification complete, browser/live Supabase checks pending.
+- Current phase/task: refresh stability fixes are complete; authorized main merge halted at the requested secret scan gate.
 
 ## DONE
 - Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
@@ -18,7 +18,7 @@
 - Pre-change checkpoint commit: `39a6cc9`; implementation committed locally as `471dd9c`; no push or merge performed.
 
 ## IN PROGRESS
-- No code task remains. Implementation is committed locally; final handoff metadata is being committed.
+- Implementation is committed locally. Main merge is blocked pending review of key-shaped test fixture strings.
 - Live browser request counts/statuses and actual Supabase persistence after server restart/sign-out/sign-in remain unverified; automated fixture test is not a live DB check.
 
 ## NEXT STEPS
@@ -27,14 +27,15 @@
 3. If browser confirms no recurring 429 and workspace restores correctly, review the local diff and decide whether to push/merge in a separate authorized task.
 
 ## USER ACTIONS PENDING
-- Start/restart the local server, then perform browser checklist steps with the existing owner account. No new user/org or sample payment is required for the refresh checks.
+- Review the 4 `sb_secret_`-shaped lines in `server/test/supabase.test.js`; the requested safety gate required stopping on any key-shaped match. They appear to be test fixtures, but were not cleared for merge.
+- Start/restart the local server and perform the browser checklist with the existing owner after the merge gate is resolved.
 
 ## LIVE STATE
 - Migrations: no migrations run in this task; syntax check passed for 21 files.
 - Tunnel/webhook: not checked.
 - Existing Supabase transaction/ledger rows: previously reported present by user; this run did not query production Supabase.
 - Server/browser request counts and actual response codes: UNVERIFIED; the screenshot text matches the general IP limiter's configured response, but no request log from that browser session was captured.
-- Secrets: no `.env` values printed; no push or merge.
+- Secrets: no `.env` values printed; no `.env` or secret-named path tracked. Secret scan found 4 token-shaped fixture lines in `server/test/supabase.test.js`; stopped as instructed. No push or merge.
 
 ## TEST STATE
 | Check | Status | Date | Command / evidence |
@@ -65,7 +66,7 @@
 - Distinguish source/test evidence from live browser and production database verification.
 
 ## DO NOT
-- Do not push or merge without explicit authorization.
+- Do not push or merge until the requested secret scan gate passes.
 - Do not create users/orgs or trigger PayPal/Gemini for these checks.
 - Do not weaken tests, remove abuse protection, or treat transient onboarding errors as missing organizations.
 - Do not print environment values or secrets.
