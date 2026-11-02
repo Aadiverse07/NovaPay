@@ -4,7 +4,7 @@
 - Date/time: 2026-11-02 17:19 IST
 - Branch: `codex/voice-assistant`
 - Pre-change checkpoint: `39a6cc9`; incident implementation is committed locally (hash recorded in WORKLOG).
-- Current phase/task: refresh stability fixes merged into main; final documentation commit is being published.
+- Current phase/task: refresh stability fixes and handoff docs merged into origin/main; browser verification remains pending.
 
 ## DONE
 - Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
@@ -15,7 +15,7 @@
 - Made IP/user/read rate budgets configurable (`RATE_LIMIT_IP=1500`, `RATE_LIMIT_USER=1200`, `RATE_LIMIT_READ_USER=2400` defaults); route-specific auth/OTP/onboarding/AI limits remain. Rate limit responses include Retry-After.
 - Added regression tests for budget/dedupe/cache/backoff, workspace 429 behavior and duplicate-workspace protection, configurable limits/headers, and persisted transaction/ledger route reads across app restart fixtures.
 - Automated verification: `npm test` PASS 352/352 (includes 21/21 migration syntax checks); changed JS `node --check` PASS; `git diff --check` PASS; protected files unchanged.
-- Pre-change checkpoint commit: `39a6cc9`; integration merge commit: `e043aafd4bf9cf70602d2870e9984198f234ceea`; pushed to origin/main and origin/novapay-final; final docs commit follows.
+- Pre-change checkpoint commit: `39a6cc9`; integration merge commit: `e043aafd4bf9cf70602d2870e9984198f234ceea`; pushed to origin/main and origin/novapay-final; the merge hash is recorded in this file and WORKLOG.
 
 ## IN PROGRESS
 - Integration merge completed with no conflicts. The strict scan found no long token patterns and no values from local `.env`; short dummy test fixtures were reviewed as test-only.
