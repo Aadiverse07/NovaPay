@@ -3,7 +3,7 @@
 ## Header
 - Date: 2026-11-02
 - Branch: `codex/voice-assistant`
-- Last commit: `562b4e4` (Ledger source checkpoint); Approvals module changes are ready for the next local commit
+- Last commit: `fb82a10` (Approvals API wiring and badge); invoice fixes are ready for next local commit
 - Current phase/task: Live-data integrity, Phase 2 Approvals API wiring and badge; Dashboard, Transactions, and Ledger source modules are complete.
 
 ## Done
@@ -14,14 +14,15 @@
 - Transactions wait for Supabase auth, replace sample DOM rows with API rows, and show empty/error states. AG Grid internals unchanged.
 - Ledger sample rows and fake totals removed; authenticated ledger now loads API entries, shows empty/error/retry states, keeps currency-separated totals, and exports API rows. Files: `src/financial-live.js`, `src/modules.js`, `dashboard.html`. Latest focused financial tests: 7/7. Live tenant rows remain UNVERIFIED.
 - Approvals now loads authenticated queue records and pending count from `/api/approvals` through `NovaPayApi`, paginates, refreshes on auth/view/mutation, routes persisted decisions through the server, and isolates sample proposals to explicit demo mode. Recent action list is labeled session-only. Files: `src/approvals-data.js`, `src/novapay-live.js`, `dashboard.html`; focused tests 3/3.
+- Invoices already used org API routes; list now waits for Supabase auth and failure states show Retry and unavailable KPI markers instead of zero counts. No sample invoice rows are used. Files: `src/invoices-live.js`, `dashboard.html`; source tests 2/2.
 
 ## In Progress
-- Phase 2 Approvals wiring and docs are ready for local module checkpoint; runtime browser/DB tenant verification remains UNVERIFIED.
+- Phase 2 Invoices source changes are ready for local checkpoint; runtime browser/DB tenant verification remains UNVERIFIED. Next module is Reports.
 - Phase 1 inspected source only. No authenticated browser or database verification was available, so live-data status remains UNVERIFIED.
 
 ## Next Steps
-1. Commit the Approvals API module and tests locally after checks.
-2. Convert Invoices, Reports, Documents, Community Funds, Maintenance, Notifications, then Settings, one module checkpoint each.
+1. Commit the invoice loading/error-state checkpoint.
+2. Convert Reports, Documents, Community Funds, Maintenance, Notifications, then Settings, one module checkpoint each.
 3. Add mapping/empty/error/tenant-source tests per module and log each actual run in TEST-REPORT.md.
 4. Phase 3: browser-walk a new empty org and an existing org, hard refresh, verify API responses and matching tenant rows. If browser/live verification is unavailable or fails, stop before merge/push.
 5. Only after Phase 3 is acceptable: secret scan, fetch/sync main, merge the completed branch, rerun tests, and push main as explicitly requested.
@@ -44,13 +45,14 @@
 | Transactions mapping and API-only source | PASS | 2026-11-02 | `node --test server/test/transactions-ledger-live.test.js`: 6/6; later expanded Ledger rerun 7/7 |
 | Ledger empty/error/API export mapping | PASS | 2026-11-02 | `node --test server/test/transactions-ledger-live.test.js` (rerun): 7/7 |
 | Approvals mapping/API source/demo isolation | PASS | 2026-11-02 | `node --test server/test/approvals-live-data.test.js`: 3/3; combined focused modules 14/14 |
+| Invoice API-only list/auth/error state | PASS | 2026-11-02 | `node --test server/test/invoices-live-source.test.js`: 2/2 |
 | Transactions live tenant/network rows | UNVERIFIED | 2026-11-02 | Browser/login unavailable |
 | Dashboard authenticated network and tenant rows | UNVERIFIED | 2026-11-02 | Browser/login and matching Supabase rows unavailable |
 | Authenticated module/network + DB verification | UNVERIFIED | 2026-11-02 | Browser unavailable and no test JWT used |
 | npm test | UNVERIFIED | 2026-11-02 | Not run in this documentation-only audit step |
 
 ## Known Issues and Risks
-- Reports values/exports, notification popover/count, and some other modules still contain demo content in authenticated paths. Dashboard, Transactions, Ledger, and Approvals are converted in source; runtime checks are pending.
+- Reports values/exports, notification popover/count, and some other modules still contain demo content in authenticated paths. Dashboard, Transactions, Ledger, Approvals, and invoice list source use live APIs; runtime checks are pending.
 - Authenticated runtime DB rows and organization scope have not been verified for converted modules; queue source correctness is covered only by code-level tests.
 - API routes exist for most modules, but authenticated data and DB rows have not been verified in this audit.
 - Existing known suite issue: `api-client.test.js` no-store assertion was previously reported; current suite not rerun here.

@@ -3,7 +3,7 @@
   var api = window.NovaPayApi, table = document.getElementById("invoice-table"), tbody = table && table.tBodies[0];
   var status = document.getElementById("invoice-live-status"), form = document.getElementById("invoice-create-form");
   var lineItems = document.getElementById("invoice-line-items"), lineTemplate = document.getElementById("invoice-line-template");
-  var invoices = [], role = "", mode = "create", editingId = "", createKey = "", createNumber = "", deleteKeys = Object.create(null);
+  var invoices = [], role = "", mode = "create", editingId = "", createKey = "", createNumber = "", deleteKeys = Object.create(null), emptyMessage = "No invoices in this organization yet.";
   var writers = ["owner", "admin", "accountant"];
   function canWrite() { return writers.indexOf(role) >= 0; }
   function showStatus(message, isError) { if (status) { status.textContent = message; status.className = isError ? "status warn" : ""; } }
@@ -33,7 +33,7 @@
     });
     var total = document.getElementById("invoice-count"), paid = document.getElementById("invoice-paid-count"), drafts = document.getElementById("invoice-draft-count"), create = document.getElementById("invoice-create-button");
     if (total) total.textContent = String(invoices.length); if (paid) paid.textContent = String(counts.paid); if (drafts) drafts.textContent = String(counts.draft); if (create) create.hidden = !canWrite();
-    if (!invoices.length) { var row = tbody.insertRow(), cell = row.insertCell(); cell.colSpan = 7; cell.textContent = "No invoices in this organization yet."; }
+    if (!invoices.length) { var row = tbody.insertRow(), cell = row.insertCell(); cell.colSpan = 7; cell.textContent = emptyMessage; }
     applyFilters();
   }
   function applyFilters() {
@@ -48,17 +48,24 @@
   }
   async function load() {
     if (!api || !tbody) return;
-    showStatus("Loading live invoices…");
+    var auth = window.NovaPayAuth, retry = document.getElementById("invoice-live-retry");
+    showStatus("Loading organization invoices…"); if (retry) retry.hidden = true;
     try {
+      if (auth && auth.ready) await auth.ready;
+      if (!auth || auth.mode !== "supabase" || !auth.isAuthenticated()) {
+        invoices = []; role = ""; emptyMessage = "Sign in with a Supabase account to load organization invoices.";
+        render(); setKpisUnavailable(); showStatus(auth && auth.mode === "demo" ? "DEMO MODE · no sample invoices are shown; sign in for organization data." : "Sign in to load live invoices."); return;
+      }
       var result = await api.request("/api/invoices?limit=100");
-      invoices = Array.isArray(result.invoices) ? result.invoices : []; role = typeof result.role === "string" ? result.role : "";
+      invoices = Array.isArray(result.invoices) ? result.invoices : []; role = typeof result.role === "string" ? result.role : ""; emptyMessage = "No invoices in this organization yet.";
       render(); showStatus("Live organization data · " + invoices.length + " invoice(s).");
     } catch (error) {
-      invoices = []; role = ""; render();
-      if (!invoices.length && tbody.rows[0]) tbody.rows[0].cells[0].textContent = "Invoice data is unavailable. Retry when the API is restored.";
-      showStatus(error.message || "Live invoices could not be loaded. No sample invoices are shown.", true);
+      invoices = []; role = ""; emptyMessage = "Invoice data could not be loaded."; render(); setKpisUnavailable();
+      showStatus(error.message || "Live invoices could not be loaded.", true); if (retry) retry.hidden = false;
+      if (window.console) console.error("Could not load organization invoices", error);
     }
   }
+  function setKpisUnavailable() { ["invoice-count", "invoice-paid-count", "invoice-draft-count"].forEach(function (id) { var node = document.getElementById(id); if (node) node.textContent = "—"; }); }
   window.NovaPayInvoices = { refresh: load };
   function activeView() { return location.hash === "#invoices" || Boolean(document.querySelector("#view-invoices:not([hidden])")); }
   function lineRows() { return lineItems ? Array.prototype.slice.call(lineItems.querySelectorAll("[data-invoice-line]")) : []; }
@@ -186,6 +193,7 @@
   }
   document.addEventListener("DOMContentLoaded", function () {
     if (activeView()) load();
+    var retry = document.getElementById("invoice-live-retry"); if (retry) retry.addEventListener("click", load);
     document.addEventListener("click", function (event) {
       if (event.target.closest('[data-view="invoices"], [href="#invoices"]')) load();
       var action = event.target.closest("[data-invoice-action]"); if (action) performAction(action);
