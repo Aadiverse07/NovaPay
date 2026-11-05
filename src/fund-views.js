@@ -401,12 +401,18 @@
 
     function render() {
       root.textContent = "";
-      var header = make("article", "dash-card module-card");
-      header.appendChild(make("h3", "", "Maintenance workflow"));
-      header.appendChild(make("p", "", "PayPal Payouts are unavailable. A queued payment is SIMULATED and does not move money or post to the ledger."));
-      header.appendChild(make("p", "status warn", "Sandbox demonstration only · no real payout will be sent."));
-      addAction(header, "Refresh maintenance requests", refresh, false);
-      if (managerRoles.indexOf(currentRole) >= 0) { var newRequest = addAction(header, "＋ New request", function () { var form = $("#maintenance-create-form"); if (form) { form.reset(); var status = $("#maintenance-form-status"); if (status) status.textContent = ""; var select = form.elements.campaignId; if (select) { select.textContent = ""; var none = make("option", "", "No campaign"); none.value = ""; select.appendChild(none); campaigns.forEach(function (item) { var option = make("option", "", item.title); option.value = item.id; select.appendChild(option); }); } var modal = $("#maintenance-create-modal"); if (modal) { modal.hidden = false; modal.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); form.elements.title.focus(); } } }, false); newRequest.dataset.uiAction = "maintenance-new-live"; }
+      var header = make("article", "dash-card module-card maintenance-live-header");
+      var heading = make("div", "maintenance-live-heading");
+      heading.appendChild(make("h3", "", "Maintenance workflow"));
+      heading.appendChild(make("p", "", "PayPal Payouts are unavailable. A queued payment is SIMULATED and does not move money or post to the ledger."));
+      heading.appendChild(make("span", "status warn", "Sandbox demonstration only · no real payout will be sent."));
+      header.appendChild(heading);
+      var actions = make("div", "maintenance-live-actions");
+      var refreshButton = addAction(actions, "↻ Refresh", refresh, false);
+      refreshButton.classList.add("maintenance-refresh-btn");
+      refreshButton.setAttribute("aria-label", "Refresh maintenance requests");
+      if (managerRoles.indexOf(currentRole) >= 0) { var newRequest = addAction(actions, "＋ New request", function () { var form = $("#maintenance-create-form"); if (form) { form.reset(); var status = $("#maintenance-form-status"); if (status) status.textContent = ""; var select = form.elements.campaignId; if (select) { select.textContent = ""; var none = make("option", "", "No campaign"); none.value = ""; select.appendChild(none); campaigns.forEach(function (item) { var option = make("option", "", item.title); option.value = item.id; select.appendChild(option); }); } var modal = $("#maintenance-create-modal"); if (modal) { modal.hidden = false; modal.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); form.elements.title.focus(); } } }, false); newRequest.dataset.uiAction = "maintenance-new-live"; newRequest.classList.remove("btn--ghost"); newRequest.classList.add("btn--primary", "maintenance-new-btn"); }
+      header.appendChild(actions);
       root.appendChild(header);
       if (!currentRole) root.appendChild(make("p", "module-foot", "Organization role is unavailable in trusted browser metadata; maintenance write controls are hidden."));
       else if (currentRole === "donor" || currentRole === "resident") root.appendChild(make("p", "module-foot", "Read-only access for your organization role."));

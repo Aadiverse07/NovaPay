@@ -89,3 +89,74 @@
 @media(max-width:560px){.invoice-dialog>.modal-close{top:14px;right:14px}}
 
 #invoice-table tbody tr.invoice-row-highlight{outline:2px solid var(--accent,#2563eb);outline-offset:-2px;background:var(--info-soft,rgba(37,99,235,.08))}
+
+/* Maintenance request rows follow the reference's clear, two-sided layout. */
+#view-maintenance .module-card>.card-heading{align-items:center;margin-bottom:0;padding-bottom:18px;border-bottom:1px solid var(--border)}
+#view-maintenance .module-card>.card-heading p{margin:3px 0 0}
+#view-maintenance .module-card>.card-heading .btn{min-height:44px;padding-inline:20px;white-space:nowrap}
+#view-maintenance .maintenance-list>article{grid-template-columns:56px minmax(0,1fr) minmax(210px,auto) auto;gap:16px;padding:24px 0}
+#view-maintenance .request-icon{width:48px;height:48px;border-radius:15px;font-size:21px}
+#view-maintenance .request-main{gap:8px}
+#view-maintenance .request-main>b{font-size:15px;line-height:1.35}
+#view-maintenance .request-main>small{font-size:11px}
+#view-maintenance .workflow-steps{gap:6px}
+#view-maintenance .workflow-steps span{padding:6px 10px;font-size:10px}
+#view-maintenance .request-meta{gap:8px;min-width:0}
+#view-maintenance .request-meta>b{font-size:16px;color:var(--text)}
+#view-maintenance .request-meta .status{justify-self:end;max-width:100%;white-space:nowrap}
+#view-maintenance .maintenance-list .table-action{min-height:42px;padding-inline:14px;white-space:nowrap}
+@media(max-width:900px){#view-maintenance .maintenance-list>article{grid-template-columns:48px minmax(0,1fr);gap:12px 14px}#view-maintenance .request-meta,#view-maintenance .maintenance-list .table-action{grid-column:2;justify-self:start;text-align:left}#view-maintenance .request-meta .status{justify-self:start}}
+@media(max-width:520px){#view-maintenance .module-card>.card-heading{align-items:flex-start;flex-wrap:wrap;gap:14px}#view-maintenance .module-card>.card-heading .btn{width:100%}#view-maintenance .maintenance-list>article{padding:18px 0}#view-maintenance .maintenance-list .table-action{width:100%}}
+
+/* Modal currency controls use the same field styling as the adjacent inputs. */
+#invoice-create-form .invoice-field select,
+#campaign-create-form .campaign-form-row select,
+#maintenance-create-form .campaign-form select{width:100%;min-width:0;min-height:42px;padding:9px 36px 9px 11px;border:1px solid var(--border);border-radius:11px;background-color:var(--surface-sunken);color:var(--text);font:inherit;font-size:13px;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--text-muted) 50%),linear-gradient(135deg,var(--text-muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+#invoice-create-form .invoice-field select:focus,
+#campaign-create-form .campaign-form-row select:focus,
+#maintenance-create-form .campaign-form select:focus{border-color:var(--info-text);outline:2px solid color-mix(in srgb,var(--info-text) 17%,transparent);outline-offset:1px}
+#invoice-create-form .invoice-field select option,
+#campaign-create-form .campaign-form-row select option,
+#maintenance-create-form .campaign-form select option{background:var(--surface);color:var(--text)}
+
+/* Campaign metrics and pledge controls wrap within the card at every width. */
+#view-community-funds .fund-live-view{display:grid;gap:16px;min-width:0}
+#view-community-funds .campaign-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;min-width:0}
+#view-community-funds .campaign-card{min-width:0;overflow:hidden}
+#view-community-funds .campaign-card h3,
+#view-community-funds .campaign-card p,
+#view-community-funds .campaign-card small{max-width:100%;overflow-wrap:anywhere}
+#view-community-funds .campaign-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;align-items:start}
+#view-community-funds .campaign-numbers>span{display:grid;gap:3px;min-width:0;overflow-wrap:anywhere}
+#view-community-funds .campaign-numbers small{font-size:10px;color:var(--text-subtle)}
+#view-community-funds .campaign-numbers b{font-size:12px;line-height:1.35;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#view-community-funds .campaign-card>.module-toolbar{width:100%;align-items:end;flex-wrap:wrap;min-width:0;margin:4px 0 0}
+#view-community-funds .campaign-card>.module-toolbar label{flex:1 1 150px;min-width:0}
+#view-community-funds .campaign-card>.module-toolbar input{width:100%;min-width:0}
+#view-community-funds .campaign-card>.module-toolbar>button{flex:0 0 auto;min-width:120px}
+#view-community-funds .campaign-card>.campaign-contributions-live,
+#view-community-funds .campaign-card .transparency-row{min-width:0;overflow-wrap:anywhere}
+@media(max-width:1100px){#view-community-funds .campaign-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){#view-community-funds .campaign-grid{grid-template-columns:1fr}#view-community-funds .campaign-numbers{grid-template-columns:repeat(2,minmax(0,1fr))}#view-community-funds .campaign-card>.module-toolbar>button{flex:1 1 100%;width:100%}}
+
+/* Live maintenance controls follow the reference's top-right action group. */
+#view-maintenance .maintenance-live-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px 24px;margin-bottom:14px;padding:22px 24px;border-color:color-mix(in srgb,var(--info-text) 16%,var(--border))}
+#view-maintenance .maintenance-live-heading{display:grid;gap:8px;min-width:0}
+#view-maintenance .maintenance-live-heading h3{font-size:20px}
+#view-maintenance .maintenance-live-heading p{margin:0;max-width:760px}
+#view-maintenance .maintenance-live-heading .status{width:max-content;max-width:100%;white-space:normal}
+#view-maintenance .maintenance-live-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+#view-maintenance .maintenance-live-actions .btn{min-height:44px;padding-inline:18px;white-space:nowrap}
+#view-maintenance .maintenance-live-actions .maintenance-refresh-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted)}
+#view-maintenance .maintenance-live-actions .maintenance-refresh-btn:hover{border-color:var(--info-text);color:var(--info-text)}
+#view-maintenance .maintenance-live-actions .maintenance-new-btn{border-color:transparent;background:var(--brand-gradient);color:#fff;box-shadow:0 10px 24px color-mix(in srgb,var(--info-text) 20%,transparent)}
+#view-maintenance .maintenance-live-actions .maintenance-new-btn:hover{filter:saturate(1.08);transform:translateY(-1px)}
+#view-maintenance [data-maintenance-live-root]>article.module-card:not(.maintenance-live-header){min-width:0;overflow:hidden;border-color:color-mix(in srgb,var(--info-text) 14%,var(--border))}
+#view-maintenance [data-maintenance-live-root]>article.module-card:not(.maintenance-live-header) .workflow-steps{gap:6px}
+#view-maintenance [data-maintenance-live-root]>article.module-card:not(.maintenance-live-header) .workflow-steps span{padding:6px 9px;font-size:10px}
+#view-maintenance [data-maintenance-live-root]>article.module-card:not(.maintenance-live-header)>p{overflow-wrap:anywhere}
+@media(max-width:760px){#view-maintenance .maintenance-live-header{grid-template-columns:1fr;padding:18px}#view-maintenance .maintenance-live-actions{justify-content:flex-start}#view-maintenance .maintenance-live-actions .btn{flex:1 1 auto}}
+@media(max-width:520px){#view-maintenance .maintenance-live-actions{display:grid;grid-template-columns:1fr;width:100%}}
+#view-maintenance [data-maintenance-live-root]{display:grid;gap:14px;min-width:0}
+#view-community-funds .transparency-row>*{min-width:0;overflow-wrap:anywhere}
+#view-community-funds .transparency-row b{font-variant-numeric:tabular-nums}

@@ -40,6 +40,8 @@
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
   var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents","community-funds":"Community Funds",maintenance:"Maintenance",settings:"Settings"};
   function canonicalView(view){return view==="fundraising"||view==="transparency"?"community-funds":view;}
+  function cleanupViewTransition(){panels.forEach(function(p){p.classList.remove("module-transition-active")});}
+  function handleViewTransitionError(error){if(error&&error.name!=="AbortError"&&window.console)console.error("Could not finish dashboard view transition",error);}
   function applyView(view,writeHash,preserveScroll){
     view=canonicalView(view);
     if(!titles[view])view="dashboard";
@@ -60,11 +62,14 @@
     /* Keep the outgoing panel in the snapshot while swapping to the incoming panel. */
     if(!reduced&&document.startViewTransition){
       if(current)current.classList.add("module-transition-active");
-      document.startViewTransition(function(){
+      var transition=document.startViewTransition(function(){
         if(current)current.classList.remove("module-transition-active");
         next.classList.add("module-transition-active");
         applyView(view,writeHash,preserveScroll);
-      }).finished.finally(function(){panels.forEach(function(p){p.classList.remove("module-transition-active")})});
+      });
+      transition.ready.catch(handleViewTransitionError);
+      transition.updateCallbackDone.catch(handleViewTransitionError);
+      transition.finished.then(cleanupViewTransition,function(error){cleanupViewTransition();handleViewTransitionError(error);});
     }else applyView(view,writeHash,preserveScroll);
   }
   window.NovaPayActivateView=activate;

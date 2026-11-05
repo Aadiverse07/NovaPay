@@ -44,6 +44,7 @@ const schema = z.object({
   ANOMALY_REFUND_RATE_THRESHOLD: z.coerce.number().min(0.01).max(1).default(0.25),
   ANOMALY_LARGE_PAYOUT_MINOR: z.coerce.number().int().min(1).default(1000000),
   ANOMALY_STALE_WEBHOOK_MINUTES: z.coerce.number().int().min(1).max(1440).default(10),
+  CURRENCY_CONVERTER_URL: z.string().url().default('https://currency-4mff.onrender.com'),
   ANOMALY_SCAN_INTERVAL_MS: z.coerce.number().int().min(60000).max(86400000).default(21600000),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
   ANTHROPIC_MODEL: z.string().min(1).default('claude-sonnet-5-5'),

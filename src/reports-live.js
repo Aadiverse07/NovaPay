@@ -2,14 +2,14 @@
   "use strict";
   var $ = function (id) { return document.getElementById(id); }, api = window.NovaPayApi, data = window.NovaPayReportsData, dashboard = window.NovaPayDashboardData;
   if (!api || !data || !dashboard) return;
-  var cache = {}, loading = false, sequence = 0, modal = $("report-detail-modal"), returnFocus = null;
+  var cache = {}, sequence = 0, modal = $("report-detail-modal"), returnFocus = null;
   function format(minor, currency) { return dashboard.formatMinor(minor, currency); }
   function periodRange() {
     var select = $("report-period"), choice = select && select.value || "month", now = new Date(), from;
     if (choice === "year") from = new Date(now.getFullYear(), 0, 1);
     else if (choice === "quarter") from = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
     else from = new Date(now.getFullYear(), now.getMonth(), 1);
-    return { from: from.toISOString().slice(0, 10), to: now.toISOString().slice(0, 10), label: choice === "year" ? "This year" : choice === "quarter" ? "This quarter" : "This month" };
+    return { from: dashboard.localDate(from), to: dashboard.localDate(now), label: choice === "year" ? "This year" : choice === "quarter" ? "This quarter" : "This month" };
   }
   function status(message, failed) { var node = $("reports-live-status"); if (node) { node.textContent = message; node.className = failed ? "module-foot status warn" : "module-foot"; } }
   function clearValues() { ["report-gross", "report-fees", "report-refunds", "report-net"].forEach(function (id) { if ($(id)) $(id).textContent = "—"; }); if ($("reports-chart")) { $("reports-chart").replaceChildren(); var p = document.createElement("p"); p.textContent = "No report activity yet."; $("reports-chart").appendChild(p); } }
@@ -23,10 +23,10 @@
   }
   function queryPath(name, range) { return "/api/reports/" + name + "?from=" + encodeURIComponent(range.from) + "&to=" + encodeURIComponent(range.to); }
   async function load() {
-    if (loading) return; var auth = window.NovaPayAuth, retry = $("reports-retry"), range = periodRange(), request = ++sequence;
+    var auth = window.NovaPayAuth, retry = $("reports-retry"), range = periodRange(), request = ++sequence;
     if (auth && auth.ready) await auth.ready;
     if (!auth || auth.mode !== "supabase" || !auth.isAuthenticated()) { cache = {}; clearValues(); status(auth && auth.mode === "demo" ? "DEMO MODE · no sample report figures are shown." : "Sign in to load organization reports."); return; }
-    loading = true; status("Loading organization reports…"); if (retry) retry.hidden = true; clearValues();
+    status("Loading organization reports…"); if (retry) retry.hidden = true;
     try {
       var results = await Promise.all([api.request(queryPath("profit-and-loss", range)), api.request(queryPath("fees", range)), api.request(queryPath("refunds", range)), api.request(queryPath("trial-balance", range))]);
       if (request !== sequence) return;
@@ -35,8 +35,7 @@
       $("report-gross").textContent = totals.revenue; $("report-fees").textContent = totals.fees; $("report-refunds").textContent = totals.refunds; $("report-net").textContent = totals.net;
       $("report-period-label").textContent = range.label + " · " + range.from + " to " + range.to + " · amounts grouped by currency";
       renderChart(cache.profit); status(cache.profit.length || cache.fees.length || cache.refunds.length ? "Organization report data loaded from the ledger." : "No report activity in this period.");
-    } catch (error) { if (request !== sequence) return; cache = {}; clearValues(); status("Couldn't load organization reports. Retry.", true); if (retry) retry.hidden = false; if (window.console) console.error("Could not load organization reports", error); }
-    finally { loading = false; }
+    } catch (error) { if (request !== sequence) return; status("Couldn't refresh organization reports. Showing the last loaded values.", true); if (retry) retry.hidden = false; if (window.console) console.error("Could not load organization reports", error); }
   }
   function fill(row, values) { row.replaceChildren(); values.forEach(function (value) { var cell = document.createElement("td"); cell.textContent = String(value == null ? "—" : value); row.appendChild(cell); }); }
   function detail(type, trigger) {

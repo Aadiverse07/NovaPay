@@ -49,8 +49,9 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
     }
   };
   const onOpeningDone = () => { if (chip) chip.hidden = false; };
-  const onPageHide = () => { document.removeEventListener('click', hear, true); document.removeEventListener('keydown', hear, true); document.removeEventListener('novapay:opening-done', onOpeningDone); window.removeEventListener('pagehide', onPageHide); };
-  document.addEventListener('novapay:opening-done', onOpeningDone, { once: true });
+  const onPageHide = () => { document.removeEventListener('click', hear, true); document.removeEventListener('keydown', hear, true); window.removeEventListener('novapay:opening-done', onOpeningDone); window.removeEventListener('pagehide', onPageHide); };
+  window.addEventListener('novapay:opening-done', onOpeningDone, { once: true });
+  if (window.__npOpeningDone) onOpeningDone();
   document.addEventListener('click', hear, true);
   document.addEventListener('keydown', hear, true);
   window.addEventListener('pagehide', onPageHide, { once: true });

@@ -24,7 +24,7 @@ import { paypalRoutes } from './routes/paypal.js';
 import { financialRoutes } from './routes/financial.js';
 import { startWebhookWorker } from './services/webhookProcessor.js';
 import { createFxService } from './services/fx.js';
-import { fxRoutes } from './routes/fx.js';
+import { fxPublicRoutes, fxRoutes } from './routes/fx.js';
 import { reportRoutes } from './routes/reports.js';
 import { invoiceRoutes } from './routes/invoices.js';
 import { notificationRoutes } from './routes/notifications.js';
@@ -80,6 +80,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', generalIpLimit);
   app.use('/api', authPreflightRoutes());
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_IP_RATE_LIMITED', message: 'Too many onboarding attempts from this network. Try again later.' } } }));
+  app.use('/api', fxPublicRoutes({ currencyConverterUrl: config.CURRENCY_CONVERTER_URL }));
   app.use('/api', authMiddleware({ config, identity }));
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_USER) || 1200, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many requests for this account. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) || isCheapReadOnlyRequest(req) }));
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_READ_USER) || 2400, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many organization reads for this account. Try again later.' } }, skip: (req) => !isCheapReadOnlyRequest(req) }));
@@ -100,7 +101,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', aiRoutes({ config, askAI, identity, transcribeAudio }));
   app.use('/api', approvalRoutes({ config, repos, identity, paypal }));
   app.use('/api', financialRoutes({ repos }));
-  app.use('/api', fxRoutes({ fx }));
+  app.use('/api', fxRoutes({ fx, currencyConverterUrl: config.CURRENCY_CONVERTER_URL }));
   app.use('/api', reportRoutes({ repos }));
   app.use('/api', invoiceRoutes({ repos }));
   app.use('/api', notificationRoutes({ repos, runAnomalyScan }));

@@ -134,3 +134,16 @@
 @media (prefers-reduced-motion: reduce) {
   .tx-badge[data-ico], .tx-badge[data-ico]::before, .tx-badge[data-ico]::after, .tx-ico *, .tx-ico { animation: none !important; }
 }
+
+/* Keep transaction warning icons and badges static; remove their pulsing amber halos. */
+#view-transactions .tx-badge.dispute[data-ico]::before{display:none;animation:none}
+#view-transactions .tx-badge.dispute{animation:none!important;box-shadow:none!important}
+#view-transactions .status.warn{animation:none!important;box-shadow:none!important}
+#view-transactions .status.warn::after{display:none;animation:none}
+
+/* A row-hover selector otherwise reapplies a large shadow over the dispute tile. */
+#view-transactions .transaction-row:hover .tx-badge.dispute[data-ico],
+#view-transactions .transaction-row:focus-visible .tx-badge.dispute[data-ico]{animation:none!important;box-shadow:none!important;filter:none!important;transform:none!important}
+#view-transactions .transaction-row:hover .tx-badge.dispute[data-ico]::before,
+#view-transactions .transaction-row:focus-visible .tx-badge.dispute[data-ico]::before{display:none!important;animation:none!important}
+#view-transactions .status.warn::after{display:none!important}

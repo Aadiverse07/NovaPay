@@ -6,9 +6,9 @@
   var busy = false, queued = false, lastPassiveRefresh = 0;
   function periodRange(value) {
     var now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), 1), end = now;
-    if (value === "last-month" || value === "30D" || !value) { start = new Date(now.getFullYear(), now.getMonth() - 1, 1); end = new Date(now.getFullYear(), now.getMonth(), 0); }
+    if (value === "last-month" || value === "30D") { start = new Date(now.getFullYear(), now.getMonth() - 1, 1); end = new Date(now.getFullYear(), now.getMonth(), 0); }
     if (value === "year") { start = new Date(now.getFullYear(), 0, 1); end = now; }
-    return "?from=" + start.toISOString().slice(0, 10) + "&to=" + end.toISOString().slice(0, 10);
+    return "?from=" + data.localDate(start) + "&to=" + data.localDate(end);
   }
   function setStatus(message, isError, retry) {
     var node = $("dashboard-live-status"); if (!node) return;
@@ -24,12 +24,22 @@
     if ($("cf-tip")) $("cf-tip").hidden = true;
   }
   function currencyForSingle(value) { return value || "USD"; }
+  function axisLabel(minor, currency) {
+    var code = String(currency || "USD").toUpperCase(), places = 2;
+    try { places = new Intl.NumberFormat("en-US", { style: "currency", currency: code }).resolvedOptions().maximumFractionDigits; } catch (_) {}
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: code, notation: "compact", maximumFractionDigits: 1 }).format(Number(minor) / Math.pow(10, places)); }
+    catch (_) { return data.formatMinor(minor, currency); }
+  }
   function renderCash(rows) {
     var movement = data.cashMovement(rows), plot = $("cf-plot");
-    ["cash-in-area", "cash-out-line", "cash-in-area", "cash-net-area"].forEach(function (id) { if ($(id)) $(id).setAttribute("d", ""); });
+    ["cash-in-line", "cash-out-line", "cash-net-line"].forEach(function (id) {
+      var line = $(id); if (!line) return;
+      line.style.removeProperty("stroke-dasharray"); line.style.removeProperty("stroke-dashoffset"); line.style.removeProperty("transition");
+    });
+    ["cash-in-area", "cash-out-line", "cash-in-line", "cash-net-area"].forEach(function (id) { if ($(id)) $(id).setAttribute("d", ""); });
     if (plot) plot.setAttribute("aria-label", "Organization net cash movement by month");
     var sub = $("cf-sub");
-    if (movement.multiCurrency) { if ($("cash-in")) $("cash-in").parentElement.hidden = true; if ($("cash-out")) $("cash-out").parentElement.hidden = true; if ($("cf-x")) $("cf-x").replaceChildren(); if (sub) sub.textContent = "Net cash movement · currencies shown separately in reports"; if ($("cash-in")) $("cash-in").textContent = "Multiple currencies"; if ($("cash-out")) $("cash-out").textContent = "—"; if ($("cash-net")) $("cash-net").textContent = "See Reports"; return; }
+    if (movement.multiCurrency) { if ($("cash-in")) $("cash-in").parentElement.hidden = true; if ($("cash-out")) $("cash-out").parentElement.hidden = true; if ($("cf-x")) $("cf-x").replaceChildren(); if ($("cf-grid")) $("cf-grid").replaceChildren(); if ($("cf-y")) $("cf-y").replaceChildren(); if (sub) sub.textContent = "Net cash movement · currencies shown separately in reports"; if ($("cash-in")) $("cash-in").textContent = "Multiple currencies"; if ($("cash-out")) $("cash-out").textContent = "—"; if ($("cash-net")) $("cash-net").textContent = "See Reports"; return; }
     var currency = currencyForSingle(movement.currency), points = movement.points.slice(-12), vals = points.map(function (p) { return Number(p.value); });
     var total = vals.reduce(function (sum, n) { return sum + (Number.isFinite(n) ? n : 0); }, 0);
     if ($("cash-in")) $("cash-in").textContent = "—";
@@ -38,9 +48,12 @@
     if ($("cash-out")) $("cash-out").parentElement.hidden = true;
     if ($("cash-net")) $("cash-net").textContent = rows.length ? data.formatMinor(total, currency) : "No activity";
     if (sub) sub.textContent = rows.length ? "Net cash movement · monthly ledger totals · " + currency : "No cash movement recorded yet.";
+    var max = Math.max(1, ...vals.map(Math.abs)), grid = $("cf-grid"), axis = $("cf-y");
+    if (grid) { grid.replaceChildren(); for (var g = 0; g <= 4; g++) { var line = document.createElementNS("http://www.w3.org/2000/svg", "line"), y = 20 + g * 55; line.setAttribute("x1", "0"); line.setAttribute("y1", String(y)); line.setAttribute("x2", "900"); line.setAttribute("y2", String(y)); grid.appendChild(line); } }
+    if (axis) { axis.replaceChildren(); for (var a = 0; a <= 4; a++) { var label = document.createElement("span"); label.textContent = axisLabel(Math.round(max * (1 - a / 2)), currency); axis.appendChild(label); } }
     var labels = $("cf-x"); if (labels) { labels.replaceChildren(); points.forEach(function (point) { var span = document.createElement("span"); span.textContent = point.period.slice(0, 7); labels.appendChild(span); }); }
     var path = $("cash-net-line");
-    if (path && vals.length) { var max = Math.max(1, ...vals.map(Math.abs)), coords = vals.map(function (v, i) { var x = 14 + i * (872 / Math.max(1, vals.length - 1)), y = 130 - (v / max) * 110; return (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }); path.setAttribute("d", coords.join(" ")); }
+    if (path && vals.length) { var coords = vals.map(function (v, i) { var x = vals.length === 1 ? 440 + i * 20 : 14 + i * (872 / (vals.length - 1)), y = 130 - (v / max) * 110; return (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }); if (vals.length === 1) coords.push("L460.0 " + (130 - (vals[0] / max) * 110).toFixed(1)); path.setAttribute("d", coords.join(" ")); }
   }
   function renderRecent(rows, failed) {
     var recent = document.querySelector(".recent-card tbody"); if (!recent) return;
@@ -54,7 +67,7 @@
   }
   async function load() {
     if (busy) { queued = true; return; }
-    busy = true; clearVisuals(); setStatus("Loading organization data…", false);
+    busy = true; setStatus("Loading organization data…", false);
     try {
       var activeTab = document.querySelector("#cashflow-tabs button.active"), selection = $("dashboard-date") && $("dashboard-date").value || (activeTab && activeTab.dataset.range), range = periodRange(selection);
       var responses = await Promise.all([api.request("/api/reports/profit-and-loss" + range), api.request("/api/reports/fees" + range), api.request("/api/reports/refunds" + range), api.request("/api/reports/cash-movement" + range), api.request("/api/transactions?limit=50&offset=0")]);
@@ -65,7 +78,7 @@
       renderCash(responses[3].rows || []); renderRecent(transactions);
       var health = document.querySelector(".financial-health-card"); if (health) { var number = health.querySelector("[data-health-value]"), segment = health.querySelector(".health-segment-main"); if (number) number.textContent = "Live"; if (segment) segment.style.strokeDasharray = "0 100"; var caption = health.querySelector(".health-callout"); if (caption) caption.textContent = "Organization data loaded from Supabase"; }
       setStatus(transactions.length ? "Dashboard totals use organization-scoped reports. Amounts are separated by currency." : "No transactions yet. Create a sandbox payment to get started.", false);
-    } catch (error) { clearVisuals(); renderRecent([], true); setStatus("Couldn't load dashboard data.", true, load); console.error("Could not load organization dashboard data", error); }
+    } catch (error) { setStatus("Couldn't load dashboard data.", true, load); console.error("Could not load organization dashboard data", error); }
     finally { busy = false; if (queued) { queued = false; load(); } }
   }
   function active() { return String(location.hash || "#dashboard") === "#dashboard"; }

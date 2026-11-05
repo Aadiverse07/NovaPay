@@ -37,6 +37,10 @@
   function formatGroups(groups) {
     return Object.keys(groups).sort().map(function (currency) { return formatMinor(groups[currency], currency); }).join(" · ") || "—";
   }
+  function localDate(value) {
+    var date = value instanceof Date ? value : new Date(value);
+    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+  }
   function metrics(profitRows, feeRows, refundRows) {
     var revenue = totals(profitRows, "amount_minor", function (row) { return row.account_type === "revenue"; });
     var contra = totals(profitRows, "amount_minor", function (row) { return row.account_type === "contra_revenue"; });
@@ -53,5 +57,5 @@
     if (currencies.size > 1) return { multiCurrency: true, currencies: Array.from(currencies).sort(), points: [] };
     return { multiCurrency: false, currency: Array.from(currencies)[0] || null, points: (rows || []).map(function (row) { return { period: String(row.period || ""), value: String(row.cash_movement_minor || 0) }; }) };
   }
-  return { formatMinor: formatMinor, formatMajor: formatMajor, metrics: metrics, cashMovement: cashMovement };
+  return { formatMinor: formatMinor, formatMajor: formatMajor, metrics: metrics, cashMovement: cashMovement, localDate: localDate };
 }));

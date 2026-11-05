@@ -37,14 +37,14 @@
       theme: root.agGrid.themeQuartz.withParams({ accentColor: "var(--info-text)", backgroundColor: "var(--surface)", foregroundColor: "var(--text)", borderColor: "var(--border)", headerBackgroundColor: "var(--surface-sunken)", headerTextColor: "var(--text)", spacing: 7, fontFamily: "inherit", fontSize: 12 }),
       rowData: core.rowsFromDom(tableBody), getRowId: function (params) { return String(params.data.id); },
       columnDefs: [
-        { field: "id", headerName: "ID", pinned: "left", lockPinned: true, minWidth: 170 },
-        { field: "date", headerName: "Date", minWidth: 175, sort: "desc", comparator: function (a, b) { return String(a || "").localeCompare(String(b || "")); }, filter: "agDateColumnFilter", filterParams: { comparator: dateComparator }, valueFormatter: function (p) { return p.data && p.data.dateLabel || "Unavailable"; } },
+        { field: "date", headerName: "Date & time", minWidth: 190, sort: "desc", comparator: function (a, b) { return String(a || "").localeCompare(String(b || "")); }, filter: "agDateColumnFilter", filterParams: { comparator: dateComparator }, valueFormatter: function (p) { return p.data && p.data.dateLabel || "Unavailable"; } },
         { field: "type", headerName: "Type", minWidth: 140, cellRenderer: badgeRenderer("type") },
-        { field: "buyer", headerName: "Buyer", minWidth: 170 },
+        { field: "buyer", headerName: "Buyer / counterparty", minWidth: 190 },
         { field: "gross", headerName: "Gross", type: "rightAligned", minWidth: 155, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "fee", headerName: "Fee", type: "rightAligned", minWidth: 145, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "net", headerName: "Net", type: "rightAligned", minWidth: 155, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "status", headerName: "Status", minWidth: 155, cellRenderer: badgeRenderer("status") },
+        { field: "id", headerName: "PayPal transaction / capture ID", minWidth: 220 },
       ],
       defaultColDef: { sortable: true, filter: true, resizable: true, minWidth: 110, enableCellChangeFlash: true, filterParams: { buttons: ["reset", "apply"], closeOnApply: true } },
       rowSelection: { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false }, selectionColumnDef: { pinned: "left", width: 48, maxWidth: 48, sortable: false, resizable: false },
@@ -86,7 +86,7 @@
     updateSummary();
   }
   function watchRows() { if (observer || !root.MutationObserver) return; observer = new MutationObserver(function () { clearTimeout(timer); timer = setTimeout(syncRows, 35); }); observer.observe(tableBody, { childList: true }); }
-  function showFallback(message) { if (errorNode) { errorNode.hidden = false; errorNode.textContent = message; } if (host) host.hidden = true; if (byId("tx-grid-toolbar")) byId("tx-grid-toolbar").hidden = true; if (source) { source.classList.remove("tx-grid-source"); source.removeAttribute("aria-hidden"); source.removeAttribute("inert"); } }
+  function showFallback(message) { if (errorNode) { errorNode.hidden = false; errorNode.textContent = message; } if (host) host.hidden = true; if (byId("tx-grid-toolbar")) byId("tx-grid-toolbar").hidden = true; if (byId("tx-grid-footer")) byId("tx-grid-footer").hidden = true; if (source) { source.classList.remove("tx-grid-source"); source.removeAttribute("aria-hidden"); source.removeAttribute("inert"); } }
   function createGrid() {
     if (!root.agGrid || !root.agGrid.createGrid || !root.agGrid.AllCommunityModule || !core) throw new Error("AG Grid Community did not load.");
     root.agGrid.ModuleRegistry.registerModules([root.agGrid.AllCommunityModule]);

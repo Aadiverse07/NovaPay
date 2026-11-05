@@ -121,6 +121,8 @@
 .hs-recv{margin-top:.9em;display:grid;justify-items:start;gap:.15em;width:76%;position:relative}
 .hs-recv small{font-size:.92em;font-weight:600;color:var(--hs-muted)}
 .hs-recv strong{font-size:1.75em;font-weight:800;color:var(--hs-green);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hs-paypal .hs-recv strong{font-size:1em;max-width:calc(100% - 2.4em);white-space:normal;overflow-wrap:normal}
+.hs-paypal .hs-recv .hs-check{right:0}
 .hs-check{position:absolute;right:-.9em;bottom:.15em;width:2.1em;height:2.1em;border-radius:50%;
   background:var(--hs-green);display:grid;place-items:center;box-shadow:0 .4em 1em rgba(16,178,127,.4)}
 .hs-check svg{width:1.15em;height:1.15em;fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
