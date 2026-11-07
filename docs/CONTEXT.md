@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-07 15:15 IST
 - Branch: `feat-run-scan`, created from `feat-payment-check` (not merged to `origin/main` at branch creation).
-- Current phase/task: Run scan button wiring; implementation complete, local commit pending; never push.
+- Current phase/task: Run scan button wiring; implementation committed locally as `5f32c47`; never push.
 
 ## DONE
 - Existing endpoint confirmed: POST `/api/anomalies/run`, protected by owner/admin/accountant RBAC; no server logic changed.
@@ -19,8 +19,7 @@
 
 ## NEXT STEPS
 1. Run final `node --check`, `git diff --check`, and protected-file diff check.
-2. Stage only the named feature/docs files; verify `.env` is not staged; commit locally on `feat-run-scan`.
-3. Do not push. Human can then verify in browser after restarting `npm start`.
+2. Do not push. Human can then verify in browser after restarting `npm start`.
 
 ## USER ACTIONS PENDING
 - Restart `npm start`; sign in as owner/admin/accountant; open Notifications or Transactions; click Run scan and verify the live status, and when findings are created confirm notification and Payment check refresh.

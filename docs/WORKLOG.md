@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: Run scan UI complete; branch `feat-run-scan`, based on `feat-payment-check` because that branch is not merged into `origin/main`; no push.
-- DONE: added Run scan controls in Notifications and beside the Transactions Needs review filter; authenticated POST uses `NovaPayApi.request`; manager-role visibility, busy state, accessible status messages and targeted notification/transaction refresh are wired.
-- VERIFIED: Notifications + route focused tests 13/13; isolated FX regression suite 20/20. Full `npm test` 376/379: one known Community Funds script-tag assertion and two FX 503s under parallel load, which pass in isolation. Migration syntax 21/21.
-- UNVERIFIED: real browser role visibility, scan click/scan result, and notification/badge refresh.
-- PENDING HUMAN: restart `npm start`, sign in as owner/admin/accountant, open Notifications and Transactions, click Run scan and inspect status/results.
-- NEXT: finish syntax/diff checks, locally commit named files, stop without pushing.
+- Current task: Run scan UI committed as `5f32c47`; branch `feat-run-scan`, based on `feat-payment-check` because that branch is not merged into `origin/main`; no push.
+- DONE: added manager-only Run scan controls in Notifications and beside Transactions Needs review; authenticated POST via `NovaPayApi.request`; accessible status/errors, retry, and targeted notifications/transaction refresh.
+- VERIFIED: Notifications and route tests 13/13; isolated FX tests 20/20. Full suite 376/379 with one known Community Funds script-tag assertion and two FX 503s under parallel load; migrations 21/21. Syntax/diff checks passed.
+- UNVERIFIED: authenticated browser scan, role-based visibility, and live notification/transaction refresh.
+- PENDING HUMAN: restart `npm start`, sign in as owner/admin/accountant, open Notifications or Transactions, click Run scan and inspect the result and refresh.
+- NEXT: perform the browser check; do not push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5660,3 +5660,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-07 15:22 IST | About to stage only the Run scan UI, its source test, and required continuity docs. Why: avoid including unrelated files or secrets; full-suite failures will be called out in WIP-BROKEN commit context. Next: verify staged paths/stat and commit locally.
 2026-11-07 15:23 IST | Result: PASS; staged exactly seven named feature/test/doc paths; no `.env` or secrets staged. Next: commit locally with WIP-BROKEN prefix because `npm test` has one known Community Funds assertion and two parallel-load FX 503s (isolated FX suite passes).
 2026-11-07 15:24 IST | About to commit the Run scan UI checkpoint on feat-run-scan without pushing. Why: persist completed feature and explicit known full-suite failures per checkpoint rule. Next: capture commit hash, update the pointer with it, and verify clean status.
+2026-11-07 15:25 IST | Result: PASS; feature checkpoint `5f32c47` committed locally on feat-run-scan; no push. Next: update the RESUME POINTER and CONTEXT from pending to committed, then checkpoint those docs and verify clean status.
+2026-11-07 15:26 IST | About to update the continuation pointer with feature commit `5f32c47` and the remaining manual browser check. Why: make the next-session resume state accurate. Next: commit only the docs pointer update, then verify branch and status.
