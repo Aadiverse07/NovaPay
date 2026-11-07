@@ -1,7 +1,7 @@
 (function (root) {
   "use strict";
   var core = root.NovaPayTransactionsGridCore, initialized = false, initializing = false, api = null, observer = null, timer = null, lastRows = [], freshIds = new Set(), host, source, tableBody, errorNode, columnsMenu, pendingAssistantView = null;
-  var columnKeys = ["id", "date", "type", "buyer", "gross", "fee", "net", "status"];
+  var columnKeys = ["id", "date", "type", "buyer", "gross", "fee", "net", "status", "paymentCheck"];
   function byId(id) { return document.getElementById(id); }
   function reduceMotion() { return !!(root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches); }
   function saveState() {
@@ -9,7 +9,7 @@
     try { root.localStorage.setItem("novapay-tx-grid-state", JSON.stringify({ columns: api.getColumnState(), pageSize: api.paginationGetPageSize() || 10 })); } catch (_) {}
   }
   function readState() { try { return JSON.parse(root.localStorage.getItem("novapay-tx-grid-state") || "{}"); } catch (_) { return {}; } }
-  function currentFilters() { return { type: byId("tx-type").value, status: byId("tx-status").value, from: byId("tx-from").value, to: byId("tx-to").value, min: byId("tx-min").value, max: byId("tx-max").value }; }
+  function currentFilters() { return { type: byId("tx-type").value, status: byId("tx-status").value, paymentCheck: byId("tx-payment-check").value, from: byId("tx-from").value, to: byId("tx-to").value, min: byId("tx-min").value, max: byId("tx-max").value }; }
   function visibleRows() { var rows = []; if (api) api.forEachNodeAfterFilter(function (node) { if (node.data && !node.data._totals) rows.push(node.data); }); return rows; }
   function updateSummary() {
     if (!api) return;
@@ -28,6 +28,7 @@
   function badgeRenderer(kind) { return function (params) { var value = String(params.value || ""), wrapper = document.createElement("span");
     if (params.data && params.data._totals) { wrapper.textContent = value; return wrapper; }
     if (kind === "type") { var icon = document.createElement("span"), key = value.toLowerCase(), glyph = { payment: "↗", refund: "↩", dispute: "!", payout: "↗" }[key] || "•"; icon.className = "tx-badge " + (key === "payment" || key === "refund" || key === "dispute" || key === "payout" ? key : "payment"); icon.textContent = glyph; wrapper.append(icon, document.createTextNode(" " + value)); return wrapper; }
+    if (kind === "paymentCheck") { var signal = params.data && params.data.paymentCheck, state = signal && signal.state; if (!state) return wrapper; var badge = document.createElement("span"); badge.className = "status " + (state === "confirmed" ? "ok" : state === "unconfirmed" ? "info" : "warn"); badge.textContent = state === "confirmed" ? "Confirmed" : state === "unconfirmed" ? "Unconfirmed" : "Needs review"; badge.title = (signal.reasons || []).join(" ") || "PayPal returned COMPLETED."; wrapper.appendChild(badge); if (signal.verifiedWebhookReceived) { var webhookDetail = document.createElement("small"); webhookDetail.textContent = "Signature-verified webhook received"; webhookDetail.style.fontSize = "12px"; wrapper.appendChild(document.createElement("br")); wrapper.appendChild(webhookDetail); } return wrapper; }
     var normalized = value.toLowerCase(), style = /complete|paid|success|refunded/.test(normalized) ? (normalized.indexOf("refund") >= 0 ? "danger" : "ok") : /review|duplicate|pending|failed|void/.test(normalized) ? "warn" : "info";
     wrapper.className = "status " + style; wrapper.textContent = value; return wrapper;
   }; }
@@ -45,13 +46,14 @@
         { field: "net", headerName: "Net", type: "rightAligned", minWidth: 155, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "status", headerName: "Status", minWidth: 155, cellRenderer: badgeRenderer("status") },
         { field: "id", headerName: "PayPal transaction / capture ID", minWidth: 220 },
+        { field: "paymentCheck", headerName: "Payment check", minWidth: 155, cellRenderer: badgeRenderer("paymentCheck") },
       ],
       defaultColDef: { sortable: true, filter: true, resizable: true, minWidth: 110, enableCellChangeFlash: true, filterParams: { buttons: ["reset", "apply"], closeOnApply: true } },
       rowSelection: { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false }, selectionColumnDef: { pinned: "left", width: 48, maxWidth: 48, sortable: false, resizable: false },
       pagination: true, paginationPageSize: [10, 25, 50].includes(Number(state.pageSize)) ? Number(state.pageSize) : 10, paginationPageSizeSelector: [10, 25, 50],
       animateRows: !reduceMotion(), cellFlashDuration: reduceMotion() ? 0 : 1000,
       overlayLoadingTemplate: '<span class="tx-grid-overlay">Loading transactions…</span>', overlayNoRowsTemplate: '<span class="tx-grid-overlay">No transactions available.</span>',
-      isExternalFilterPresent: function () { var f = currentFilters(); return Boolean(f.type || f.status || f.from || f.to || f.min || f.max); },
+      isExternalFilterPresent: function () { var f = currentFilters(); return Boolean(f.type || f.status || f.paymentCheck || f.from || f.to || f.min || f.max); },
       doesExternalFilterPass: function (node) { return core.matchesExternalFilters(node.data || {}, currentFilters()); },
       getRowClass: function (params) { return params.data && freshIds.has(params.data.id) ? "tx-grid-row-live" : undefined; },
       onGridReady: function (event) { api = event.api; if (Array.isArray(state.columns)) { try { api.applyColumnState({ state: state.columns, applyOrder: true }); } catch (_) {} } api.hideOverlay(); updateSummary(); filtersChanged(); },
@@ -98,7 +100,7 @@
     if (errorNode) errorNode.hidden = true;
     renderColumnsMenu();
     var search = byId("tx-search");
-    [search].concat(["tx-type", "tx-status", "tx-from", "tx-to", "tx-min", "tx-max"].map(byId)).forEach(function (control) { if (!control || control.dataset.txGridBound) return; control.dataset.txGridBound = "1"; control.addEventListener(control === search ? "input" : "change", filtersChanged); });
+    [search].concat(["tx-type", "tx-status", "tx-payment-check", "tx-from", "tx-to", "tx-min", "tx-max"].map(byId)).forEach(function (control) { if (!control || control.dataset.txGridBound) return; control.dataset.txGridBound = "1"; control.addEventListener(control === search ? "input" : "change", filtersChanged); });
     byId("tx-export-grid-csv").addEventListener("click", function () { if (!api) return; var selected = api.getSelectedRows().length > 0; api.exportDataAsCsv({ onlySelected: selected, fileName: "novapay-transactions.csv", columnKeys: columnKeys }); });
     byId("tx-columns-toggle").addEventListener("click", function () { var open = columnsMenu.hidden; columnsMenu.hidden = !open; byId("tx-columns-toggle").setAttribute("aria-expanded", String(open)); if (open) renderColumnsMenu(); });
     root.document.addEventListener("click", function (event) { if (!event.target.closest(".tx-grid-columns")) { columnsMenu.hidden = true; byId("tx-columns-toggle").setAttribute("aria-expanded", "false"); } });

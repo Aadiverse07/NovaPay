@@ -1,79 +1,64 @@
 # NovaPay Context
 
 ## HEADER
-- Date/time: 2026-11-02 17:19 IST
-- Branch: `codex/voice-assistant`
-- Pre-change checkpoint: `39a6cc9`; incident implementation is committed locally (hash recorded in WORKLOG).
-- Current phase/task: refresh stability fixes and handoff docs merged into origin/main; browser verification remains pending.
+- Date/time: 2026-11-08 10:03 IST
+- Branch: `feat-payment-check`, created from `main` at `9c20fe2`.
+- Current phase/task: Payment check signal complete; local commit pending; never pushed.
 
 ## DONE
-- Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
-- Confirmed the code path: onboarding lookup failures were treated as “no organization”; global request limiters were hard-coded at 300/IP and 240/user per 15 minutes; several hidden modules and focus/auth events fetched independently.
-- Added workspace restore states: only a successful lookup returning no org can show create-workspace. Transient 429/5xx/network retains the last org, retries with backoff/Retry-After, and exposes retry state.
-- Added shared GET in-flight deduplication, 20-second successful response cache, scoped mutation invalidation, and bounded Retry-After handling in `src/api-client.js`.
-- Scoped passive refresh to active views, visible tabs, and at least 30-second focus debounce; Sandbox events poll no faster than 60 seconds while visible.
-- Made IP/user/read rate budgets configurable (`RATE_LIMIT_IP=1500`, `RATE_LIMIT_USER=1200`, `RATE_LIMIT_READ_USER=2400` defaults); route-specific auth/OTP/onboarding/AI limits remain. Rate limit responses include Retry-After.
-- Added regression tests for budget/dedupe/cache/backoff, workspace 429 behavior and duplicate-workspace protection, configurable limits/headers, and persisted transaction/ledger route reads across app restart fixtures.
-- Automated verification: `npm test` PASS 352/352 (includes 21/21 migration syntax checks); changed JS `node --check` PASS; `git diff --check` PASS; protected files unchanged.
-- Pre-change checkpoint commit: `39a6cc9`; integration merge commit: `e043aafd4bf9cf70602d2870e9984198f234ceea`; pushed to origin/main and origin/novapay-final; the merge hash is recorded in this file and WORKLOG.
+- Phase 1 sources inspected: `server/src/routes/financial.js`, `server/src/routes/paypal.js`, `server/src/services/webhookProcessor.js`, `server/src/ai/anomalies.js`, `server/src/services/anomalies.js`, `supabase/migrations/0005_ai.sql`.
+- Added pure capture signal evaluator in `server/src/services/paymentCheck.js`: confirmed means PayPal status `COMPLETED` with no open linked anomaly; unconfirmed means a linked webhook is failed/unverified; otherwise actionable flags produce Needs review. Seller protection is considered only when present.
+- `/api/transactions` now adds `paymentCheck: { state, reasons }`, with `verifiedWebhookReceived: true` only when a matching event is signature verified. Reads are limited to the current org's transactions/anomalies/captures and exact capture IDs for current-org or org-less webhook rows. Signal lookup failures show Needs review rather than falsely confirming.
+- Transactions grid displays Confirmed / Needs review / Unconfirmed, reasons in a tooltip, visible verified-webhook detail only when present, helper text, and a Needs review filter. Demo rows remain unchanged.
+- Files edited for the task: `server/src/services/paymentCheck.js`, `server/src/routes/financial.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/payment-check.test.js`, `server/test/financial-routes.test.js`, `server/test/postgres-repos.test.js`, `server/test/transactions-grid.test.js`, `src/financial-live.js`, `src/transactions-grid-core.js`, `src/transactions-grid.js`, `src/dashboard.js`, `dashboard.html`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/CONTEXT.md`.
+- No schema migration or write path added. Refunds, approvals, ledger, and webhook processing behavior unchanged.
 
 ## IN PROGRESS
-- Integration merge completed with no conflicts. The strict scan found no long token patterns and no values from local `.env`; short dummy test fixtures were reviewed as test-only.
-- Live browser request counts/statuses and actual Supabase persistence after server restart/sign-out/sign-in remain unverified; automated fixture test is not a live DB check.
+- Implementation complete; local commit is the remaining step. Preserve the earlier user edit in `src/financial-live.js` (source/capture ID datasets), which is now used by this feature.
 
 ## NEXT STEPS
-1. Human: run the exact steps in `docs/BROWSER-CHECKLIST.md` using the existing owner and org; record Network statuses and request counts.
-2. Confirm Transactions and Ledger responses still contain the existing sandbox payment after server restart, hard refresh, and sign-out/sign-in.
-3. Human: perform the browser checklist; browser and live database verification remain unverified.
+1. Stage only the named feature files and docs; confirm `.env` is not staged/tracked.
+2. Commit locally on `feat-payment-check`; do not push.
+3. Restart the local server and hard-refresh the dashboard; follow manual checks in the final response.
 
 ## USER ACTIONS PENDING
-- Start/restart the local server and perform the browser checklist with the existing owner; record observed request counts and statuses.
+- Restart `npm start`, sign in, open Transactions, inspect a badge and its reason tooltip, choose Needs review, and verify the visible signature-verified webhook detail only for a row that has a verified event.
 
 ## LIVE STATE
-- Migrations: no migrations run in this task; syntax check passed for 21 files.
-- Tunnel/webhook: not checked.
-- Existing Supabase transaction/ledger rows: previously reported present by user; this run did not query production Supabase.
-- Server/browser request counts and actual response codes: UNVERIFIED; the screenshot text matches the general IP limiter's configured response, but no request log from that browser session was captured.
-- Secrets: no `.env` values printed; no `.env` or secret-named path tracked. Strict scan clean; the two distinct `sb_secret_` dummy fixtures were length 20. Main and backup pushes completed without force.
+- Migrations: no migration required or applied; all 21 existing migration files pass syntax checks.
+- Read-only data lookup: `6UV5767052048553J`, `1PH772199P287644F`, `62T15745ED514284D` are COMPLETED; no open anomaly, matching webhook event, or stored `seller_protection` was found for each.
+- Seller protection: PayPal capture route and webhook processor store only `seller_receivable_breakdown`; no saved seller protection field exists, so it does not influence current rows.
+- Browser/live endpoint from this branch: UNVERIFIED.
+- Secrets: no `.env` values printed; `.env` is not tracked.
 
 ## TEST STATE
-| Check | Status | Date | Command / evidence |
+| Check | Status | Date | Command / result |
 |---|---|---|---|
-| API request dedupe/cache/budget/backoff | PASS | 2026-11-02 | `npm test`; modeled 11 distinct module GETs, repeated opens made no extra network calls within TTL |
-| Workspace transient 429/backoff/org retention | PASS | 2026-11-02 | `npm test`; 429 does not enter create-workspace flow; Retry-After and retry state tested |
-| Configurable limits and Retry-After | PASS | 2026-11-02 | `npm test`; defaults 1500 IP / 1200 writes / 2400 authenticated reads per 15 min |
-| Transaction/ledger restart persistence route regression | PASS | 2026-11-02 | `npm test`; same fixture repositories read through two app instances; not live Supabase |
-| Full test suite | PASS | 2026-11-02 | `npm test`: 352/352; migration syntax 21/21 |
-| Changed JS syntax and whitespace | PASS | 2026-11-02 | `node --check` changed JS; `git diff --check` |
-| Browser full-page/module request counts and real 429 codes | UNVERIFIED | 2026-11-02 | Browser surface unavailable; budget test is a harness, not a browser measurement |
-| Existing org transactions/ledger after real server restart and re-login | UNVERIFIED | 2026-11-02 | No live Supabase read or authenticated browser session in this run |
+| Payment-check evaluator, API, repository query, grid mapping/filter | PASS | 2026-11-08 | `node --test server/test/payment-check.test.js server/test/financial-routes.test.js server/test/postgres-repos.test.js server/test/transactions-grid.test.js`: 39/39 |
+| Full suite and migrations | FAIL (known unrelated test) | 2026-11-08 | `npm test`: 377/378; 21/21 migration syntax checks pass; `server/test/fund-campaign-live-view.test.js:43` expects obsolete script tag |
+| FX tests that briefly returned 503 in first full run | PASS | 2026-11-08 | `node --test server/test/fx-providers.test.js server/test/phase3-services.test.js`: 20/20 |
+| Changed JS syntax, whitespace, protected-file diff | PASS | 2026-11-08 | `node --check` changed JS; `git diff --check`; protected-file diff vs main empty |
+| Browser badge, reason and filter | UNVERIFIED | 2026-11-08 | Must be checked manually after restarting server |
 
 ## KNOWN ISSUES AND RISKS
-- The 11-call budget test covers modeled unique reads and dedupe behavior; actual total browser calls may include auth/public-config and must be measured in DevTools.
-- Actual screenshot root cause is strongly consistent with a burst reaching the IP limiter plus onboarding misclassification, but the exact failing endpoint and 429 error code are not captured. General IP limiter emits `RATE_LIMITED`; user limiter emits `USER_RATE_LIMITED`.
-- Request cache is in-memory and short-lived; it never replaces server-side tenant scoping and must be invalidated after mutations.
-- Browser verification is required before claiming the incident resolved for the existing Supabase org.
+- Full suite retains the pre-existing Community Funds script-tag assertion failure; it is unrelated to transaction markup/code.
+- Live state is based on read-only lookup; this branch's HTTP response and browser display were not exercised.
+- Anomaly list is bounded to 1000 recent rows by the repository call; if a tenant grows beyond that, consider a targeted open-anomaly lookup.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT receives 403.
+- Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary-user denial.
 - PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only and ON DELETE RESTRICT; cleanup journal_entries first, then audit_log, organizations, auth.users, via `scripts/cleanup-phase2-test-data.sql`; reuse fixed named test identities.
-- PayPal sandbox buyer must be a US Personal account; seller USD only; use Visa at checkout; webhook URL ends `/api/webhook` and PAYPAL_WEBHOOK_ID matches.
-- Raw body is needed for PayPal signature verification.
-- Never print `.env` values; use key names only.
-- Distinguish source/test evidence from live browser and production database verification.
+- audit_log is insert-only with ON DELETE RESTRICT; cleanup journal_entries before audit_log, organizations and auth.users using the manual cleanup script.
+- PayPal Sandbox buyer must be US Personal; seller USD only; Visa at checkout; webhook URL ends `/api/webhook` and webhook ID matches.
+- Raw body is needed for PayPal signature verification. Never print `.env` values; use key names only.
 
 ## DO NOT
-- Do not force-push or rewrite history.
-- Do not create users/orgs or trigger PayPal/Gemini for these checks.
-- Do not weaken tests, remove abuse protection, or treat transient onboarding errors as missing organizations.
-- Do not print environment values or secrets.
+- Do not push, touch main, force-push, edit protected theme/assets, change approval/refund/webhook/ledger behavior, weaken tests, or commit `.env`.
 
 ## RESUME COMMANDS
-```sh
-git status --short
-git branch --show-current
-npm test
-npm run check:migrations
-```
+- `git status --short`
+- `git branch --show-current`
+- `npm test`
+- `npm run check:migrations`
+- `git diff --check`

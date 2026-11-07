@@ -26,6 +26,7 @@ export class CapturesRepo {
   constructor() { this.items = []; this.refunds = new Map(); this.locks = new Set(); }
   key(orgId, id) { return `${orgId}:${id}`; }
   all(orgId) { return this.items.filter((capture) => capture.orgId === orgId); }
+  async paymentCheckData(orgId, captureIds = []) { const ids = new Set(captureIds.map(String)); return this.all(orgId).filter((capture) => ids.has(String(capture.id))).map((capture) => ({ id: capture.id, providerPayload: capture.providerPayload || {} })); }
   get(id, orgId) { return this.items.find((capture) => capture.id === id && capture.orgId === orgId); }
   add(capture, orgId) { capture.orgId = orgId; if (!this.get(capture.id, orgId)) this.items.unshift(capture); return capture; }
   async addFromWebhook(capture) {
@@ -110,6 +111,10 @@ export class EventsRepo {
   async pending() { return this.events.filter((row) => ['queued','retry'].includes(row.processingStatus)); }
   async complete(id, verification, orgId, status, error) { const event = this.events.find((row) => row.id === id); if (event) Object.assign(event, { verification, orgId, processingStatus: status, lastError: error }); }
   async anomalyCandidates(orgId) { return this.events.filter((row) => row.orgId === orgId); }
+  async paymentCheckSignals(orgId, captureIds = []) {
+    const ids = new Set(captureIds.map(String));
+    return this.events.filter((event) => ids.has(String(event.payload?.resource?.id || '')) || (event.orgId === orgId && ids.has(String(event.captureId || '')))).map((event) => ({ event_id: event.id, event_type: event.type, org_id: event.orgId, verification_status: String(event.verification || 'unverified').toLowerCase(), processing_status: event.processingStatus || 'unverified', payload: event.payload || {} }));
+  }
 }
 
 export function createRepositories() {

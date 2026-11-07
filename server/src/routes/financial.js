@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { minorToMoney } from '../repos/postgres.js';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
+import { paymentCheckForTransaction } from '../services/paymentCheck.js';
 
 const pageSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -46,7 +47,30 @@ export function financialRoutes({ repos }) {
     if (filters.status && !['COMPLETED','PENDING','FAILED','REFUNDED'].includes(filters.status.toUpperCase())) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Unsupported transaction status.'));
     try {
       const rows = await repos.listTransactions(req.orgId,{ ...filters, status: filters.status?.toUpperCase() });
-      return res.json({ transactions: (rows || []).map(transactionShape), page: { limit: filters.limit, offset: filters.offset } });
+      const page = rows || [];
+      const captureIds = [...new Set(page.filter((row) => row.source_type === 'capture').map((row) => row.paypal_capture_id || row.source_id).filter(Boolean))];
+      let anomalies = [], webhookEvents = [], captures = [], signalLoadFailed = false;
+      try {
+        [anomalies, webhookEvents, captures] = await Promise.all([
+          captureIds.length && repos.anomalies?.list(req.orgId, { limit: 1000, offset: 0 }) || [],
+          repos.events?.paymentCheckSignals ? repos.events.paymentCheckSignals(req.orgId, captureIds) : [],
+          repos.captures?.paymentCheckData ? repos.captures.paymentCheckData(req.orgId, captureIds) : [],
+        ]);
+      } catch (error) {
+        signalLoadFailed = true;
+        console.error(JSON.stringify({ level: 'error', event: 'payment_check_signals_unavailable', requestId: req.requestId || null, errorName: error?.name || 'Error', code: error?.code || 'SIGNAL_LOOKUP_FAILED' }));
+      }
+      const captureById = new Map((captures || []).map((capture) => [String(capture.id), capture]));
+      const transactions = page.map((row) => {
+        const captureId = row.paypal_capture_id || row.source_id;
+        const events = (webhookEvents || []).filter((event) => String(event.capture_id || event.captureId || event.payload?.resource?.id || '') === String(captureId || ''));
+        const capture = captureById.get(String(captureId || ''));
+        const signal = signalLoadFailed
+          ? { state: 'needs_review', reasons: ['review_signals_unavailable: Payment review signals could not be loaded; retry before relying on this status.'] }
+          : paymentCheckForTransaction({ ...row, provider_payload: capture?.providerPayload || row.provider_payload }, anomalies || [], events);
+        return { ...transactionShape(row), paymentCheck: signal };
+      });
+      return res.json({ transactions, page: { limit: filters.limit, offset: filters.offset } });
     } catch (error) { return next(error); }
   });
   router.get('/ledger/entries', async (req, res, next) => {

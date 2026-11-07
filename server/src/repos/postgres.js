@@ -81,6 +81,12 @@ export function createPostgresRepositories(database) {
   };
 
   const captures = {
+    async paymentCheckData(orgId, captureIds = []) {
+      const ids = [...new Set(captureIds.filter((id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,150}$/.test(id)))].slice(0, 100);
+      if (!ids.length) return [];
+      const rows = await database.select('paypal_captures', q({ select: 'paypal_capture_id,provider_payload', org_id: `eq.${orgId}`, paypal_capture_id: `in.(${ids.join(',')})`, limit: String(ids.length) }));
+      return (rows || []).map((row) => ({ id: row.paypal_capture_id, providerPayload: row.provider_payload || {} }));
+    },
     async all(orgId) {
       const rows = await database.select('paypal_captures', q({ select: '*,paypal_orders!paypal_captures_org_id_order_id_fkey(paypal_order_id)', org_id: `eq.${orgId}`, order: 'created_at.desc' }));
       return (rows || []).map((row) => ({ ...mapCapture(row), orderId: row.paypal_orders?.paypal_order_id || null }));
@@ -176,6 +182,15 @@ export function createPostgresRepositories(database) {
     async pending() { return database.rpc('list_pending_paypal_events', {}); },
     async anomalyCandidates(orgId) {
       return database.select('paypal_events', q({ select: 'event_id,processing_status,created_at', org_id: `eq.${orgId}`, processing_status: 'in.(queued,retry,processing,dead_letter)', order: 'created_at.asc', limit: '100' }));
+    },
+    async paymentCheckSignals(orgId, captureIds = []) {
+      const ids = [...new Set(captureIds.filter((id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,150}$/.test(id)))].slice(0, 100);
+      if (!ids.length) return [];
+      // Unverified events may have org_id=NULL. Match only exact capture IDs from
+      // this organization's already-scoped transaction page; never read another org's events.
+      const select = (orgFilter) => database.select('paypal_events', q({ select: 'event_id,event_type,org_id,verification_status,processing_status,payload', ...orgFilter, 'payload->resource->>id': `in.(${ids.join(',')})`, limit: String(ids.length * 4) }));
+      const [owned, unassigned] = await Promise.all([select({ org_id: `eq.${orgId}` }), select({ org_id: 'is.null' })]);
+      return [...(owned || []), ...(unassigned || [])];
     },
     async complete(id, verification, orgId, status, error = null) { return database.rpc('complete_paypal_event', { p_id: id, p_verification: verification, p_org: orgId, p_status: status, p_error: error }); },
     async snapshot(orgId) {

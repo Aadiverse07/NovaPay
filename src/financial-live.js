@@ -33,7 +33,15 @@
   function makeTransactionNode(row) {
     var tr = root.document.createElement("tr"), mapped = data.transactionRow(row);
     tr.className = "transaction-row"; tr.tabIndex = 0;
-    tr.dataset.txId = mapped.id; tr.dataset.type = mapped.type; tr.dataset.status = mapped.status;
+    tr.dataset.txId = mapped.id; tr.dataset.sourceId = String(row.sourceId || row.source_id || row.sourceId || "");
+    tr.dataset.captureId = String(row.captureId || row.capture_id || (row.source_type === "capture" || row.sourceType === "capture" ? row.sourceId || row.source_id || "" : ""));
+    tr.dataset.type = mapped.type; tr.dataset.status = mapped.status;
+    var paymentCheck = row.paymentCheck || null;
+    if (paymentCheck && paymentCheck.state) {
+      tr.dataset.paymentCheck = paymentCheck.state;
+      tr.dataset.paymentReasons = JSON.stringify(paymentCheck.reasons || []);
+      tr.dataset.verifiedWebhookReceived = paymentCheck.verifiedWebhookReceived ? "true" : "false";
+    }
     tr.dataset.amount = mapped.amount; tr.dataset.currency = mapped.currency; tr.dataset.date = mapped.date;
     tr.dataset.buyer = mapped.buyer; tr.dataset.source = mapped.source;
     tr.dataset.note = "Loaded from the organization-scoped saved transaction API.";
@@ -49,6 +57,16 @@
       } else td.textContent = text;
       tr.appendChild(td);
     });
+    var checkCell = root.document.createElement("td");
+    if (paymentCheck && paymentCheck.state) {
+      var badge = root.document.createElement("span"), reasonText = (paymentCheck.reasons || []).join(" ");
+      badge.className = "status " + (paymentCheck.state === "confirmed" ? "ok" : paymentCheck.state === "unconfirmed" ? "info" : "warn");
+      badge.textContent = paymentCheck.state === "confirmed" ? "Confirmed" : paymentCheck.state === "unconfirmed" ? "Unconfirmed" : "Needs review";
+      badge.title = (reasonText ? reasonText + " " : "PayPal returned COMPLETED. ") + (paymentCheck.verifiedWebhookReceived ? "Signature-verified webhook received." : "");
+      checkCell.appendChild(badge);
+      if (paymentCheck.verifiedWebhookReceived) { var detail = root.document.createElement("small"); detail.textContent = "Signature-verified webhook received"; checkCell.appendChild(root.document.createElement("br")); checkCell.appendChild(detail); }
+    } else checkCell.textContent = "";
+    tr.appendChild(checkCell);
     return tr;
   }
   async function loadTransactions() {
@@ -70,7 +88,7 @@
       rows.forEach(function (row) { body.appendChild(makeTransactionNode(row)); });
       if (!rows.length) {
         var emptyRow = root.document.createElement("tr"), emptyCell = root.document.createElement("td");
-        emptyRow.dataset.txEmpty = "true"; emptyCell.colSpan = 8; emptyCell.textContent = "No transactions yet. Create a sandbox payment to get started."; emptyRow.appendChild(emptyCell); body.appendChild(emptyRow);
+        emptyRow.dataset.txEmpty = "true"; emptyCell.colSpan = 9; emptyCell.textContent = "No transactions yet. Create a sandbox payment to get started."; emptyRow.appendChild(emptyCell); body.appendChild(emptyRow);
       }
       setNote(rows.length ? "Saved transactions loaded from this organization." : "No transactions yet. Create a sandbox payment to get started.");
       clearError(error);
@@ -78,7 +96,7 @@
       root.console.error("Could not load saved transactions", cause);
       body.replaceChildren();
       var failedRow = root.document.createElement("tr"), failedCell = root.document.createElement("td");
-      failedRow.dataset.txEmpty = "true"; failedCell.colSpan = 8; failedCell.textContent = "Couldn't load saved transactions."; failedRow.appendChild(failedCell); body.appendChild(failedRow);
+      failedRow.dataset.txEmpty = "true"; failedCell.colSpan = 9; failedCell.textContent = "Couldn't load saved transactions."; failedRow.appendChild(failedCell); body.appendChild(failedRow);
       setNote("Couldn't load saved transactions.");
       showError(error, "transactions", loadTransactions);
     } finally { transactionBusy = false; if (transactionQueued) { transactionQueued = false; loadTransactions(); } }

@@ -38,6 +38,19 @@ test('transaction focus lookup batches IDs under an explicit organization filter
   assert.doesNotMatch(decoded,/org_id\.eq\.org-b/);
 });
 
+test('payment-check repository reads only current-org and org-less webhook events for exact capture IDs', async () => {
+  const calls=[];
+  const database={async select(table,query){calls.push({table,query:decodeURIComponent(query)});return [];}};
+  const repos=createPostgresRepositories(database);
+  await repos.events.paymentCheckSignals('org-a',['CAP-1','CAP-2','bad),org_id.eq.org-b']);
+  assert.equal(calls.length,2);
+  assert.ok(calls.every((call)=>call.table==='paypal_events'));
+  assert.ok(calls.some((call)=>call.query.includes('org_id=eq.org-a')));
+  assert.ok(calls.some((call)=>call.query.includes('org_id=is.null')));
+  assert.ok(calls.every((call)=>call.query.includes('payload->resource->>id=in.(CAP-1,CAP-2)')));
+  assert.ok(calls.every((call)=>!call.query.includes('org-b')));
+});
+
 test('invoice detail loads lines and status events only for the selected organization and invoice', async () => {
   const calls=[];
   const database={async select(table,query){calls.push({table,query});if(table==='invoices')return [{id:'invoice-a',org_id:'org-a',invoice_number:'INV-A',state:'draft',currency:'INR',subtotal_minor:13440,tax_minor:0,total_minor:13440}];if(table==='invoice_lines')return [{id:'line-a',description:'Consulting',quantity:1,unit_price_minor:13440,line_total_minor:13440}];if(table==='invoice_events')return [{event_type:'draft.created',created_at:'2026-11-01T10:00:00.000Z'}];return [];}};
