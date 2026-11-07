@@ -1,10 +1,10 @@
 # NovaPay Context
 
 ## HEADER
-- Date/time: 2026-11-02 17:19 IST
-- Branch: `codex/voice-assistant`
-- Pre-change checkpoint: `39a6cc9`; incident implementation is committed locally (hash recorded in WORKLOG).
-- Current phase/task: refresh stability fixes and handoff docs merged into origin/main; browser verification remains pending.
+- Date/time: 2026-11-07 20:30 IST
+- Branch: `fix-ai-proposals` (created from local commit `9c20fe2`)
+- Last commit: `9c20fe2`; current AI proposal and carried-forward changes are uncommitted.
+- Current phase/task: fix false-success AI refund proposal handling and preserve whitespace-split PayPal IDs; no server restart or live AI call permitted during this task.
 
 ## DONE
 - Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
@@ -18,8 +18,8 @@
 - Pre-change checkpoint commit: `39a6cc9`; integration merge commit: `e043aafd4bf9cf70602d2870e9984198f234ceea`; pushed to origin/main and origin/novapay-final; the merge hash is recorded in this file and WORKLOG.
 
 ## IN PROGRESS
-- Integration merge completed with no conflicts. The strict scan found no long token patterns and no values from local `.env`; short dummy test fixtures were reviewed as test-only.
-- Live browser request counts/statuses and actual Supabase persistence after server restart/sign-out/sign-in remain unverified; automated fixture test is not a live DB check.
+- Current AI refund ID fix is uncommitted; see the 2026-11-07 section below.
+- Live browser request counts/statuses and production Supabase persistence remain unverified; automated fixture tests are not live DB checks.
 
 ## NEXT STEPS
 1. Human: run the exact steps in `docs/BROWSER-CHECKLIST.md` using the existing owner and org; record Network statuses and request counts.
@@ -77,3 +77,20 @@ git branch --show-current
 npm test
 npm run check:migrations
 ```
+
+## 2026-11-07 AI refund proposal ID fix
+- Branch: `main`. Pre-existing dirty user changes in README.md, preview.html, src/base.css, src/hero-laptop.css, src/hero-orbit.css were left untouched.
+- Changed server sanitizer to validate as before then normalize a known transaction UUID proposal reference to its PayPal `sourceId`; client resolves by ID/source/capture attributes and submits capture reference. Refund safety checks and approval/refund services were not changed.
+- Focused regressions: PASS 25/25. Full `npm test`: FAIL 365/366; sole unrelated failure is the Community Funds source test expecting `src/fund-views.js` directly in dashboard.html.
+- Browser: authenticated dashboard submitted the requested query; server returned 200, but assistant rendered narrative only, no proposal card. Target card state and `/api/approvals/register` call are unverified.
+- Next: investigate why this live assistant response omitted a structured proposal; once a card is returned, verify 10.00 USD, Sandbox approval label, enabled Send control, and registration without executing a refund.
+- Follow-up: authenticated “Send to Approvals” now uses `NovaPayApi.request` to POST `/api/approvals/register` with the proposal approval ID, resolved PayPal capture ID, and amount from the loaded transaction row, then refreshes the approvals queue. This requires an explicit button click; no refund is sent by this flow.
+- Final test rerun after that wiring: `npm test` FAIL 365/366; the same unrelated Community Funds script-tag assertion remains. Focused AI/dashboard tests pass 25/25.
+
+
+## AI refund proposal diagnosis (2026-11-07)
+- Read-only service-role query: exact provided capture text had 0 capture and approval rows. Prefix query found one matching stored transaction/capture: COMPLETED, USD, 700 minor units, ID `6UV5767052048553J`; the reported `6UV57670520485 3J` omits a `5`. Approval count by status for the provided exact ID was 0. No list filter was involved in the database check.
+- Redaction reproduced as `6UV[REDACTED_PHONE]J`; whitespace-split PayPal capture IDs are now protected through phone redaction. Exact known-record matching accepts whitespace inserted into a known alphanumeric ID, but does not guess missing characters.
+- Proposal persistence now logs a reason code on each rejection, reports an honest failure to the user, and does not allow “prepared/already created” wording without a persisted proposal object. Completed USD status, organization scope, refundable balance and approval RPC checks remain enforced.
+- Full `npm test`: 370/371; one unrelated existing failure in `server/test/fund-campaign-live-view.test.js:43` (expects a direct `src/fund-views.js` script tag). AI suite: 24/24. Migrations syntax: 21/21.
+- Live browser proposal flow remains UNVERIFIED; server on port 3000 was not restarted and no AI request was made.

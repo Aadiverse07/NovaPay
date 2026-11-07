@@ -30,6 +30,23 @@ test('AI sanitizer removes foreign evidence IDs and keeps known IDs', () => {
   assert.deepEqual(sanitizeAIResponse('{"reply":"These records show the result.","evidence":["known","foreign","known"]}', { transactions: [{ id: 'known' }] }), { reply: 'These records show the result.', evidence: ['known'], proposal: null });
 });
 
+test('AI proposal normalizes a known internal transaction ID to its PayPal source ID', () => {
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const captureId = '62T15745ED514284D';
+  const result = sanitizeAIResponse(JSON.stringify({
+    reply: 'A refund can be reviewed for this capture.', evidence: [internalId],
+    proposal: { type: 'refund', txId: internalId },
+  }), { records: [{ id: internalId, sourceId: captureId, recordType: 'transaction' }] });
+  assert.equal(result.proposal.txId, captureId);
+  assert.deepEqual(result.evidence, [internalId]);
+
+  const alreadySourceId = sanitizeAIResponse(JSON.stringify({
+    reply: 'Review this capture.', evidence: [captureId], proposal: { type: 'refund', txId: captureId },
+  }), { records: [{ id: internalId, sourceId: captureId, recordType: 'transaction' }] });
+  assert.equal(alreadySourceId.proposal.txId, captureId);
+  assert.equal(sanitizeAIResponse(JSON.stringify({ reply: 'Review foreign.', evidence: [], proposal: { type: 'refund', txId: 'foreign-id' } }), { records: [{ id: internalId, sourceId: captureId }] }).proposal, null);
+});
+
 test('AI sanitizer rejects unknown top-level fields and oversized output', () => {
   assert.equal(sanitizeAIResponse('{"reply":"safe","evidence":[],"proposal":null,"tool":"refund"}').reply, UNSAFE_REPLY);
   assert.equal(sanitizeAIResponse(JSON.stringify({ reply: 'x'.repeat(12001), evidence: [], proposal: null })).reply, UNSAFE_REPLY);
@@ -66,6 +83,15 @@ test('PII redaction masks Unicode names, addresses, phone, account/card numbers,
   assert.match(result, /\[REDACTED_TOKEN\]/);
   assert.match(result, /Annette/);
   assert.match(result, /Annual/);
+});
+
+test('sensitive-text redaction preserves spaced alphanumeric PayPal capture IDs but still redacts phone numbers and UUIDs', () => {
+  const capture = '6UV57670520485 3J';
+  const uuid = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const result = redactSensitiveText(`Refund ${capture}; call +1 (415) 555-0123; transaction ${uuid}`);
+  assert.match(result, new RegExp(capture.replace(' ', '\\s')));
+  assert.match(result, /\[REDACTED_PHONE\]/);
+  assert.match(result, new RegExp(uuid));
 });
 
 test('AI service rejects numeric claims absent from evidence and labels missing evidence', async () => {
@@ -132,6 +158,80 @@ test('an AI refund proposal creates only a pending org-scoped approval and never
   assert.deepEqual(stored.requestPayload.evidenceIds, ['CAP-AI-1']);
   assert.equal(await repos.approvals.get(proposal.approvalId, 'org-b'), undefined);
   assert.equal(paypalCalls, 0);
+});
+
+test('spaced spoken capture ID reaches AI intact and resolves to the exact completed USD capture', async () => {
+  const captureId = '6UV5767052048553J';
+  const spacedId = '6UV576705204855 3J';
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '7.00', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  const transaction = { id: internalId, source_type: 'capture', source_id: captureId, amount_minor: 700, fee_minor: 0, net_minor: 700, currency: 'USD', status: 'COMPLETED' };
+  repos.listTransactions = async () => [transaction];
+  let prompt;
+  const provider = { async generate(input) { prompt = input.prompt; return JSON.stringify({ reply: 'I have prepared a refund proposal.', evidence: [internalId], proposal: { type: 'refund', txId: spacedId, title: 'Review refund', reason: 'Completed capture is available.' } }); } };
+  const result = await createAIService({ config: {}, repos, provider })('Prepare a refund proposal for transaction ' + spacedId, { orgId: 'org-a', userId: 'user-a' });
+  assert.match(prompt, new RegExp(spacedId.replace(' ', '\\s')));
+  assert.equal(result.proposal?.amount, '7.00');
+  assert.equal(result.proposal?.currency, 'USD');
+  assert.equal(result.proposal?.status, 'pending');
+  const saved = await repos.approvals.get(result.proposal.approvalId, 'org-a');
+  assert.equal(saved.captureId, captureId);
+  assert.equal(saved.amount, '7.00');
+});
+
+test('a mistyped capture reference is not guessed and returns a reason instead of a false proposal claim', async () => {
+  const captureId = '6UV5767052048553J';
+  const mistypedId = '6UV57670520485 3J';
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '7.00', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  repos.listTransactions = async () => [{ id: internalId, source_type: 'capture', source_id: captureId, amount_minor: 700, currency: 'USD', status: 'COMPLETED' }];
+  const provider = { async generate() { return JSON.stringify({ reply: 'I have prepared a refund proposal.', evidence: [internalId], proposal: { type: 'refund', txId: mistypedId } }); } };
+  const warn = console.warn, logs = [];
+  console.warn = (line) => logs.push(String(line));
+  try {
+    const result = await createAIService({ config: {}, repos, provider })('Prepare a refund proposal for transaction ' + mistypedId, { orgId: 'org-a', userId: 'user-a' });
+    assert.equal(result.proposal, null);
+    assert.match(result.reply, /could not create a proposal: the transaction ID did not match a record in this organization/i);
+    assert.doesNotMatch(result.reply, /prepared/i);
+    assert.match(logs.join('\n'), /PROPOSAL_REFERENCE_NOT_IN_ORG/);
+    assert.equal(repos.approvals.items.size, 0);
+  } finally { console.warn = warn; }
+});
+
+test('failed server-side proposal creation is logged by reason code and never claims it was prepared', async () => {
+  const repos = createRepositories();
+  const captureId = 'CAP-NULL-7';
+  repos.captures.add({ id: captureId, value: '7.00', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  repos.listTransactions = async () => [{ id: 'tx-null-7', source_type: 'capture', source_id: captureId, amount_minor: 700, currency: 'USD', status: 'COMPLETED' }];
+  repos.approvals.createAIProposal = async () => null;
+  const provider = { async generate() { return JSON.stringify({ reply: 'I have prepared a refund proposal.', evidence: ['tx-null-7'], proposal: { type: 'refund', txId: captureId } }); } };
+  const originalWarn = console.warn, logs = [];
+  console.warn = (line) => logs.push(String(line));
+  try {
+    const result = await createAIService({ config: {}, repos, provider })('Prepare a refund proposal', { orgId: 'org-a', userId: 'user-a' });
+    assert.equal(result.proposal, null);
+    assert.match(result.reply, /^I could not create a proposal:/);
+    assert.doesNotMatch(result.speak, /prepared/i);
+    assert.doesNotMatch(result.reply, /prepared/i);
+    assert.match(logs.join('\n'), /APPROVAL_CREATE_RETURNED_EMPTY/);
+  } finally { console.warn = originalWarn; }
+});
+
+test('assistant history cannot make an unpersisted proposal sound already created', async () => {
+  const repos = createRepositories();
+  repos.listTransactions = async () => [{ id: 'tx-no-proposal', source_type: 'capture', source_id: 'CAP-NO-PROPOSAL', amount_minor: 700, currency: 'USD', status: 'COMPLETED' }];
+  const provider = { async generate() { return JSON.stringify({ reply: 'That refund proposal was already created.', evidence: ['tx-no-proposal'], proposal: null }); } };
+  const warn = console.warn, logs = [];
+  console.warn = (line) => logs.push(String(line));
+  try {
+    const result = await createAIService({ config: {}, repos, provider })('Can you prepare the refund proposal?', { orgId: 'org-a', userId: 'user-a' });
+    assert.equal(result.proposal, null);
+    assert.match(result.reply, /could not create a proposal/i);
+    assert.doesNotMatch(result.reply, /already created/i);
+    assert.match(logs.join('\n'), /PROPOSAL_OBJECT_MISSING/);
+  } finally { console.warn = warn; }
 });
 
 test('an uncited AI proposal does not create an approval', async () => {
