@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-07 20:30 IST
 - Branch: `fix-ai-proposals` (created from local commit `9c20fe2`)
-- Last commit: `9c20fe2`; current AI proposal and carried-forward changes are uncommitted.
+- Last implementation commit: `8ad3845` (`WIP-BROKEN: diagnose AI refund proposal failures`); unrelated carried-forward UI edits remain uncommitted.
 - Current phase/task: fix false-success AI refund proposal handling and preserve whitespace-split PayPal IDs; no server restart or live AI call permitted during this task.
 
 ## DONE
