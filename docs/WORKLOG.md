@@ -1,10 +1,10 @@
 ## RESUME POINTER
-- Current task: Transactions Payment check renderer/loading fix complete; branch `feat-run-scan`, based on unmerged `feat-payment-check`; no push.
-- DONE: `/api/transactions` adds `paymentCheck` per row; grid cell reads its state via valueGetter and shows Confirmed / Needs review / Unconfirmed with reason tooltip; AG Grid loading placeholder is cleared before mount; Run scan status is below filters.
-- VERIFIED: focused financial route/grid/live-source tests 20/20; full `npm test` 380/381 with only the known Community Funds script-tag assertion; migrations 21/21; JS syntax and diff checks pending final pass.
-- UNVERIFIED: authenticated browser rendering, actual Payment check tooltip, and layout at narrow widths.
-- PENDING HUMAN: restart `npm start`, sign in, open Transactions, confirm badges/reasons and loader behavior; verify Run scan status is on a separate line.
-- NEXT: finish syntax/diff checks, commit locally, no push; human browser check after restart.
+- Current task: Transactions Payment check renderer/loading fix committed as `ff4d73b`; branch `feat-run-scan`, based on unmerged `feat-payment-check`; no push.
+- DONE: API route/test confirms `paymentCheck` per transaction; grid valueGetter and renderer display Confirmed / Needs review / Unconfirmed with reason tooltip; AG Grid placeholder clears before mount; scan status moved below filters.
+- VERIFIED: focused route/grid tests 20/20; full `npm test` 380/381 with one known Community Funds script-tag assertion; migrations 21/21; changed-JS syntax, diff and protected-file checks pass; no server source modified.
+- UNVERIFIED: authenticated browser display, hover tooltip, loading disappearance, and narrow filter layout.
+- PENDING HUMAN: restart `npm start`, sign in, open Transactions, inspect badges/reasons and scan status placement.
+- NEXT: browser check; no push.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5677,3 +5677,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-07 15:53 IST | About to stage the named Transactions UI and handoff files. Why: checkpoint the client-only fix while excluding server and unrelated files. Next: inspect staged paths/stat and commit.
 2026-11-07 15:54 IST | Result: PASS; exactly seven intended UI/test/doc paths staged, no server source or `.env`. Next: commit with WIP-BROKEN prefix because the full suite retains the known unrelated Community Funds assertion.
 2026-11-07 15:55 IST | About to create a local checkpoint commit for the Transactions Payment check UI fix. Why: persist the verified client changes on feat-run-scan; no push. Next: record final commit hash and status.
+2026-11-07 15:56 IST | Result: PASS; Transactions UI fix committed locally as `ff4d73b` on feat-run-scan; worktree clean and no push. Next: update the RESUME POINTER/CONTEXT with the committed state, checkpoint docs, then report restart and browser limitation.
+2026-11-07 15:57 IST | About to finalize the continuation pointer with commit `ff4d73b`. Why: ensure a new agent sees the exact current branch state and remaining human browser check. Next: commit pointer/context update and stop.

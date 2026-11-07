@@ -17,12 +17,11 @@
 - Additional UI fix files: `src/transactions-grid.js`, `dashboard.html`, `server/test/transactions-ledger-live.test.js`, plus the four continuity docs.
 
 ## IN PROGRESS
-- UI fix complete; final syntax/diff checks and local commit remain. This branch inherits Payment check commits `2a22b9e` and `413dc9f` from `feat-payment-check`, which is not merged into main.
+- UI fix committed locally as `ff4d73b`; no push. This branch inherits Payment check commits `2a22b9e` and `413dc9f` from `feat-payment-check`, which is not merged into main.
 
 ## NEXT STEPS
-1. Run final `node --check`, `git diff --check`, and protected-file diff check.
-2. Commit the named UI/docs files locally; do not push.
-3. Human can verify in browser after restarting `npm start`.
+1. Human can verify in browser after restarting `npm start`.
+2. Do not push unless separately authorized.
 
 ## USER ACTIONS PENDING
 - Restart `npm start`; sign in; open Transactions and verify badges, tooltip reasons, and that Loading transactions clears. Confirm Run scan status is below the filters.
