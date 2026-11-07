@@ -29,6 +29,28 @@ test('Settings role and profile use authenticated membership/session instead of 
   assert.match(source, /"Supabase account"/);
 });
 
+test('AI proposal renderer resolves internal, source and capture transaction references', async () => {
+  const [dashboard, financial] = await Promise.all([
+    readFile(new URL('../../src/dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('../../src/financial-live.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(dashboard, /records\.find\(function\(r\)\{return String\(r\.id\|\|""\)===ref\|\|String\(r\.sourceId\|\|r\.source_id\|\|r\.captureId\|\|r\.capture_id\|\|""\)===ref\}\)/);
+  assert.match(dashboard, /data-source-id=/);
+  assert.match(dashboard, /data-capture-id=/);
+  assert.match(dashboard, /var captureRef=String\(row\.sourceId\|\|row\.source_id\|\|row\.captureId\|\|row\.capture_id/);
+  assert.match(dashboard, /NovaPayApi\.request\("\/api\/approvals\/register",\{method:"POST",body:\{approvalId:String\(proposal\.approvalId\|\|""\),proposalType:"refund",captureId:captureRef,amount:amount\.toFixed\(2\),currency:"USD"\}\}\)/);
+  assert.match(financial, /tr\.dataset\.sourceId/);
+  assert.match(financial, /tr\.dataset\.captureId/);
+});
+
+test('authenticated AI proposals with server approval IDs show a review link, not the legacy send card', async () => {
+  const source = await readFile(new URL('../../src/dashboard.js', import.meta.url), 'utf8');
+  assert.match(source, /if\(auth&&auth\.mode==="supabase"\)\{if\(!proposal\.approvalId\)return/);
+  assert.match(source, /Proposal created and waiting for review\./);
+  assert.match(source, /open\.textContent="Open Approvals"/);
+  assert.match(source, /location\.hash="#approvals";if\(window\.NovaLive&&window\.NovaLive\.refreshApprovals\)window\.NovaLive\.refreshApprovals\(\)/);
+});
+
 test('transaction detail AI errors do not echo browser row fields or create fake approval proposals', async () => {
   const source = await readFile(new URL('../../src/dashboard.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /AI backend unavailable\. Available transaction data:/);

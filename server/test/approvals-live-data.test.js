@@ -25,6 +25,35 @@ test('authenticated approvals use paginated org API, live pending count, server 
   assert.match(html, /src="src\/approvals-data\.js"/);
 });
 
+test('persisted refunds use PayPal Sandbox confirmation copy and never say simulated', () => {
+  assert.match(live, /persistedRefund=!!\(p\.persisted&&p\.type==="refund"\)/);
+  assert.match(live, /Confirm refund in PayPal Sandbox/);
+  assert.match(live, /Capture: .*Amount: .*PayPal Sandbox will be contacted/);
+  assert.match(live, /\["send-invoice","maintenance-payment","dispute-evidence","hold-payout"\]/);
+});
+
+test('auth errors refresh once and read approval status without resubmitting the decision', () => {
+  const recoveryStart = live.indexOf("function refreshPersistedApproval(p){");
+  const recoveryEnd = live.indexOf("function approveActive(){", recoveryStart);
+  const recovery = recoveryStart >= 0 && recoveryEnd > recoveryStart ? live.slice(recoveryStart, recoveryEnd) : "";
+  assert.ok(recovery);
+  assert.match(recovery, /refreshSession/);
+  assert.match(recovery, /NovaPayApi\.request\("\/api\/approvals\/"\+encodeURIComponent\(p\.approvalId\),\{cache:false\}\)/);
+  assert.match(recovery, /Server status: .*No decision request was resent/);
+  assert.doesNotMatch(recovery, /method:"POST"|\/decision|\/api\/paypal\/refund/);
+  assert.match(live, /if\(authFailure\(error\)\)return refreshPersistedApproval\(p\)/);
+});
+
+test('status card uses provider/model from public status and hides connected Sandbox warning', () => {
+  assert.match(live, /function aiProviderDescription\(s\)/);
+  assert.match(live, /aiProviderDescription\(s\).*configured on the server/);
+  assert.doesNotMatch(live, /Anthropic key is configured on the server/);
+  assert.match(live, /statusText\.hidden=live\.paypal/);
+  assert.match(live, /statusText\.textContent=live\.paypal\?"PayPal Sandbox is connected/);
+  assert.match(live, /Provider and model unavailable because the status endpoint could not be reached/);
+  assert.match(html, /id="st-ai-model">Checking configured provider and model/);
+});
+
 test('sample approvals are explicitly demo-only; authenticated mode hydrates only API records', () => {
   assert.match(live, /function demoMode\(\)\{return window\.NovaPayAuth&&window\.NovaPayAuth\.mode==="demo"\}/);
   assert.match(live, /queue=demoQueue\.slice\(\)/);
