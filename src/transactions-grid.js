@@ -57,7 +57,7 @@
         { field: "fee", headerName: "Fee", type: "rightAligned", minWidth: 145, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "net", headerName: "Net", type: "rightAligned", minWidth: 155, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "status", headerName: "Status", minWidth: 155, cellRenderer: badgeRenderer("status") },
-        { field: "id", headerName: "PayPal transaction / capture ID", minWidth: 220 },
+        { field: "id", headerName: "PayPal transaction / capture ID", minWidth: 220, valueFormatter: function (params) { return core.displayId(params.data); } },
         { field: "paymentCheck", headerName: "Payment check", minWidth: 155, valueGetter: function (params) { var signal = params.data && params.data.paymentCheck; return signal && typeof signal === "object" ? signal.state : signal || ""; }, cellRenderer: badgeRenderer("paymentCheck") },
       ],
       defaultColDef: { sortable: true, filter: true, resizable: true, minWidth: 110, enableCellChangeFlash: true, filterParams: { buttons: ["reset", "apply"], closeOnApply: true } },

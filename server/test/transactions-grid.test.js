@@ -43,6 +43,11 @@ test('transaction totals are grouped by currency and never sum mixed currencies'
   ]);
   assert.equal(totals.length, 2);
   assert.deepEqual(totals.map((entry) => [entry.currency, entry.gross, entry.fee, entry.net]), [['INR', 150, 3, 147], ['JPY', 200, 0, 200]]);
+  const usdTotal = core.totalsByCurrency([{ id: 'd', currency: 'USD', gross: 1, fee: 0, net: 1 }])[0];
+  assert.equal(usdTotal.id, '__total__USD');
+  assert.equal(core.displayId(usdTotal), 'Total (USD)');
+  assert.equal(core.displayId(totals[0]), 'Total (INR)');
+  assert.equal(core.displayId({ id: 'CAP-1' }), 'CAP-1');
   assert.match(core.formatMoney(10000, 'INR'), /10,000/);
 });
 

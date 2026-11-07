@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp } from '../src/app.js';
 import { createRepositories } from '../src/repos/memory.js';
+import { createPostgresRepositories } from '../src/repos/postgres.js';
 
 const org = 'a0000000-0000-4000-8000-000000000001';
 const otherOrg = 'b0000000-0000-4000-8000-000000000002';
@@ -87,6 +88,37 @@ test('transactions include org-scoped paymentCheck state, reasons, and verified-
     const a=(await responseA.json()).transactions[0], b=(await responseB.json()).transactions[0];
     assert.deepEqual(a.paymentCheck,{state:'needs_review',reasons:['duplicate_amount_payer: Possible duplicate amount and payer.'],verifiedWebhookReceived:true});
     assert.deepEqual(b.paymentCheck,{state:'confirmed',reasons:[]});
+  });
+});
+
+test('Postgres transaction rows preserve fee/net major units and route adds paymentCheck', async()=>{
+  const captureRows=[
+    {id:'db-62t',source_type:'capture',source_id:'62T15745ED514284D',paypal_capture_id:'62T15745ED514284D',status:'COMPLETED',amount_minor:1000,fee_minor:81,net_minor:919,currency:'USD',occurred_at:'2026-11-07T10:00:00.000Z',org_id:org},
+    {id:'db-6uv',source_type:'capture',source_id:'6UV5767052048553J',paypal_capture_id:'6UV5767052048553J',status:'COMPLETED',amount_minor:700,fee_minor:67,net_minor:633,currency:'USD',occurred_at:'2026-11-07T10:01:00.000Z',org_id:org},
+    {id:'db-1ph',source_type:'capture',source_id:'1PH772199P287644F',paypal_capture_id:'1PH772199P287644F',status:'COMPLETED',amount_minor:200,fee_minor:45,net_minor:155,currency:'USD',occurred_at:'2026-11-07T10:02:00.000Z',org_id:org},
+  ];
+  const database={async select(table,query){
+    const params=new URLSearchParams(query);
+    if(table==='transactions'){ assert.equal(params.get('org_id'),`eq.${org}`); return captureRows; }
+    if(table==='paypal_captures') return captureRows.map((row)=>({paypal_capture_id:row.paypal_capture_id,provider_payload:{}}));
+    if(table==='anomalies') return [{id:'anomaly-1ph',org_id:org,rule:'fee_rate_spike',status:'open',evidence_ids:['db-1ph']}];
+    if(table==='paypal_events') return [];
+    return [];
+  }};
+  const repos=createPostgresRepositories(database);
+  const repoRows=await repos.listTransactions(org,{limit:50,offset:0});
+  assert.equal(repoRows[0].paymentCheck,undefined,'paymentCheck is derived by the route, not stored on the Postgres transaction row');
+  assert.deepEqual(repoRows.map((row)=>[row.source_id,(row.fee_minor/100).toFixed(2),(row.net_minor/100).toFixed(2)]),[
+    ['62T15745ED514284D','0.81','9.19'],['6UV5767052048553J','0.67','6.33'],['1PH772199P287644F','0.45','1.55'],
+  ]);
+  await withApi(repos,{},async({call})=>{
+    const response=await call('/api/transactions'); assert.equal(response.status,200);
+    const rows=(await response.json()).transactions;
+    assert.deepEqual(rows.map((row)=>[row.sourceId,row.amount,row.fee,row.net]),[
+      ['62T15745ED514284D','10.00','0.81','9.19'],['6UV5767052048553J','7.00','0.67','6.33'],['1PH772199P287644F','2.00','0.45','1.55'],
+    ]);
+    assert.deepEqual(rows.map((row)=>row.paymentCheck.state),['confirmed','confirmed','needs_review']);
+    assert.match(rows[2].paymentCheck.reasons[0],/^fee_rate_spike:/);
   });
 });
 

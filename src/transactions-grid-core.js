@@ -52,10 +52,11 @@
     });
     return Object.keys(byCurrency).sort().map(function (currency) { return byCurrency[currency]; });
   }
+  function displayId(row) { return row && row._totals ? "Total (" + String(row.currency || "UNKNOWN").toUpperCase() + ")" : String(row && row.id || ""); }
   function formatMoney(amount, currency) {
     if (amount == null || !Number.isFinite(Number(amount))) return "Unavailable";
     try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(amount)).replace(/\u00a0/g, " "); }
     catch (_) { return (currency || "") + " " + Number(amount).toFixed(2); }
   }
-  return { parseMoney: parseMoney, rowFromDom: rowFromDom, rowsFromDom: rowsFromDom, matchesExternalFilters: matchesExternalFilters, matchesFilters: matchesFilters, totalsByCurrency: totalsByCurrency, formatMoney: formatMoney };
+  return { parseMoney: parseMoney, rowFromDom: rowFromDom, rowsFromDom: rowsFromDom, matchesExternalFilters: matchesExternalFilters, matchesFilters: matchesFilters, totalsByCurrency: totalsByCurrency, displayId: displayId, formatMoney: formatMoney };
 }));
