@@ -77,7 +77,16 @@ export function redactSensitiveText(value, sensitiveValues = []) {
     const pattern = new RegExp('(?<![\\p{L}\\p{N}])' + escapeRegExp(privateValue.trim()) + '(?![\\p{L}\\p{N}])', 'giu');
     text = text.replace(pattern, '[REDACTED_PERSON]');
   }
-  return text
+  // PayPal capture IDs are alphanumeric; speech transcription can insert a
+  // space inside them (for example `6UV57670520485 3J`). Protect that narrow
+  // shape while phone/account-number redaction runs, then restore it verbatim.
+  const captureIds = [];
+  text = text.replace(/\b(?=[A-Z0-9 ]{12,24}\b)(?=[A-Z0-9 ]*[A-Z])(?=[A-Z0-9 ]*\d)[A-Z0-9]{10,18}\s+[A-Z0-9]{1,4}\b/gi, (id) => {
+    const marker = `NOVAPAYCAPTUREID${captureIds.length}END`;
+    captureIds.push(id);
+    return marker;
+  });
+  text = text
     .replace(/\b[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9-]+(?:\.[A-Z0-9-]+)+\b/gi, '[REDACTED_EMAIL]')
     .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED_ID]')
     .replace(/\b(?:bearer\s+)[A-Za-z0-9._~+/=-]{8,}/gi, 'Bearer [REDACTED_TOKEN]')
@@ -86,6 +95,7 @@ export function redactSensitiveText(value, sensitiveValues = []) {
     .replace(/\b\d{1,6}\s+[\p{L}\p{N}.'’#-]+(?:\s+[\p{L}\p{N}.'’#-]+){0,4}\s+(?:street|st|road|rd|avenue|ave|lane|ln|drive|dr|boulevard|blvd|court|ct|way)\b/giu, '[REDACTED_ADDRESS]')
     .replace(/\b(?:\d[ -]*?){8,19}\b/g, '[REDACTED_ACCOUNT_OR_CARD]')
     .replace(/\+?\d[\d ().-]{7,}\d/g, '[REDACTED_PHONE]');
+  return captureIds.reduce((result, id, index) => result.replace(`NOVAPAYCAPTUREID${index}END`, id), text);
 }
 
 export function sanitizeAIResponse(text, context = {}) {
@@ -107,12 +117,28 @@ export function sanitizeAIResponse(text, context = {}) {
         reason: typeof proposal.reason === 'string' ? proposal.reason.slice(0, 500) : 'No reason supplied.',
       };
     } else proposal = null;
-    const knownIds = new Set([
+    const knownRecords = [
       ...(Array.isArray(context.records) ? context.records : []),
       ...(Array.isArray(context.transactions) ? context.transactions : []),
-    ].flatMap((item) => [item?.id, item?.sourceId].map((id) => String(id || ''))).filter(Boolean));
-    const evidence = [...new Set(out.evidence.filter((id) => knownIds.has(id)))];
-    if (proposal && (!knownIds.has(proposal.txId) || !allowedProposals.has(proposal.type))) proposal = null;
+    ];
+    const knownIds = new Set(knownRecords.flatMap((item) => [item?.id, item?.sourceId].map((id) => String(id || ''))).filter(Boolean));
+    const resolveKnownId = (value) => {
+      const id = String(value || '');
+      if (knownIds.has(id)) return id;
+      const compact = id.replace(/\s+/g, '');
+      if (!/^[A-Z0-9]{12,24}$/i.test(compact) || !/\s/.test(id)) return null;
+      return [...knownIds].find((known) => /^[A-Z0-9]{12,24}$/i.test(known) && known.toUpperCase() === compact.toUpperCase()) || null;
+    };
+    const evidence = [...new Set(out.evidence.map(resolveKnownId).filter(Boolean))];
+    if (proposal) {
+      const canonicalProposalId = resolveKnownId(proposal.txId);
+      if (!canonicalProposalId || !allowedProposals.has(proposal.type)) proposal = null;
+      else {
+        proposal.txId = canonicalProposalId;
+        const matched = knownRecords.find((item) => String(item?.id || '') === proposal.txId);
+        if (matched?.sourceId) proposal.txId = String(matched.sourceId);
+      }
+    }
     return { reply: out.reply.trim(), evidence, proposal };
   } catch { return { reply: UNSAFE_REPLY, evidence: [], proposal: null }; }
 }
@@ -236,27 +262,32 @@ function safeProposalText(value, fallback, maxLength) {
 }
 
 async function persistPendingProposal({ proposal, citations, records, repos, context }) {
-  if (!proposal || !repos?.approvals?.createAIProposal || !context?.orgId || !context?.userId) return null;
+  const reject = (reasonCode) => {
+    console.warn(JSON.stringify({ level: 'warn', event: 'ai_proposal_not_created', reasonCode }));
+    return { proposal: null, reasonCode };
+  };
+  if (!proposal || !repos?.approvals?.createAIProposal || !context?.orgId || !context?.userId) return reject('PROPOSAL_CONTEXT_OR_REPOSITORY_MISSING');
   const record = records.find((item) => [item.id, item.sourceId].map(String).includes(String(proposal.txId)));
-  if (!record || !citations.includes(String(record.id))) return null;
+  if (!record) return reject('PROPOSAL_RECORD_NOT_FOUND');
+  if (![record.id, record.sourceId].some((id) => citations.includes(String(id || '')))) return reject('PROPOSAL_CITATION_MISSING');
   let captureId = null, invoiceId = null, amount = null, currency = null;
   if (proposal.type === 'refund') {
-    if (record.recordType !== 'transaction' || String(record.type).toLowerCase() !== 'capture' || String(record.status).toUpperCase() !== 'COMPLETED') return null;
+    if (record.recordType !== 'transaction' || String(record.type).toLowerCase() !== 'capture' || String(record.status).toUpperCase() !== 'COMPLETED') return reject('REFUND_CAPTURE_NOT_COMPLETED');
     captureId = String(record.sourceId || record.id);
     const capture = await repos.captures?.get(captureId, context.orgId);
-    if (!capture || String(capture.status).toUpperCase() !== 'COMPLETED') return null;
+    if (!capture || String(capture.status).toUpperCase() !== 'COMPLETED') return reject('REFUND_CAPTURE_NOT_FOUND_OR_NOT_COMPLETED');
     const remaining = remainingRefundable(capture);
-    if (!Number.isFinite(remaining) || remaining <= 0) return null;
+    if (!Number.isFinite(remaining) || remaining <= 0) return reject('REFUND_BALANCE_EXHAUSTED');
     amount = remaining.toFixed(2);
     currency = String(capture.currency || record.currency || 'USD');
-    if (currency !== 'USD') return null;
+    if (currency !== 'USD') return reject('REFUND_CURRENCY_NOT_USD');
   } else if (proposal.type === 'send-invoice') {
-    if (record.recordType !== 'invoice') return null;
+    if (record.recordType !== 'invoice') return reject('SEND_INVOICE_RECORD_INELIGIBLE');
     const invoice = await repos.invoices?.get(record.id, context.orgId);
-    if (!invoice || invoice.state !== 'reviewed') return null;
+    if (!invoice || invoice.state !== 'reviewed') return reject('SEND_INVOICE_NOT_REVIEWED');
     invoiceId = record.id;
   }
-  else if (proposal.type === 'hold-payout' && String(record.type).toLowerCase() !== 'payout') return null;
+  else if (proposal.type === 'hold-payout' && String(record.type).toLowerCase() !== 'payout') return reject('PAYOUT_RECORD_INELIGIBLE');
 
   const approval = await repos.approvals.createAIProposal({
     orgId: context.orgId,
@@ -271,11 +302,30 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
       title: safeProposalText(proposal.title, 'AI suggestion', 120),
       reason: safeProposalText(proposal.reason, 'No reason supplied.', 500),
       targetId: String(record.id).slice(0, 150),
-      evidenceIds: [...new Set(citations.filter((id) => records.some((item) => String(item.id) === id)))].slice(0, 30),
+      evidenceIds: [...new Set(citations.filter((id) => records.some((item) => [item.id, item.sourceId].some((known) => String(known || '') === id))))].slice(0, 30),
     },
   });
-  if (!approval) return null;
-  return { ...proposal, ...(amount ? { amount, currency } : {}), approvalId: approval.approvalId, status: 'pending' };
+  if (!approval) return reject('APPROVAL_CREATE_RETURNED_EMPTY');
+  return { proposal: { ...proposal, ...(amount ? { amount, currency } : {}), approvalId: approval.approvalId, status: 'pending' }, reasonCode: null };
+}
+
+function proposalFailureReply(reasonCode) {
+  const reasons = {
+    PROPOSAL_REFERENCE_NOT_IN_ORG: 'the transaction ID did not match a record in this organization',
+    PROPOSAL_OBJECT_MISSING: 'the assistant did not return a valid proposal reference',
+    PROPOSAL_CONTEXT_OR_REPOSITORY_MISSING: 'the organization or approval service is unavailable',
+    PROPOSAL_RECORD_NOT_FOUND: 'the transaction could not be matched to an organization record',
+    PROPOSAL_CITATION_MISSING: 'the transaction was not cited by the answer',
+    REFUND_CAPTURE_NOT_COMPLETED: 'the record is not a completed capture',
+    REFUND_CAPTURE_NOT_FOUND_OR_NOT_COMPLETED: 'the completed capture could not be verified in this organization',
+    REFUND_BALANCE_EXHAUSTED: 'there is no refundable balance remaining',
+    REFUND_CURRENCY_NOT_USD: 'refund proposals require a USD capture',
+    SEND_INVOICE_RECORD_INELIGIBLE: 'the referenced record is not an invoice',
+    SEND_INVOICE_NOT_REVIEWED: 'the invoice is not eligible for a send proposal',
+    PAYOUT_RECORD_INELIGIBLE: 'the referenced record is not an eligible payout',
+    APPROVAL_CREATE_RETURNED_EMPTY: 'the approval service did not create an approval',
+  };
+  return `I could not create a proposal: ${reasons[reasonCode] || 'the approval could not be created'}.`;
 }
 
 export function createAIService({ config, events, repos, fx, provider = createLLMAdapter({ config, events }), documentSearch }) {
@@ -370,6 +420,12 @@ export function createAIService({ config, events, repos, fx, provider = createLL
     if (reservation?.usageId) await aiRepo.usage.complete(reservation.usageId, { inputTokens: Number(result?.usage?.inputTokens ?? inputTokensEstimate), outputTokens: Number(result?.usage?.outputTokens || 0), latencyMs: Date.now() - startedAt, model: result?.model || config.resolvedLLMModel || config.LLM_MODEL, status: sanitized.reply === UNSAFE_REPLY || sanitized.reply === EMPTY_REPLY ? 'invalid_response' : 'completed' }).catch(() => {});
     if (sanitized.reply === UNSAFE_REPLY || sanitized.reply === EMPTY_REPLY) return withRoute(sanitized);
     const rawParsed = (() => { try { return JSON.parse(typeof result === 'string' ? result : result?.text); } catch { return null; } })();
+    let proposalFailure = null;
+    const claimsProposal = /\bproposal\b.{0,80}\b(?:prepared|created|already created|submitted|generated)\b|\b(?:prepared|created|already created|submitted|generated)\b.{0,80}\bproposal\b/i.test(sanitized.reply);
+    if (rawParsed?.proposal && !sanitized.proposal) proposalFailure = 'PROPOSAL_REFERENCE_NOT_IN_ORG';
+    else if (sanitized.proposal && !sanitized.evidence.length) proposalFailure = 'PROPOSAL_CITATION_MISSING';
+    else if (!sanitized.proposal && claimsProposal) proposalFailure = 'PROPOSAL_OBJECT_MISSING';
+    if (proposalFailure) console.warn(JSON.stringify({ level: 'warn', event: 'ai_proposal_not_created', reasonCode: proposalFailure }));
     const actions = validateAssistantActions(rawParsed?.actions, message, context?.role);
     const knownIds = new Set(safeRecords.flatMap((record) => [record?.id, record?.sourceId].map((id) => String(id || ''))).filter(Boolean));
     const unknownEvidenceCount = Array.isArray(rawParsed?.evidence) ? rawParsed.evidence.filter((id) => !knownIds.has(String(id))).length : 0;
@@ -381,12 +437,20 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       return withRoute({ reply: INSUFFICIENT_EVIDENCE_REPLY, evidence: sanitized.evidence, proposal: null, insufficientEvidence: true });
     }
     if (!safeRecords.length || !sanitized.evidence.length) {
+      if (rawParsed?.proposal || proposalFailure) {
+        const reasonCode = proposalFailure || (!safeRecords.length ? 'PROPOSAL_RECORD_NOT_FOUND' : 'PROPOSAL_CITATION_MISSING');
+        if (!proposalFailure) console.warn(JSON.stringify({ level: 'warn', event: 'ai_proposal_not_created', reasonCode }));
+        const reply = proposalFailureReply(reasonCode);
+        return withRoute({ ...sanitized, reply, speak: safeSpokenText(reply), proposal: null, actions, insufficientEvidence: false });
+      }
       if (actions.length) return withRoute({ ...sanitized, actions, speak: safeSpokenText(rawParsed?.speak || sanitized.reply), usage: { model: result?.model || config.resolvedLLMModel || config.LLM_MODEL || null, inputTokens: Number(result?.usage?.inputTokens ?? inputTokensEstimate), outputTokens: Number(result?.usage?.outputTokens || 0) }, cached: false, insufficientEvidence: false });
       return withRoute({ reply: INSUFFICIENT_EVIDENCE_REPLY, evidence: [], proposal: null, insufficientEvidence: true });
     }
     const hadProposal = Boolean(sanitized.proposal);
-    const persistedProposal = await persistPendingProposal({ proposal: sanitized.proposal, citations: sanitized.evidence, records: safeRecords, repos, context });
-    const answer = { ...sanitized, ...(actions.length ? { actions } : {}), speak: safeSpokenText(rawParsed?.speak || sanitized.reply), proposal: persistedProposal, insufficientEvidence: false, model: result?.model || config.resolvedLLMModel || config.LLM_MODEL || null, usage: { model: result?.model || config.resolvedLLMModel || config.LLM_MODEL || null, inputTokens: Number(result?.usage?.inputTokens ?? inputTokensEstimate), outputTokens: Number(result?.usage?.outputTokens || 0) }, cached: false, cacheHit: false };
+    const persistence = sanitized.proposal ? await persistPendingProposal({ proposal: sanitized.proposal, citations: sanitized.evidence, records: safeRecords, repos, context }) : { proposal: null, reasonCode: null };
+    const failedProposal = Boolean(proposalFailure || sanitized.proposal && !persistence.proposal);
+    const reply = proposalFailure ? proposalFailureReply(proposalFailure) : sanitized.proposal && !persistence.proposal ? proposalFailureReply(persistence.reasonCode) : sanitized.reply;
+    const answer = { ...sanitized, reply, ...(actions.length ? { actions } : {}), speak: safeSpokenText(failedProposal ? reply : rawParsed?.speak || reply), proposal: persistence.proposal, insufficientEvidence: false, model: result?.model || config.resolvedLLMModel || config.LLM_MODEL || null, usage: { model: result?.model || config.resolvedLLMModel || config.LLM_MODEL || null, inputTokens: Number(result?.usage?.inputTokens ?? inputTokensEstimate), outputTokens: Number(result?.usage?.outputTokens || 0) }, cached: false, cacheHit: false };
     if (cacheEnabled && dataVersion && cacheKey && !hadProposal && !answer.proposal && !answer.unavailable && !answer.insufficientEvidence) {
       const ttl = Number(config.AI_CACHE_TTL_SECONDS || 300);
       await aiRepo.cache.put({ orgId: context.orgId, cacheKey, dataVersion, answer, expiresAt: new Date(Date.now() + ttl * 1000).toISOString() }).catch(() => {});

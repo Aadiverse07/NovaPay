@@ -80,10 +80,10 @@
       <h1 id="hero-title">From PayPal<br>Transactions to<br><span class="text-gradient">Intelligent Financial Action</span></h1>
       <p class="hero-description">NovaPay automatically turns your PayPal transactions into accurate books, explains your finances, detects unusual activity, and helps you take action — all in one intelligent platform.</p>
       <div class="hero-cta">
-        <a id="open-dashboard" class="btn btn--primary btn--large" href="dashboard.html">Open Dashboard <span aria-hidden="true">→</span></a>
-        <button id="hero-start" class="btn btn--ghost btn--large">Get Started Free <span>→</span></button>
+        <a id="open-dashboard" class="btn btn--ghost btn--large" href="dashboard.html">Open Dashboard <span aria-hidden="true">→</span></a>
+        <button id="hero-start" class="btn btn--primary btn--large">Get Started Free <span>→</span></button>
       </div>
-      <button id="intro-voice-hear" class="btn btn--ghost" type="button" aria-label="Tap to hear the NovaPay introduction">Tap to hear NovaPay</button>
+      <button id="intro-voice-hear" class="btn btn--text" type="button" aria-label="Tap to hear the NovaPay introduction">Tap to hear NovaPay</button>
       <div class="hero-proof" aria-label="NovaPay capabilities">
         <div><span class="proof-icon">✓</span><strong>Automated</strong><small>Bookkeeping</small></div>
         <div><span class="proof-icon"><novapay-logo size="17" variant="mark"></novapay-logo></span><strong>Smart</strong><small>Insights</small></div>
@@ -141,7 +141,7 @@
         <div class="approval-label">NOVAPAY RECOMMENDATION</div>
         <strong>Possible anomaly found</strong>
         <p>Review the transaction before taking action.</p>
-        <div class="approval-actions"><button class="mini-btn mini-btn--primary" data-demo-action="approve">Approve</button><button class="mini-btn" data-demo-action="review">Review</button></div>
+        <div class="approval-actions" aria-hidden="true"><span class="btn btn--primary btn--compact" data-demo-action="approve">Approve</span><span class="btn btn--ghost btn--compact" data-demo-action="review">Review</span></div>
       </div>
     </div>
   </section>
@@ -165,15 +165,15 @@
         <div class="feature-top"><span class="feature-icon">▤</span><span class="feature-tag">AUTOMATION</span></div>
         <h3>Automatic Bookkeeping</h3>
         <p>PayPal events flow into NovaPay and are represented as structured double-entry ledger activity.</p>
-        <button class="feature-cta" type="button" data-feature="Automatic Bookkeeping">Explore bookkeeping <span>→</span></button>
+        <button class="btn btn--text feature-cta" type="button" data-feature="Automatic Bookkeeping">Explore bookkeeping <span aria-hidden="true">→</span></button>
       </article>
 
       <article class="feature-card feature-card--assistant">
-        <div class="feature-top"><span class="feature-icon"><novapay-logo size="17" variant="mark"></novapay-logo></span><span class="feature-tag">INTELLIGENCE</span></div>
+        <div class="feature-top"><span class="feature-icon" aria-hidden="true">✦</span><span class="feature-tag">INTELLIGENCE</span></div>
         <h3>AI Assistant</h3>
         <p>Ask financial questions and receive clear explanations and insights from the information NovaPay organizes.</p>
         <div class="assistant-preview"><span class="assistant-dot"><novapay-logo size="15" variant="mark"></novapay-logo></span><span>“Explain this month's PayPal fees.”</span><b>Insight ready</b></div>
-        <button class="feature-cta" type="button" data-feature="AI Assistant">Ask NovaPay AI <span>→</span></button>
+        <button class="btn btn--text feature-cta" type="button" data-feature="AI Assistant">Ask NovaPay AI <span aria-hidden="true">→</span></button>
       </article>
 
       <article class="feature-card feature-card--ledger">
@@ -181,7 +181,7 @@
         <h3>Smart Ledger</h3>
         <p>Keep accounting behavior deterministic and structured so financial records remain clear and auditable.</p>
         <div class="ledger-preview"><div><span>Debit</span><b>$120.00</b></div><div><span>Credit</span><b>$120.00</b></div><em>Balanced entry</em></div>
-        <button class="feature-cta" type="button" data-feature="Smart Ledger">View ledger <span>→</span></button>
+        <button class="btn btn--text feature-cta" type="button" data-feature="Smart Ledger">View ledger <span aria-hidden="true">→</span></button>
       </article>
 
       <article class="feature-card feature-card--anomaly">
@@ -189,19 +189,20 @@
         <h3>Anomaly Detection</h3>
         <p>Surface unusual refunds, disputes, and transaction patterns so merchants know what deserves a closer look.</p>
         <div class="anomaly-preview"><span>Refund</span><b>Unusual</b><i>Review needed</i></div>
-        <button class="feature-cta" type="button" data-feature="Anomaly Detection">Review anomalies <span>→</span></button>
+        <button class="btn btn--text feature-cta" type="button" data-feature="Anomaly Detection">Review anomalies <span aria-hidden="true">→</span></button>
       </article>
 
       <article class="feature-card feature-card--actions">
         <div class="feature-top"><span class="feature-icon">✓</span><span class="feature-tag">CONTROL</span></div>
         <h3>Safe Actions</h3>
         <p>NovaPay proposes a next step, the human reviews it, and the approved action can proceed through the connected action flow.</p>
-        <button class="feature-cta" type="button" data-feature="Safe Actions">Review actions <span>→</span></button>
+        <div class="safe-action-preview" aria-hidden="true"><span>Review</span><i>→</i><span>Approve</span></div>
+        <button class="btn btn--text feature-cta" type="button" data-feature="Safe Actions">Review actions <span aria-hidden="true">→</span></button>
       </article>
     </div>
   </section>
 <section class="pricing-band" id="get-started-cta" aria-labelledby="pricing-title">
-    <div><span class="section-kicker">START WITH NOVAPAY</span><h2 id="pricing-title">Ready to turn financial activity into action?</h2><p>Explore the product experience and connect it to your existing NovaPay flow.</p></div>
+    <div><span class="section-kicker cta-text cta-kicker" style="--cta-d: 0ms;">Start with NovaPay</span><h2 id="pricing-title">Ready to turn financial activity into action?</h2><p>Explore the product experience and connect it to your existing NovaPay flow.</p></div>
     <button class="btn btn--primary btn--large" id="pricing-start">Get Started Free <span>→</span></button>
   </section>
 </main>
