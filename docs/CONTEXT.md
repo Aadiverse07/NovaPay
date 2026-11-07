@@ -1,10 +1,10 @@
 # NovaPay Context
 
 ## HEADER
-- Date/time: 2026-11-07 20:30 IST
-- Branch: `fix-ai-proposals` (created from local commit `9c20fe2`)
+- Date/time: 2026-11-07 20:50 IST
+- Branch: `ui-polish-approvals` (created from `fix-ai-proposals`)
 - Last implementation commit: `8ad3845` (`WIP-BROKEN: diagnose AI refund proposal failures`); unrelated carried-forward UI edits remain uncommitted.
-- Current phase/task: fix false-success AI refund proposal handling and preserve whitespace-split PayPal IDs; no server restart or live AI call permitted during this task.
+- Current phase/task: approvals and AI proposal UI polish; no server logic, safety checks, refund services or ledger logic changed.
 
 ## DONE
 - Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
@@ -94,3 +94,11 @@ npm run check:migrations
 - Proposal persistence now logs a reason code on each rejection, reports an honest failure to the user, and does not allow “prepared/already created” wording without a persisted proposal object. Completed USD status, organization scope, refundable balance and approval RPC checks remain enforced.
 - Full `npm test`: 370/371; one unrelated existing failure in `server/test/fund-campaign-live-view.test.js:43` (expects a direct `src/fund-views.js` script tag). AI suite: 24/24. Migrations syntax: 21/21.
 - Live browser proposal flow remains UNVERIFIED; server on port 3000 was not restarted and no AI request was made.
+
+
+## UI polish checkpoint (2026-11-07)
+- Persisted refund confirmations use “Confirm refund in PayPal Sandbox”, capture ID and amount, and state Sandbox will be contacted. Simulated wording is limited to send-invoice, maintenance-payment, dispute-evidence and hold-payout.
+- Auth errors trigger one Supabase session refresh and an authenticated uncached GET for `/api/approvals/:id`; the UI reflects server status. No decision/refund POST is repeated.
+- Live Supabase AI proposal cards with an approval ID show a review-pending message and Open Approvals button; missing approval IDs show no card. Demo mode behavior is preserved.
+- `/api/status` model is shown with a provider label inferred from the model name; initial and failed status copy does not claim Anthropic. Connected PayPal Sandbox hides the unavailable notice.
+- Focused UI tests PASS 16/16; syntax and diff whitespace checks PASS. Browser verification UNVERIFIED. Hard-reload the browser; no server restart required because server code did not change.

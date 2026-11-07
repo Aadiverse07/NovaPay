@@ -1535,3 +1535,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-07 | `node --test server/test/ai.test.js` | PASS | 24/24 | Covers spaced capture IDs, exact no-fuzzy-match rejection, proposal creation failure logging, false “already created” claims, and phone redaction.
 2026-11-07 | `npm test` | FAIL | 371 total, 370 passed, 1 failed | Existing unrelated `server/test/fund-campaign-live-view.test.js:43` expects `<script src="src/fund-views.js">`; migrations 21/21 syntax checks passed.
 2026-11-07 | Browser / local server proposal verification | UNVERIFIED | Not run | User instructed not to restart port 3000; no AI request or approval write was made.
+
+2026-11-07 | `node --check src/novapay-live.js && node --check src/dashboard.js && node --test server/test/approvals-live-data.test.js server/test/dashboard-demo-isolation.test.js server/test/novapay-live-api.test.js && git diff --check` | PASS | 16/16 tests; syntax and whitespace checks passed | Covers persisted refund wording, auth refresh + status GET without POST retry, AI live proposal link, status provider/Sandbox copy.
+2026-11-07 | Browser verification of approval auth recovery, live AI card and status notices | UNVERIFIED | Not run | Requires a hard reload and authenticated browser; no server restart needed.
