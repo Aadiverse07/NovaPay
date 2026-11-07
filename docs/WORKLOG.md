@@ -1,11 +1,11 @@
 ## RESUME POINTER
-- Current task: Payment check feature complete; branch `feat-payment-check` based on main commit `9c20fe2`; no push.
-- DONE: investigated transaction/capture/webhook/anomaly sources; added pure payment-check rules and org-scoped GET /api/transactions enrichment; added transaction badge, reasons tooltip, verified-webhook detail and Needs review filter; no migration or write path.
-- VERIFIED: focused feature/API/repository/grid tests 39/39; all 21 migrations syntax-check; final `npm test` 377/378 with one pre-existing Community Funds script-tag assertion; changed-JS syntax, `git diff --check`, protected-file diff clean.
-- LIVE READ-ONLY: captures 6UV5767052048553J, 1PH772199P287644F and 62T15745ED514284D each had COMPLETED status, no open anomaly, no matching webhook row, and no stored seller_protection; each derives Confirmed (PayPal status only).
-- UNVERIFIED: browser rendering/filter and live /api/transactions response from this branch; authenticated network fetches for the new signal fields.
-- PENDING HUMAN: restart/reload app and verify badges, reasons, Needs review filter and visible verified-webhook detail (only where present).
-- NEXT: commit the documented feature work locally; do not push. Human browser check can follow using docs/BROWSER-CHECKLIST.md if present, otherwise manual steps in final response.
+- Current task: Payment check feature committed as `2a22b9e`; branch `feat-payment-check`, based on main `9c20fe2`; never pushed.
+- DONE: Phase 1 audit and Phase 2 server/UI implementation; org-scoped transaction response signal; anomaly reasons, webhook verification detail, display-only badges and Needs review filter; no migration/write path.
+- VERIFIED: focused feature/API/repository/grid tests 39/39; npm test 377/378 with one known pre-existing Community Funds script-tag assertion; 21 migrations parse; changed-JS syntax, diff whitespace, protected-file diff pass.
+- LIVE READ-ONLY: captures 6UV5767052048553J, 1PH772199P287644F, and 62T15745ED514284D each COMPLETED, with no open anomaly, matching webhook, or stored seller_protection; each derives Confirmed based only on PayPal status.
+- UNVERIFIED: branch-specific live API response and browser rendering/filter/detail.
+- PENDING HUMAN: restart/reload app; open Transactions; inspect badge reason; choose Needs review; verify signature-verified webhook detail only when a verified event exists.
+- NEXT: perform browser check; no push requested or performed.
 
 ## Backfill
 - 2026-10-26 — ABOUT TO: Record T1/T2 history and existing commits in this append-only journal. WHY: establish a repo-local continuation record before resuming live verification.
@@ -5635,3 +5635,8 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-08 10:11 IST | About to stage explicitly named Payment check implementation/tests/docs on feat-payment-check. Why: create the requested local checkpoint without staging unrelated or secret files. Next: verify staged names/stat and commit; never push.
 2026-11-08 10:12 IST | Result: PASS; staged exactly 17 explicit implementation/test/doc files; staged stat reviewed; no `.env` or secret path staged. Next: commit as “Add advisory PayPal payment checks” on feat-payment-check, then record the resulting commit locally.
 2026-11-08 10:13 IST | About to create the local feature commit. Why: requested checkpoint on feat-payment-check after tests/docs are ready. Next: verify commit hash and clean status, then append the commit result and finalize the handoff.
+2026-11-07 14:36 IST | Result: PASS; feature commit `2a22b9e` created locally on `feat-payment-check`; no push. Timestamp correction: the detailed entries above were accidentally dated 2026-11-08 during this turn; actual task date is 2026-11-07. Next: update the RESUME POINTER/CONTEXT to the committed state, record corrected run dates, commit the handoff docs, then stop.
+2026-11-07 14:37 IST | About to update the top RESUME POINTER and CONTEXT with commit `2a22b9e`, and correct this turn's test/decision dates. Why: make the repo handoff accurate after the local feature checkpoint. Next: commit only the updated handoff docs, then verify clean status and branch.
+2026-11-07 14:38 IST | Result: PASS; RESUME POINTER and CONTEXT now record feature commit `2a22b9e`; TEST-REPORT/DECISIONS dates corrected for this turn. Next: stage only handoff docs, check diff whitespace, commit documentation, and verify branch/status.
+2026-11-07 14:39 IST | About to commit the post-feature handoff docs only. Why: checkpoint the updated continuation pointer and result records after the implementation commit. Next: verify final commit hash, branch and worktree; stop without pushing.
+2026-11-07 14:40 IST | Result: PASS; handoff documentation commit succeeded as `e74ec29`; branch remains `feat-payment-check`, worktree was clean, and nothing was pushed. Next: finalize this outcome entry in the same local docs checkpoint and report the two local commit hashes.

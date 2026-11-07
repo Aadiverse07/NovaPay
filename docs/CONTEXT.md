@@ -1,7 +1,7 @@
 # NovaPay Context
 
 ## HEADER
-- Date/time: 2026-11-08 10:03 IST
+- Date/time: 2026-11-07 14:37 IST
 - Branch: `feat-payment-check`, created from `main` at `9c20fe2`.
 - Current phase/task: Payment check signal complete; local commit pending; never pushed.
 
@@ -14,12 +14,11 @@
 - No schema migration or write path added. Refunds, approvals, ledger, and webhook processing behavior unchanged.
 
 ## IN PROGRESS
-- Implementation complete; local commit is the remaining step. Preserve the earlier user edit in `src/financial-live.js` (source/capture ID datasets), which is now used by this feature.
+- Implementation complete; feature commit `2a22b9e` is local and complete. Preserve the source/capture ID dataset edit in `src/financial-live.js`; it is included in the feature commit.
 
 ## NEXT STEPS
-1. Stage only the named feature files and docs; confirm `.env` is not staged/tracked.
-2. Commit locally on `feat-payment-check`; do not push.
-3. Restart the local server and hard-refresh the dashboard; follow manual checks in the final response.
+1. 1. Restart the local server and hard-refresh the dashboard; follow manual checks in the final response.
+2. Do not push unless separately authorized.
 
 ## USER ACTIONS PENDING
 - Restart `npm start`, sign in, open Transactions, inspect a badge and its reason tooltip, choose Needs review, and verify the visible signature-verified webhook detail only for a row that has a verified event.
