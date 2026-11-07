@@ -1,76 +1,78 @@
 # NovaPay Context
 
 ## HEADER
+- Date/time: 2026-11-07 15:48 IST
+- Branch: `feat-run-scan`, created from `feat-payment-check` (not merged to `origin/main` at branch creation).
+- Current phase/task: Fix Transactions Payment check rendering/loading and scan status layout; local commit pending; never push.
+
 - Date/time: 2026-11-07 20:50 IST
 - Branch: `ui-polish-approvals` (created from `fix-ai-proposals`)
 - Last UI implementation commit: `a8e469a` (`Polish persisted approval and AI proposal UI`); unrelated carried-forward edits remain uncommitted.
 - Current phase/task: approvals and AI proposal UI polish; no server logic, safety checks, refund services or ledger logic changed.
 
 ## DONE
-- Read this file and the WORKLOG tail before work; created checkpoint `39a6cc9` before changing code.
-- Confirmed the code path: onboarding lookup failures were treated as “no organization”; global request limiters were hard-coded at 300/IP and 240/user per 15 minutes; several hidden modules and focus/auth events fetched independently.
-- Added workspace restore states: only a successful lookup returning no org can show create-workspace. Transient 429/5xx/network retains the last org, retries with backoff/Retry-After, and exposes retry state.
-- Added shared GET in-flight deduplication, 20-second successful response cache, scoped mutation invalidation, and bounded Retry-After handling in `src/api-client.js`.
-- Scoped passive refresh to active views, visible tabs, and at least 30-second focus debounce; Sandbox events poll no faster than 60 seconds while visible.
-- Made IP/user/read rate budgets configurable (`RATE_LIMIT_IP=1500`, `RATE_LIMIT_USER=1200`, `RATE_LIMIT_READ_USER=2400` defaults); route-specific auth/OTP/onboarding/AI limits remain. Rate limit responses include Retry-After.
-- Added regression tests for budget/dedupe/cache/backoff, workspace 429 behavior and duplicate-workspace protection, configurable limits/headers, and persisted transaction/ledger route reads across app restart fixtures.
-- Automated verification: `npm test` PASS 352/352 (includes 21/21 migration syntax checks); changed JS `node --check` PASS; `git diff --check` PASS; protected files unchanged.
-- Pre-change checkpoint commit: `39a6cc9`; integration merge commit: `e043aafd4bf9cf70602d2870e9984198f234ceea`; pushed to origin/main and origin/novapay-final; the merge hash is recorded in this file and WORKLOG.
+- Existing endpoint confirmed: POST `/api/anomalies/run`, protected by owner/admin/accountant RBAC; no server logic changed.
+- Added two existing-token `.btn btn--ghost` controls: Notifications popover and beside Transactions Needs review filter.
+- `src/notifications-live.js` uses `NovaPayApi.request` for auth/org headers; checks trusted app metadata or existing `/api/onboarding` memberships; hides in demo mode and for known unauthorized roles.
+- Scan disables both controls and shows Scanning; results/errors use aria-live status text. 403 role message is specific; 401/429 and generic failures are readable and retryable. No alerts or raw stack output.
+- When new findings are created, invalidates notifications/transactions and refreshes both existing views. `created: 0` says findings may already be recorded today.
+- Files changed: `dashboard.html`, `src/notifications-live.js`, `server/test/notifications-live-source.test.js`, `docs/WORKLOG.md`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
+- Transactions API response was verified in route code/tests: each returned row receives `paymentCheck`; no server changes were made for this UI fix.
+- No RBAC/anomaly rule, approval, refund or ledger changes. No migration.
+- Additional UI fix files: `src/transactions-grid.js`, `dashboard.html`, `server/test/transactions-ledger-live.test.js`, plus the four continuity docs.
 
 ## IN PROGRESS
+- UI fix committed locally as `ff4d73b`; no push. This branch inherits Payment check commits `2a22b9e` and `413dc9f` from `feat-payment-check`, which is not merged into main.
+
 - Current AI refund ID fix is uncommitted; see the 2026-11-07 section below.
 - Live browser request counts/statuses and production Supabase persistence remain unverified; automated fixture tests are not live DB checks.
 
 ## NEXT STEPS
-1. Human: run the exact steps in `docs/BROWSER-CHECKLIST.md` using the existing owner and org; record Network statuses and request counts.
-2. Confirm Transactions and Ledger responses still contain the existing sandbox payment after server restart, hard refresh, and sign-out/sign-in.
-3. Human: perform the browser checklist; browser and live database verification remain unverified.
+1. Human can verify in browser after restarting `npm start`.
+2. Do not push unless separately authorized.
 
 ## USER ACTIONS PENDING
-- Start/restart the local server and perform the browser checklist with the existing owner; record observed request counts and statuses.
+- Restart `npm start`; sign in; open Transactions and verify badges, tooltip reasons, and that Loading transactions clears. Confirm Run scan status is below the filters.
 
 ## LIVE STATE
-- Migrations: no migrations run in this task; syntax check passed for 21 files.
-- Tunnel/webhook: not checked.
-- Existing Supabase transaction/ledger rows: previously reported present by user; this run did not query production Supabase.
-- Server/browser request counts and actual response codes: UNVERIFIED; the screenshot text matches the general IP limiter's configured response, but no request log from that browser session was captured.
-- Secrets: no `.env` values printed; no `.env` or secret-named path tracked. Strict scan clean; the two distinct `sb_secret_` dummy fixtures were length 20. Main and backup pushes completed without force.
+- Branch base: `feat-payment-check` at local commit `413dc9f`; `origin/main` was `b1bbbbf` at fetch and did not contain feat-payment-check.
+- Migrations: unchanged; 21 files passed syntax checks via `npm test`.
+- Browser scan execution and UI refresh: UNVERIFIED.
+- Secrets: no `.env` values printed; `.env` not staged/tracked.
 
 ## TEST STATE
-| Check | Status | Date | Command / evidence |
+| Check | Status | Date | Command / result |
 |---|---|---|---|
-| API request dedupe/cache/budget/backoff | PASS | 2026-11-02 | `npm test`; modeled 11 distinct module GETs, repeated opens made no extra network calls within TTL |
-| Workspace transient 429/backoff/org retention | PASS | 2026-11-02 | `npm test`; 429 does not enter create-workspace flow; Retry-After and retry state tested |
-| Configurable limits and Retry-After | PASS | 2026-11-02 | `npm test`; defaults 1500 IP / 1200 writes / 2400 authenticated reads per 15 min |
-| Transaction/ledger restart persistence route regression | PASS | 2026-11-02 | `npm test`; same fixture repositories read through two app instances; not live Supabase |
-| Full test suite | PASS | 2026-11-02 | `npm test`: 352/352; migration syntax 21/21 |
-| Changed JS syntax and whitespace | PASS | 2026-11-02 | `node --check` changed JS; `git diff --check` |
-| Browser full-page/module request counts and real 429 codes | UNVERIFIED | 2026-11-02 | Browser surface unavailable; budget test is a harness, not a browser measurement |
-| Existing org transactions/ledger after real server restart and re-login | UNVERIFIED | 2026-11-02 | No live Supabase read or authenticated browser session in this run |
+| Notifications and anomaly route tests | PASS | 2026-11-07 | `node --test server/test/notifications-live-source.test.js server/test/routes.test.js`: 13/13 |
+| Full tests/migrations | FAIL (known/unrelated) | 2026-11-07 | `npm test`: 376/379; 21/21 migration syntax checks; known Community Funds assertion and two FX 503s |
+| FX failures isolated | PASS | 2026-11-07 | `node --test server/test/fx-providers.test.js server/test/phase3-services.test.js`: 20/20 |
+| Payment check badges/loading and scan-status layout in browser | UNVERIFIED | 2026-11-07 | Requires authenticated browser session |
+| Focused transaction API/grid tests | PASS | 2026-11-07 | `node --test server/test/financial-routes.test.js server/test/transactions-grid.test.js server/test/transactions-ledger-live.test.js`: 20/20 |
+| Current full suite | FAIL (known unrelated) | 2026-11-07 | `npm test`: 380/381; 21/21 migration syntax checks; only Community Funds script-tag assertion failed |
 
 ## KNOWN ISSUES AND RISKS
-- The 11-call budget test covers modeled unique reads and dedupe behavior; actual total browser calls may include auth/public-config and must be measured in DevTools.
-- Actual screenshot root cause is strongly consistent with a burst reaching the IP limiter plus onboarding misclassification, but the exact failing endpoint and 429 error code are not captured. General IP limiter emits `RATE_LIMITED`; user limiter emits `USER_RATE_LIMITED`.
-- Request cache is in-memory and short-lived; it never replaces server-side tenant scoping and must be invalidated after mutations.
-- Browser verification is required before claiming the incident resolved for the existing Supabase org.
+- Full test suite has the known Community Funds test expecting an obsolete `src/fund-views.js` tag. Two FX route tests returned 503 under parallel full-suite load but passed in isolation; this feature does not touch FX.
+- A scan with no new rows reports that findings may already be recorded today; it does not claim there were no anomalies.
+- The browser rendering bug was not verified in a real browser during this pass.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; errors roll everything back. Never edit an applied migration; add a new numbered file.
-- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary user JWT receives 403.
-- PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only and ON DELETE RESTRICT; cleanup journal_entries first, then audit_log, organizations, auth.users, via `scripts/cleanup-phase2-test-data.sql`; reuse fixed named test identities.
-- PayPal sandbox buyer must be a US Personal account; seller USD only; use Visa at checkout; webhook URL ends `/api/webhook` and PAYPAL_WEBHOOK_ID matches.
-- Raw body is needed for PayPal signature verification.
+- Supabase SQL Editor runs inside one transaction; a syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary-user denial.
+- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
+- audit_log is insert-only with ON DELETE RESTRICT; clean journal entries before audit_log, organizations and auth users using the manual cleanup script.
+- PayPal Sandbox buyer must be US Personal; seller USD; Visa at checkout; webhook URL ends in `/api/webhook` and webhook ID matches. Raw body is needed for signature verification.
 - Never print `.env` values; use key names only.
-- Distinguish source/test evidence from live browser and production database verification.
 
 ## DO NOT
-- Do not force-push or rewrite history.
-- Do not create users/orgs or trigger PayPal/Gemini for these checks.
-- Do not weaken tests, remove abuse protection, or treat transient onboarding errors as missing organizations.
-- Do not print environment values or secrets.
+- Never push to main, force-push, use `git add .`, edit protected UI/theme/assets, change server scan/RBAC rules, weaken tests, or commit `.env`.
 
 ## RESUME COMMANDS
+- `git status --short`
+- `git branch --show-current`
+- `npm test`
+- `npm run check:migrations`
+- `git diff --check`
+
 ```sh
 git status --short
 git branch --show-current

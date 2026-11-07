@@ -24,6 +24,17 @@ test('transaction grid external and quick filters compose on type, dates, amount
   assert.equal(core.matchesFilters(mapped, { max: '2000' }), false);
 });
 
+test('Payment check state maps from live row metadata and Needs review filters only flagged rows', () => {
+  const input = row('CAP-REVIEW', 'Payment', 'USD', '10.00', null, '10.00');
+  input.dataset.paymentCheck = 'needs_review';
+  input.dataset.paymentReasons = '["duplicate_amount_payer: Possible duplicate amount and payer."]';
+  const mapped = core.rowFromDom(input);
+  assert.deepEqual(mapped.paymentCheck, { state: 'needs_review', reasons: ['duplicate_amount_payer: Possible duplicate amount and payer.'], verifiedWebhookReceived: false });
+  assert.equal(core.matchesExternalFilters(mapped, { paymentCheck: 'needs_review' }), true);
+  assert.equal(core.matchesExternalFilters(core.rowFromDom(row('CAP-OK', 'Payment', 'USD', '10.00', null, '10.00')), { paymentCheck: 'needs_review' }), false);
+  assert.equal(core.rowFromDom(row('DEMO-1', 'Payment', 'USD', '10.00', null, '10.00')).paymentCheck, null);
+});
+
 test('transaction totals are grouped by currency and never sum mixed currencies', () => {
   const totals = core.totalsByCurrency([
     { id: 'a', currency: 'INR', gross: 100, fee: 2, net: 98 },
@@ -32,6 +43,11 @@ test('transaction totals are grouped by currency and never sum mixed currencies'
   ]);
   assert.equal(totals.length, 2);
   assert.deepEqual(totals.map((entry) => [entry.currency, entry.gross, entry.fee, entry.net]), [['INR', 150, 3, 147], ['JPY', 200, 0, 200]]);
+  const usdTotal = core.totalsByCurrency([{ id: 'd', currency: 'USD', gross: 1, fee: 0, net: 1 }])[0];
+  assert.equal(usdTotal.id, '__total__USD');
+  assert.equal(core.displayId(usdTotal), 'Total (USD)');
+  assert.equal(core.displayId(totals[0]), 'Total (INR)');
+  assert.equal(core.displayId({ id: 'CAP-1' }), 'CAP-1');
   assert.match(core.formatMoney(10000, 'INR'), /10,000/);
 });
 

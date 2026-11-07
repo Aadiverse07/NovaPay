@@ -23,14 +23,17 @@
       gross: parseMoney(textCell(row, 3)) == null ? parseMoney(data.amount) : parseMoney(textCell(row, 3)),
       fee: parseMoney(textCell(row, 4)), net: parseMoney(textCell(row, 5)), date: String(data.date || ""),
       dateLabel: textCell(row, 0), source: String(data.source || "demo"),
+      paymentCheck: data.paymentCheck ? { state: String(data.paymentCheck), reasons: safeJsonArray(data.paymentReasons), verifiedWebhookReceived: data.verifiedWebhookReceived === "true" } : null,
     };
   }
+  function safeJsonArray(value) { try { var parsed = JSON.parse(value || "[]"); return Array.isArray(parsed) ? parsed : []; } catch (_) { return []; } }
   function rowsFromDom(tbody) { return Array.prototype.map.call(tbody ? tbody.querySelectorAll("tr[data-tx-id]") : [], rowFromDom).filter(function (row) { return row.id; }); }
   function matchesExternalFilters(row, filters) {
     filters = filters || {};
     var day = String(row.date || "").slice(0, 10), amount = Number(row.gross);
     return (!filters.type || row.type.toLowerCase() === String(filters.type).toLowerCase()) &&
       (!filters.status || row.status.toLowerCase() === String(filters.status).toLowerCase()) &&
+      (!filters.paymentCheck || Boolean(row.paymentCheck && row.paymentCheck.state === filters.paymentCheck)) &&
       (!filters.from || (day && day >= filters.from)) && (!filters.to || (day && day <= filters.to)) &&
       (!filters.min || (Number.isFinite(amount) && amount >= Number(filters.min))) &&
       (!filters.max || (Number.isFinite(amount) && amount <= Number(filters.max)));
@@ -49,10 +52,11 @@
     });
     return Object.keys(byCurrency).sort().map(function (currency) { return byCurrency[currency]; });
   }
+  function displayId(row) { return row && row._totals ? "Total (" + String(row.currency || "UNKNOWN").toUpperCase() + ")" : String(row && row.id || ""); }
   function formatMoney(amount, currency) {
     if (amount == null || !Number.isFinite(Number(amount))) return "Unavailable";
     try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currency || "USD" }).format(Number(amount)).replace(/\u00a0/g, " "); }
     catch (_) { return (currency || "") + " " + Number(amount).toFixed(2); }
   }
-  return { parseMoney: parseMoney, rowFromDom: rowFromDom, rowsFromDom: rowsFromDom, matchesExternalFilters: matchesExternalFilters, matchesFilters: matchesFilters, totalsByCurrency: totalsByCurrency, formatMoney: formatMoney };
+  return { parseMoney: parseMoney, rowFromDom: rowFromDom, rowsFromDom: rowsFromDom, matchesExternalFilters: matchesExternalFilters, matchesFilters: matchesFilters, totalsByCurrency: totalsByCurrency, displayId: displayId, formatMoney: formatMoney };
 }));

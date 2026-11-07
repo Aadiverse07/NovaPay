@@ -855,7 +855,7 @@
     if(e.key==="Tab"){var f=txModal.querySelectorAll("button"),a=f[0],z=f[f.length-1];
       if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();}}
   });
-  var txReset=$("tx-reset");if(txReset)txReset.addEventListener("click",function(){txSearch.value="";txType.value="";$("tx-status").value="";$("tx-from").value="";$("tx-to").value="";$("tx-min").value="";$("tx-max").value="";filterTx();txSearch.focus();});
+  var txReset=$("tx-reset");if(txReset)txReset.addEventListener("click",function(){txSearch.value="";txType.value="";$("tx-status").value="";$("tx-payment-check").value="";$("tx-from").value="";$("tx-to").value="";$("tx-min").value="";$("tx-max").value="";filterTx();txSearch.focus();});
   var sub=$("dashboard-subtitle");
   function syncSubtitle(){if(sub)sub.hidden=!($("view-dashboard")&&!$("view-dashboard").hidden);}
   window.addEventListener("hashchange",syncSubtitle);window.addEventListener("popstate",syncSubtitle);nav.forEach(function(a){a.addEventListener("click",syncSubtitle);});

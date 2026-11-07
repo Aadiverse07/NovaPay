@@ -16,3 +16,21 @@ test('notification bell replaces static alerts with authenticated org API data a
   assert.match(moduleSource, /Couldn't load organization notifications/);
   assert.match(moduleSource, /auth\.mode !== "supabase"/);
 });
+
+test('Run scan controls use the authenticated client, role gate, live status, and refresh affected views', async () => {
+  const [html, moduleSource] = await Promise.all([
+    readFile(new URL('../../dashboard.html', import.meta.url), 'utf8'),
+    readFile(new URL('../../src/notifications-live.js', import.meta.url), 'utf8'),
+  ]);
+  assert.match(html, /id="notif-run-scan"[^>]*hidden>Run scan/);
+  assert.match(html, /id="tx-run-scan"[^>]*hidden>Run scan/);
+  assert.match(html, /id="notif-scan-status"[^>]*aria-live="polite"/);
+  assert.match(html, /id="tx-scan-status"[^>]*aria-live="polite"/);
+  assert.match(moduleSource, /api\.request\("\/api\/anomalies\/run", \{ method: "POST", body: \{\} \}\)/);
+  assert.match(moduleSource, /\["owner", "admin", "accountant"\]/);
+  assert.match(moduleSource, /Your role can't run scans\. Ask an owner, admin or accountant\./);
+  assert.match(moduleSource, /Scan complete: no new findings \(already recorded today\)\./);
+  assert.match(moduleSource, /api\.invalidate\(\["notifications", "transactions"\]\)/);
+  assert.match(moduleSource, /window\.NovaPayFinancialViews\.loadTransactions\(\)/);
+  assert.match(moduleSource, /button\.textContent = "Scanning…"/);
+});
