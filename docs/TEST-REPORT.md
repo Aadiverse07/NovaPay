@@ -1534,3 +1534,6 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 2026-11-07 | `node --test server/test/payment-check.test.js server/test/financial-routes.test.js server/test/postgres-repos.test.js server/test/transactions-grid.test.js` | PASS | 38/38 | Added explicit org-owned/org-less exact-capture webhook query assertions.
 2026-11-07 | Final focused feature/API/repository/grid tests | PASS | 39/39 | Includes fail-closed signal-source lookup behavior.
 2026-11-07 | Final `npm test` | FAIL | 377/378; migrations 21/21 syntax OK | Same known Community Funds script-tag assertion at `server/test/fund-campaign-live-view.test.js:43`; no feature-test failures.
+2026-11-07 | `node --test server/test/notifications-live-source.test.js server/test/routes.test.js` | PASS | 13/13 | Run scan control markup/wiring, status/error handling and existing scan role/RBAC route.
+2026-11-07 | `npm test` | FAIL | 376/379; migrations 21/21 syntax OK | One known Community Funds script-tag test failure and two FX route tests returned 503 under parallel suite load.
+2026-11-07 | `node --test server/test/fx-providers.test.js server/test/phase3-services.test.js` | PASS | 20/20 | The two FX 503 failures did not reproduce in isolation; this feature does not modify FX.

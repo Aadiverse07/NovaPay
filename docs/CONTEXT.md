@@ -1,59 +1,58 @@
 # NovaPay Context
 
 ## HEADER
-- Date/time: 2026-11-07 14:37 IST
-- Branch: `feat-payment-check`, created from `main` at `9c20fe2`.
-- Current phase/task: Payment check signal complete; local commit pending; never pushed.
+- Date/time: 2026-11-07 15:15 IST
+- Branch: `feat-run-scan`, created from `feat-payment-check` (not merged to `origin/main` at branch creation).
+- Current phase/task: Run scan button wiring; implementation complete, local commit pending; never push.
 
 ## DONE
-- Phase 1 sources inspected: `server/src/routes/financial.js`, `server/src/routes/paypal.js`, `server/src/services/webhookProcessor.js`, `server/src/ai/anomalies.js`, `server/src/services/anomalies.js`, `supabase/migrations/0005_ai.sql`.
-- Added pure capture signal evaluator in `server/src/services/paymentCheck.js`: confirmed means PayPal status `COMPLETED` with no open linked anomaly; unconfirmed means a linked webhook is failed/unverified; otherwise actionable flags produce Needs review. Seller protection is considered only when present.
-- `/api/transactions` now adds `paymentCheck: { state, reasons }`, with `verifiedWebhookReceived: true` only when a matching event is signature verified. Reads are limited to the current org's transactions/anomalies/captures and exact capture IDs for current-org or org-less webhook rows. Signal lookup failures show Needs review rather than falsely confirming.
-- Transactions grid displays Confirmed / Needs review / Unconfirmed, reasons in a tooltip, visible verified-webhook detail only when present, helper text, and a Needs review filter. Demo rows remain unchanged.
-- Files edited for the task: `server/src/services/paymentCheck.js`, `server/src/routes/financial.js`, `server/src/repos/postgres.js`, `server/src/repos/memory.js`, `server/test/payment-check.test.js`, `server/test/financial-routes.test.js`, `server/test/postgres-repos.test.js`, `server/test/transactions-grid.test.js`, `src/financial-live.js`, `src/transactions-grid-core.js`, `src/transactions-grid.js`, `src/dashboard.js`, `dashboard.html`, `docs/WORKLOG.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`, `docs/CONTEXT.md`.
-- No schema migration or write path added. Refunds, approvals, ledger, and webhook processing behavior unchanged.
+- Existing endpoint confirmed: POST `/api/anomalies/run`, protected by owner/admin/accountant RBAC; no server logic changed.
+- Added two existing-token `.btn btn--ghost` controls: Notifications popover and beside Transactions Needs review filter.
+- `src/notifications-live.js` uses `NovaPayApi.request` for auth/org headers; checks trusted app metadata or existing `/api/onboarding` memberships; hides in demo mode and for known unauthorized roles.
+- Scan disables both controls and shows Scanning; results/errors use aria-live status text. 403 role message is specific; 401/429 and generic failures are readable and retryable. No alerts or raw stack output.
+- When new findings are created, invalidates notifications/transactions and refreshes both existing views. `created: 0` says findings may already be recorded today.
+- Files changed: `dashboard.html`, `src/notifications-live.js`, `server/test/notifications-live-source.test.js`, `docs/WORKLOG.md`, `docs/CONTEXT.md`, `docs/TEST-REPORT.md`, `docs/DECISIONS.md`.
+- No server/RBAC/anomaly rule, approval, refund or ledger changes. No migration.
 
 ## IN PROGRESS
-- Implementation complete; feature commit `2a22b9e` is local and complete. Preserve the source/capture ID dataset edit in `src/financial-live.js`; it is included in the feature commit.
+- Feature complete; local commit pending. This branch inherits Payment check commits `2a22b9e` and `413dc9f` from `feat-payment-check`, which is not merged into main.
 
 ## NEXT STEPS
-1. 1. Restart the local server and hard-refresh the dashboard; follow manual checks in the final response.
-2. Do not push unless separately authorized.
+1. Run final `node --check`, `git diff --check`, and protected-file diff check.
+2. Stage only the named feature/docs files; verify `.env` is not staged; commit locally on `feat-run-scan`.
+3. Do not push. Human can then verify in browser after restarting `npm start`.
 
 ## USER ACTIONS PENDING
-- Restart `npm start`, sign in, open Transactions, inspect a badge and its reason tooltip, choose Needs review, and verify the visible signature-verified webhook detail only for a row that has a verified event.
+- Restart `npm start`; sign in as owner/admin/accountant; open Notifications or Transactions; click Run scan and verify the live status, and when findings are created confirm notification and Payment check refresh.
 
 ## LIVE STATE
-- Migrations: no migration required or applied; all 21 existing migration files pass syntax checks.
-- Read-only data lookup: `6UV5767052048553J`, `1PH772199P287644F`, `62T15745ED514284D` are COMPLETED; no open anomaly, matching webhook event, or stored `seller_protection` was found for each.
-- Seller protection: PayPal capture route and webhook processor store only `seller_receivable_breakdown`; no saved seller protection field exists, so it does not influence current rows.
-- Browser/live endpoint from this branch: UNVERIFIED.
-- Secrets: no `.env` values printed; `.env` is not tracked.
+- Branch base: `feat-payment-check` at local commit `413dc9f`; `origin/main` was `b1bbbbf` at fetch and did not contain feat-payment-check.
+- Migrations: unchanged; 21 files passed syntax checks via `npm test`.
+- Browser scan execution and UI refresh: UNVERIFIED.
+- Secrets: no `.env` values printed; `.env` not staged/tracked.
 
 ## TEST STATE
 | Check | Status | Date | Command / result |
 |---|---|---|---|
-| Payment-check evaluator, API, repository query, grid mapping/filter | PASS | 2026-11-08 | `node --test server/test/payment-check.test.js server/test/financial-routes.test.js server/test/postgres-repos.test.js server/test/transactions-grid.test.js`: 39/39 |
-| Full suite and migrations | FAIL (known unrelated test) | 2026-11-08 | `npm test`: 377/378; 21/21 migration syntax checks pass; `server/test/fund-campaign-live-view.test.js:43` expects obsolete script tag |
-| FX tests that briefly returned 503 in first full run | PASS | 2026-11-08 | `node --test server/test/fx-providers.test.js server/test/phase3-services.test.js`: 20/20 |
-| Changed JS syntax, whitespace, protected-file diff | PASS | 2026-11-08 | `node --check` changed JS; `git diff --check`; protected-file diff vs main empty |
-| Browser badge, reason and filter | UNVERIFIED | 2026-11-08 | Must be checked manually after restarting server |
+| Notifications and anomaly route tests | PASS | 2026-11-07 | `node --test server/test/notifications-live-source.test.js server/test/routes.test.js`: 13/13 |
+| Full tests/migrations | FAIL (known/unrelated) | 2026-11-07 | `npm test`: 376/379; 21/21 migration syntax checks; known Community Funds assertion and two FX 503s |
+| FX failures isolated | PASS | 2026-11-07 | `node --test server/test/fx-providers.test.js server/test/phase3-services.test.js`: 20/20 |
+| Browser run scan | UNVERIFIED | 2026-11-07 | Requires authenticated owner/admin/accountant browser session |
 
 ## KNOWN ISSUES AND RISKS
-- Full suite retains the pre-existing Community Funds script-tag assertion failure; it is unrelated to transaction markup/code.
-- Live state is based on read-only lookup; this branch's HTTP response and browser display were not exercised.
-- Anomaly list is bounded to 1000 recent rows by the repository call; if a tenant grows beyond that, consider a targeted open-anomaly lookup.
+- Full test suite has the known Community Funds test expecting an obsolete `src/fund-views.js` tag. Two FX route tests returned 503 under parallel full-suite load but passed in isolation; this feature does not touch FX.
+- A scan with no new rows reports that findings may already be recorded today; it does not claim there were no anomalies.
 
 ## LESSONS LEARNED
-- Supabase SQL Editor runs inside one transaction; a syntax or runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
+- Supabase SQL Editor runs inside one transaction; a syntax/runtime error rolls everything back. Never edit an applied migration; add a new numbered file.
 - Every SECURITY DEFINER or posting RPC must revoke execute from public, anon, authenticated and grant only to service_role; prove ordinary-user denial.
-- PostgREST embeds need explicit foreign-key names when two relationships exist.
-- audit_log is insert-only with ON DELETE RESTRICT; cleanup journal_entries before audit_log, organizations and auth.users using the manual cleanup script.
-- PayPal Sandbox buyer must be US Personal; seller USD only; Visa at checkout; webhook URL ends `/api/webhook` and webhook ID matches.
-- Raw body is needed for PayPal signature verification. Never print `.env` values; use key names only.
+- PostgREST embeds need explicit foreign-key names when multiple relationships exist.
+- audit_log is insert-only with ON DELETE RESTRICT; clean journal entries before audit_log, organizations and auth users using the manual cleanup script.
+- PayPal Sandbox buyer must be US Personal; seller USD; Visa at checkout; webhook URL ends in `/api/webhook` and webhook ID matches. Raw body is needed for signature verification.
+- Never print `.env` values; use key names only.
 
 ## DO NOT
-- Do not push, touch main, force-push, edit protected theme/assets, change approval/refund/webhook/ledger behavior, weaken tests, or commit `.env`.
+- Never push to main, force-push, use `git add .`, edit protected UI/theme/assets, change server scan/RBAC rules, weaken tests, or commit `.env`.
 
 ## RESUME COMMANDS
 - `git status --short`
