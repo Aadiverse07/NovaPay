@@ -75,6 +75,21 @@ test('authenticated transactions wait for Supabase auth and render API-only rows
   for (const sampleId of ['PAY-1001', 'PAY-1002', 'REF-1003', 'PAY-28491', 'DSP-1004', 'PAY-1005']) assert.ok(!transactionsPanel.includes(sampleId));
 });
 
+test('Payment check renderer uses live state/reasons and clears the loading placeholder before AG Grid mounts', () => {
+  assert.match(gridSource, /valueGetter: function \(params\).*signal\.state/s);
+  assert.match(gridSource, /signal && signal\.state \|\| rowSignal \|\| params\.value/);
+  assert.match(gridSource, /signal\.reasons\.join\(" "\)/);
+  assert.match(gridSource, /lastRows = core\.rowsFromDom\(tableBody\);\s*host\.replaceChildren\(\);\s*api = root\.agGrid\.createGrid/);
+});
+
+test('Run scan status is on its own line below the transaction filters', () => {
+  const panel = html.split('id="view-transactions"')[1].split('id="view-ai-assistant"')[0];
+  const filtersEnd = panel.indexOf('</div><p id="tx-scan-status"');
+  const status = panel.indexOf('id="tx-scan-status"');
+  assert.ok(filtersEnd >= 0 && status > filtersEnd);
+  assert.doesNotMatch(panel.slice(panel.indexOf('class="filter-row tx-filters"'), filtersEnd), /tx-scan-status/);
+});
+
 test('ledger uses only saved rows, has an honest empty state, retry, and API CSV export', () => {
   assert.match(liveSource, /auth\.mode !== "supabase" \|\| !auth\.isAuthenticated\(\)/);
   assert.match(liveSource, /No ledger entries yet\. A saved transaction will create ledger entries\./);

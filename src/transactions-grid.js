@@ -28,7 +28,19 @@
   function badgeRenderer(kind) { return function (params) { var value = String(params.value || ""), wrapper = document.createElement("span");
     if (params.data && params.data._totals) { wrapper.textContent = value; return wrapper; }
     if (kind === "type") { var icon = document.createElement("span"), key = value.toLowerCase(), glyph = { payment: "↗", refund: "↩", dispute: "!", payout: "↗" }[key] || "•"; icon.className = "tx-badge " + (key === "payment" || key === "refund" || key === "dispute" || key === "payout" ? key : "payment"); icon.textContent = glyph; wrapper.append(icon, document.createTextNode(" " + value)); return wrapper; }
-    if (kind === "paymentCheck") { var signal = params.data && params.data.paymentCheck, state = signal && signal.state; if (!state) return wrapper; var badge = document.createElement("span"); badge.className = "status " + (state === "confirmed" ? "ok" : state === "unconfirmed" ? "info" : "warn"); badge.textContent = state === "confirmed" ? "Confirmed" : state === "unconfirmed" ? "Unconfirmed" : "Needs review"; badge.title = (signal.reasons || []).join(" ") || "PayPal returned COMPLETED."; wrapper.appendChild(badge); if (signal.verifiedWebhookReceived) { var webhookDetail = document.createElement("small"); webhookDetail.textContent = "Signature-verified webhook received"; webhookDetail.style.fontSize = "12px"; wrapper.appendChild(document.createElement("br")); wrapper.appendChild(webhookDetail); } return wrapper; }
+    if (kind === "paymentCheck") {
+      var rowSignal = params.data && params.data.paymentCheck;
+      var signal = rowSignal && typeof rowSignal === "object" ? rowSignal : null;
+      var state = String(signal && signal.state || rowSignal || params.value || "").toLowerCase();
+      if (state !== "confirmed" && state !== "needs_review" && state !== "unconfirmed") return wrapper;
+      var badge = document.createElement("span");
+      badge.className = "status " + (state === "confirmed" ? "ok" : state === "unconfirmed" ? "info" : "warn");
+      badge.textContent = state === "confirmed" ? "Confirmed" : state === "unconfirmed" ? "Unconfirmed" : "Needs review";
+      badge.title = signal && Array.isArray(signal.reasons) && signal.reasons.length ? signal.reasons.join(" ") : "PayPal returned COMPLETED.";
+      wrapper.appendChild(badge);
+      if (signal && signal.verifiedWebhookReceived) { var webhookDetail = document.createElement("small"); webhookDetail.textContent = "Signature-verified webhook received"; webhookDetail.style.fontSize = "12px"; wrapper.appendChild(document.createElement("br")); wrapper.appendChild(webhookDetail); }
+      return wrapper;
+    }
     var normalized = value.toLowerCase(), style = /complete|paid|success|refunded/.test(normalized) ? (normalized.indexOf("refund") >= 0 ? "danger" : "ok") : /review|duplicate|pending|failed|void/.test(normalized) ? "warn" : "info";
     wrapper.className = "status " + style; wrapper.textContent = value; return wrapper;
   }; }
@@ -46,7 +58,7 @@
         { field: "net", headerName: "Net", type: "rightAligned", minWidth: 155, filter: "agNumberColumnFilter", valueFormatter: currencyFormatter },
         { field: "status", headerName: "Status", minWidth: 155, cellRenderer: badgeRenderer("status") },
         { field: "id", headerName: "PayPal transaction / capture ID", minWidth: 220 },
-        { field: "paymentCheck", headerName: "Payment check", minWidth: 155, cellRenderer: badgeRenderer("paymentCheck") },
+        { field: "paymentCheck", headerName: "Payment check", minWidth: 155, valueGetter: function (params) { var signal = params.data && params.data.paymentCheck; return signal && typeof signal === "object" ? signal.state : signal || ""; }, cellRenderer: badgeRenderer("paymentCheck") },
       ],
       defaultColDef: { sortable: true, filter: true, resizable: true, minWidth: 110, enableCellChangeFlash: true, filterParams: { buttons: ["reset", "apply"], closeOnApply: true } },
       rowSelection: { mode: "multiRow", checkboxes: true, headerCheckbox: true, enableClickSelection: false }, selectionColumnDef: { pinned: "left", width: 48, maxWidth: 48, sortable: false, resizable: false },
@@ -93,6 +105,7 @@
     if (!root.agGrid || !root.agGrid.createGrid || !root.agGrid.AllCommunityModule || !core) throw new Error("AG Grid Community did not load.");
     root.agGrid.ModuleRegistry.registerModules([root.agGrid.AllCommunityModule]);
     lastRows = core.rowsFromDom(tableBody);
+    host.replaceChildren();
     api = root.agGrid.createGrid(host, buildOptions(readState()));
     if (api) watchRows();
     source.classList.add("tx-grid-source"); source.setAttribute("aria-hidden", "true"); source.setAttribute("inert", "");
