@@ -3,7 +3,7 @@
 ## HEADER
 - Date/time: 2026-11-07 20:50 IST
 - Branch: `ui-polish-approvals` (created from `fix-ai-proposals`)
-- Last implementation commit: `8ad3845` (`WIP-BROKEN: diagnose AI refund proposal failures`); unrelated carried-forward UI edits remain uncommitted.
+- Last UI implementation commit: `a8e469a` (`Polish persisted approval and AI proposal UI`); unrelated carried-forward edits remain uncommitted.
 - Current phase/task: approvals and AI proposal UI polish; no server logic, safety checks, refund services or ledger logic changed.
 
 ## DONE

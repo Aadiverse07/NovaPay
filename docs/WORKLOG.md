@@ -1,5 +1,5 @@
 ## RESUME POINTER
-- Current task: approvals and AI proposal UI polish; branch `ui-polish-approvals`, implementation based on local `fix-ai-proposals` checkpoint `1132aaf`.
+- Current task: approvals and AI proposal UI polish; branch `ui-polish-approvals`, UI checkpoint `a8e469a` based on `fix-ai-proposals` checkpoint `1132aaf`.
 - DONE: persisted refund confirmation identifies PayPal Sandbox, capture and amount; auth errors refresh the Supabase session once and GET current approval status without retrying the decision; live AI proposal cards link to Approvals; status labels use `/api/status` model/provider and connected Sandbox warning is hidden.
 - TESTS: focused approvals/dashboard/Sandbox suite PASS 16/16; JS syntax and `git diff --check` PASS. Full `npm test` not run for this UI-only task.
 - BROWSER: UNVERIFIED. Hard-reload dashboard with Cmd+Shift+R to load changed static assets; no server restart is needed because no server code changed.
@@ -5672,3 +5672,5 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-07 20:50 IST | About to update CONTEXT, TEST-REPORT, DECISIONS and the WORKLOG RESUME POINTER for the UI polish task. Why: record test evidence, auth-recovery safety behavior and exact browser refresh needed. Next: inspect intended staged paths and create the requested local commit.
 2026-11-07 20:51 IST | Result: PASS; CONTEXT, TEST-REPORT and DECISIONS now record the exact UI changes, 16/16 focused tests and browser UNVERIFIED state; pointer says hard reload, no server restart. Next: stage only dashboard.html, two UI JS files, the two focused test files and continuity docs; inspect list before commit.
 2026-11-07 20:52 IST | About to stage the requested UI files, focused tests and continuity docs, then verify the staged list and whitespace. Why: create a local checkpoint on `ui-polish-approvals` without including unrelated README/CSS/preview edits. Next: commit the verified staged set.
+2026-11-07 20:53 IST | Result: PASS; commit `a8e469a` created on `ui-polish-approvals` with the nine requested UI/test/continuity files. Unrelated README/preview/CSS and financial hydration edits remain unstaged. Next: sync the pointer to the new UI checkpoint, then final report; no server restart or push.
+2026-11-07 20:54 IST | About to update the top pointer and CONTEXT header to identify UI checkpoint `a8e469a`. Why: make the handoff point at this branch’s committed UI work. Next: commit only the two continuity files, then stop.
