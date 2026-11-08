@@ -48,7 +48,6 @@
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
     title.textContent=titles[view];
-    var subs={transactions:"TRANSACTIONS","ai-assistant":"NOVAPAY AI \u00b7 MERCHANT ASSISTANT",approvals:"HUMAN-IN-THE-LOOP",sandbox:"PAYPAL DEVELOPER PLATFORM",ledger:"FINANCIAL CORE",invoices:"FINANCE UTILITIES",reports:"FINANCE UTILITIES",documents:"DOCUMENTS & OCR","community-funds":"COMMUNITY FUNDS",maintenance:"COMMUNITY OPERATIONS",settings:"PREFERENCES"},aiKick=$("ai-top-kicker"); if(aiKick){aiKick.textContent=subs[view]||"";aiKick.hidden=!subs[view]}
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
     if(view==="transactions"&&window.NovaPayTransactionsGrid)requestAnimationFrame(function(){var panel=$("view-transactions");if(panel&&!panel.hidden)window.NovaPayTransactionsGrid.init()});
     if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
