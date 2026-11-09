@@ -1,3 +1,26 @@
+# 2026-11-09 security and support handoff
+
+Current branch: `ui-declutter-modules`.
+
+## Current implementation
+
+- Payment failures are classified from documented PayPal issue identifiers and HTTP/network outcomes, persisted by organization, exposed through `/api/failures`, used in anomaly and AI evidence, and shown with retry guidance. Failure causes are real PayPal Sandbox results; no live PayPal failure scenario was executed in this handoff.
+- Security sessions record salted hashes of network prefix and user-agent signature, device and login history, risk scores/reasons, and per-user notifications. Risk-based step-up is server-enforced for refund approvals and invoice sends through short-lived device grants. Login attempts are persisted with generic account/network lockouts and owner/admin unlock controls. Supabase direct Auth requests still rely on Supabase's rate limits.
+- Settings → Security shows the signed-in user's activity, risk and known devices. Supabase password/email-code re-authentication is real when configured; MFA/TOTP is out of scope. CSP remains report-only; phishing detection is deterministic heuristic behavior.
+- Support tickets persist in Supabase with creator-scoped RLS and staff-only internal notes. Notifications target ticket counterparts or the support queue. The `support` membership role can be granted using `scripts/grant-support-role.js`; live RLS checks are available in `scripts/verify-support-rls-live.js`.
+- Ticket UI and notifications are in-app only; no external email or help-desk connection exists. PayPal Sandbox remains test-money only; illustrative and unsupported financial actions remain labeled simulated.
+
+## Verification
+
+- `npm test`: PASS, 429/429 tests. `scripts/check-migrations.js` parses migrations 0001–0029.
+- Focused tests cover classifier and failure persistence, risk and step-up, login lockout, Security panel roles/device removal, per-user notification scope, ticket counterpart delivery and internal-note silence.
+- The live Supabase RLS script was written but not run; it requires existing creator, other-user and support-role test accounts and the migrations below. No live migration or PayPal call was made.
+- Protected user edits in `dashboard.html`, `src/date-picker.css`, and `src/module-header-align.css` were preserved; only additive dashboard markup/scripts/styles for the requested Security panel were staged.
+
+## Required Supabase migrations
+
+The live project already has 0001–0024. Apply these new migrations in order: `0025_security_session_details.sql`, `0026_step_up_grants.sql`, `0027_login_attempts.sql`, `0028_notification_recipients.sql`. `0024_support_tickets.sql` is synced in this repository only for the already-live membership role list (`donor`, `resident`, `support`).
+
 # Phase 1 handoff
 
 Branch: `backend`. Current phase: Phase 1 — Foundation.
@@ -62,3 +85,29 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 3. Start the server and verify status, public config, static pages, and protected route behavior.
 4. With local Supabase CLI and Docker, run `supabase start` and `supabase test db`; then verify the migration against a real project when credentials are available.
 5. Check `git status`, ensure `.env` is not staged, review frontend diff is empty, then continue only after Phase 1 acceptance is verified.
+
+## 2026-11-09 step-up follow-up
+
+- Root cause reproduced with mock provider responses: Supabase grant failures were collapsed to `null`, leading the route to call all cases an incorrect password. The grant request itself uses the correct endpoint and anon key; it sends the authenticated account's lower-cased/trimmed email and preserves the password exactly.
+- Fixed distinct provider outcomes and separate five-per-ten-minute step-up failure limiting. `node scripts/verify-step-up-live.js` is available for a dedicated test user; not run without supplied env credentials.
+- Next follow-up items from the user report: isolated email-code flow, password change handling, modal finish, and email-based support ticket redesign.
+
+## 2026-11-09 isolated email-code follow-up
+
+- Replaced server-side OTP send/verify with a dedicated non-persisting Supabase browser client and a signed proof checked by the backend. Proof must match the signed-in subject, use email OTP, and be at most 120 seconds old.
+- Modal shows masked email and resend cooldown. Automated route checks pass; actual delivery requires the Supabase Magic Link and Reauthentication templates to include `{{ .Token }}` and was not tested against a live inbox.
+
+## 2026-11-09 password-change follow-up
+
+- Settings no longer erases Supabase password-update errors. It handles secure-change nonce flow, maps weak/same/invalid-session/rate-limit outcomes, and records a successful credential change through the backend, revoking other device grants while preserving the current session.
+- Test fixtures cover error mapping and grant revocation. A real password change/code delivery remains a manual check.
+
+## 2026-11-09 step-up modal follow-up
+
+- Modal now uses NovaPay theme tokens and glass surface styling with a backdrop, responsive width, keyboard/focus behavior, password visibility control, method switch and inline states. Automated source checks pass; visual browser confirmation remains a manual check.
+
+## 2026-11-09 support ticket email redesign
+
+- Support tickets now receive per-organization numbers; creators see only ticket number and purpose. Support/owner/admin staff retain the queue and thread. Creator replies are rejected; public staff replies/status emails use the email address resolved from the ticket creator's Supabase account.
+- Message email outcomes are persisted and visible to staff, with retry for failed public mail. Internal notes never email. SMTP is optional and ticket creation still persists when unconfigured.
+- Apply migration 0029_support_ticket_email.sql after 0028. Add the SMTP variables documented in .env.example as needed. Live SMTP and migration application remain unverified.

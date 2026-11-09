@@ -118,6 +118,8 @@ export class EventsRepo {
 }
 
 export function createRepositories() {
+  const failureRows = [];
+  const loginEventRows = [], loginAttemptRows = [], deviceRows = new Map(), stepUpGrantRows = new Map();
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
@@ -349,6 +351,49 @@ export function createRepositories() {
   captures.funds = funds;
   const notifications = new MemoryNotificationsRepo();
   const repos = { orders, captures, approvals: approvalRepo, events: new EventsRepo(), notifications, funds };
+  repos.security = {
+    async listLogins(orgId,userId,{limit=50,offset=0}={}) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).slice().sort((a,b)=>b.occurred_at.localeCompare(a.occurred_at)).slice(offset,offset+limit); },
+    async recordLogin(input) { const row={id:randomUUID(),occurred_at:new Date().toISOString(),...input};loginEventRows.unshift(row);return row; },
+    async listDevices(orgId,userId) { return [...deviceRows.values()].filter((row)=>row.org_id===orgId&&row.user_id===userId).sort((a,b)=>b.last_seen.localeCompare(a.last_seen)); },
+    async getDevice(orgId,userId,deviceId) { return deviceRows.get(`${orgId}:${userId}:${deviceId}`)||null; },
+    async upsertDevice(input) { const key=`${input.org_id}:${input.user_id}:${input.device_id}`,old=deviceRows.get(key);const row={first_seen:old?.first_seen||input.last_seen,...old,...input};deviceRows.set(key,row);return row; },
+    async deleteDevice(orgId,userId,deviceId) { stepUpGrantRows.delete(`${orgId}:${userId}:${deviceId}`);return deviceRows.delete(`${orgId}:${userId}:${deviceId}`); },
+    async loginCount(orgId,userId) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).length; },
+    async hasNetwork(orgId,userId,ipHash) { return loginEventRows.some((row)=>row.org_id===orgId&&row.user_id===userId&&row.ip_hash===ipHash); },
+    async failedLoginCount(orgId,userId,minutes=15) { const since=Date.now()-minutes*60000;return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
+    async failedLoginCountByHash(accountHash,minutes=15) { const since=Date.now()-minutes*60000;return loginAttemptRows.filter(row=>row.account_hash===accountHash&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
+    async grantStepUp(input) { const row={id:randomUUID(),granted_at:new Date().toISOString(),...input};stepUpGrantRows.set(`${input.org_id}:${input.user_id}:${input.device_id}`,row);return row; },
+    async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const row=stepUpGrantRows.get(`${orgId}:${userId}:${deviceId}`);return Boolean(row&&Date.parse(row.expires_at)>now.getTime()); },
+    async deleteStepUpGrant(orgId,userId,deviceId) { return stepUpGrantRows.delete(`${orgId}:${userId}:${deviceId}`); },
+    async deleteOtherStepUpGrants(orgId,userId,deviceId) { let deleted=0;for(const [key,row] of stepUpGrantRows){if(row.org_id===orgId&&row.user_id===userId&&row.device_id!==deviceId){stepUpGrantRows.delete(key);deleted++}}return deleted; },
+    async loginLock(accountHash,ipHash) { const now=Date.now();return loginAttemptRows.filter((row)=>(row.account_hash===accountHash||row.ip_hash===ipHash)&&row.locked_until&&Date.parse(row.locked_until)>now).sort((a,b)=>Date.parse(b.locked_until)-Date.parse(a.locked_until))[0]?.locked_until||null; },
+    async recordLoginAttempt({orgId=null,userId=null,accountHash,ipHash,success,config={}}) {
+      const now=Date.now(),windowMs=Number(config.SECURITY_LOGIN_WINDOW_MINUTES||15)*60000,baseMs=Number(config.SECURITY_LOGIN_LOCK_MINUTES||15)*60000,threshold=Number(config.SECURITY_LOGIN_FAILURE_THRESHOLD||5);
+      const failures=success?0:loginAttemptRows.filter(row=>!row.success&&now-Date.parse(row.occurred_at)<windowMs&&(row.account_hash===accountHash||row.ip_hash===ipHash)).length+1;
+      const previous=loginAttemptRows.filter(row=>row.account_hash===accountHash&&now-Date.parse(row.occurred_at)<30*86400000).reduce((count,row)=>Math.max(count,row.lock_count||0),0);
+      const locked=failures>=threshold,lockCount=locked?previous+1:previous,lockedUntil=locked?new Date(now+Math.min(24*3600000,baseMs*2**Math.min(6,lockCount-1))).toISOString():null;
+      if(success&&userId)for(const row of loginAttemptRows)if(row.account_hash===accountHash&&!row.success&&now-Date.parse(row.occurred_at)<windowMs){row.user_id=userId;row.org_id=orgId}
+      loginAttemptRows.unshift({id:randomUUID(),org_id:orgId,user_id:userId,account_hash:accountHash,ip_hash:ipHash,occurred_at:new Date(now).toISOString(),success,failure_count:failures,lock_count:lockCount,locked_until:lockedUntil});
+      return{locked,failureCount:failures,lockCount,lockedUntil};
+    },
+    async listOrgMembers() { return []; },
+    async memberLock(orgId,userId) { const now=Date.now();return loginAttemptRows.filter(row=>row.user_id===userId&&row.locked_until&&Date.parse(row.locked_until)>now).sort((a,b)=>Date.parse(b.locked_until)-Date.parse(a.locked_until))[0]?.locked_until||null; },
+    async clearAccountLock(accountHash) { const before=loginAttemptRows.length;for(let i=loginAttemptRows.length-1;i>=0;i--)if(loginAttemptRows[i].account_hash===accountHash&&!loginAttemptRows[i].success)loginAttemptRows.splice(i,1);return before-loginAttemptRows.length; },
+    async linkLoginAttempts(accountHash,userId,orgId) { for(const row of loginAttemptRows)if(row.account_hash===accountHash){row.user_id=userId;row.org_id=orgId}return true; },
+    async loginIdentityForHash(accountHash) { const row=loginAttemptRows.find(item=>item.account_hash===accountHash&&item.user_id&&item.org_id);return row?{userId:row.user_id,orgId:row.org_id}:null; },
+  };
+  const ticketRows = new Map(), ticketMessages = [], ticketCounters = new Map();
+  repos.supportTickets = {
+    async create(orgId,userId,input) { const at=new Date().toISOString(),ticketNumber=(ticketCounters.get(orgId)||0)+1;ticketCounters.set(orgId,ticketNumber);const row={id:randomUUID(),org_id:orgId,created_by:userId,assignee_id:null,ticket_number:ticketNumber,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null,created_at:at,updated_at:at,resolved_at:null};ticketRows.set(`${orgId}:${row.id}`,row);return row; },
+    async addMessage(orgId,ticketId,authorId,body,internalNote,emailStatus='not_configured',emailKind='reply') { const row={id:randomUUID(),ticket_id:ticketId,org_id:orgId,author_id:authorId,body,internal_note:internalNote,email_status:emailStatus,email_error_class:null,email_kind:emailKind,created_at:new Date().toISOString()};ticketMessages.push(row);return row; },
+    async get(orgId,id) { return ticketRows.get(`${orgId}:${id}`)||null; },
+    async list(orgId,userId,staff,{limit,offset,status,priority,category}) { return [...ticketRows.values()].filter(t=>t.org_id===orgId&&(staff||t.created_by===userId)&&(!status||t.status===status)&&(!priority||t.priority===priority)&&(!category||t.category===category)).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(offset,offset+limit); },
+    async messages(orgId,ticketId,staff) { return ticketMessages.filter(m=>m.org_id===orgId&&m.ticket_id===ticketId&&(staff||!m.internal_note)); },
+    async getMessage(orgId,ticketId,id) { return ticketMessages.find(m=>m.org_id===orgId&&m.ticket_id===ticketId&&m.id===id)||null; },
+    async updateMessageEmail(orgId,id,status,errorClass=null) { const row=ticketMessages.find(m=>m.org_id===orgId&&m.id===id);if(!row)return null;row.email_status=status;row.email_error_class=errorClass;return row; },
+    async update(orgId,id,input) { const row=ticketRows.get(`${orgId}:${id}`);if(!row)return null;Object.assign(row,{...(input.status?{status:input.status}:{}),...(input.priority?{priority:input.priority}:{}),...(input.assigneeId!==undefined?{assignee_id:input.assigneeId}:{}),updated_at:new Date().toISOString(),...(input.status==='resolved'?{resolved_at:new Date().toISOString()}:{})});return row; },
+    async staffRecipients() { return []; },
+  };
   repos.anomalies = new MemoryAnomaliesRepo(notifications);
   repos.ai = {
     usage: new AIUsageRepo(),
@@ -411,5 +456,10 @@ export function createRepositories() {
   };
   repos.approvals.decideInvoiceSend = async () => ({result:'missing',approval:null});
   repos.reports = { async rows() { return []; } };
+  repos.failures = {
+    async record(input) { const row = { id: randomUUID(), occurred_at: new Date().toISOString(), ...input }; failureRows.unshift(row); return row; },
+    async list(orgId, { limit = 50, offset = 0 } = {}) { return failureRows.filter((row) => row.org_id === orgId).slice(offset, offset + limit); },
+    async recent(orgId, minutes = 15) { const since = Date.now() - minutes * 60000; return failureRows.filter((row) => row.org_id === orgId && Date.parse(row.occurred_at) >= since); },
+  };
   return repos;
 }

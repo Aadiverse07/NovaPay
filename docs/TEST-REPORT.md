@@ -1552,3 +1552,60 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 
 2026-11-07 | `node --check src/novapay-live.js && node --check src/dashboard.js && node --test server/test/approvals-live-data.test.js server/test/dashboard-demo-isolation.test.js server/test/novapay-live-api.test.js && git diff --check` | PASS | 16/16 tests; syntax and whitespace checks passed | Covers persisted refund wording, auth refresh + status GET without POST retry, AI live proposal link, status provider/Sandbox copy.
 2026-11-07 | Browser verification of approval auth recovery, live AI card and status notices | UNVERIFIED | Not run | Requires a hard reload and authenticated browser; no server restart needed.
+# Final feature checkpoint (2026-11-09)
+
+- `npm test`: 400/401 passing. Migration syntax check passes all 24 migration files. The one existing failure is `server/test/fund-campaign-live-view.test.js`, which expects the obsolete direct `src/fund-views.js` script tag.
+- New feature tests pass for failure classification/recording/anomaly detection, account-risk helper behavior and deterministic phishing checks, and support repository isolation/internal-note visibility.
+- Live PayPal Sandbox execution, Supabase migrations/RLS, browser rendering and user notification delivery were not exercised.
+
+# Failure diagnosis checkpoint (2026-11-09)
+
+- `npm test`: migration syntax passed; 395/396 tests passed. One unrelated existing failure remains in `server/test/fund-campaign-live-view.test.js`, whose fixture expects the obsolete `src/fund-views.js` script tag. The legacy PayPal error `statusCode: 502` contract is preserved while actual provider status is exposed separately.
+- New classifier, repository isolation and repeated-category anomaly tests pass. UI is wired to display returned failure causes; visual and live PayPal provider failure cases are not verified.
+# Security groundwork checkpoint (2026-11-09)
+
+- New account risk, step-up helper, generic throttling, and suspicious-message checks pass. Migration syntax for `0023_security.sql` passes.
+- The full suite remains 400/401 because of the same unrelated Community Funds fixture expecting `src/fund-views.js`.
+- Supabase login-event ingestion, MFA enrollment/challenge UX, real lockout wiring and sensitive-action enforcement are not implemented or verified in this checkpoint.
+# Support ticket checkpoint (2026-11-09)
+
+- Memory repository tests verify org isolation, creator scoping and internal-note visibility. Migration syntax for `0024_support_tickets.sql` passes.
+- Live Supabase RLS and notification delivery are not verified. The current full suite has one unrelated Community Funds script-tag fixture failure (400/401).
+
+# Security and support completion checkpoint (2026-11-09)
+
+- `npm test`: PASS, 409/409. Migration syntax check passed for migrations 0001–0028.
+- Added endpoint coverage for persistent login lockout and generic auth middleware blocking; Security overview/device removal/admin unlock role tests; recipient-filtered ticket/security notifications and internal-note notification silence.
+- Updated `server/test/fund-campaign-live-view.test.js` to accept the current versioned `src/fund-views.js?v=2` script URL; no dashboard behavior changed for that test.
+- Live Supabase RLS verifier and support-role assignment script were syntax-checked but not run. New migrations were not applied to the live project. Live PayPal Sandbox failure and browser flow checks remain unverified.
+
+## Step-up password failure follow-up (2026-11-09)
+
+- Reproduced root cause with mock Supabase password grant outcomes: provider errors had been collapsed to null and mislabeled as incorrect password. Request endpoint/key/content-type/body field names were correct in code inspection; email was sourced from the verified user and normalized; password was not transformed.
+- Added regression checks for success/grant creation, wrong password, provider rate limiting, unconfirmed email, outage, anon-key request headers, and password preservation.
+- Live verification: NOT RUN; requires a dedicated test account and the documented environment values.
+
+## Step-up email-code follow-up (2026-11-09)
+
+- Verified route acceptance requires a matching user subject, email provider, OTP auth method, and token issued no more than 120 seconds ago; old and other-user proofs are rejected.
+- UI now uses an isolated non-persisting Supabase client, masks the account email, and shows a 60-second resend cooldown. Automated tests do not send email. Supabase Dashboard Magic Link and Reauthentication templates still require `{{ .Token }}`; live delivery remains unverified.
+
+## Settings password change follow-up (2026-11-09)
+
+- Added mapping tests for `reauthentication_needed`, invalid nonce, `same_password`, `weak_password` details, absent/expired session, and rate limiting.
+- Added route/repository coverage showing a credential-change event revokes other step-up device grants while preserving the current one and writing an audit entry.
+- Live Supabase password update and nonce email flow were not exercised.
+
+## Step-up modal follow-up (2026-11-09)
+
+- Source-level checks cover accessible dialog roles/labels, method switching, responsive theme styling, focus restoration and cancel cleanup. Browser visual testing is not available in this run.
+
+## Support ticket email redesign (2026-11-09)
+
+- Migration syntax: 0029_support_ticket_email.sql included in npm test migration parsing.
+- Route tests cover creator response minimization, another user's isolation, creator reply/detail denial, staff thread, assignment, resolution email, safe notifications, internal notes not emailed, and failed-email retry.
+- Email tests cover unconfigured/success/failure, server-selected recipient, support-inbox copy/Reply-To, HTML escaping, and safe error classes.
+- npm audit --omit=dev: PASS, 0 vulnerabilities.
+- Live SMTP delivery and live database migration were not run.
+
+- Final suite after the five follow-up fixes: `npm test` PASS, 429/429 tests; migrations 0001–0029 parse successfully.

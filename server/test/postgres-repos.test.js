@@ -249,7 +249,7 @@ test('AI usage reservations and cache persistence stay scoped to the verified or
 test('anomaly records, notification actions, webhook inputs and scheduled org scans are scoped', async () => {
   const calls = [];
   const database = {
-    async rpc(name, args) { calls.push({ kind: 'rpc', name, args }); if (name === 'record_anomaly') return { inserted: true, anomaly: { id: 'ANM-1', org_id: args.p_org } }; if (name === 'set_notification_status') return { id: args.p_notification_id, org_id: args.p_org, status: args.p_status }; return ['org-a']; },
+    async rpc(name, args) { calls.push({ kind: 'rpc', name, args }); if (name === 'record_anomaly') return { inserted: true, anomaly: { id: 'ANM-1', org_id: args.p_org } }; if (name === 'set_notification_status_for_user') return { id: args.p_notification_id, org_id: args.p_org, status: args.p_status }; return ['org-a']; },
     async select(table, query) { calls.push({ kind: 'select', table, query }); return table === 'notifications' ? [{ id: 'NTF-1', org_id: 'org-a', status: 'unread' }] : [{ event_id: 'EV-1', processing_status: 'retry' }]; },
   };
   const repos = createPostgresRepositories(database);
@@ -264,6 +264,7 @@ test('anomaly records, notification actions, webhook inputs and scheduled org sc
   assert.match(calls[2].query, /org_id=eq\.org-a/);
   const updated = await repos.notifications.setStatus('org-a', 'NTF-1', 'dismissed');
   assert.equal(updated.status, 'dismissed');
+  assert.equal(calls[3].name, 'set_notification_status_for_user');
   assert.deepEqual(await repos.ai.listOrgIds(), ['org-a']);
   assert.equal(calls[3].args.p_org, 'org-a');
   assert.equal(calls[4].name, 'list_anomaly_org_ids');

@@ -4,11 +4,11 @@ async function readResponse(response) {
   try { return await response.json(); } catch { return null; }
 }
 
-export function createSupabaseServices(config, fetchImpl = fetch) {
+export function createSupabaseServices(config, fetchImpl = fetch, { secretApiKey = String(config.SUPABASE_SERVICE_ROLE_KEY || '').startsWith('sb_secret_') } = {}) {
   if (!config.hasSupabase) return null;
   const apiKey = config.SUPABASE_SERVICE_ROLE_KEY;
   const apiUrl = config.SUPABASE_URL.replace(/\/$/, '');
-  const serviceHeaders = { apikey: apiKey, ...(apiKey.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${apiKey}` }) };
+  const serviceHeaders = { apikey: apiKey, ...(secretApiKey ? {} : { Authorization: `Bearer ${apiKey}` }) };
   async function request(path, { method = 'GET', token, body, publicKey = false, prefer } = {}) {
     const headers = { ...(publicKey ? { apikey: config.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } : serviceHeaders) };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -118,7 +118,28 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
       return result.data;
     },
+    async delete(table, query) {
+      if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
+      const result=await request(`/rest/v1/${table}?${query}`,{method:'DELETE',prefer:'return=representation'});
+      if(result.error)throw Object.assign(new Error('Financial database write failed.'),{statusCode:503,code:'DATABASE_UNAVAILABLE',databaseCode:result.data?.code||null});
+      return result.data;
+    },
   };
+  async function authVerify(path,payload) {
+    let response;
+    try { response=await fetchImpl(`${apiUrl}${path}`,{method:'POST',headers:{apikey:config.SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)}); }
+    catch { return { userId: null, status: 0, errorCode: 'network_error' }; }
+    const data=await readResponse(response);
+    return { userId: response.ok&&data?.user?.id ? data.user.id : null, status: response.status, errorCode: response.ok ? null : (data?.code || data?.error_code || data?.error || null), accessToken: response.ok ? data?.access_token || null : null };
+  }
+  async function authPost(path,payload) {
+    try {
+      const response=await fetchImpl(`${apiUrl}${path}`,{method:'POST',headers:{apikey:config.SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)});
+      await readResponse(response);
+      return Boolean(response.ok);
+    } catch { return false; }
+  }
+  function jwtClaims(token) { try { const part=String(token||'').split('.')[1]; if(!part)return null; return JSON.parse(Buffer.from(part.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString('utf8')); } catch { return null; } }
   return {
     database,
     storage,
@@ -127,7 +148,7 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       const { response, data, error } = await request('/auth/v1/user', { token, publicKey: true });
       if (error && [401, 403].includes(response.status)) return null;
       if (error || !data?.id) throw new Error('Supabase Auth could not verify the token.');
-      return { id: data.id, email: typeof data.email === 'string' ? data.email : null, emailConfirmedAt: data.email_confirmed_at || data.confirmed_at || null };
+      return { id: data.id, email: typeof data.email === 'string' ? data.email : null, emailConfirmedAt: data.email_confirmed_at || data.confirmed_at || null, updatedAt: data.updated_at || null, createdAt: data.created_at || null, lastSignInAt: data.last_sign_in_at || null };
     },
     async organizationsForUser(userId) {
       const query = new URLSearchParams({ select: 'org_id,role', user_id: `eq.${userId}`, order: 'created_at.asc' });
@@ -140,6 +161,16 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       const { data, error } = await request(`/rest/v1/memberships?${query}`);
       if (error) throw new Error('Membership lookup failed.');
       return Array.isArray(data) ? data[0] || null : null;
+    },
+    async verifyStepUpToken(token) { const verified=await this.verifyToken(token); if(!verified)return null; const claims=jwtClaims(token); if(!claims)return null; return {userId:verified.id,issuedAt:Number(claims.iat||0),authMethods:Array.isArray(claims.amr)?claims.amr:[],provider:claims.app_metadata?.provider||null}; },
+    async verifyReauthPassword(email,password) { if(typeof email!=='string'||typeof password!=='string'||!password)return {userId:null,status:400,errorCode:'invalid_request'};return authVerify('/auth/v1/token?grant_type=password',{email:email.trim().toLowerCase(),password}); },
+    async verifyStepUpEmailOtp(email,token) { if(typeof email!=='string'||typeof token!=='string'||!/^\d{6,8}$/.test(token))return null;return authVerify('/auth/v1/verify',{email,token,type:'email'}); },
+    async sendStepUpOtp(email) { if(typeof email!=='string'||!email)return false;return authPost('/auth/v1/otp',{email,create_user:false}); },
+    async getUserById(userId) {
+      if(!/^[0-9a-f-]{36}$/i.test(String(userId||'')))return null;
+      const {data,error}=await request(`/auth/v1/admin/users/${encodeURIComponent(userId)}`);
+      const providers=Array.isArray(data?.app_metadata?.providers)?data.app_metadata.providers:Array.isArray(data?.identities)?data.identities.map((item)=>item.provider).filter(Boolean):null;
+      return !error&&data?.id?{id:data.id,email:typeof data.email==='string'?data.email:null,providers}:null;
     },
     async onboard(userId, name, requestId) {
       const { response, data, error } = await request('/rest/v1/rpc/create_organization_for_user', {

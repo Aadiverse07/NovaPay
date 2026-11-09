@@ -5817,3 +5817,57 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-07 21:02 IST | About to rerun and capture npm test summary after the shell used zsh reserved variable `status` and stopped before displaying results. Why: confirm the actual suite outcome and proceed with JS syntax/conflict checks. Next: commit the merge only if the sole failure is the known Community Funds assertion.
 2026-11-07 21:08 IST | About to record the merge commit and verification result in the append-only worklog, then commit only that file. Why: the merge commit succeeded, and a test-run log line was appended after the conflict resolution had been staged. Next: push the completed branch after the worktree is clean.
 2026-11-07 21:08 IST | Merge `origin/main` completed on `fix-payment-check-grid` as `a685f6d`; only conflicts were the four docs logs, with both sides retained. `npm test` 392/393; sole known Community Funds script-tag failure. Conflict-marker scan, changed-JS syntax checks, and diff checks passed. Next: stage this worklog entry only, commit it, then push fix-payment-check-grid.
+# 2026-11-09 Failure diagnosis implementation
+
+- Added `classifyFailure`, PayPal safe error fields, migration `0022_payment_failures.sql`, memory/Postgres failure repositories, org-scoped GET `/api/failures`, repeated-failure anomaly rule, and failure recording for order creation, capture, refund decision, and webhook dead-letter paths.
+- Regression coverage checks distinct network, provider outage, declined instrument, refund-limit and unknown causes, plus repeated-category detection.
+- PayPal issue mapping was checked against official Orders v2 and Payments v2 references. No live PayPal request was made.
+# 2026-11-09 Security hardening groundwork
+
+- Added migration `0023_security.sql`, account-risk scoring and recent-auth step-up helpers, process-local login throttling primitive, a deterministic suspicious-message endpoint, report-only CSP headers, login/OTP phishing notice, and Supabase Dashboard leaked-password-protection instructions.
+- Automated risk, step-up helper, throttling, phishing and migration syntax checks pass. Browser CSP reports and Supabase MFA integration have not been verified.
+# 2026-11-09 Support ticketing implementation
+
+- Added migration `0024_support_tickets.sql`, `support` role, org-scoped memory/Postgres repositories, zod-validated ticket routes, account-level creation limiting, audit events, creator-only ticket access and staff-only internal notes.
+- Replaced the support email form with ticket creation, My tickets, ticket threads, a support queue, assignment to self and status/category/priority filters. Failure reports prefill the ticket form with the failure ID.
+- The ticketing backend is in-app only. User notifications to the other party and live Postgres/Supabase behavior still need verification.
+
+2026-11-09 | Task 3 (step-up): added device-bound, expiring step-up grants; server-side password and email-code verification; risk-based enforcement for refund approvals and invoice sends; and a shared UI prompt that retries the original request once after verification. Migration `0026_step_up_grants.sql` references the existing text device IDs and is org-scoped. Focused security tests pass. Full `npm test` was run; the only failure remains the pre-existing stale Community Funds script-tag assertion in `server/test/fund-campaign-live-view.test.js`. Next: finish security login throttling and the Settings panel.
+
+2026-11-09 | Task 4 (login lockout): added persistent, salted account/network attempt keys, a generic pre-login check/report endpoint, threshold-based exponential lockout storage in `login_attempts`, and API middleware enforcement after valid Supabase token verification. The 2-attempt focused end-to-end test verifies preflight and authenticated API blocks. New migration: `0027_login_attempts.sql`. Direct Supabase Auth attempts remain covered by Supabase's own rate limits; NovaPay cannot intercept direct calls.
+
+2026-11-09 | Task 5 (Security panel): added real own-account overview/history/device endpoints and a Settings panel with risk explanations, device removal and recent login records. Owner/admin member list and unlock actions resolve the account email server-side, clear failed-attempt records, and audit the action. Device removal cascades the step-up grant. API tests cover private data, removal and role restrictions.
+
+2026-11-09 | Task 5 verification: `npm test` migration check passed; 407/408 tests passed. The remaining known failure is `server/test/fund-campaign-live-view.test.js:49`, which still expects an obsolete script tag and is scheduled for correction in Task 6.
+
+2026-11-09 | Task 6 (notification delivery and live RLS tooling): per-user notification recipients now scope listing and status changes; ticket creation routes to support/owner/admin, public replies and status changes notify the other party, user replies notify the assignee or support queue, and internal notes create no customer notification. Medium/high sign-in risk alerts go to the affected user. Added support role grant and live RLS verifier scripts, updated the allowed role list in the already-applied 0024 migration per request, and corrected the stale Community Funds test expectation without changing page behavior. Added 0028 notification recipient/RLS migration.
+
+## 2026-11-09 — Step-up password diagnosis
+
+- Reproduced the failure using mocked Supabase password-grant responses. The endpoint, anon key, JSON content type, payload field names, authenticated email source, and unchanged password value were correct. Root cause: the service returned `null` for every non-2xx response, so the route mislabeled provider rate limits, unconfirmed email and outages as an incorrect password.
+- Preserved safe provider status/error codes, added distinct messages and a separate step-up attempt limiter, and tested successful grant creation with the authenticated device.
+- Added `scripts/verify-step-up-live.js`; no live account credentials were available or used in this run.
+
+## 2026-11-09 — Isolated step-up email code
+
+- Reproduced the empty-send behavior: the route sent OTP from the server via `/auth/v1/otp`, and its helper discarded the Supabase response; code verification also happened server-side without a short-lived signed proof.
+- Switched to a separate browser Supabase client with persistence/refresh disabled. It sends and verifies email OTP without replacing the primary session, then posts the temporary token to NovaPay. The server checks the verified subject, email provider, OTP auth method, and token issue time (120 seconds).
+- Added masked email display and 60-second resend cooldown. Live delivery was not tested; see the dashboard template configuration in the Runbook.
+
+## 2026-11-09 — Password change recovery
+
+- Reproduced the generic error path: Settings discarded the Supabase error and always showed one message. Added a live-session check, distinct mappings for reauthentication, same/weak password, missing/expired session, rate limit, and invalid nonce.
+- Secure-password-change errors trigger Supabase `reauthenticate()` and expose a code field; `updateUser` retries with the submitted nonce. On success the backend records an audit event and revokes the user's other device grants while retaining the current one.
+- No live account password was changed during verification.
+
+## 2026-11-09 — Step-up confirmation modal
+
+- Replaced the bare dialog with a theme-token glass modal, responsive width, dimmed backdrop, labeled password/code inputs, show/hide control, password/email method switch, resend state, inline status, and cancel behavior.
+- The native dialog provides focus containment and Escape handling; the opener receives focus after close. Approval's existing finalizer resets the underlying confirmation button after cancel or failure.
+
+## 2026-11-09 — Numbered email support tickets
+
+- Added 0029_support_ticket_email.sql to backfill organization-local ticket numbers and create an RLS-enabled private counter table/RPC; added message delivery kind/status/error class.
+- Added SMTP mail delivery with HTML escaping and safe error classes. Recipients come from server-side Supabase account lookup. Public replies and status emails go to the user; internal notes never send.
+- Regular-user API responses and UI now expose only ticket number and purpose. Staff keep queue filters, assignment, status/priority, thread and failed-email retry; the ticket creator cannot post in-app replies.
+- Added nodemailer 10.4.0 after checking/fixing the initial dependency advisory; production dependency audit reports zero vulnerabilities.

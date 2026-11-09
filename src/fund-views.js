@@ -47,13 +47,13 @@
   function labelSampleViews() {
     var fundsPanel = $("#view-community-funds"), hidden = false;
     try { hidden = sessionStorage.getItem("novapay-fund-samples-hidden") === "1"; } catch (_) {}
-    if (fundsPanel) { fundsPanel.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = hidden; node.style.display = hidden ? "none" : ""; }); var copy = $(".page-intro p", fundsPanel); if (copy) copy.textContent = hidden ? "DEMO MODE · sample fund data is hidden for this session." : "DEMO MODE · all campaign and transparency amounts are illustrative sample data."; }
+    if (fundsPanel) { fundsPanel.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = hidden; node.style.display = hidden ? "none" : ""; }); var copy = $(".page-intro p", fundsPanel); if (copy) copy.textContent = hidden ? "DEMO MODE · sample fund data is hidden." : "DEMO MODE · campaign and transparency amounts are illustrative."; }
     ["community-funds", "maintenance"].forEach(function (name) {
       var intro = $("#view-" + name + " .page-intro"); if (!intro) return;
       var badge = $("[data-sample-view-label]", intro);
       if (!badge) { badge = make("span", "status warn", "Sample data · Demo workspace"); badge.setAttribute("data-sample-view-label", ""); intro.appendChild(badge); }
       var dismiss = $("[data-sample-dismiss]", intro);
-      if (!dismiss && !hidden) { dismiss = make("button", "btn btn--ghost", "Hide sample data"); dismiss.type = "button"; dismiss.setAttribute("data-sample-dismiss", ""); dismiss.addEventListener("click", function () { try { sessionStorage.setItem("novapay-fund-samples-hidden", "1"); } catch (_) {} ["community-funds", "maintenance"].forEach(function (view) { var section = $("#view-" + view); if (section) section.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = true; node.style.display = "none"; }); var label = $("[data-sample-view-label]", $("#view-" + view)); if (label) label.textContent = "Sample data hidden"; }); if (copy) copy.textContent = "DEMO MODE · sample fund data is hidden for this session."; dismiss.hidden = true; }); intro.appendChild(dismiss); }
+      if (!dismiss && !hidden) { dismiss = make("button", "btn btn--ghost", "Hide sample data"); dismiss.type = "button"; dismiss.setAttribute("data-sample-dismiss", ""); dismiss.addEventListener("click", function () { try { sessionStorage.setItem("novapay-fund-samples-hidden", "1"); } catch (_) {} ["community-funds", "maintenance"].forEach(function (view) { var section = $("#view-" + view); if (section) section.querySelectorAll("[data-fund-sample]").forEach(function (node) { node.hidden = true; node.style.display = "none"; }); var label = $("[data-sample-view-label]", $("#view-" + view)); if (label) label.textContent = "Sample data hidden"; }); if (copy) copy.textContent = "DEMO MODE · sample fund data is hidden."; dismiss.hidden = true; }); intro.appendChild(dismiss); }
       if (hidden && dismiss) dismiss.hidden = true;
     });
   }

@@ -169,3 +169,51 @@ The browser fetches the PDF with JWT and `X-Org-Id` headers, then saves the blob
 ### `POST /api/ai/transcribe`
 
 Authenticated, organization-scoped. Accepts an `application/octet-stream` audio body (maximum 8 MB) plus `X-Audio-Mime-Type` (`audio/webm`, `audio/mp4`, `audio/ogg`, `audio/wav`, `audio/mpeg`, or `audio/aac`). Limited to 10 clips per user per 15 minutes. Returns `{ "transcript": "..." }`; raw audio is not stored. This is the only voice path that sends audio to Gemini (Gemini 3.5 Transcribe via the server-side key pool). For Brave or browsers without a working SpeechRecognition service, hold the AI view mic button to record, then the transcript follows the same AI query pipeline as typed and recognized speech. Free-tier provider terms may allow submitted data to be used for product improvement; use only non-sensitive sample speech.
+# Payment failures
+
+`GET /api/failures?limit=50&offset=0` returns recent organization-scoped failure records for owner, admin, accountant and approver roles. Records retain sanitized provider issue codes and debug identifiers only; they do not include provider response bodies.
+
+## Support tickets
+
+- POST /api/support/tickets creates a numbered ticket (maximum 10 per user per hour). The creator sees only ticket number, topic and subject; SMTP delivery status is returned.
+- GET /api/support/tickets lists only number and purpose for creators; support, owner and admin get the organization queue with filters for status, priority and category.
+- GET /api/support/tickets/:id and POST /api/support/tickets/:id/messages are staff-only. Public replies are emailed to the account email on file. Internal notes are never emailed.
+- PATCH /api/support/tickets/:id updates status, priority or assignee for support, owner and admin. Resolved/closed statuses email the creator.
+- POST /api/support/tickets/:id/messages/:messageId/retry-email retries failed email delivery.
+
+Ticket email status is sent, failed, or not_configured. Recipients come from Supabase Admin Auth, never client input.
+
+## Sensitive-action re-authentication
+
+- The browser sends and verifies email OTP using a separate non-persisting Supabase client. POST /api/security/step-up/otp/verify accepts the temporary access token only after checking its subject, email OTP method and two-minute issue window. The legacy POST /api/security/step-up/otp returns STEP_UP_CLIENT_REQUIRED.
+- POST /api/security/step-up accepts a password method and registered device ID. Success creates a short-lived device-bound grant.
+- Refund approvals and invoice sends can return STEP_UP_REQUIRED; the client prompts and retries that action once after verification.
+
+## Login throttling
+
+- `GET /api/auth/preflight?flow=login&email=…` checks the salted account and network-prefix lock before Supabase sign-in. A locked attempt receives a generic `LOGIN_TEMPORARILY_UNAVAILABLE` response.
+- `POST /api/auth/login-attempt` accepts `{ "email": "…", "success": true|false }` after the browser's Supabase password attempt. The server stores only salted account and network hashes, not the submitted email or raw IP.
+- Defaults: 5 failures in 15 minutes create a 15-minute lock; repeated locks back off exponentially, capped at 24 hours. Locked accounts are also refused at the NovaPay API boundary after token verification. Supabase's direct Auth endpoint remains protected by Supabase's own rate limits.
+
+## Security activity
+
+- `GET /api/security/overview` returns the signed-in user's risk summary, login history, known devices and current lock status.
+- `GET /api/security/logins?limit=50&offset=0` and `GET /api/security/devices` return only the signed-in user's records. `GET /api/security/devices/:id` checks ownership; `DELETE /api/security/devices/:id` removes that device and cascades its step-up grants.
+- `GET /api/security/members` and `POST /api/security/members/:id/unlock` are owner/admin only. Unlock resolves the member through Supabase Admin Auth on the server, clears that member's failed-attempt lock records and audits the action.
+
+## Notification recipients
+
+- `GET /api/notifications` returns organization-wide notifications plus rows addressed to the signed-in user.
+- `POST /api/notifications/:id/read` and `POST /api/notifications/:id/dismiss` can update only those same visible rows. Support replies/status changes notify the ticket creator; user replies notify the assignee or support queue; security risk alerts notify the affected user. Internal notes do not send a customer notification.
+
+### Step-up password verification
+
+`POST /api/security/step-up` with `{ "method":"password", "password":"…", "deviceId":"…" }` uses the authenticated user's normalized account email and a stateless Supabase Auth password grant with the anon key. Password text is passed unchanged. Errors use distinct codes for invalid password, unconfirmed email, rate limit and temporary provider outage. Step-up attempts have a separate per-user limit (5 failures per 10 minutes); they do not modify login lockout state. Use `node scripts/verify-step-up-live.js` with the `STEP_UP_TEST_*` environment values to check a configured test account.
+
+### Step-up email code
+
+The browser requests email OTP with a separate non-persisting Supabase Auth client, then verifies it with `verifyOtp({ email, token, type: 'email' })`. `POST /api/security/step-up/otp/verify` accepts only `{ deviceId, accessToken }`; the server verifies the access token against Supabase and grants only when its subject matches the signed-in user, its provider/method indicate email OTP, and its issue time is within the last 120 seconds. The legacy `/api/security/step-up/otp` server-send route returns `STEP_UP_CLIENT_REQUIRED`.
+
+`POST /api/security/credential-changed` accepts `{ "deviceId":"…" }` after Supabase reports a successful password update. It audits the event and revokes other device-bound step-up grants; the current authenticated session and device grant remain valid.
+
+The step-up prompt presents password and isolated email-code methods in an accessible native dialog. Cancelling closes the prompt and rejects the gated operation; the approval confirmation returns to its ready state.

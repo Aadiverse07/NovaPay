@@ -328,14 +328,61 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const failures = {
+    async record(input) { const rows = await database.insert('payment_failures', input); return rows?.[0] || null; },
+    async list(orgId, { limit = 50, offset = 0 } = {}) { return database.select('payment_failures', q({ select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(limit), offset: String(offset) })); },
+    async recent(orgId, minutes = 15) { return database.select('payment_failures', q({ select: '*', org_id: `eq.${orgId}`, occurred_at: `gte.${new Date(Date.now() - minutes * 60000).toISOString()}`, order: 'occurred_at.desc', limit: '100' })); },
+  };
+
+  const security = {
+    async listLogins(orgId,userId,{limit=50,offset=0}={}) { return database.select('login_events',q({select:'*',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,order:'occurred_at.desc',limit:String(limit),offset:String(offset)})); },
+    async recordLogin(input) { const rows=await database.insert('login_events',input);return rows?.[0]||null; },
+    async listDevices(orgId,userId) { return database.select('user_devices',q({select:'*',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,order:'last_seen.desc',limit:'100'})); },
+    async getDevice(orgId,userId,deviceId) { const rows=await database.select('user_devices',q({select:'*',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`,limit:'1'}));return rows?.[0]||null; },
+    async upsertDevice(input) { const rows=await database.upsert('user_devices',input,'org_id,user_id,device_id');return rows?.[0]||null; },
+    async deleteDevice(orgId,userId,deviceId) { return database.delete('user_devices',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`})); },
+    async loginCount(orgId,userId) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,limit:'1'}));return rows?.length?1:0; },
+    async hasNetwork(orgId,userId,ipHash) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,ip_hash:`eq.${ipHash}`,limit:'1'}));return Boolean(rows?.length); },
+    async failedLoginCount(orgId,userId,minutes=15) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,success:'eq.false',occurred_at:`gte.${new Date(Date.now()-minutes*60000).toISOString()}`,limit:'100'}));return rows?.length||0; },
+    async failedLoginCountByHash(accountHash,minutes=15) { const rows=await database.select('login_attempts',q({select:'id',account_hash:`eq.${accountHash}`,success:'eq.false',occurred_at:`gte.${new Date(Date.now()-minutes*60000).toISOString()}`,limit:'100'}));return rows?.length||0; },
+    async loginLock(accountHash,ipHash) { const now=new Date().toISOString(),or=`(account_hash.eq.${accountHash},ip_hash.eq.${ipHash})`,rows=await database.select('login_attempts',q({select:'locked_until',or,locked_until:`gt.${now}`,order:'locked_until.desc',limit:'1'}));return rows?.[0]?.locked_until||null; },
+    async recordLoginAttempt({orgId=null,userId=null,accountHash,ipHash,success,config={}}) { return database.rpc('record_login_attempt',{p_org_id:orgId,p_user_id:userId,p_account_hash:accountHash,p_ip_hash:ipHash,p_success:Boolean(success),p_threshold:Number(config.SECURITY_LOGIN_FAILURE_THRESHOLD||5),p_window_minutes:Number(config.SECURITY_LOGIN_WINDOW_MINUTES||15),p_base_lock_minutes:Number(config.SECURITY_LOGIN_LOCK_MINUTES||15)}); },
+    async listOrgMembers(orgId) { return database.select('memberships',q({select:'user_id,role',org_id:`eq.${orgId}`,order:'created_at.asc',limit:'200'})); },
+    async memberLock(orgId,userId) { const rows=await database.select('login_attempts',q({select:'locked_until',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,locked_until:`gt.${new Date().toISOString()}`,order:'locked_until.desc',limit:'1'}));return rows?.[0]?.locked_until||null; },
+    async clearAccountLock(accountHash) { return database.delete('login_attempts',q({account_hash:`eq.${accountHash}`,success:'eq.false'})); },
+    async linkLoginAttempts(accountHash,userId,orgId) { return database.patch('login_attempts',q({account_hash:`eq.${accountHash}`}),{user_id:userId,org_id:orgId}); },
+    async loginIdentityForHash(accountHash) { const rows=await database.select('login_attempts',q({select:'user_id,org_id',account_hash:`eq.${accountHash}`,user_id:'not.is.null',org_id:'not.is.null',order:'occurred_at.desc',limit:'1'}));return rows?.[0]?{userId:rows[0].user_id,orgId:rows[0].org_id}:null; },
+    async grantStepUp(input) { const rows=await database.upsert('step_up_grants',input,'org_id,user_id,device_id');return rows?.[0]||null; },
+    async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const rows=await database.select('step_up_grants',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`,expires_at:`gt.${now.toISOString()}`,limit:'1'}));return Boolean(rows?.length); },
+    async deleteStepUpGrant(orgId,userId,deviceId) { return database.delete('step_up_grants',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`})); },
+    async deleteOtherStepUpGrants(orgId,userId,deviceId) { return database.delete('step_up_grants',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`neq.${deviceId}`})); },
+  };
+
+  const supportTickets = {
+    async create(orgId,userId,input) { const allocated=await database.rpc('allocate_support_ticket_number',{p_org_id:orgId});const rows=await database.insert('support_tickets',{org_id:orgId,created_by:userId,ticket_number:allocated,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null});return rows?.[0]||null; },
+    async addMessage(orgId,ticketId,authorId,body,internalNote,emailStatus='not_configured',emailKind='reply') { const rows=await database.insert('support_ticket_messages',{org_id:orgId,ticket_id:ticketId,author_id:authorId,body,internal_note:internalNote,email_status:emailStatus,email_kind:emailKind});return rows?.[0]||null; },
+    async get(orgId,id) { const rows=await database.select('support_tickets',q({select:'*',org_id:`eq.${orgId}`,id:`eq.${id}`,limit:'1'}));return rows?.[0]||null; },
+    async list(orgId,userId,staff,filters) { const p={select:'*',org_id:`eq.${orgId}`,order:'created_at.desc',limit:String(filters.limit),offset:String(filters.offset)};if(!staff)p.created_by=`eq.${userId}`;for(const key of ['status','priority','category'])if(filters[key])p[key]=`eq.${filters[key]}`;return database.select('support_tickets',q(p)); },
+    async messages(orgId,ticketId,staff) { const p={select:'*',org_id:`eq.${orgId}`,ticket_id:`eq.${ticketId}`,order:'created_at.asc',limit:'500'};if(!staff)p.internal_note='eq.false';return database.select('support_ticket_messages',q(p)); },
+    async getMessage(orgId,ticketId,id) { const rows=await database.select('support_ticket_messages',q({select:'*',org_id:`eq.${orgId}`,ticket_id:`eq.${ticketId}`,id:`eq.${id}`,limit:'1'}));return rows?.[0]||null; },
+    async updateMessageEmail(orgId,id,status,errorClass=null) { const rows=await database.patch('support_ticket_messages',q({org_id:`eq.${orgId}`,id:`eq.${id}`}),{email_status:status,email_error_class:errorClass});return rows?.[0]||null; },
+    async update(orgId,id,input) { const p={};if(input.status)p.status=input.status;if(input.priority)p.priority=input.priority;if(input.assigneeId!==undefined)p.assignee_id=input.assigneeId;p.updated_at=new Date().toISOString();if(input.status==='resolved')p.resolved_at=new Date().toISOString();const rows=await database.patch('support_tickets',q({org_id:`eq.${orgId}`,id:`eq.${id}`}),p);return rows?.[0]||null; },
+    async staffRecipients(orgId) { const rows=await database.select('memberships',q({select:'user_id',org_id:`eq.${orgId}`,role:'in.(support,owner,admin)',limit:'500'}));return(rows||[]).map(row=>row.user_id); },
+  };
+
   const notifications = {
-    async list(orgId, { status, limit = 50, offset = 0 } = {}) {
+    async addSupport(orgId, ticketId, recipientUserId, rule='support_ticket_update', ticketNumber=null) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId||null,anomaly_id:null,rule,severity:'info',evidence_ids:[`support_ticket:${ticketId}`,...(ticketNumber?[`ticket_number:${ticketNumber}`]:[])],status:'unread'});return rows?.[0]||null; },
+    async addSecurity(orgId,recipientUserId,loginEventId,risk) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId,anomaly_id:null,rule:'security_new_device',severity:risk.level==='high'?'high':'warning',evidence_ids:[`login_event:${loginEventId}`],status:'unread'});return rows?.[0]||null; },
+    async list(orgId, userId, options = {}) {
+      if(userId&&typeof userId==='object'){options=userId;userId=null}
+      const {status,limit=50,offset=0}=options;
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(limit), offset: String(offset) };
       if (status) params.status = `eq.${status}`;
+      if(userId)params.or=`(recipient_user_id.is.null,recipient_user_id.eq.${userId})`;
       return database.select('notifications', q(params));
     },
-    async setStatus(orgId, id, status) {
-      return database.rpc('set_notification_status', { p_org: orgId, p_notification_id: id, p_status: status });
+    async setStatus(orgId, id, status, userId) {
+      return database.rpc('set_notification_status_for_user', { p_org: orgId, p_notification_id: id, p_status: status, p_user:userId||null });
     },
   };
 
@@ -436,7 +483,7 @@ export function createPostgresRepositories(database) {
   };
 
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds, failures, supportTickets, security,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

@@ -4,9 +4,15 @@ import { moneyToMinor } from '../repos/postgres.js';
 import { rbac } from '../middleware/auth.js';
 import { auditApiAction } from '../services/audit.js';
 import { decideApproval } from '../services/refunds.js';
+import { classifyFailure } from '../services/failureClassifier.js';
 
 export function paypalRoutes({ config, paypal, repos, identity, fx }) {
   const router = Router();
+  async function failureResponse(req, operation, referenceId, error) {
+    const cause = classifyFailure(error);
+    const row = await repos.failures.record({ org_id: req.orgId, operation, reference_id: referenceId || null, category: cause.category, code: cause.code, http_status: error.httpStatus || null, retryable: cause.retryable, provider_issues: error.providerIssues || [], debug_id: error.debugId || null, request_id: req.id || null }).catch(() => null);
+    return { error: { code: cause.code, message: error.message }, category: cause.category, userMessage: cause.userMessage, nextStep: cause.nextStep, retryable: cause.retryable, failureId: row?.id || null };
+  }
   router.post('/paypal/create-order', rbac(['owner', 'admin', 'accountant', 'approver']), async (req, res, next) => {
     try {
       if (!config.hasPayPal) return res.status(503).json({ error: 'PayPal sandbox credentials not set' });
@@ -22,7 +28,9 @@ export function paypalRoutes({ config, paypal, repos, identity, fx }) {
         await repos.orders.save({ id: '', requestKey, amount, currency: 'USD', status: 'CREATING', state: 'Creating', approveUrl: '' }, req.orgId);
         await auditApiAction(identity, req, { action: 'paypal.order.create', entity: 'order', entityId: requestKey, metadata: { amount, currency: 'USD' } });
       }
-      const data = await paypal.pp('POST', '/v2/checkout/orders', { intent: 'CAPTURE', purchase_units: [{ amount: { currency_code: 'USD', value: amount }, description: 'NovaPay sandbox test payment' }], payment_source: { paypal: { experience_context: { return_url: `http://localhost:${config.PORT}/dashboard.html#sandbox`, cancel_url: `http://localhost:${config.PORT}/dashboard.html#sandbox`, user_action: 'PAY_NOW' } } } }, paypalRequestId('order', `${req.orgId}:${requestKey}`), req.orgId);
+      let data;
+      try { data = await paypal.pp('POST', '/v2/checkout/orders', { intent: 'CAPTURE', purchase_units: [{ amount: { currency_code: 'USD', value: amount }, description: 'NovaPay sandbox test payment' }], payment_source: { paypal: { experience_context: { return_url: `http://localhost:${config.PORT}/dashboard.html#sandbox`, cancel_url: `http://localhost:${config.PORT}/dashboard.html#sandbox`, user_action: 'PAY_NOW' } } } }, paypalRequestId('order', `${req.orgId}:${requestKey}`), req.orgId); }
+      catch (error) { return res.status(error.statusCode || 502).json(await failureResponse(req, 'create_order', requestKey, error)); }
       const link = (data.links || []).find((item) => item.rel === 'payer-action' || item.rel === 'approve'), url = approveUrl(link && link.href);
       if (!data.id || !url) return res.status(502).json({ error: 'PayPal returned an incomplete order. No buyer approval link is available.' });
       const order = await repos.orders.save({ id: String(data.id), requestKey, amount, currency: 'USD', status: String(data.status || 'CREATED'), approveUrl: url, state: 'Created', capture: null }, req.orgId);
@@ -49,8 +57,9 @@ export function paypalRoutes({ config, paypal, repos, identity, fx }) {
       let data;
       try { data = await paypal.pp('POST', `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, null, paypalRequestId('capture', orderId), req.orgId); }
       catch (error) {
-        if (error.requestSent && !error.paypalResponse) { await repos.orders.updateState(orderId, req.orgId, 'Capture outcome uncertain'); return res.status(503).json({ error: 'The capture request outcome is uncertain. Check PayPal Sandbox before retrying.', retryBlocked: true }); }
-        await repos.orders.updateState(orderId, req.orgId, 'Created'); throw error;
+        const failure = await failureResponse(req, 'capture', orderId, error);
+        if (error.requestSent && !error.paypalResponse) { await repos.orders.updateState(orderId, req.orgId, 'Capture outcome uncertain'); return res.status(503).json({ ...failure, error: 'The capture request outcome is uncertain. Check PayPal Sandbox before retrying.', retryBlocked: true }); }
+        await repos.orders.updateState(orderId, req.orgId, 'Created'); return res.status(error.statusCode || 502).json({ ...failure, retryBlocked: false });
       }
       const capture = data?.purchase_units?.[0]?.payments?.captures?.[0];
       if (!capture?.id || !capture.amount?.value || !capture.amount?.currency_code) {
@@ -97,7 +106,7 @@ export function paypalRoutes({ config, paypal, repos, identity, fx }) {
       try { refundMinor = moneyToMinor(body.amount); } catch { return res.status(400).json({ error: 'Refund amount must be a positive USD amount with at most two decimal places.' }); }
       if (!/^\d+(?:\.\d{1,2})?$/.test(String(body.amount || '')) || refundMinor <= 0) return res.status(400).json({ error: 'Refund amount must be a positive USD amount with at most two decimal places.' });
       if (approval.amount !== (refundMinor / 100).toFixed(2)) return res.status(403).json({ error: 'This refund does not match a server-registered approval, capture, amount, and currency.' });
-      const result = await decideApproval({ repos, paypal, identity, req, approvalId, decision: 'approve', note: String(body.note || '').slice(0, 500) });
+      const result = await decideApproval({ config, repos, paypal, identity, req, approvalId, decision: 'approve', note: String(body.note || '').slice(0, 500) });
       return res.status(result.status).json(result.body);
     } catch (error) { return next(error); }
   });

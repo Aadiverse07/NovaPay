@@ -48,7 +48,6 @@
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
     title.textContent=titles[view];
-    var subs={transactions:"TRANSACTIONS","ai-assistant":"NOVAPAY AI \u00b7 MERCHANT ASSISTANT",approvals:"HUMAN-IN-THE-LOOP",sandbox:"PAYPAL DEVELOPER PLATFORM",ledger:"FINANCIAL CORE",invoices:"FINANCE UTILITIES",reports:"FINANCE UTILITIES",documents:"DOCUMENTS & OCR","community-funds":"COMMUNITY FUNDS",maintenance:"COMMUNITY OPERATIONS",settings:"PREFERENCES"},aiKick=$("ai-top-kicker"); if(aiKick){aiKick.textContent=subs[view]||"";aiKick.hidden=!subs[view]}
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
     if(view==="transactions"&&window.NovaPayTransactionsGrid)requestAnimationFrame(function(){var panel=$("view-transactions");if(panel&&!panel.hidden)window.NovaPayTransactionsGrid.init()});
     if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
@@ -480,7 +479,8 @@
         if(next.length<8){pwSay("Use at least 8 characters for the new password.","error");$("set-pw-new").focus();return;}
         if(!/[A-Za-z]/.test(next)||!/\d/.test(next)){pwSay("Include at least one letter and one number.","error");$("set-pw-new").focus();return;}
         if(next!==again){pwSay("The new passwords do not match.","error");$("set-pw-confirm").focus();return;}
-        $("set-pw-submit").disabled=true;NovaPayAuth.updatePassword(next).then(function(){pwForm.reset();$("set-pw-username").value=user.email||"";pwSay("Password updated with Supabase Auth.","ok");showToast("Password updated.");}).catch(function(error){pwSay("Supabase could not update the password. Check your session and try again.","error");if(window.console)console.error("Could not update Supabase password",error);}).finally(function(){$("set-pw-submit").disabled=false;});return;
+        var nonceField=$("set-pw-nonce"),nonceLabel=$("set-pw-nonce-label"),nonce=nonceLabel&&!nonceLabel.hidden?String(nonceField.value||"").trim():"";
+        $("set-pw-submit").disabled=true;NovaPayAuth.updatePassword(next,nonce||undefined).then(function(){pwForm.reset();if(nonceLabel)nonceLabel.hidden=true;$("set-pw-username").value=user.email||"";pwSay("Password updated with Supabase Auth.","ok");showToast("Password updated.");}).catch(function(error){var mapped=window.NovaPayPasswordErrors.passwordUpdateError(error);if(mapped.code==="reauthentication_needed"&&!nonce){NovaPayAuth.reauthenticatePasswordChange().then(function(){if(nonceLabel)nonceLabel.hidden=false;if(nonceField){nonceField.value="";nonceField.focus()}pwSay("A verification code was sent to your account email. Enter it to finish changing your password.","")}).catch(function(sendError){var sendMapped=window.NovaPayPasswordErrors.passwordUpdateError(sendError);pwSay(sendMapped.message,"error")})}else{pwSay(mapped.message,"error")}}).finally(function(){$("set-pw-submit").disabled=false;});return;
       }
       if(real===null)return;
       if(!cur){pwSay("Enter your current password.","error");$("set-pw-current").focus();return;}
@@ -493,7 +493,7 @@
       if(!putAccts(accts)){pwSay("Could not save the new password in this browser.","error");return;}
       pwForm.reset();$("set-pw-username").value=user.email||"";pwSay("Password updated. Use it the next time you sign in.","ok");showToast("Password updated.");
     });
-    ["set-pw-current","set-pw-new","set-pw-confirm"].forEach(function(id){$(id).addEventListener("input",function(){if(pwStatus.classList.contains("is-error"))pwSay("","");});});
+    ["set-pw-current","set-pw-new","set-pw-confirm","set-pw-nonce"].forEach(function(id){if($(id))$(id).addEventListener("input",function(){if(pwStatus.classList.contains("is-error"))pwSay("","");});});
   }
 
   /* Confirmation dialog */

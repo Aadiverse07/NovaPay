@@ -44,6 +44,26 @@ const schema = z.object({
   ANOMALY_REFUND_RATE_THRESHOLD: z.coerce.number().min(0.01).max(1).default(0.25),
   ANOMALY_LARGE_PAYOUT_MINOR: z.coerce.number().int().min(1).default(1000000),
   ANOMALY_STALE_WEBHOOK_MINUTES: z.coerce.number().int().min(1).max(1440).default(10),
+  ANOMALY_FAILURE_COUNT: z.coerce.number().int().min(2).max(100).default(3),
+  ANOMALY_FAILURE_WINDOW_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+  SECURITY_HASH_SALT: z.string().optional().default(''),
+  SECURITY_RISK_WEIGHT_NEW_DEVICE: z.coerce.number().int().min(0).max(100).default(35),
+  SECURITY_RISK_WEIGHT_NEW_NETWORK: z.coerce.number().int().min(0).max(100).default(20),
+  SECURITY_RISK_WEIGHT_FAILED_LOGINS: z.coerce.number().int().min(0).max(100).default(20),
+  SECURITY_RISK_WEIGHT_CREDENTIAL_CHANGE: z.coerce.number().int().min(0).max(100).default(25),
+  SECURITY_RISK_WEIGHT_SENSITIVE_ACTION: z.coerce.number().int().min(0).max(100).default(20),
+  SECURITY_RISK_WEIGHT_REQUEST_BURST: z.coerce.number().int().min(0).max(100).default(15),
+  SECURITY_RISK_MEDIUM_THRESHOLD: z.coerce.number().int().min(1).max(99).default(35),
+  SECURITY_RISK_HIGH_THRESHOLD: z.coerce.number().int().min(2).max(100).default(70),
+  SECURITY_CREDENTIAL_CHANGE_WINDOW_MINUTES: z.coerce.number().int().min(1).max(1440).default(30),
+  SECURITY_SENSITIVE_AFTER_NEW_DEVICE_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+  SECURITY_REQUEST_BURST_WINDOW_SECONDS: z.coerce.number().int().min(10).max(3600).default(60),
+  SECURITY_REQUEST_BURST_THRESHOLD: z.coerce.number().int().min(2).max(1000).default(30),
+  STEP_UP_TTL_MINUTES: z.coerce.number().int().min(1).max(60).default(10),
+  STEP_UP_ALWAYS_FOR_REFUNDS: z.enum(['true','false']).default('false').transform((value)=>value==='true'),
+  SECURITY_LOGIN_FAILURE_THRESHOLD: z.coerce.number().int().min(2).max(20).default(5),
+  SECURITY_LOGIN_WINDOW_MINUTES: z.coerce.number().int().min(1).max(120).default(15),
+  SECURITY_LOGIN_LOCK_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
   CURRENCY_CONVERTER_URL: z.string().url().default('https://currency-4mff.onrender.com'),
   ANOMALY_SCAN_INTERVAL_MS: z.coerce.number().int().min(60000).max(86400000).default(21600000),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
@@ -51,6 +71,12 @@ const schema = z.object({
   SUPABASE_URL: z.string().url().optional().or(z.literal('')).default(''),
   SUPABASE_ANON_KEY: z.string().trim().optional().default(''),
   SUPABASE_SERVICE_ROLE_KEY: z.string().trim().optional().default(''),
+  SMTP_HOST: z.string().trim().optional().default(''),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_USER: z.string().optional().default(''),
+  SMTP_PASS: z.string().optional().default(''),
+  SMTP_FROM: z.string().trim().optional().default(''),
+  SUPPORT_INBOX_EMAIL: z.string().trim().email().optional().or(z.literal('')).default(''),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   STATIC_DIR: z.string().min(1).default(root),
 });
@@ -64,12 +90,16 @@ const supabaseValues = [parsed.data.SUPABASE_URL, parsed.data.SUPABASE_ANON_KEY,
 if (supabaseValues.some(Boolean) && !supabaseValues.every(Boolean)) {
   throw new Error('Invalid NovaPay configuration: SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY must be set together.');
 }
+if (process.env.NODE_ENV === 'production' && parsed.data.SECURITY_HASH_SALT.length < 32) {
+  throw new Error('Invalid NovaPay configuration: SECURITY_HASH_SALT must be at least 32 characters in production.');
+}
 
 const geminiKeySlots = resolveGeminiKeySlots(parsed.data);
 const providerFlags = resolveGeminiCapabilities(parsed.data);
 
 export const config = Object.freeze({
   ...parsed.data,
+  SECURITY_HASH_SALT: parsed.data.SECURITY_HASH_SALT || (process.env.NODE_ENV === 'production' ? '' : 'novapay-development-only-security-salt'),
   geminiKeySlots,
   STATIC_DIR: path.resolve(root, parsed.data.STATIC_DIR),
   hasPayPal: Boolean(parsed.data.PAYPAL_CLIENT_ID && parsed.data.PAYPAL_CLIENT_SECRET),

@@ -62,3 +62,37 @@ The backend accepts optional server-only `GEMINI_API_KEY_1` through `GEMINI_API_
 A switch appears in the server/API activity log as a safe slot-only message, such as `POST gemini gemini-3.5-flash-lite:generateContent -> 429 · key #1 exhausted, switching to key #2`; no key material is logged. When every configured key is cooling down or disabled, the provider returns the existing safe unavailable response immediately; it does not wait for a reset. Existing `LLM_API_KEY` (for Gemini) and `GEMINI_API_KEY` configurations continue to work without numbered variables.
 
 `AI_DAILY_USER_LIMIT` and `AI_DAILY_ORG_LIMIT` still apply before a model call (including document embeddings); therefore those application budgets can block judging traffic before a provider key is exhausted. Increase them only through server environment configuration when the demo requires it.
+# Supabase password breach protection
+
+Enable leaked-password protection in the Supabase Dashboard under Authentication → Security and Protection. NovaPay does not call a leaked-password service in the sign-in request path.
+
+## NovaPay security and support operations
+
+The live project already has migrations 0001–0028. After reviewing the SQL and running `npm run check:migrations`, apply only `0029_support_ticket_email.sql` through the Supabase SQL Editor. Migration `0024_support_tickets.sql` is checked into this repository as a record of the already-applied ticket schema and support role.
+
+Set `SECURITY_HASH_SALT` to a random server-only value of at least 32 characters in production. Never rotate it casually: existing device/network/account hashes will no longer compare. Defaults for lockouts are 5 failures in 15 minutes and a 15-minute initial lock; repeated lockouts increase exponentially up to 24 hours. Direct requests to Supabase Auth do not pass through NovaPay's preflight; Supabase Auth's own rate limits protect that route.
+
+To grant the support role, an authorized project operator runs `node scripts/grant-support-role.js <org-uuid> <user-uuid>` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the environment. Confirm the target user and org before running; the script changes only that membership role and never prints the service key.
+
+To verify live ticket RLS after the migrations are applied, set `SUPPORT_RLS_ORG_ID`, `SUPPORT_RLS_CREATOR_EMAIL`, `SUPPORT_RLS_OTHER_EMAIL`, and `SUPPORT_RLS_SUPPORT_EMAIL` to existing test fixtures (the last must have the `support` role), then run `node scripts/verify-support-rls-live.js`. It uses Supabase Admin Auth to obtain short-lived sign-in links for existing fixtures, creates one temporary ticket and two messages with service role, checks creator/other-user/support visibility with ordinary user JWTs, and deletes the temporary ticket in a `finally` cleanup. Use a disposable test org and test accounts; the script does not create users or organizations. Tokens and keys remain in process memory and are never printed.
+
+Email-code step-up and password re-authentication use Supabase Auth with the server-side anon key; passwords and codes are never persisted. Refund and invoice actions still require the existing human approval; PayPal execution remains Sandbox-only where configured. No MFA/TOTP enrollment is included.
+
+### Verify refund step-up password
+
+Use a dedicated test user and set `STEP_UP_TEST_API_URL`, `STEP_UP_TEST_ACCESS_TOKEN`, `STEP_UP_TEST_ORG_ID`, `STEP_UP_TEST_DEVICE_ID`, and `STEP_UP_TEST_PASSWORD` in the process environment, then run `node scripts/verify-step-up-live.js`. The script does not print credentials. A device must already be registered by a signed-in session. Do not use production credentials.
+
+### Step-up email-code templates
+
+In Supabase Dashboard → Authentication → Email Templates, edit **Magic Link** and **Reauthentication** to include the OTP token variable. Use this short template:
+
+> Your NovaPay verification code is {{ .Token }}. It expires in a few minutes. NovaPay will never ask you for your password.
+
+The step-up prompt uses a temporary, non-persisting Auth client and requires a code-based `email` verification token issued within two minutes. Supabase Auth rate limits and configured SMTP still apply. If email delivery is disabled or SMTP is unavailable, the prompt reports that and password verification remains available.
+
+Settings → Security → Password now handles Supabase's Secure password change setting. If Supabase returns `reauthentication_needed`, a code is sent and the next update includes the nonce. For test accounts, verify successful update, same-password rejection, weak-password details, reauthentication code accepted/rejected, expired session, and Auth rate limiting. Never put passwords or codes in logs or issue reports.
+
+
+### Support ticket email delivery
+
+Set SMTP_HOST, SMTP_PORT (587 with STARTTLS or 465 with TLS), SMTP_USER, SMTP_PASS, and SMTP_FROM on the server, then restart NovaPay. Set optional SUPPORT_INBOX_EMAIL to receive copies of new tickets and use as Reply-To. Do not put SMTP credentials in browser configuration. When not configured, ticket creation still works and the API/staff thread reports not_configured; delivery errors are stored only as a safe error class, and staff can retry failed messages. To assign staff, use the existing support-role grant script. Verify with a controlled test mailbox and inspect only delivery status; never log message bodies or addresses.

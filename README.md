@@ -10,12 +10,26 @@ NovaPay is for testing and evaluation. It does not move real money and does not 
 - Test payments (create and capture an order) and refunds through PayPal Sandbox.
 - Signed webhook verification. Verified captures and refunds are posted to the ledger.
 - Sign-in through Supabase Auth, with organization-scoped row-level security (RLS).
+- Support email through configured SMTP to the account address on file. Ticket storage, status and delivery tracking are real NovaPay backend behavior.
 - AI answers with cited evidence from your organization's records, using the configured free-tier Gemini model.
 
 **Simulated:**
 - Invoice sending. No PayPal invoice is created and no recipient is notified.
 - Maintenance payouts. PayPal Payouts Sandbox is unavailable, so approval only queues the workflow. No money is sent and no ledger entry is made. A simulated payment must never be presented as a completed payout.
 - Dashboard seed figures, illustrative transactions and starter proposals. They are labeled as illustrative in the UI.
+- No external help desk is connected. When SMTP is not configured, support requests are stored but no email is sent.
+
+## Failure diagnosis
+
+PayPal Sandbox API errors are classified from documented provider issue codes and HTTP status. The org-scoped `/api/failures` feed records the safe cause, retry guidance, request reference and sanitized provider issue identifiers; it never stores full provider payloads or credentials. A retry is only presented as safe when the classifier says the request can be retried. Network, provider and payment-method outcomes remain PayPal Sandbox results; anomaly detection and cause wording are local NovaPay behavior.
+
+## Security hardening
+
+Login and device risk are recorded using salted hashes for network range and browser signature; raw IP addresses are not stored. Password or email-code re-authentication protects sensitive refund approvals and invoice sends. MFA enrollment and TOTP challenges are out of scope. The Security panel shows real recent sign-ins, known devices, explainable risk and lock status; owners/admins can unlock a member. The browser security policy runs in report-only mode, and suspicious-message checks use deterministic heuristics that are not a guarantee. Supabase Auth provides real account sign-in and verification; risk checks and lockout enforcement are NovaPay application behavior. Direct Supabase Auth attempts remain subject to Supabase's own rate limits.
+
+## Support tickets
+
+Support cases receive sequential organization-local numbers such as NP-0007. Regular users see only the number, topic and subject in Settings → Help & support; replies are delivered to the account email on file. The queue is available to support members, owners and admins, with assignment, status and priority controls. Internal notes stay in the staff view and are never emailed. SMTP delivery is real when configured; each message shows sent, failed or not configured, and staff can retry failed delivery. Ticket storage, role checks, notifications and email tracking are NovaPay behavior; no external help desk is connected. Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM and optionally SUPPORT_INBOX_EMAIL on the server. Grant the support role with node scripts/grant-support-role.js <org-uuid> <user-uuid>.
 
 ## Modules
 
@@ -102,3 +116,11 @@ For the sandbox-first flow: create and capture an order, ask the assistant about
 Phase-by-phase notes live in `CHANGELOG.md`, with test results in `PHASE-8-TEST-REPORT.md` and `docs/TEST-REPORT.md`.
 
 [Needs input: the static demo login (`user@novapay.app` / `novapay123`) still appears in `src/landing.js` and `src/dashboard.js`. Confirm whether it is still a supported path next to Supabase Auth before documenting it here.]
+
+## Security hardening
+
+Login and device risk are recorded with salted hashes for network range and browser signature; raw IP addresses are not stored. Sensitive refund approvals and invoice sends can require password or email-code re-authentication, with short-lived grants tied to a registered device. MFA enrollment and TOTP challenges are not part of this release. The browser security policy runs in report-only mode while existing inline UI behavior is monitored. Suspicious-message checks use deterministic heuristics and are not a guarantee. Supabase Auth still provides real account sign-in and verification; risk scoring and policy checks are NovaPay application behavior.
+
+NovaPay records failed sign-in reports and applies account and network-prefix lockouts before login plus to authenticated API requests. Supabase Auth is still reachable directly by an attacker, so NovaPay cannot prevent direct password attempts against Supabase; Supabase's own Auth rate limits cover that path.
+
+Settings → Security uses real Supabase-backed login and device records, shows the current explainable risk reasons, and lets owners/admins unlock a workspace member. Device removal also ends that device's active step-up grant. This panel reports only data recorded after these migrations are applied; earlier sign-ins are not backfilled.

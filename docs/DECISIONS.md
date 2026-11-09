@@ -759,3 +759,45 @@
 2026-11-07 | Question: How should the AI handle whitespace-split or mistyped PayPal capture IDs and proposal persistence failures? | Choice: Preserve alphanumeric PayPal capture IDs through phone redaction and resolve only exact known IDs after removing whitespace; never guess missing characters. Log a reason code for each failed validation/persistence guard, and replace proposal-success wording unless a server-side approval exists. | Reason: the stored completed USD capture is `6UV5767052048553J`, while the supplied text omits a digit; exact organization-bound capture, currency, status and refundable-balance checks remain mandatory. | Source: read-only Supabase query and `server/src/services/ai.js`, checked 2026-11-07. Rejected: fuzzy matching that might select another capture, auto-approval, or trusting model text as proof of an approval.
 
 2026-11-07 | Question: How should persisted refund approval errors and assistant-created approval cards be described? | Choice: Label persisted refunds as PayPal Sandbox actions; on auth error refresh once and read the approval status without resubmitting; show a review link only when the server returned an approval ID. | Reason: copy should reflect the actual pending approval and avoid duplicate financial requests. | Source: existing approval API/status response and client UI inspected 2026-11-07. Rejected: calling a persisted Sandbox refund simulated, retrying approve/refund POST after auth error, or showing a send card without a persisted approval.
+# Payment failure diagnosis (2026-11-09)
+
+- Choice: classify only documented PayPal issue identifiers before applying HTTP status fallback; preserve safe diagnostics with a failure record and keep `retryBlocked` on uncertain captures/refunds.
+- Reason: the UI can explain known causes without guessing and the existing idempotency and human approval controls remain in place. Unknown provider values stay unknown.
+- Sources: PayPal [Orders v2 errors](https://developer.paypal.com/serversdk/php/api-endpoints/orders/errors), [Payments v2 refund](https://developer.paypal.com/api/payments/v2/captures-refund), checked 2026-11-09.
+# Security groundwork (2026-11-09)
+
+- Choice: add org-scoped login/device schemas, explainable risk scoring primitives, a deterministic suspicious-message checker and report-only CSP. Supabase remains the sign-in authority.
+- Reason: these foundations avoid storing raw network identifiers and permit observing CSP reports before enforcing a policy against existing inline UI.
+- Limitation: login event ingestion, Supabase MFA enrollment/challenges, integrated lockout and risk-based step-up enforcement remain to be wired.
+# Support access model (2026-11-09)
+
+- Choice: add a `support` organization membership role, while retaining owner/admin access to the queue.
+- Reason: existing RBAC already operates on organization roles, so this is the smallest explicit way to designate staff without widening ordinary member access. Ticket reads remain creator-scoped; internal notes have a separate staff-only policy.
+
+# Sensitive-action step-up (2026-11-09)
+
+- Choice: require a recent server-verified password or email one-time-code check when risk is medium/high or a refund policy requires it; store a short-lived grant bound to the current registered device. Invoice sends use the same risk gate.
+- Reason: the browser cannot grant itself authorization; only Supabase Auth verification on the server creates a grant, and the grant expires and is removed with its device.
+- Scope: email code is re-authentication, not MFA enrollment. TOTP/MFA remains outside this follow-up scope.
+
+# Security activity panel (2026-11-09)
+
+- Choice: expose only the signed-in user's login/device history; owners/admins can inspect workspace member roles and clear a member's lock by resolving their account through the server-side Supabase Admin Auth API.
+- Reason: membership data provides the org boundary, while authentication account details and security hashes remain server-only. Removing a device cascades its short-lived step-up grant.
+
+# Per-user notifications and support role operations (2026-11-09)
+
+- Choice: keep org-wide anomaly notifications nullable-recipient and target ticket/security notifications to explicit user IDs. The notification RLS policy exposes org-wide rows plus the current user's rows; status mutation checks the same recipient boundary.
+- Choice: retain `support` as an organization membership role and provide a narrowly scoped administrator script to assign it; avoid a second member permission system.
+- Reason: in-app ticket replies reach only the other party or the designated support queue, while Supabase remains the source of org membership and RLS authority.
+
+2026-11-09 | Question: How should step-up password grant failures be reported? | Choice: Preserve the Supabase HTTP status and safe error code from the stateless anon-key grant call, normalize the authenticated user's email only, and never trim or alter the password. Give step-up attempts their own per-user limiter. | Reason: the former service erased all provider failures and the route mislabeled every one as a wrong password; a separate limiter prevents step-up checks from affecting sign-in lockouts. | Source: reproduced against mocked Supabase grant responses and existing route/service code. No live test account was available.
+
+2026-11-09 | Question: How should step-up email OTP avoid replacing the current session? | Choice: Use a distinct Supabase browser client with persistence and refresh disabled for `signInWithOtp`/`verifyOtp`, then submit its temporary access token to the backend. The backend verifies it through Supabase Auth and checks subject, `email` provider, `otp` auth method and `iat` within 120 seconds before granting. | Reason: the primary browser session is untouched and NovaPay does not trust a client-supplied OTP assertion. | Source: Supabase Auth flow and current route/client implementation, checked 2026-11-09.
+
+2026-11-09 | Question: What happens to step-up grants after password change? | Choice: Audit a credential-change event and delete the user's grants on other registered devices, retaining the current device grant so the active session continues. | Reason: a credential update should invalidate other temporary authorizations without signing the user out of the session that completed the change. | Source: Supabase `reauthentication_needed` and `updateUser({ password, nonce })` documentation; repo grant model inspected 2026-11-09.
+
+2026-11-09 | Question: How should the step-up prompt layer over existing approval confirmation? | Choice: Use a native modal dialog with theme-token glass styling, explicit method switch, keyboard submit/cancel behavior and focus restoration; retain the approval flow's existing finalizer to restore its button after rejection/cancel. | Reason: native dialog top-layer and focus behavior avoid an extra custom focus trap while preserving NovaPay styling. | Source: dashboard markup and approvals client flow inspected 2026-11-09.
+
+2026-11-09 | Question: How should support tickets be exposed to creators? | Choice: Show only sequential ticket number, topic/category and subject; send all staff replies to the account email on file and keep thread, status, priority and internal notes in staff-only views. | Reason: this follows the project owner's product decision and avoids exposing staff workflows or internal notes in the customer view. | Source: user follow-up prompt; support route, role model and migration 0024 inspected 2026-11-09.
+2026-11-09 | Question: How should email failures affect ticket creation? | Choice: Persist the ticket even if delivery is unavailable, store each public message's sent/failed/not_configured state and safe error class, and let staff retry failures. | Reason: a mail outage should not lose a support request or imply a message was sent. | Source: support ticket manual-test requirements.

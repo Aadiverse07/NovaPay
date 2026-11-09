@@ -8,6 +8,7 @@ import { validateBody } from '../middleware/validate.js';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
 import { moneyToMinor } from '../repos/postgres.js';
 import { decideInvoiceSend } from '../services/invoices.js';
+import { checkSensitiveAction } from '../services/securityStepUp.js';
 
 const decisionSchema = z.object({ decision: z.enum(['approve','reject']), note: z.string().trim().max(500).default('') }).strict();
 
@@ -65,11 +66,12 @@ export function approvalRoutes({ config, repos, identity, paypal }) {
         return res.json(result);
       }
       if (existing?.proposalType === 'send-invoice') {
+        if(req.body.decision==='approve'){const stepUp=await checkSensitiveAction({req,repos,identity,config,action:'invoice'});if(stepUp.body)return res.status(stepUp.status).json(stepUp.body)}
         const result=await decideInvoiceSend({repos,paypal,req,approvalId:req.params.approvalId,decision:req.body.decision,note:req.body.note,simulate:true});
         return res.status(result.status).json(result.body);
       }
       if (!config.hasPayPal && config.PAYPAL_INVOICE_SEND_MODE !== 'simulated' && req.body.decision === 'approve') return res.status(503).json(structuredErrorBody('PAYPAL_NOT_CONFIGURED','PayPal Sandbox is unavailable; this approval cannot be executed.'));
-      const result = await decideApproval({ repos, paypal, identity, req, approvalId: req.params.approvalId, decision: req.body.decision, note: req.body.note });
+      const result = await decideApproval({ config, repos, paypal, identity, req, approvalId: req.params.approvalId, decision: req.body.decision, note: req.body.note });
       return res.status(result.status).json(result.body);
     } catch (error) { return next(error); }
   });

@@ -220,6 +220,7 @@
       <div class="form-box Login">
         <h2 class="animation" id="modal-title" style="--out:0;--in:21">Login</h2>
         <form id="login-form">
+          <p class="auth-hint">NovaPay will never ask for your password or OTP.</p>
           <div class="auth-demo" hidden><b>SECURE SIGN-IN</b></div>
           <div class="input-box animation" style="--out:1;--in:22">
             <input id="login-email" type="email" autocomplete="email" required><label for="login-email">Email</label>
@@ -288,6 +289,7 @@
 
       <!-- EMAIL OTP / RECOVERY: same auth-stage and form component classes as Login/Register -->
       <div class="form-box OTP" id="otp-panel" inert aria-hidden="true">
+        <p class="auth-hint">NovaPay will never ask for your password or OTP.</p>
         <h2 class="animation" id="otp-title">Verify your email</h2>
         <p class="auth-otp-description" id="otp-description" aria-live="polite">We sent a 6-digit code to your email.</p>
         <form id="otp-form" novalidate>

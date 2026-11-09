@@ -29,7 +29,7 @@
     }
     return result;
   }
-  function setNote(text) { var note = byId("tx-source-note"); if (note) note.textContent = text; }
+  function setNote(text) { var note = byId("tx-source-note"); if (note) note.textContent = text + " Sandbox records are only payments captured in this workspace."; }
   function makeTransactionNode(row) {
     var tr = root.document.createElement("tr"), mapped = data.transactionRow(row);
     tr.className = "transaction-row"; tr.tabIndex = 0;

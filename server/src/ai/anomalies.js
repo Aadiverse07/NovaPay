@@ -104,9 +104,15 @@ function reconciliationFinding(run, now) {
   return [finding('webhook_ledger_mismatch', 'high', [run.id ? `reconciliation:${run.id}` : `reconciliation:${now.toISOString().slice(0, 10)}`, ...evidenceIds], { status: 'mismatch', currency: run.currency || 'USD' }, now.toISOString().slice(0, 10))];
 }
 
-export function detectAnomalies({ transactions = [], events = [], reconciliation = null, config = {}, now = new Date() }) {
+export function detectAnomalies({ transactions = [], events = [], failures = [], reconciliation = null, config = {}, now = new Date() }) {
   const date = now instanceof Date ? now : new Date(now);
+  const failureWindow = Number(config.ANOMALY_FAILURE_WINDOW_MINUTES || 15) * 60000;
+  const recentFailures = failures.filter((row) => Number.isFinite(Date.parse(row.occurred_at || row.occurredAt)) && Date.parse(row.occurred_at || row.occurredAt) >= date.getTime() - failureWindow && Date.parse(row.occurred_at || row.occurredAt) <= date.getTime());
+  const grouped = new Map();
+  for (const row of recentFailures) grouped.set(row.category, [...(grouped.get(row.category) || []), row]);
+  const repeatedFailures = [...grouped.entries()].filter(([, rows]) => rows.length >= Number(config.ANOMALY_FAILURE_COUNT || 3)).map(([category, rows]) => finding('repeated_payment_failures', 'warning', rows.map((row) => row.id), { category, count: rows.length, windowMinutes: Number(config.ANOMALY_FAILURE_WINDOW_MINUTES || 15) }, date.toISOString().slice(0, 10)));
   return [
+    ...repeatedFailures,
     ...feeSpikeFindings(transactions, config, date),
     ...duplicateFindings(transactions, config, date),
     ...refundRateFinding(transactions, config, date),

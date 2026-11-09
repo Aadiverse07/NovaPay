@@ -12,6 +12,10 @@
   var workspaceError = "";
   var workspaceState = "idle";
   var workspaceRetryAt = 0;
+  var securityStartedToken = "";
+  var publicConfig = null;
+  var stepUpClient = null;
+  var recoveryFlow = false;
 
   function notifyAuth() {
     document.dispatchEvent(new CustomEvent("novapay:auth", { detail: { mode: mode, signedIn: isAuthenticated(), workspaceRequired: workspaceState === "missing", workspaceState: workspaceState } }));
@@ -239,22 +243,47 @@
     try { return localStorage.getItem(AUTH_ORG_KEY + userId) || ""; } catch (_) { return ""; }
   }
 
+  function persistentDeviceId() {
+    var key = "novapay-security-device-id", id = "";
+    try { id = localStorage.getItem(key) || ""; } catch (_) {}
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return id;
+    id = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+    try { localStorage.setItem(key,id); } catch (_) {}
+    return id;
+  }
+
+  function startSecuritySession(authSession) {
+    if (mode !== "supabase" || !authSession || !authSession.access_token || !authSession.user) return Promise.resolve();
+    if (securityStartedToken === authSession.access_token) return Promise.resolve();
+    var orgId = currentOrgId(authSession.user.id);
+    if (!orgId) return Promise.resolve();
+    securityStartedToken = authSession.access_token;
+    return fetch("/api/security/session-start", { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + authSession.access_token, "X-Org-Id": orgId }, body: JSON.stringify({ deviceId: persistentDeviceId() }), cache: "no-store" }).then(function(){},function(){});
+  }
+
   async function currentSession() {
     await api.ready;
     if (mode !== "supabase" || !client) return null;
     var result = await client.auth.getSession();
     if (result.error) throw result.error;
     session = result.data.session;
+    recoveryFlow = true;
     return session;
   }
 
   async function signIn(email, password) {
     await api.ready;
     if (mode !== "supabase") throw new Error("Real sign-in is unavailable in demo mode.");
-    var result = await client.auth.signInWithPassword({ email: email, password: password });
-    if (result.error) throw result.error;
+    email = String(email || "").trim().toLowerCase();
+    await authPreflight("login", email);
+    var result;
+    try { result = await client.auth.signInWithPassword({ email: email, password: password }); }
+    catch (error) { await reportLoginAttempt(email, false); throw error; }
+    if (result.error) { await reportLoginAttempt(email, false); throw result.error; }
+    await reportLoginAttempt(email, true, result.data && result.data.session);
     session = result.data.session;
     await ensureWorkspace(session, displayName(session.user), { forceRefresh: true });
+    await startSecuritySession(session);
     notifyAuth();
     return session;
   }
@@ -283,6 +312,14 @@
     return readJson(response);
   }
 
+  async function reportLoginAttempt(email, success, authSession) {
+    try {
+      var headers={Accept:"application/json","Content-Type":"application/json"};
+      if(success&&authSession&&authSession.access_token)headers.Authorization="Bearer "+authSession.access_token;
+      await fetch("/api/auth/login-attempt", { method:"POST", headers:headers, body:JSON.stringify({email:email,success:Boolean(success)}), cache:"no-store" });
+    } catch (_) {}
+  }
+
   async function verifySignup(email, token) {
     await api.ready;
     if (mode !== "supabase") throw new Error("Email verification is unavailable in demo mode.");
@@ -293,6 +330,7 @@
     session = result.data.session;
     if (!session) throw new Error("Email verification succeeded, but no sign-in session was returned. Sign in to continue.");
     await ensureWorkspace(session, displayName(session.user), { forceRefresh: true });
+    await startSecuritySession(session);
     notifyAuth();
     return session;
   }
@@ -304,6 +342,25 @@
     await authPreflight("resend", email);
     var result = await client.auth.resend({ type: "signup", email: email });
     if (result.error) throw result.error;
+  }
+
+  async function sendStepUpOtp() {
+    await api.ready;
+    if(mode!=="supabase"||!client||!session||!session.user.email||!publicConfig)throw new Error("Email re-authentication is unavailable.");
+    if(!stepUpClient) stepUpClient=window.supabase.createClient(publicConfig.supabaseUrl,publicConfig.supabaseAnonKey,{auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false,flowType:"implicit"}});
+    var result=await stepUpClient.auth.signInWithOtp({email:String(session.user.email).trim().toLowerCase(),options:{shouldCreateUser:false}});
+    if(result.error){var code=String(result.error.code||result.error.name||"").toLowerCase(),e=new Error(result.error.status===429||/rate_limit|too_many/.test(code)?"Too many code requests. Wait before trying again.":/smtp|email.*disabled|not configured|provider_disabled/.test((result.error.message||"")+" "+code)?"Email delivery is not configured. Contact support.":/user_not_found|user_not_allowed/.test(code)?"This account could not be found for email verification. Sign in again and use its registered address.":"An email code could not be sent. Try again later.");e.code=code;e.status=result.error.status;throw e;}
+  }
+
+  async function verifyStepUpOtp(code,deviceId) {
+    await api.ready;
+    if(!stepUpClient||!session||!session.user.email)throw new Error("Request an email code first.");
+    var result=await stepUpClient.auth.verifyOtp({email:String(session.user.email).trim().toLowerCase(),token:normalizeOtp(code),type:"email"});
+    if(result.error){var e=new Error(result.error.status===429?"Too many code attempts. Wait a minute.":"That code is wrong or expired.");e.code=result.error.code||result.error.name;e.status=result.error.status;throw e;}
+    var temporary=result.data&&result.data.session;
+    if(!temporary||!temporary.access_token)throw new Error("The verification code did not create a valid proof.");
+    try{return await window.NovaPayApi.request("/api/security/step-up/otp/verify",{method:"POST",body:{deviceId:deviceId,accessToken:temporary.access_token}});}
+    finally{try{await stepUpClient.auth.signOut({scope:"local"});}catch(_){} stepUpClient=null;}
   }
 
   async function resetPassword(email) {
@@ -323,17 +380,29 @@
     var result = await client.auth.verifyOtp({ email: email, token: String(token || ""), type: "recovery" });
     if (result.error) throw result.error;
     session = result.data.session;
+    recoveryFlow = true;
     return session;
   }
 
-  async function updatePassword(password) {
+  async function updatePassword(password, nonce) {
     await api.ready;
-    if (mode !== "supabase" || !client) throw new Error("Password recovery is unavailable in demo mode.");
-    var result = await client.auth.updateUser({ password: password });
-    if (result.error) throw result.error;
-    if (session) await ensureWorkspace(session, displayName(session.user));
+    if (mode !== "supabase" || !client) throw Object.assign(new Error("Password recovery is unavailable in demo mode."),{code:"session_not_found"});
+    var current=await client.auth.getSession();
+    if(current.error)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found",status:401});
+    session=current.data.session||session;
+    if(!session||!session.access_token)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found",status:401});
+    if(recoveryFlow&& !session.user)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found",status:401});
+    var attrs={password:password};if(nonce)attrs.nonce=nonce;
+    var result=await client.auth.updateUser(attrs);
+    if(result.error)throw result.error;
+    session=(await client.auth.getSession()).data.session||session;recoveryFlow=false;
+    await ensureWorkspace(session,displayName(session.user));
+    if(window.NovaPayApi&&typeof window.NovaPayApi.request==="function")try{await window.NovaPayApi.request("/api/security/credential-changed",{method:"POST",body:{deviceId:persistentDeviceId()}})}catch(error){throw Object.assign(new Error("Password changed, but NovaPay could not record the security update. Refresh your session and try again."),{code:"credential_audit_failed",passwordChanged:true});}
     notifyAuth();
   }
+
+  async function reauthenticatePasswordChange(){await api.ready;if(mode!=="supabase"||!client||!session)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found"});var result=await client.auth.reauthenticate();if(result.error)throw result.error;}
+
 
   async function signInWithGoogle() {
     await api.ready;
@@ -374,6 +443,9 @@
     isAuthenticated: isAuthenticated,
     currentSession: currentSession,
     currentOrgId: currentOrgId,
+    securityDeviceId: persistentDeviceId,
+    sendStepUpOtp: sendStepUpOtp,
+    verifyStepUpOtp: verifyStepUpOtp,
     ensureWorkspace: ensureWorkspace,
     loginErrorCategory: loginErrorCategory,
     loginErrorMessage: loginErrorMessage,
@@ -385,6 +457,7 @@
     resetPassword: resetPassword,
     verifyRecovery: verifyRecovery,
     updatePassword: updatePassword,
+    reauthenticatePasswordChange: reauthenticatePasswordChange,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut
   };
@@ -400,6 +473,7 @@
       } finally { if (timeout) clearTimeout(timeout); }
       if (!response.ok) throw new Error("The NovaPay API is not reachable.");
       config = await response.json();
+      publicConfig = config;
     } catch (error) {
       mode = "demo";
       demoReason = error && error.message ? error.message : "Backend authentication is unavailable.";
@@ -431,8 +505,10 @@
       } catch (_) { demoReason = "Supabase Auth could not verify the saved session."; }
       client.auth.onAuthStateChange(function (_event, nextSession) {
         session = nextSession;
+        if (_event === "SIGNED_IN") startSecuritySession(nextSession);
         notifyAuth();
       });
+      if (session) await startSecuritySession(session);
     }
     updateModeLabels();
     notifyAuth();

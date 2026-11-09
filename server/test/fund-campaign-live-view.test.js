@@ -46,7 +46,7 @@ test('dashboard loads live fund views; campaign create uses API with field valid
     readFile(new URL('../../src/fund-views.js', import.meta.url), 'utf8'),
     readFile(new URL('../../src/modules.js', import.meta.url), 'utf8'),
   ]);
-  assert.match(html, /src="src\/fund-views\.js"/);
+  assert.match(html, /src="src\/fund-views\.js(?:\?v=\d+)?"/);
   assert.match(views, /#view-community-funds/);
   assert.match(views, /NovaPayApi\.request\("\/api\/funds\/campaigns"/);
   assert.match(views, /result\.role/);

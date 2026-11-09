@@ -1,0 +1,24 @@
+import { hashNetwork, hashUserAgent, scoreAccountRisk } from './accountRisk.js';
+import { auditApiAction } from './audit.js';
+import { accountLoginHash } from './loginThrottle.js';
+
+export async function recordSecuritySession({ req, repos, config, identity, now = new Date() }) {
+  const deviceId=req.body.deviceId, userId=req.user.id, orgId=req.orgId, at=now.toISOString();
+  const priorCount=await repos.security.loginCount(orgId,userId);
+  const knownDevice=await repos.security.getDevice(orgId,userId,deviceId);
+  const network=hashNetwork(req.ip||req.socket?.remoteAddress||'',config.SECURITY_HASH_SALT);
+  const newDevice=priorCount>0&&!knownDevice;
+  const newNetwork=priorCount>0&&!await repos.security.hasNetwork(orgId,userId,network.ipHash)&&network.networkPrefix!=='local'&&network.networkPrefix!=='unknown';
+  const updatedAt=Date.parse(req.user.updatedAt||'');
+  const credentialWindow=Number(config.SECURITY_CREDENTIAL_CHANGE_WINDOW_MINUTES||30)*60000;
+  const recentCredentialChange=Number.isFinite(updatedAt)&&now.getTime()-updatedAt>=0&&now.getTime()-updatedAt<credentialWindow;
+  const failedLogins=await repos.security.failedLoginCountByHash?.(accountLoginHash(req.user.email,config.SECURITY_HASH_SALT||''),Number(config.SECURITY_FAILED_LOGIN_WINDOW_MINUTES||15))||0;
+  const risk=scoreAccountRisk({newDevice,newIpRange:newNetwork,failedLogins:Number(failedLogins)>0,recentCredentialChange,requestBurst:Boolean(req.securityRequestBurst?.burst)},config);
+  const row=await repos.security.recordLogin({org_id:orgId,user_id:userId,occurred_at:at,ip_hash:network.ipHash,user_agent_hash:hashUserAgent(req.get('user-agent')||'',config.SECURITY_HASH_SALT),device_id:deviceId,success:true,failure_reason:null,risk_score:risk.score,risk_level:risk.level,risk_reasons:risk.reasons,network_label:network.networkLabel});
+  await repos.security.linkLoginAttempts?.(accountLoginHash(req.user.email,config.SECURITY_HASH_SALT||''),userId,orgId);
+  await repos.security.upsertDevice({org_id:orgId,user_id:userId,device_id:deviceId,last_seen:at,trusted:Boolean(knownDevice?.trusted)});
+  await auditApiAction(identity,req,{action:'security.session_started',entity:'login_event',entityId:row?.id||null,metadata:{riskLevel:risk.level,riskScore:risk.score,newDevice}});
+  if(risk.level==='medium'||risk.level==='high')await auditApiAction(identity,req,{action:'security.risk_detected',entity:'login_event',entityId:row?.id||null,metadata:{riskLevel:risk.level,riskScore:risk.score,reasons:risk.reasons}});
+  if(risk.level==='medium'||risk.level==='high')await repos.notifications?.addSecurity?.(orgId,userId,row?.id,risk,now);
+  return {loginEventId:row?.id||null,risk,newDevice,networkLabel:network.networkLabel};
+}

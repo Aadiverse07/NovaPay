@@ -36,12 +36,12 @@ export function createPayPalService({ config, events }) {
       response = await fetch(`${PAYPAL_API}/v1/oauth2/token`, { method: 'POST', headers: { Authorization: `Basic ${Buffer.from(`${config.PAYPAL_CLIENT_ID}:${config.PAYPAL_CLIENT_SECRET}`).toString('base64')}`, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=client_credentials' });
     } catch {
       token.failUntil = Date.now() + 60000; log('POST /v1/oauth2/token · network error', false);
-      throw Object.assign(new Error('PayPal Sandbox could not be reached.'), { statusCode: 502 });
+      throw Object.assign(new Error('PayPal Sandbox could not be reached.'), { statusCode: 502, httpStatus: null, networkError: true, providerName: null, providerIssues: [], debugId: null });
     }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       token.failUntil = Date.now() + 60000; log(`POST /v1/oauth2/token → ${response.status}`, false);
-      throw Object.assign(new Error('PayPal Sandbox credentials could not be verified. Check the sandbox app credentials.'), { statusCode: 502 });
+      throw Object.assign(new Error('PayPal Sandbox credentials could not be verified. Check the sandbox app credentials.'), { statusCode: 502, httpStatus: response.status, networkError: false, providerName: String(data?.name || ''), providerIssues: Array.isArray(data?.details) ? data.details.map((item) => String(item?.issue || '')).filter(Boolean).slice(0, 4) : [], debugId: typeof data?.debug_id === 'string' ? data.debug_id.slice(0, 100) : null });
     }
     token = { value: data.access_token, expiresAt: Date.now() + (data.expires_in - 60) * 1000, failUntil: 0 };
     log('POST /v1/oauth2/token'); return token.value;
@@ -55,7 +55,7 @@ export function createPayPalService({ config, events }) {
       response = await fetch(PAYPAL_API + url, { method, headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'PayPal-Request-Id': requestId || `np-${Date.now()}${Math.random().toString(36).slice(2)}` }, body: rawJsonBody ?? (body ? JSON.stringify(body) : undefined) });
     } catch {
       log(`${method} ${url} · network error`, false, orgId);
-      throw Object.assign(new Error('PayPal Sandbox request failed. Check the connection and recent API activity.'), { requestSent: true, statusCode: 502 });
+      throw Object.assign(new Error('PayPal Sandbox request failed. Check the connection and recent API activity.'), { requestSent: true, statusCode: 502, httpStatus: null, networkError: true, providerName: null, providerIssues: [], debugId: null });
     }
     const responseText = await response.text().catch(() => '');
     let data = {};
@@ -65,7 +65,7 @@ export function createPayPalService({ config, events }) {
     const providerIssues=Array.isArray(data?.details)?[...new Set(data.details.map((item)=>String(item?.issue||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,48)).filter(Boolean))].slice(0,4):[];
     const safeDiagnostic=!response.ok?` [${providerName|| (providerIssues.length?'PAYPAL_ERROR':structuredError?'UNCLASSIFIED_ERROR':'NON_JSON_ERROR')}${providerIssues.length?':'+providerIssues.join(','):''}]`:'';
     log(`${method} ${url} → ${response.status}${safeDiagnostic}`, response.ok, orgId);
-    if (!response.ok) { const error = new Error('PayPal Sandbox returned an error for this request. Check the API activity log and sandbox order state.'); error.requestSent = true; error.paypalResponse = true; error.statusCode = 502; throw error; }
+    if (!response.ok) { const error = new Error('PayPal Sandbox returned an error for this request. Check the API activity log and sandbox order state.'); error.requestSent = true; error.paypalResponse = true; error.statusCode = 502; error.httpStatus = response.status; error.providerName = providerName || null; error.providerIssues = providerIssues; error.debugId = typeof data?.debug_id === 'string' ? data.debug_id.slice(0, 100) : null; error.networkError = false; throw error; }
     return data;
   }
 
