@@ -77,3 +77,7 @@ To grant the support role, an authorized project operator runs `node scripts/gra
 To verify live ticket RLS after the migrations are applied, set `SUPPORT_RLS_ORG_ID`, `SUPPORT_RLS_CREATOR_EMAIL`, `SUPPORT_RLS_OTHER_EMAIL`, and `SUPPORT_RLS_SUPPORT_EMAIL` to existing test fixtures (the last must have the `support` role), then run `node scripts/verify-support-rls-live.js`. It uses Supabase Admin Auth to obtain short-lived sign-in links for existing fixtures, creates one temporary ticket and two messages with service role, checks creator/other-user/support visibility with ordinary user JWTs, and deletes the temporary ticket in a `finally` cleanup. Use a disposable test org and test accounts; the script does not create users or organizations. Tokens and keys remain in process memory and are never printed.
 
 Email-code step-up and password re-authentication use Supabase Auth with the server-side anon key; passwords and codes are never persisted. Refund and invoice actions still require the existing human approval; PayPal execution remains Sandbox-only where configured. No MFA/TOTP enrollment is included.
+
+### Verify refund step-up password
+
+Use a dedicated test user and set `STEP_UP_TEST_API_URL`, `STEP_UP_TEST_ACCESS_TOKEN`, `STEP_UP_TEST_ORG_ID`, `STEP_UP_TEST_DEVICE_ID`, and `STEP_UP_TEST_PASSWORD` in the process environment, then run `node scripts/verify-step-up-live.js`. The script does not print credentials. A device must already be registered by a signed-in session. Do not use production credentials.

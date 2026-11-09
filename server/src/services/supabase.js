@@ -128,9 +128,9 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
   async function authVerify(path,payload) {
     let response;
     try { response=await fetchImpl(`${apiUrl}${path}`,{method:'POST',headers:{apikey:config.SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)}); }
-    catch { return null; }
+    catch { return { userId: null, status: 0, errorCode: 'network_error' }; }
     const data=await readResponse(response);
-    return response.ok&&data?.user?.id?data.user.id:null;
+    return { userId: response.ok&&data?.user?.id ? data.user.id : null, status: response.status, errorCode: response.ok ? null : (data?.code || data?.error_code || data?.error || null), accessToken: response.ok ? data?.access_token || null : null };
   }
   async function authPost(path,payload) {
     try {
@@ -161,7 +161,7 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (error) throw new Error('Membership lookup failed.');
       return Array.isArray(data) ? data[0] || null : null;
     },
-    async verifyReauthPassword(email,password) { if(typeof email!=='string'||typeof password!=='string'||!password)return null;return authVerify('/auth/v1/token?grant_type=password',{email,password}); },
+    async verifyReauthPassword(email,password) { if(typeof email!=='string'||typeof password!=='string'||!password)return {userId:null,status:400,errorCode:'invalid_request'};return authVerify('/auth/v1/token?grant_type=password',{email:email.trim().toLowerCase(),password}); },
     async verifyStepUpEmailOtp(email,token) { if(typeof email!=='string'||typeof token!=='string'||!/^\d{6,8}$/.test(token))return null;return authVerify('/auth/v1/verify',{email,token,type:'email'}); },
     async sendStepUpOtp(email) { if(typeof email!=='string'||!email)return false;return authPost('/auth/v1/otp',{email,create_user:false}); },
     async getUserById(userId) {

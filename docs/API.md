@@ -203,3 +203,7 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 
 - `GET /api/notifications` returns organization-wide notifications plus rows addressed to the signed-in user.
 - `POST /api/notifications/:id/read` and `POST /api/notifications/:id/dismiss` can update only those same visible rows. Support replies/status changes notify the ticket creator; user replies notify the assignee or support queue; security risk alerts notify the affected user. Internal notes do not send a customer notification.
+
+### Step-up password verification
+
+`POST /api/security/step-up` with `{ "method":"password", "password":"…", "deviceId":"…" }` uses the authenticated user's normalized account email and a stateless Supabase Auth password grant with the anon key. Password text is passed unchanged. Errors use distinct codes for invalid password, unconfirmed email, rate limit and temporary provider outage. Step-up attempts have a separate per-user limit (5 failures per 10 minutes); they do not modify login lockout state. Use `node scripts/verify-step-up-live.js` with the `STEP_UP_TEST_*` environment values to check a configured test account.

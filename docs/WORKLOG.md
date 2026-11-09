@@ -5841,3 +5841,9 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-09 | Task 5 verification: `npm test` migration check passed; 407/408 tests passed. The remaining known failure is `server/test/fund-campaign-live-view.test.js:49`, which still expects an obsolete script tag and is scheduled for correction in Task 6.
 
 2026-11-09 | Task 6 (notification delivery and live RLS tooling): per-user notification recipients now scope listing and status changes; ticket creation routes to support/owner/admin, public replies and status changes notify the other party, user replies notify the assignee or support queue, and internal notes create no customer notification. Medium/high sign-in risk alerts go to the affected user. Added support role grant and live RLS verifier scripts, updated the allowed role list in the already-applied 0024 migration per request, and corrected the stale Community Funds test expectation without changing page behavior. Added 0028 notification recipient/RLS migration.
+
+## 2026-11-09 — Step-up password diagnosis
+
+- Reproduced the failure using mocked Supabase password-grant responses. The endpoint, anon key, JSON content type, payload field names, authenticated email source, and unchanged password value were correct. Root cause: the service returned `null` for every non-2xx response, so the route mislabeled provider rate limits, unconfirmed email and outages as an incorrect password.
+- Preserved safe provider status/error codes, added distinct messages and a separate step-up attempt limiter, and tested successful grant creation with the authenticated device.
+- Added `scripts/verify-step-up-live.js`; no live account credentials were available or used in this run.

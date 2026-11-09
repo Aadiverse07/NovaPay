@@ -85,3 +85,9 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 3. Start the server and verify status, public config, static pages, and protected route behavior.
 4. With local Supabase CLI and Docker, run `supabase start` and `supabase test db`; then verify the migration against a real project when credentials are available.
 5. Check `git status`, ensure `.env` is not staged, review frontend diff is empty, then continue only after Phase 1 acceptance is verified.
+
+## 2026-11-09 step-up follow-up
+
+- Root cause reproduced with mock provider responses: Supabase grant failures were collapsed to `null`, leading the route to call all cases an incorrect password. The grant request itself uses the correct endpoint and anon key; it sends the authenticated account's lower-cased/trimmed email and preserves the password exactly.
+- Fixed distinct provider outcomes and separate five-per-ten-minute step-up failure limiting. `node scripts/verify-step-up-live.js` is available for a dedicated test user; not run without supplied env credentials.
+- Next follow-up items from the user report: isolated email-code flow, password change handling, modal finish, and email-based support ticket redesign.

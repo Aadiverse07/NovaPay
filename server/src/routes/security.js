@@ -26,6 +26,12 @@ const stepUpSchema = z.discriminatedUnion('method',[
 const visibleLogin = (row) => ({id:row.id,occurred_at:row.occurred_at,device_id:row.device_id,device_label:`Device …${String(row.device_id||'').slice(-6)}`,network_label:row.network_label||'Unknown network',success:Boolean(row.success),risk_score:Number(row.risk_score||0),risk_level:row.risk_level||'low',risk_reasons:Array.isArray(row.risk_reasons)?row.risk_reasons:[]});
 export function securityRoutes({ config = {}, identity, repos } = {}) {
   const router = Router();
+  const stepUpAttempts = new Map();
+  function stepUpFailure(req, now = Date.now()) {
+    const key = String(req.user.id), recent = (stepUpAttempts.get(key) || []).filter((at) => now - at < 10 * 60 * 1000);
+    recent.push(now); stepUpAttempts.set(key, recent);
+    return recent.length > 5;
+  }
   router.get('/security/overview',async(req,res,next)=>{
     try{
       const [risk,devices,logins]=await Promise.all([computeAccountRisk({repos,orgId:req.orgId,userId:req.user.id,config,user:req.user,requestBurst:Boolean(req.securityRequestBurst?.burst)}),repos.security.listDevices(req.orgId,req.user.id),repos.security.listLogins(req.orgId,req.user.id,{limit:10,offset:0})]);
@@ -72,10 +78,19 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
     try{
       const device=await repos.security.getDevice(req.orgId,req.user.id,deviceId);
       if(!device){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'device_session_missing'}});return res.status(403).json(structuredErrorBody('DEVICE_SESSION_REQUIRED','This device session is not registered. Sign in again and retry.'))}
-      const verifiedUserId=method==='password'
-        ? await identity?.verifyReauthPassword?.(req.user.email,parsed.data.password)
-        : await identity?.verifyStepUpEmailOtp?.(req.user.email,parsed.data.code);
-      if(verifiedUserId!==req.user.id){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{method}});return res.status(403).json(structuredErrorBody('STEP_UP_INVALID','Password or email code could not be verified.'))}
+      const email=typeof req.user.email==='string'?req.user.email.trim().toLowerCase():'';
+      const verification=method==='password'
+        ? await identity?.verifyReauthPassword?.(email,parsed.data.password)
+        : await identity?.verifyStepUpEmailOtp?.(email,parsed.data.code);
+      if(verification?.userId!==req.user.id){
+        const limited=stepUpFailure(req), code=String(verification?.errorCode||'').toLowerCase(), status=Number(verification?.status||0);
+        await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{method,reason:limited?'rate_limited':status===429?'provider_rate_limited':status>=500||status===0?'provider_unavailable':code==='email_not_confirmed'?'email_not_confirmed':'invalid_proof'}});
+        if(limited||status===429)return res.status(429).json(structuredErrorBody('STEP_UP_RATE_LIMITED','Too many verification attempts. Wait 10 minutes before trying again.'));
+        if(status>=500||status===0)return res.status(503).json(structuredErrorBody('STEP_UP_UNAVAILABLE','Verification is temporarily unavailable. Try again later.'));
+        if(code==='email_not_confirmed')return res.status(403).json(structuredErrorBody('STEP_UP_EMAIL_UNCONFIRMED','Confirm your account email before using password verification.'));
+        if(method==='password'&&['user_not_found','weak_password','no_password','password_not_set'].includes(code))return res.status(400).json(structuredErrorBody('STEP_UP_NO_PASSWORD','This account has no password set. Use the email code instead.'));
+        return res.status(403).json(structuredErrorBody('STEP_UP_INVALID',method==='password'?'That password is incorrect.':'The code is wrong or expired.'));
+      }
       const now=new Date(),expiresAt=new Date(now.getTime()+Number(config.STEP_UP_TTL_MINUTES||10)*60000);
       const grant=await repos.security.grantStepUp({org_id:req.orgId,user_id:req.user.id,device_id:deviceId,granted_at:now.toISOString(),expires_at:expiresAt.toISOString()});
       await auditApiAction(identity,req,{action:'security.step_up_granted',entity:'step_up_grant',entityId:grant?.id||null,metadata:{method,expiresAt:expiresAt.toISOString()}});

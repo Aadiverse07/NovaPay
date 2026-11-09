@@ -1578,3 +1578,9 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Added endpoint coverage for persistent login lockout and generic auth middleware blocking; Security overview/device removal/admin unlock role tests; recipient-filtered ticket/security notifications and internal-note notification silence.
 - Updated `server/test/fund-campaign-live-view.test.js` to accept the current versioned `src/fund-views.js?v=2` script URL; no dashboard behavior changed for that test.
 - Live Supabase RLS verifier and support-role assignment script were syntax-checked but not run. New migrations were not applied to the live project. Live PayPal Sandbox failure and browser flow checks remain unverified.
+
+## Step-up password failure follow-up (2026-11-09)
+
+- Reproduced root cause with mock Supabase password grant outcomes: provider errors had been collapsed to null and mislabeled as incorrect password. Request endpoint/key/content-type/body field names were correct in code inspection; email was sourced from the verified user and normalized; password was not transformed.
+- Added regression checks for success/grant creation, wrong password, provider rate limiting, unconfirmed email, outage, anon-key request headers, and password preservation.
+- Live verification: NOT RUN; requires a dedicated test account and the documented environment values.
