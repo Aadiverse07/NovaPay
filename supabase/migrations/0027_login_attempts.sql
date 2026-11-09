@@ -14,7 +14,7 @@ create index login_attempts_account_time_idx on public.login_attempts(account_ha
 create index login_attempts_ip_time_idx on public.login_attempts(ip_hash, occurred_at desc);
 alter table public.login_attempts enable row level security;
 revoke all on public.login_attempts from public, anon, authenticated;
-grant select, insert on public.login_attempts to service_role;
+grant select, insert, update, delete on public.login_attempts to service_role;
 
 create or replace function public.record_login_attempt(
   p_org_id uuid, p_user_id uuid, p_account_hash text, p_ip_hash text, p_success boolean,
@@ -31,6 +31,8 @@ begin
   perform pg_advisory_xact_lock(hashtextextended(p_account_hash, 0));
   if p_success then
     insert into public.login_attempts(org_id,user_id,account_hash,ip_hash,success) values(p_org_id,p_user_id,p_account_hash,p_ip_hash,true);
+    update public.login_attempts set user_id=p_user_id,org_id=p_org_id where account_hash=p_account_hash and success=false
+      and occurred_at >= v_now - make_interval(mins=>greatest(1,least(p_window_minutes,120)));
     return jsonb_build_object('locked',false,'failure_count',0,'lock_count',0);
   end if;
   select coalesce(max(locked_until),null), coalesce(max(lock_count),0)

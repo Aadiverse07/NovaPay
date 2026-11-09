@@ -164,6 +164,11 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
     async verifyReauthPassword(email,password) { if(typeof email!=='string'||typeof password!=='string'||!password)return null;return authVerify('/auth/v1/token?grant_type=password',{email,password}); },
     async verifyStepUpEmailOtp(email,token) { if(typeof email!=='string'||typeof token!=='string'||!/^\d{6,8}$/.test(token))return null;return authVerify('/auth/v1/verify',{email,token,type:'email'}); },
     async sendStepUpOtp(email) { if(typeof email!=='string'||!email)return false;return authPost('/auth/v1/otp',{email,create_user:false}); },
+    async getUserById(userId) {
+      if(!/^[0-9a-f-]{36}$/i.test(String(userId||'')))return null;
+      const {data,error}=await request(`/auth/v1/admin/users/${encodeURIComponent(userId)}`);
+      return !error&&data?.id?{id:data.id,email:typeof data.email==='string'?data.email:null}:null;
+    },
     async onboard(userId, name, requestId) {
       const { response, data, error } = await request('/rest/v1/rpc/create_organization_for_user', {
         method: 'POST', body: { p_user_id: userId, p_name: name, p_request_id: requestId },

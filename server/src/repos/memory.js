@@ -357,7 +357,7 @@ export function createRepositories() {
     async listDevices(orgId,userId) { return [...deviceRows.values()].filter((row)=>row.org_id===orgId&&row.user_id===userId).sort((a,b)=>b.last_seen.localeCompare(a.last_seen)); },
     async getDevice(orgId,userId,deviceId) { return deviceRows.get(`${orgId}:${userId}:${deviceId}`)||null; },
     async upsertDevice(input) { const key=`${input.org_id}:${input.user_id}:${input.device_id}`,old=deviceRows.get(key);const row={first_seen:old?.first_seen||input.last_seen,...old,...input};deviceRows.set(key,row);return row; },
-    async deleteDevice(orgId,userId,deviceId) { return deviceRows.delete(`${orgId}:${userId}:${deviceId}`); },
+    async deleteDevice(orgId,userId,deviceId) { stepUpGrantRows.delete(`${orgId}:${userId}:${deviceId}`);return deviceRows.delete(`${orgId}:${userId}:${deviceId}`); },
     async loginCount(orgId,userId) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).length; },
     async hasNetwork(orgId,userId,ipHash) { return loginEventRows.some((row)=>row.org_id===orgId&&row.user_id===userId&&row.ip_hash===ipHash); },
     async failedLoginCount(orgId,userId,minutes=15) { const since=Date.now()-minutes*60000;return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
@@ -371,9 +371,14 @@ export function createRepositories() {
       const failures=success?0:loginAttemptRows.filter(row=>!row.success&&now-Date.parse(row.occurred_at)<windowMs&&(row.account_hash===accountHash||row.ip_hash===ipHash)).length+1;
       const previous=loginAttemptRows.filter(row=>row.account_hash===accountHash&&now-Date.parse(row.occurred_at)<30*86400000).reduce((count,row)=>Math.max(count,row.lock_count||0),0);
       const locked=failures>=threshold,lockCount=locked?previous+1:previous,lockedUntil=locked?new Date(now+Math.min(24*3600000,baseMs*2**Math.min(6,lockCount-1))).toISOString():null;
+      if(success&&userId)for(const row of loginAttemptRows)if(row.account_hash===accountHash&&!row.success&&now-Date.parse(row.occurred_at)<windowMs){row.user_id=userId;row.org_id=orgId}
       loginAttemptRows.unshift({id:randomUUID(),org_id:orgId,user_id:userId,account_hash:accountHash,ip_hash:ipHash,occurred_at:new Date(now).toISOString(),success,failure_count:failures,lock_count:lockCount,locked_until:lockedUntil});
       return{locked,failureCount:failures,lockCount,lockedUntil};
     },
+    async listOrgMembers() { return []; },
+    async memberLock(orgId,userId) { const now=Date.now();return loginAttemptRows.filter(row=>row.user_id===userId&&row.locked_until&&Date.parse(row.locked_until)>now).sort((a,b)=>Date.parse(b.locked_until)-Date.parse(a.locked_until))[0]?.locked_until||null; },
+    async clearAccountLock(accountHash) { const before=loginAttemptRows.length;for(let i=loginAttemptRows.length-1;i>=0;i--)if(loginAttemptRows[i].account_hash===accountHash&&!loginAttemptRows[i].success)loginAttemptRows.splice(i,1);return before-loginAttemptRows.length; },
+    async linkLoginAttempts(accountHash,userId,orgId) { for(const row of loginAttemptRows)if(row.account_hash===accountHash&&!row.success){row.user_id=userId;row.org_id=orgId}return true; },
   };
   const ticketRows = new Map(), ticketMessages = [];
   repos.supportTickets = {

@@ -779,3 +779,8 @@
 - Choice: require a recent server-verified password or email one-time-code check when risk is medium/high or a refund policy requires it; store a short-lived grant bound to the current registered device. Invoice sends use the same risk gate.
 - Reason: the browser cannot grant itself authorization; only Supabase Auth verification on the server creates a grant, and the grant expires and is removed with its device.
 - Scope: email code is re-authentication, not MFA enrollment. TOTP/MFA remains outside this follow-up scope.
+
+# Security activity panel (2026-11-09)
+
+- Choice: expose only the signed-in user's login/device history; owners/admins can inspect workspace member roles and clear a member's lock by resolving their account through the server-side Supabase Admin Auth API.
+- Reason: membership data provides the org boundary, while authentication account details and security hashes remain server-only. Removing a device cascades its short-lived step-up grant.

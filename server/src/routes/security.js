@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
+import { rbac } from '../middleware/auth.js';
 import { recordSecuritySession } from '../services/security.js';
+import { computeAccountRisk } from '../services/accountRisk.js';
+import { accountLoginHash, loginAttemptKeys } from '../services/loginThrottle.js';
+import { auditApiAction } from '../services/audit.js';
 
 const schema = z.object({ text: z.string().min(1).max(5000) }).strict();
 export function inspectSuspiciousMessage(text) {
@@ -21,6 +25,39 @@ const stepUpSchema = z.discriminatedUnion('method',[
 ]);
 export function securityRoutes({ config = {}, identity, repos } = {}) {
   const router = Router();
+  router.get('/security/overview',async(req,res,next)=>{
+    try{
+      const [risk,devices,logins]=await Promise.all([computeAccountRisk({repos,orgId:req.orgId,userId:req.user.id,config,user:req.user,requestBurst:Boolean(req.securityRequestBurst?.burst)}),repos.security.listDevices(req.orgId,req.user.id),repos.security.listLogins(req.orgId,req.user.id,{limit:10,offset:0})]);
+      const keys=loginAttemptKeys(req.user.email,req.ip||req.socket?.remoteAddress,config.SECURITY_HASH_SALT||'');
+      const lockedUntil=await repos.security.loginLock(keys.accountHash,keys.ipHash);
+      return res.json({risk:{score:risk.score,level:risk.level,reasons:risk.reasons},devices,logins,lockedUntil,role:req.orgRole});
+    }catch(error){return next(error)}
+  });
+  router.get('/security/logins',async(req,res,next)=>{
+    const parsed=z.object({limit:z.coerce.number().int().min(1).max(100).default(50),offset:z.coerce.number().int().min(0).max(10000).default(0)}).safeParse(req.query);
+    if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Login history pagination is invalid.'));
+    try{return res.json({logins:await repos.security.listLogins(req.orgId,req.user.id,parsed.data)})}catch(error){return next(error)}
+  });
+  router.get('/security/devices/:id',async(req,res,next)=>{
+    const parsed=z.string().uuid().safeParse(req.params.id);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid device ID is required.'));
+    try{const device=await repos.security.getDevice(req.orgId,req.user.id,parsed.data);return device?res.json({device}):res.status(404).json(structuredErrorBody('DEVICE_NOT_FOUND','That device was not found.'))}catch(error){return next(error)}
+  });
+  router.get('/security/devices',async(req,res,next)=>{try{return res.json({devices:await repos.security.listDevices(req.orgId,req.user.id)})}catch(error){return next(error)}});
+  router.delete('/security/devices/:id',async(req,res,next)=>{
+    const parsed=z.string().uuid().safeParse(req.params.id);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid device ID is required.'));
+    try{const device=await repos.security.getDevice(req.orgId,req.user.id,parsed.data);if(!device)return res.status(404).json(structuredErrorBody('DEVICE_NOT_FOUND','That device was not found.'));await repos.security.deleteDevice(req.orgId,req.user.id,parsed.data);await auditApiAction(identity,req,{action:'security.device_removed',entity:'user_device',entityId:parsed.data});return res.json({removed:true})}catch(error){return next(error)}
+  });
+  router.get('/security/members',rbac(['owner','admin']),async(req,res,next)=>{try{const members=await repos.security.listOrgMembers(req.orgId);const rows=await Promise.all(members.map(async(member)=>({userId:member.user_id,role:member.role,lockedUntil:await repos.security.memberLock(req.orgId,member.user_id)})));return res.json({members:rows})}catch(error){return next(error)}});
+  router.post('/security/members/:id/unlock',rbac(['owner','admin']),async(req,res,next)=>{
+    const parsed=z.string().uuid().safeParse(req.params.id);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid member ID is required.'));
+    try{
+      const members=await repos.security.listOrgMembers(req.orgId);if(!members.some(member=>member.user_id===parsed.data))return res.status(404).json(structuredErrorBody('MEMBER_NOT_FOUND','That member was not found in this workspace.'));
+      const user=await identity?.getUserById?.(parsed.data);if(!user?.email)return res.status(404).json(structuredErrorBody('MEMBER_EMAIL_UNAVAILABLE','The member account could not be resolved.'));
+      await repos.security.clearAccountLock(accountLoginHash(user.email,config.SECURITY_HASH_SALT||''));
+      await auditApiAction(identity,req,{action:'security.login_unlocked',entity:'user',entityId:parsed.data,metadata:{memberRole:members.find(member=>member.user_id===parsed.data)?.role}});
+      return res.json({unlocked:true,userId:parsed.data});
+    }catch(error){return next(error)}
+  });
   router.post('/security/session-start', async (req,res,next) => {
     const parsed=sessionSchema.safeParse(req.body);
     if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid device ID is required.'));

@@ -53,8 +53,15 @@ export function authPreflightRoutes({ now = Date.now, buckets = new Map(), repos
     if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Sign-in could not be completed.'));
     if(!repos?.security)return res.status(503).json(structuredErrorBody('AUTH_UNAVAILABLE','Sign-in could not be completed.'));
     try{
+      let userId=null;
+      if(parsed.data.success){
+        const match=/^Bearer ([A-Za-z0-9._~-]+)$/.exec(req.get('authorization')||'');
+        const user=match&&await identity?.verifyToken?.(match[1]);
+        if(!user||String(user.email||'').trim().toLowerCase()!==parsed.data.email.trim().toLowerCase())return res.status(401).json(structuredErrorBody('AUTH_INVALID','Sign-in could not be completed.'));
+        userId=user.id;
+      }
       const keys=loginAttemptKeys(parsed.data.email,req.ip||req.socket.remoteAddress,config.SECURITY_HASH_SALT||'');
-      const outcome=await repos.security.recordLoginAttempt({orgId:null,userId:null,...keys,success:parsed.data.success,config});
+      const outcome=await repos.security.recordLoginAttempt({orgId:null,userId,...keys,success:parsed.data.success,config});
       if(outcome.locked)await identity?.audit?.({orgId:null,actorId:null,action:'security.login_locked',entity:'login_attempt',entityId:null,metadata:{failureCount:outcome.failureCount,lockCount:outcome.lockCount},requestId:req.id}).catch(()=>{});
       return res.json({recorded:true,locked:Boolean(outcome.locked),message:outcome.locked?'Sign-in could not be completed. Wait a little and try again.':undefined});
     }catch(error){return next(error)}

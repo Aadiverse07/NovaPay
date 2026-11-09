@@ -276,7 +276,7 @@
     try { result = await client.auth.signInWithPassword({ email: email, password: password }); }
     catch (error) { await reportLoginAttempt(email, false); throw error; }
     if (result.error) { await reportLoginAttempt(email, false); throw result.error; }
-    await reportLoginAttempt(email, true);
+    await reportLoginAttempt(email, true, result.data && result.data.session);
     session = result.data.session;
     await ensureWorkspace(session, displayName(session.user), { forceRefresh: true });
     await startSecuritySession(session);
@@ -308,9 +308,11 @@
     return readJson(response);
   }
 
-  async function reportLoginAttempt(email, success) {
+  async function reportLoginAttempt(email, success, authSession) {
     try {
-      await fetch("/api/auth/login-attempt", { method:"POST", headers:{Accept:"application/json","Content-Type":"application/json"}, body:JSON.stringify({email:email,success:Boolean(success)}), cache:"no-store" });
+      var headers={Accept:"application/json","Content-Type":"application/json"};
+      if(success&&authSession&&authSession.access_token)headers.Authorization="Bearer "+authSession.access_token;
+      await fetch("/api/auth/login-attempt", { method:"POST", headers:headers, body:JSON.stringify({email:email,success:Boolean(success)}), cache:"no-store" });
     } catch (_) {}
   }
 

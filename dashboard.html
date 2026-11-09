@@ -45,6 +45,7 @@
 <link rel="stylesheet" href="src/fx-swap-logo.css">
 <link rel="stylesheet" href="src/settings.css?v=4">
 <link rel="stylesheet" href="src/help-support.css">
+<link rel="stylesheet" href="src/security.css">
 <link rel="stylesheet" href="src/topbar-fx.css?v=2">
 <link rel="stylesheet" href="src/date-picker.css">
 </head>
@@ -340,6 +341,9 @@
                 <div class="set-row"><span><b>Sign out</b><small>End this session on this device.</small></span><button class="btn btn--ghost" id="set-logout" type="button">Log out</button></div>
               </div>
             </section>
+            <section class="set-group"><h4 class="set-group-title">Sign-in activity</h4>
+              <div class="settings-card" id="security-panel-content"><p id="security-panel-status" role="status" aria-live="polite">Loading recent sign-ins and known devices…</p><div id="security-risk-summary"></div><div id="security-lock-status"></div><h5>Known devices</h5><ul id="security-devices-list" class="security-device-list"></ul><h5>Recent sign-ins</h5><ul id="security-logins-list" class="security-device-list"></ul><section id="security-members-section" hidden><h5>Workspace members · unlock sign-in</h5><ul id="security-members-list" class="security-device-list"></ul></section></div>
+            </section>
           </article>
           <article class="dash-card set-panel" id="setpanel-appearance" aria-labelledby="settitle-appearance" hidden>
             <header class="set-panel-head"><h3 id="settitle-appearance">Appearance</h3><p>Make NovaPay look and feel the way you like.</p></header>
@@ -605,6 +609,7 @@
 <script src="src/strands.js"></script>
 <script src="src/ai-thoughts.js?v=3"></script>
 <script src="src/dashboard.js?v=6"></script>
+<script src="src/security-panel.js"></script>
 <script src="src/ai-fullscreen.js"></script>
 <script src="src/approvals-data.js"></script>
 <script src="src/novapay-live.js"></script>

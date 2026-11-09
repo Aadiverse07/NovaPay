@@ -192,3 +192,9 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 - `GET /api/auth/preflight?flow=login&email=…` checks the salted account and network-prefix lock before Supabase sign-in. A locked attempt receives a generic `LOGIN_TEMPORARILY_UNAVAILABLE` response.
 - `POST /api/auth/login-attempt` accepts `{ "email": "…", "success": true|false }` after the browser's Supabase password attempt. The server stores only salted account and network hashes, not the submitted email or raw IP.
 - Defaults: 5 failures in 15 minutes create a 15-minute lock; repeated locks back off exponentially, capped at 24 hours. Locked accounts are also refused at the NovaPay API boundary after token verification. Supabase's direct Auth endpoint remains protected by Supabase's own rate limits.
+
+## Security activity
+
+- `GET /api/security/overview` returns the signed-in user's risk summary, login history, known devices and current lock status.
+- `GET /api/security/logins?limit=50&offset=0` and `GET /api/security/devices` return only the signed-in user's records. `GET /api/security/devices/:id` checks ownership; `DELETE /api/security/devices/:id` removes that device and cascades its step-up grants.
+- `GET /api/security/members` and `POST /api/security/members/:id/unlock` are owner/admin only. Unlock resolves the member through Supabase Admin Auth on the server, clears that member's failed-attempt lock records and audits the action.
