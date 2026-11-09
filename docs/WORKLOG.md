@@ -5864,3 +5864,10 @@ ABOUT TO stage only task files; no .env path is included.
 
 - Replaced the bare dialog with a theme-token glass modal, responsive width, dimmed backdrop, labeled password/code inputs, show/hide control, password/email method switch, resend state, inline status, and cancel behavior.
 - The native dialog provides focus containment and Escape handling; the opener receives focus after close. Approval's existing finalizer resets the underlying confirmation button after cancel or failure.
+
+## 2026-11-09 — Numbered email support tickets
+
+- Added 0029_support_ticket_email.sql to backfill organization-local ticket numbers and create an RLS-enabled private counter table/RPC; added message delivery kind/status/error class.
+- Added SMTP mail delivery with HTML escaping and safe error classes. Recipients come from server-side Supabase account lookup. Public replies and status emails go to the user; internal notes never send.
+- Regular-user API responses and UI now expose only ticket number and purpose. Staff keep queue filters, assignment, status/priority, thread and failed-email retry; the ticket creator cannot post in-app replies.
+- Added nodemailer 10.4.0 after checking/fixing the initial dependency advisory; production dependency audit reports zero vulnerabilities.

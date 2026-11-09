@@ -34,3 +34,8 @@ test('email OTP proof must be recent, email-provider issued and match the signed
  });
  assert.equal(await repos.security.hasStepUpGrant(org,user,device),true);
 });
+
+test('OAuth-only account is clearly directed to email-code step-up',async()=>{
+ let passwordGrantCalled=false;const {app}=await setup({async getUserById(){return{id:user,email:'owner@example.test',providers:['google']}},async verifyReauthPassword(){passwordGrantCalled=true;return{userId:null,status:400,errorCode:'invalid_credentials'}}});
+ await withServer(app,async base=>{const response=await req(base,{method:'password',password:'anything',deviceId:device});const body=await response.json();assert.equal(response.status,400);assert.equal(body.error.code,'STEP_UP_NO_PASSWORD');assert.match(body.error.message,/email code/i)});assert.equal(passwordGrantCalled,false);
+});

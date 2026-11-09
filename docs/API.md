@@ -175,17 +175,19 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 
 ## Support tickets
 
-- `POST /api/support/tickets` creates a ticket and first message (maximum 10 per user per hour).
-- `GET /api/support/tickets` lists the caller's tickets; support, owner and admin can list the organization queue. Supports `status`, `priority`, `category`, `limit`, and `offset` filters.
-- `GET /api/support/tickets/:id` returns the ticket thread, excluding internal notes from the creator.
-- `POST /api/support/tickets/:id/messages` adds a reply; only support, owner and admin can set `internalNote`.
-- `PATCH /api/support/tickets/:id` updates status, priority or assignee for support, owner and admin.
+- POST /api/support/tickets creates a numbered ticket (maximum 10 per user per hour). The creator sees only ticket number, topic and subject; SMTP delivery status is returned.
+- GET /api/support/tickets lists only number and purpose for creators; support, owner and admin get the organization queue with filters for status, priority and category.
+- GET /api/support/tickets/:id and POST /api/support/tickets/:id/messages are staff-only. Public replies are emailed to the account email on file. Internal notes are never emailed.
+- PATCH /api/support/tickets/:id updates status, priority or assignee for support, owner and admin. Resolved/closed statuses email the creator.
+- POST /api/support/tickets/:id/messages/:messageId/retry-email retries failed email delivery.
+
+Ticket email status is sent, failed, or not_configured. Recipients come from Supabase Admin Auth, never client input.
 
 ## Sensitive-action re-authentication
 
-- `POST /api/security/step-up/otp` sends a re-authentication email code to the signed-in account.
-- `POST /api/security/step-up` accepts either `{ "method": "password", "password": "…", "deviceId": "<registered-device-uuid>" }` or `{ "method": "email_otp", "code": "<code>", "deviceId": "<registered-device-uuid>" }`. Successful verification creates a device-bound grant for `STEP_UP_TTL_MINUTES` (default 10).
-- Refund approvals and invoice sends can return HTTP 403 with `error.code: "STEP_UP_REQUIRED"`; the client prompts and retries that action once after verification. Risk weights, thresholds and the optional always-step-up refund policy are configured by `SECURITY_RISK_*` and `STEP_UP_ALWAYS_FOR_REFUNDS`.
+- The browser sends and verifies email OTP using a separate non-persisting Supabase client. POST /api/security/step-up/otp/verify accepts the temporary access token only after checking its subject, email OTP method and two-minute issue window. The legacy POST /api/security/step-up/otp returns STEP_UP_CLIENT_REQUIRED.
+- POST /api/security/step-up accepts a password method and registered device ID. Success creates a short-lived device-bound grant.
+- Refund approvals and invoice sends can return STEP_UP_REQUIRED; the client prompts and retries that action once after verification.
 
 ## Login throttling
 

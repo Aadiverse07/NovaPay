@@ -169,7 +169,8 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
     async getUserById(userId) {
       if(!/^[0-9a-f-]{36}$/i.test(String(userId||'')))return null;
       const {data,error}=await request(`/auth/v1/admin/users/${encodeURIComponent(userId)}`);
-      return !error&&data?.id?{id:data.id,email:typeof data.email==='string'?data.email:null}:null;
+      const providers=Array.isArray(data?.app_metadata?.providers)?data.app_metadata.providers:Array.isArray(data?.identities)?data.identities.map((item)=>item.provider).filter(Boolean):null;
+      return !error&&data?.id?{id:data.id,email:typeof data.email==='string'?data.email:null,providers}:null;
     },
     async onboard(userId, name, requestId) {
       const { response, data, error } = await request('/rest/v1/rpc/create_organization_for_user', {

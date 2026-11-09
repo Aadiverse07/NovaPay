@@ -11,7 +11,7 @@ function makeSession(id = 'existing-owner') {
   return { access_token: 'test-access-token', user: { id, email: 'owner@example.test', user_metadata: { full_name: 'Existing Owner' } } };
 }
 
-function authHarness({ session = null, loginSession = makeSession(), duplicate = false, otpError = null, signInError = null, emptyWorkspace = false, freshWorkspace = false, knownOrgId = '', workspaceFailures = [] } = {}) {
+function authHarness({ session = null, loginSession = makeSession(), duplicate = false, otpError = null, emailSendError = null, signInError = null, emptyWorkspace = false, freshWorkspace = false, knownOrgId = '', workspaceFailures = [] } = {}) {
   const calls = [];
   const stored = new Map();
   const sessionStored = new Map();
@@ -27,13 +27,16 @@ function authHarness({ session = null, loginSession = makeSession(), duplicate =
     async signInWithPassword() { return signInError ? { data: { session: null }, error: signInError } : { data: { session: loginSession }, error: null }; },
     async signUp(args) { calls.push({ op: 'signUp', email: args.email }); return { data: { user: { id: 'new-user', email: args.email, identities: duplicate ? [] : [{ provider: 'email' }] }, session: null }, error: null }; },
     async verifyOtp(args) { calls.push({ op: 'verifyOtp', type: args.type, tokenLength: args.token.length }); return otpError ? { data: {}, error: otpError } : { data: { session: loginSession, user: loginSession.user }, error: null }; },
+    async signInWithOtp(args) { calls.push({ op:'signInWithOtp',email:args.email,shouldCreateUser:args.options.shouldCreateUser });return emailSendError?{data:{},error:emailSendError}:{data:{},error:null}; },
+    async signOut() { calls.push({op:'otpClientSignOut'});return {error:null}; },
     async resend(args) { calls.push({ op: 'resend', type: args.type, email: args.email }); return { data: {}, error: null }; },
     async resetPasswordForEmail(email) { calls.push({ op: 'resetPasswordForEmail', email }); return { data: {}, error: null }; },
     async updateUser() { calls.push({ op: 'updateUser' }); return { data: { user: loginSession.user }, error: null }; },
   };
   const window = {
     location: { origin: 'https://novapay.test' },
-    supabase: { createClient() { return { auth: authClient }; } },
+    supabase: { createClient(url,key,options) { calls.push({op:"createClient",options:options||null});return { auth: authClient }; } },
+    NovaPayApi: { request(path,options){calls.push({op:"api",path,body:options.body});return Promise.resolve({granted:true})} },
     setTimeout(callback, ms) { timerCalls.push(ms); callback(); return timerCalls.length; },
     clearTimeout,
   };
@@ -289,4 +292,12 @@ test('preview and dashboard load the pinned Supabase SDK and auth modules before
   const guard = readFileSync(new URL('../../src/workspace-guard.js', import.meta.url), 'utf8');
   assert.match(guard, /auth\.ensureWorkspace\(session\)/);
   assert.match(guard, /workspace-required/);
+});
+
+test('step-up email code uses isolated non-persisting Supabase client and leaves primary session intact',async()=>{
+ const initial=makeSession();const {auth,calls}=authHarness({session:initial});await auth.ready;const before=await auth.currentSession();await auth.sendStepUpOtp();await auth.verifyStepUpOtp('123456','c0000000-0000-4000-8000-000000000003');const after=await auth.currentSession();assert.equal(before.access_token,after.access_token);assert.equal(calls.find(call=>call.op==='signInWithOtp').shouldCreateUser,false);assert.equal(calls.find(call=>call.op==='signInWithOtp').email,'owner@example.test');const clients=calls.filter(call=>call.op==='createClient');assert.equal(clients.length,2);assert.equal(clients[1].options.auth.persistSession,false);assert.equal(clients[1].options.auth.autoRefreshToken,false);assert.equal(clients[1].options.auth.detectSessionInUrl,false);assert.equal(calls.find(call=>call.op==='verifyOtp').type,'email');assert.equal(calls.find(call=>call.op==='api').path,'/api/security/step-up/otp/verify');
+});
+
+test('step-up email send surfaces Supabase rate-limit guidance',async()=>{
+ const {auth}=authHarness({session:makeSession(),emailSendError:{code:'over_email_send_rate_limit',status:429,message:'rate limited'}});await auth.ready;await assert.rejects(auth.sendStepUpOtp(),/Too many code requests/);
 });

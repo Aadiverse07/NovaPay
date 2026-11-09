@@ -349,7 +349,7 @@
     if(mode!=="supabase"||!client||!session||!session.user.email||!publicConfig)throw new Error("Email re-authentication is unavailable.");
     if(!stepUpClient) stepUpClient=window.supabase.createClient(publicConfig.supabaseUrl,publicConfig.supabaseAnonKey,{auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false,flowType:"implicit"}});
     var result=await stepUpClient.auth.signInWithOtp({email:String(session.user.email).trim().toLowerCase(),options:{shouldCreateUser:false}});
-    if(result.error){var e=new Error(result.error.status===429?"Too many code requests. Wait before trying again.":/smtp|email.*disabled|not configured/i.test(result.error.message||"")?"Email delivery is not configured. Contact support.":"An email code could not be sent. Try again later.");e.code=result.error.code||result.error.name;e.status=result.error.status;throw e;}
+    if(result.error){var code=String(result.error.code||result.error.name||"").toLowerCase(),e=new Error(result.error.status===429||/rate_limit|too_many/.test(code)?"Too many code requests. Wait before trying again.":/smtp|email.*disabled|not configured|provider_disabled/.test((result.error.message||"")+" "+code)?"Email delivery is not configured. Contact support.":/user_not_found|user_not_allowed/.test(code)?"This account could not be found for email verification. Sign in again and use its registered address.":"An email code could not be sent. Try again later.");e.code=code;e.status=result.error.status;throw e;}
   }
 
   async function verifyStepUpOtp(code,deviceId) {

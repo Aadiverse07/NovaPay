@@ -1599,3 +1599,13 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 ## Step-up modal follow-up (2026-11-09)
 
 - Source-level checks cover accessible dialog roles/labels, method switching, responsive theme styling, focus restoration and cancel cleanup. Browser visual testing is not available in this run.
+
+## Support ticket email redesign (2026-11-09)
+
+- Migration syntax: 0029_support_ticket_email.sql included in npm test migration parsing.
+- Route tests cover creator response minimization, another user's isolation, creator reply/detail denial, staff thread, assignment, resolution email, safe notifications, internal notes not emailed, and failed-email retry.
+- Email tests cover unconfigured/success/failure, server-selected recipient, support-inbox copy/Reply-To, HTML escaping, and safe error classes.
+- npm audit --omit=dev: PASS, 0 vulnerabilities.
+- Live SMTP delivery and live database migration were not run.
+
+- Final suite after the five follow-up fixes: `npm test` PASS, 429/429 tests; migrations 0001–0029 parse successfully.

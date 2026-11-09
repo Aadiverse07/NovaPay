@@ -68,7 +68,7 @@ Enable leaked-password protection in the Supabase Dashboard under Authentication
 
 ## NovaPay security and support operations
 
-Apply new project migrations through the Supabase SQL Editor in numeric order after reviewing each file and running `npm run check:migrations`: `0025_security_session_details.sql`, `0026_step_up_grants.sql`, `0027_login_attempts.sql`, and `0028_notification_recipients.sql`. Migrations 0001–0024 are already applied in the live project; `0024_support_tickets.sql` is only synced in this repository to the already-live memberships role list.
+The live project already has migrations 0001–0028. After reviewing the SQL and running `npm run check:migrations`, apply only `0029_support_ticket_email.sql` through the Supabase SQL Editor. Migration `0024_support_tickets.sql` is checked into this repository as a record of the already-applied ticket schema and support role.
 
 Set `SECURITY_HASH_SALT` to a random server-only value of at least 32 characters in production. Never rotate it casually: existing device/network/account hashes will no longer compare. Defaults for lockouts are 5 failures in 15 minutes and a 15-minute initial lock; repeated lockouts increase exponentially up to 24 hours. Direct requests to Supabase Auth do not pass through NovaPay's preflight; Supabase Auth's own rate limits protect that route.
 
@@ -91,3 +91,8 @@ In Supabase Dashboard → Authentication → Email Templates, edit **Magic Link*
 The step-up prompt uses a temporary, non-persisting Auth client and requires a code-based `email` verification token issued within two minutes. Supabase Auth rate limits and configured SMTP still apply. If email delivery is disabled or SMTP is unavailable, the prompt reports that and password verification remains available.
 
 Settings → Security → Password now handles Supabase's Secure password change setting. If Supabase returns `reauthentication_needed`, a code is sent and the next update includes the nonce. For test accounts, verify successful update, same-password rejection, weak-password details, reauthentication code accepted/rejected, expired session, and Auth rate limiting. Never put passwords or codes in logs or issue reports.
+
+
+### Support ticket email delivery
+
+Set SMTP_HOST, SMTP_PORT (587 with STARTTLS or 465 with TLS), SMTP_USER, SMTP_PASS, and SMTP_FROM on the server, then restart NovaPay. Set optional SUPPORT_INBOX_EMAIL to receive copies of new tickets and use as Reply-To. Do not put SMTP credentials in browser configuration. When not configured, ticket creation still works and the API/staff thread reports not_configured; delivery errors are stored only as a safe error class, and staff can retry failed messages. To assign staff, use the existing support-role grant script. Verify with a controlled test mailbox and inspect only delivery status; never log message bodies or addresses.

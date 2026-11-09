@@ -71,6 +71,12 @@ const schema = z.object({
   SUPABASE_URL: z.string().url().optional().or(z.literal('')).default(''),
   SUPABASE_ANON_KEY: z.string().trim().optional().default(''),
   SUPABASE_SERVICE_ROLE_KEY: z.string().trim().optional().default(''),
+  SMTP_HOST: z.string().trim().optional().default(''),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_USER: z.string().optional().default(''),
+  SMTP_PASS: z.string().optional().default(''),
+  SMTP_FROM: z.string().trim().optional().default(''),
+  SUPPORT_INBOX_EMAIL: z.string().trim().email().optional().or(z.literal('')).default(''),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   STATIC_DIR: z.string().min(1).default(root),
 });

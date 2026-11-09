@@ -84,9 +84,9 @@ export class MemoryNotificationsRepo {
     this.rows.set(this.key(orgId, id), row);
     return row;
   }
-  addSupport(orgId, ticketId, recipientUserId, now = new Date()) {
+  addSupport(orgId, ticketId, recipientUserId, rule = 'support_ticket_update', ticketNumber = null, now = new Date()) {
     const id = `NTF-${++this.sequence}`;
-    const row = { id, orgId, recipientUserId: recipientUserId || null, anomalyId: null, rule: 'support_ticket_update', severity: 'info', evidenceIds: [`support_ticket:${ticketId}`], status: 'unread', createdAt: now.toISOString() };
+    const row = { id, orgId, recipientUserId: recipientUserId || null, anomalyId: null, rule, severity: 'info', evidenceIds: [`support_ticket:${ticketId}`, ...(ticketNumber?[`ticket_number:${ticketNumber}`]:[])], status: 'unread', createdAt: now.toISOString() };
     this.rows.set(this.key(orgId, id), row);
     return row;
   }

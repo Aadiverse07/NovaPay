@@ -90,6 +90,10 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
     try{
       const device=await repos.security.getDevice(req.orgId,req.user.id,deviceId);
       if(!device){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'device_session_missing'}});return res.status(403).json(structuredErrorBody('DEVICE_SESSION_REQUIRED','This device session is not registered. Sign in again and retry.'))}
+      if(method==='password'){
+        const account=await identity?.getUserById?.(req.user.id);
+        if(Array.isArray(account?.providers)&&account.providers.length&&!account.providers.includes('email')){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{method,reason:'password_not_set'}});return res.status(400).json(structuredErrorBody('STEP_UP_NO_PASSWORD','This account has no password set. Use the email code instead.'))}
+      }
       const email=typeof req.user.email==='string'?req.user.email.trim().toLowerCase():'';
       const verification=method==='password'
         ? await identity?.verifyReauthPassword?.(email,parsed.data.password)

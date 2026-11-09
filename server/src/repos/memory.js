@@ -382,13 +382,15 @@ export function createRepositories() {
     async linkLoginAttempts(accountHash,userId,orgId) { for(const row of loginAttemptRows)if(row.account_hash===accountHash){row.user_id=userId;row.org_id=orgId}return true; },
     async loginIdentityForHash(accountHash) { const row=loginAttemptRows.find(item=>item.account_hash===accountHash&&item.user_id&&item.org_id);return row?{userId:row.user_id,orgId:row.org_id}:null; },
   };
-  const ticketRows = new Map(), ticketMessages = [];
+  const ticketRows = new Map(), ticketMessages = [], ticketCounters = new Map();
   repos.supportTickets = {
-    async create(orgId,userId,input) { const at=new Date().toISOString(); const row={id:randomUUID(),org_id:orgId,created_by:userId,assignee_id:null,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null,created_at:at,updated_at:at,resolved_at:null};ticketRows.set(`${orgId}:${row.id}`,row);return row; },
-    async addMessage(orgId,ticketId,authorId,body,internalNote) { const row={id:randomUUID(),ticket_id:ticketId,org_id:orgId,author_id:authorId,body,internal_note:internalNote,created_at:new Date().toISOString()};ticketMessages.push(row);return row; },
+    async create(orgId,userId,input) { const at=new Date().toISOString(),ticketNumber=(ticketCounters.get(orgId)||0)+1;ticketCounters.set(orgId,ticketNumber);const row={id:randomUUID(),org_id:orgId,created_by:userId,assignee_id:null,ticket_number:ticketNumber,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null,created_at:at,updated_at:at,resolved_at:null};ticketRows.set(`${orgId}:${row.id}`,row);return row; },
+    async addMessage(orgId,ticketId,authorId,body,internalNote,emailStatus='not_configured',emailKind='reply') { const row={id:randomUUID(),ticket_id:ticketId,org_id:orgId,author_id:authorId,body,internal_note:internalNote,email_status:emailStatus,email_error_class:null,email_kind:emailKind,created_at:new Date().toISOString()};ticketMessages.push(row);return row; },
     async get(orgId,id) { return ticketRows.get(`${orgId}:${id}`)||null; },
     async list(orgId,userId,staff,{limit,offset,status,priority,category}) { return [...ticketRows.values()].filter(t=>t.org_id===orgId&&(staff||t.created_by===userId)&&(!status||t.status===status)&&(!priority||t.priority===priority)&&(!category||t.category===category)).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(offset,offset+limit); },
     async messages(orgId,ticketId,staff) { return ticketMessages.filter(m=>m.org_id===orgId&&m.ticket_id===ticketId&&(staff||!m.internal_note)); },
+    async getMessage(orgId,ticketId,id) { return ticketMessages.find(m=>m.org_id===orgId&&m.ticket_id===ticketId&&m.id===id)||null; },
+    async updateMessageEmail(orgId,id,status,errorClass=null) { const row=ticketMessages.find(m=>m.org_id===orgId&&m.id===id);if(!row)return null;row.email_status=status;row.email_error_class=errorClass;return row; },
     async update(orgId,id,input) { const row=ticketRows.get(`${orgId}:${id}`);if(!row)return null;Object.assign(row,{...(input.status?{status:input.status}:{}),...(input.priority?{priority:input.priority}:{}),...(input.assigneeId!==undefined?{assignee_id:input.assigneeId}:{}),updated_at:new Date().toISOString(),...(input.status==='resolved'?{resolved_at:new Date().toISOString()}:{})});return row; },
     async staffRecipients() { return []; },
   };

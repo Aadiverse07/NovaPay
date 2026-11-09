@@ -359,17 +359,19 @@ export function createPostgresRepositories(database) {
   };
 
   const supportTickets = {
-    async create(orgId,userId,input) { const rows=await database.insert('support_tickets',{org_id:orgId,created_by:userId,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null});return rows?.[0]||null; },
-    async addMessage(orgId,ticketId,authorId,body,internalNote) { const rows=await database.insert('support_ticket_messages',{org_id:orgId,ticket_id:ticketId,author_id:authorId,body,internal_note:internalNote});return rows?.[0]||null; },
+    async create(orgId,userId,input) { const allocated=await database.rpc('allocate_support_ticket_number',{p_org_id:orgId});const rows=await database.insert('support_tickets',{org_id:orgId,created_by:userId,ticket_number:allocated,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null});return rows?.[0]||null; },
+    async addMessage(orgId,ticketId,authorId,body,internalNote,emailStatus='not_configured',emailKind='reply') { const rows=await database.insert('support_ticket_messages',{org_id:orgId,ticket_id:ticketId,author_id:authorId,body,internal_note:internalNote,email_status:emailStatus,email_kind:emailKind});return rows?.[0]||null; },
     async get(orgId,id) { const rows=await database.select('support_tickets',q({select:'*',org_id:`eq.${orgId}`,id:`eq.${id}`,limit:'1'}));return rows?.[0]||null; },
     async list(orgId,userId,staff,filters) { const p={select:'*',org_id:`eq.${orgId}`,order:'created_at.desc',limit:String(filters.limit),offset:String(filters.offset)};if(!staff)p.created_by=`eq.${userId}`;for(const key of ['status','priority','category'])if(filters[key])p[key]=`eq.${filters[key]}`;return database.select('support_tickets',q(p)); },
     async messages(orgId,ticketId,staff) { const p={select:'*',org_id:`eq.${orgId}`,ticket_id:`eq.${ticketId}`,order:'created_at.asc',limit:'500'};if(!staff)p.internal_note='eq.false';return database.select('support_ticket_messages',q(p)); },
+    async getMessage(orgId,ticketId,id) { const rows=await database.select('support_ticket_messages',q({select:'*',org_id:`eq.${orgId}`,ticket_id:`eq.${ticketId}`,id:`eq.${id}`,limit:'1'}));return rows?.[0]||null; },
+    async updateMessageEmail(orgId,id,status,errorClass=null) { const rows=await database.patch('support_ticket_messages',q({org_id:`eq.${orgId}`,id:`eq.${id}`}),{email_status:status,email_error_class:errorClass});return rows?.[0]||null; },
     async update(orgId,id,input) { const p={};if(input.status)p.status=input.status;if(input.priority)p.priority=input.priority;if(input.assigneeId!==undefined)p.assignee_id=input.assigneeId;p.updated_at=new Date().toISOString();if(input.status==='resolved')p.resolved_at=new Date().toISOString();const rows=await database.patch('support_tickets',q({org_id:`eq.${orgId}`,id:`eq.${id}`}),p);return rows?.[0]||null; },
     async staffRecipients(orgId) { const rows=await database.select('memberships',q({select:'user_id',org_id:`eq.${orgId}`,role:'in.(support,owner,admin)',limit:'500'}));return(rows||[]).map(row=>row.user_id); },
   };
 
   const notifications = {
-    async addSupport(orgId, ticketId, recipientUserId) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId||null,anomaly_id:null,rule:'support_ticket_update',severity:'info',evidence_ids:[`support_ticket:${ticketId}`],status:'unread'});return rows?.[0]||null; },
+    async addSupport(orgId, ticketId, recipientUserId, rule='support_ticket_update', ticketNumber=null) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId||null,anomaly_id:null,rule,severity:'info',evidence_ids:[`support_ticket:${ticketId}`,...(ticketNumber?[`ticket_number:${ticketNumber}`]:[])],status:'unread'});return rows?.[0]||null; },
     async addSecurity(orgId,recipientUserId,loginEventId,risk) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId,anomaly_id:null,rule:'security_new_device',severity:risk.level==='high'?'high':'warning',evidence_ids:[`login_event:${loginEventId}`],status:'unread'});return rows?.[0]||null; },
     async list(orgId, userId, options = {}) {
       if(userId&&typeof userId==='object'){options=userId;userId=null}

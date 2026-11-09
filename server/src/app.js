@@ -37,6 +37,7 @@ import { failureRoutes } from './routes/failures.js';
 import { securityRoutes } from './routes/security.js';
 
 import { supportRoutes } from './routes/support.js';
+import { createSupportMail } from './services/supportMail.js';
 import { createRequestBurstTracker } from './services/accountRisk.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -52,7 +53,7 @@ export function shouldLogAccess(path, status) {
   return status !== 304 || String(path || '').startsWith('/api/');
 }
 
-export function createApp({ config = defaultConfig, repos, paypal, askAI, transcribeAudio, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider } = {}) {
+export function createApp({ config = defaultConfig, repos, paypal, askAI, transcribeAudio, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider, supportMail } = {}) {
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
@@ -62,6 +63,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   askAI ||= createAIService({ config, events: repos.events, repos, fx, provider: createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool }), documentSearch: documentRag });
   transcribeAudio ||= createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool, purpose: 'transcription' }).transcribeAudio;
   const runAnomalyScan = createAnomalyService({ repos, config });
+  supportMail ||= createSupportMail({ config });
   const requestBurstTracker=createRequestBurstTracker({windowMs:Number(config.SECURITY_REQUEST_BURST_WINDOW_SECONDS||60)*1000,threshold:Number(config.SECURITY_REQUEST_BURST_THRESHOLD||30)});
 
   app.disable('x-powered-by');
@@ -115,7 +117,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', aiRoutes({ config, askAI, identity, transcribeAudio }));
   app.use('/api', approvalRoutes({ config, repos, identity, paypal }));
   app.use('/api', failureRoutes({ repos }));
-  app.use('/api', supportRoutes({ repos, identity }));
+  app.use('/api', supportRoutes({ repos, identity, supportMail }));
   app.use('/api', financialRoutes({ repos }));
   app.use('/api', fxRoutes({ fx, currencyConverterUrl: config.CURRENCY_CONVERTER_URL }));
   app.use('/api', reportRoutes({ repos }));

@@ -13,7 +13,7 @@
     if (value.indexOf("transaction") >= 0 || value.indexOf("refund") >= 0 || value.indexOf("fee") >= 0) return "transactions";
     return "approvals";
   }
-  function label(rule) { return String(rule || "Organization alert").replace(/[_-]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); }); }
+  function label(rule, row) { if(rule==="support_ticket_reply"){var ids=row&&row.evidence_ids||row&&row.evidenceIds||[],number=ids.find(function(id){return String(id).indexOf("ticket_number:")===0;});return "Support replied to "+(number?String(number).slice("ticket_number:".length):"your ticket")}return String(rule || "Organization alert").replace(/[_-]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); }); }
   function scanStatus(message) { scanStatuses.forEach(function (node) { node.textContent = message || ""; }); }
   function setScanVisibility(role) {
     scanRole = String(role || "").toLowerCase();
@@ -78,7 +78,7 @@
       var item = document.createElement("button"), icon = document.createElement("span"), copy = document.createElement("span"), title = document.createElement("b"), detail = document.createElement("small"), badge = document.createElement("span");
       item.type = "button"; item.className = "notification-item"; item.dataset.notificationView = targetFor(row.rule); item.dataset.notifKind = "live"; item.dataset.notificationId = row.id; item.dataset.notificationStatus = row.status || "read";
       icon.className = "notif-icon " + (row.severity === "critical" || row.severity === "high" ? "warn" : "info"); icon.textContent = row.severity === "critical" ? "!" : "•";
-      title.textContent = label(row.rule); detail.textContent = (row.severity || "info") + " · " + (row.created_at ? new Date(row.created_at).toLocaleString() : "Date unavailable");
+      title.textContent = label(row.rule,row); detail.textContent = row.rule==="support_ticket_reply"?"Check your email.":(row.severity || "info") + " · " + (row.created_at ? new Date(row.created_at).toLocaleString() : "Date unavailable");
       copy.append(title, detail); item.append(icon, copy);
       if (row.status === "unread") { badge.className = "status info"; badge.textContent = "New"; item.appendChild(badge); }
       item.addEventListener("click", async function () { try { if (row.status === "unread") { await api.request("/api/notifications/" + encodeURIComponent(row.id) + "/read", { method: "POST", body: {} }); row.status = "read"; load(); } } catch (error) { console.error("Could not mark organization notification read", error); } if (window.NovaPayActivateView) window.NovaPayActivateView(item.dataset.notificationView, true); var popover = document.getElementById("notification-popover"), button = document.getElementById("notifications"); if (popover) popover.hidden = true; if (button) button.setAttribute("aria-expanded", "false"); });

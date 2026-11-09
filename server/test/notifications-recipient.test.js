@@ -16,8 +16,8 @@ test('ticket and security notifications are recipient scoped, replies notify the
    const created=await call('creator-token','/api/support/tickets',{method:'POST',body:JSON.stringify({subject:'Payment failed',category:'payment_failure',body:'Please investigate.'})});assert.equal(created.status,201);const ticket=(await created.json()).ticket;
    let own=await call('creator-token','/api/notifications');assert.equal((await own.json()).notifications.length,0);
    let queue=await call('staff-token','/api/notifications');assert.equal((await queue.json()).notifications.length,1);
-   await call('creator-token',`/api/support/tickets/${ticket.id}/messages`,{method:'POST',body:JSON.stringify({body:'A customer follow-up.'})});
-   let staffNotifications=(await(await call('staff-token','/api/notifications')).json()).notifications;assert.equal(staffNotifications.length,2);
+   const creatorReply=await call('creator-token',`/api/support/tickets/${ticket.id}/messages`,{method:'POST',body:JSON.stringify({body:'A customer follow-up.'})});assert.equal(creatorReply.status,403);
+   let staffNotifications=(await(await call('staff-token','/api/notifications')).json()).notifications;assert.equal(staffNotifications.length,1);
    await call('staff-token',`/api/support/tickets/${ticket.id}/messages`,{method:'POST',body:JSON.stringify({body:'Private note.',internalNote:true})});
    own=await call('creator-token','/api/notifications');assert.equal((await own.json()).notifications.length,0);
    await call('staff-token',`/api/support/tickets/${ticket.id}/messages`,{method:'POST',body:JSON.stringify({body:'We are reviewing this.'})});

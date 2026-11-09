@@ -12,7 +12,7 @@ Current branch: `ui-declutter-modules`.
 
 ## Verification
 
-- `npm test`: PASS, 409/409 tests. `scripts/check-migrations.js` parses migrations 0001–0028.
+- `npm test`: PASS, 429/429 tests. `scripts/check-migrations.js` parses migrations 0001–0029.
 - Focused tests cover classifier and failure persistence, risk and step-up, login lockout, Security panel roles/device removal, per-user notification scope, ticket counterpart delivery and internal-note silence.
 - The live Supabase RLS script was written but not run; it requires existing creator, other-user and support-role test accounts and the migrations below. No live migration or PayPal call was made.
 - Protected user edits in `dashboard.html`, `src/date-picker.css`, and `src/module-header-align.css` were preserved; only additive dashboard markup/scripts/styles for the requested Security panel were staged.
@@ -105,3 +105,9 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 ## 2026-11-09 step-up modal follow-up
 
 - Modal now uses NovaPay theme tokens and glass surface styling with a backdrop, responsive width, keyboard/focus behavior, password visibility control, method switch and inline states. Automated source checks pass; visual browser confirmation remains a manual check.
+
+## 2026-11-09 support ticket email redesign
+
+- Support tickets now receive per-organization numbers; creators see only ticket number and purpose. Support/owner/admin staff retain the queue and thread. Creator replies are rejected; public staff replies/status emails use the email address resolved from the ticket creator's Supabase account.
+- Message email outcomes are persisted and visible to staff, with retry for failed public mail. Internal notes never email. SMTP is optional and ticket creation still persists when unconfigured.
+- Apply migration 0029_support_ticket_email.sql after 0028. Add the SMTP variables documented in .env.example as needed. Live SMTP and migration application remain unverified.
