@@ -1,0 +1,32 @@
+/* Module headers: keep the description text vertically centred on its module logo.
+   UI-only override, loaded last. Works for every module that has a .module-head-logo. */
+.page-intro.ai-page-intro:has(>.module-head-logo){
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr);
+  column-gap:12px;
+  row-gap:0;
+  align-items:center;
+}
+.page-intro.ai-page-intro:has(>.module-head-logo)>.module-head-logo{
+  grid-column:1;grid-row:1;width:40px;height:40px;align-self:center;justify-self:start;
+}
+/* Modules whose title is visually hidden: the description sits in the logo's row, centred on it */
+.page-intro.ai-page-intro:has(>.module-head-logo)>h2.sr-only~p{
+  grid-column:2;grid-row:1;margin:0;align-self:center;
+}
+/* Modules with a visible title (e.g. AI Assistant): logo centred on title + description together */
+.page-intro.ai-page-intro:has(>.module-head-logo)>h2:not(.sr-only){
+  grid-column:2;grid-row:1;margin:0;align-self:end;
+}
+.page-intro.ai-page-intro:has(>.module-head-logo)>h2:not(.sr-only)~p{
+  grid-column:2;grid-row:2;margin:4px 0 0;align-self:start;
+}
+.page-intro.ai-page-intro:has(>.module-head-logo)>h2:not(.sr-only)~p ~ *{grid-column:2}
+.page-intro.ai-page-intro:has(>.module-head-logo):has(>h2:not(.sr-only))>.module-head-logo{grid-row:1 / span 2}
+/* Any extra items added by scripts (sample-data badge, buttons) go under the text */
+.page-intro.ai-page-intro:has(>.module-head-logo)>:not(.module-head-logo):not(h2):not(p){grid-column:2;margin-top:8px;justify-self:start}
+@media (max-width:520px){
+  .page-intro.ai-page-intro:has(>.module-head-logo){grid-template-columns:36px minmax(0,1fr);column-gap:10px}
+  .page-intro.ai-page-intro:has(>.module-head-logo)>.module-head-logo{width:36px;height:36px}
+}
+
