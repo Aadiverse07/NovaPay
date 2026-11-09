@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSupabaseServices } from '../src/services/supabase.js';
 
-const config = { hasSupabase: true, SUPABASE_URL: 'https://project.supabase.co', SUPABASE_ANON_KEY: 'anon-key', SUPABASE_SERVICE_ROLE_KEY: 'service-role-secret' };
+const config = { hasSupabase: true, SUPABASE_URL: 'https://project.supabase.co', SUPABASE_ANON_KEY: 'anon-key', SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key' };
 
 test('Supabase service verifies bearer tokens with anon key and uses service role only server-side', async () => {
   const calls = [];
@@ -36,12 +36,12 @@ test('invalid JWT is rejected; Supabase service outages fail closed', async () =
 
 test('new Supabase secret keys are sent as apikey only, never as bearer JWTs', async () => {
   let seen;
-  const services = createSupabaseServices({ ...config, SUPABASE_SERVICE_ROLE_KEY: 'sb_secret_new-format' }, async (_url, options) => {
+  const services = createSupabaseServices({ ...config, SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key' }, async (_url, options) => {
     seen = options.headers;
     return new Response(JSON.stringify([]), { status: 200 });
-  });
+  }, { secretApiKey: true });
   await services.membership('user-a', 'org-a');
-  assert.equal(seen.apikey, 'sb_secret_new-format');
+  assert.equal(seen.apikey, 'test-service-role-key');
   assert.equal(Object.hasOwn(seen, 'Authorization'), false);
 });
 

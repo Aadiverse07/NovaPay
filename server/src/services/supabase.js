@@ -4,11 +4,11 @@ async function readResponse(response) {
   try { return await response.json(); } catch { return null; }
 }
 
-export function createSupabaseServices(config, fetchImpl = fetch) {
+export function createSupabaseServices(config, fetchImpl = fetch, { secretApiKey = String(config.SUPABASE_SERVICE_ROLE_KEY || '').startsWith('sb_secret_') } = {}) {
   if (!config.hasSupabase) return null;
   const apiKey = config.SUPABASE_SERVICE_ROLE_KEY;
   const apiUrl = config.SUPABASE_URL.replace(/\/$/, '');
-  const serviceHeaders = { apikey: apiKey, ...(apiKey.startsWith('sb_secret_') ? {} : { Authorization: `Bearer ${apiKey}` }) };
+  const serviceHeaders = { apikey: apiKey, ...(secretApiKey ? {} : { Authorization: `Bearer ${apiKey}` }) };
   async function request(path, { method = 'GET', token, body, publicKey = false, prefer } = {}) {
     const headers = { ...(publicKey ? { apikey: config.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` } : serviceHeaders) };
     if (body !== undefined) headers['Content-Type'] = 'application/json';

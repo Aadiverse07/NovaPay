@@ -144,16 +144,18 @@ test('Phase 3 routes return tenant-scoped FX, report, and recalculated invoice s
   repos.reports.rows=async()=>[{org_id:'a0000000-0000-4000-8000-000000000001',period:'2026-10-01',currency:'USD',code:'4000',name:'Sales Revenue',account_type:'revenue',amount_minor:'10000'}];
   repos.invoices.createDraft=async(_org,invoice,lines)=>({id:'00000000-0000-4000-8000-000000000001',...invoice,subtotalMinor:invoice.subtotal_minor,taxMinor:invoice.tax_minor,totalMinor:invoice.total_minor,lines});
   repos.invoices.createDraftIdempotent=async(orgId,_key,invoice,lines)=>({invoice:await repos.invoices.createDraft(orgId,invoice,lines),replayed:false});
-  const config={PORT:3000,STATIC_DIR:process.cwd(),hasPayPal:true,hasAI:false,hasSupabase:true,SUPABASE_URL:'https://example.supabase.co',SUPABASE_ANON_KEY:'test-public',SUPABASE_SERVICE_ROLE_KEY:'test-server'};
+  const config={PORT:3000,STATIC_DIR:process.cwd(),hasPayPal:true,hasAI:false,hasSupabase:true,SUPABASE_URL:'https://example.supabase.co',SUPABASE_ANON_KEY:'test-public',SUPABASE_SERVICE_ROLE_KEY:'test-server',CURRENCY_CONVERTER_URL:'https://fx.test.invalid'};
   const org='a0000000-0000-4000-8000-000000000001';
   const identity={async verifyToken(token){return ['ok','viewer'].includes(token)?{id:token==='viewer'?'viewer-user':'owner'}:null;},async membership(userId,orgId){return orgId===org&&['owner','viewer-user'].includes(userId)?{role:userId==='viewer-user'?'viewer':'owner',org_id:org,user_id:userId}:null;}};
-  const app=createApp({config,repos,identity,paypal:{async pp(){throw new Error('unexpected provider call');}},askAI:async()=>({reply:'ok',evidence:[],proposal:null})});
+  const fxCalls=[];
+  const fxFetch=async(url)=>{fxCalls.push(String(url));return{ok:true,json:async()=>({from:'USD',to:'USD',result:'1.00',rate:'1',rateAsOf:'2026-11-09T00:00:00.000Z',source:'test FX provider'})};};
+  const app=createApp({config,repos,identity,fxFetch,paypal:{async pp(){throw new Error('unexpected provider call');}},askAI:async()=>({reply:'ok',evidence:[],proposal:null})});
   const server=app.listen(0,'127.0.0.1');await new Promise((resolve)=>server.once('listening',resolve));
   const base=`http://127.0.0.1:${server.address().port}`;
   const call=(path,options={})=>fetch(`${base}${path}`,{...options,headers:{authorization:`Bearer ${options.token||'ok'}`,'x-org-id':org,...(options.body?{'content-type':'application/json'}:{}),...options.headers}});
   try{
     const unauth=await fetch(`${base}/api/fx/convert?amount=1.00&base=USD&quote=EUR`);assert.equal(unauth.status,401);
-    const fx=await call('/api/fx/convert?amount=1.00&base=USD&quote=USD');assert.equal(fx.status,200);assert.equal((await fx.json()).convertedAmount,'1.00 USD');
+    const fx=await call('/api/fx/convert?amount=1.00&base=USD&quote=USD');const fxBody=await fx.json();assert.equal(fx.status,200);assert.equal(fxBody.convertedAmount,'1.00 USD');assert.equal(fxBody.timestamp,'2026-11-09T00:00:00.000Z');assert.equal(fxBody.source,'test FX provider');assert.deepEqual(fxCalls,['https://fx.test.invalid/api/convert?amount=1.00&from=USD&to=USD']);
     const badFx=await call('/api/fx/convert?amount=-1&base=USD&quote=EUR');assert.equal(badFx.status,400);
     const report=await call('/api/reports/profit-and-loss?from=2026-10-01&to=2026-10-31');const reportBody=await report.json();assert.equal(report.status,200);assert.equal(reportBody.totals.revenueMinor,'10000');
     assert.deepEqual(await (await call('/api/reports/profit-and-loss?from=2026-10-01&to=2026-10-31')).json(),reportBody);

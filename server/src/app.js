@@ -53,7 +53,7 @@ export function shouldLogAccess(path, status) {
   return status !== 304 || String(path || '').startsWith('/api/');
 }
 
-export function createApp({ config = defaultConfig, repos, paypal, askAI, transcribeAudio, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider, supportMail } = {}) {
+export function createApp({ config = defaultConfig, repos, paypal, askAI, transcribeAudio, identity = createSupabaseServices(config), documentOCRProvider, documentEmbeddingProvider, supportMail, fxFetch = fetch } = {}) {
   const app = express();
   repos ||= config.hasSupabase && identity?.database ? createPostgresRepositories(identity.database) : createRepositories();
   paypal ||= createPayPalService({ config, events: repos.events });
@@ -119,7 +119,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', failureRoutes({ repos }));
   app.use('/api', supportRoutes({ repos, identity, supportMail }));
   app.use('/api', financialRoutes({ repos }));
-  app.use('/api', fxRoutes({ fx, currencyConverterUrl: config.CURRENCY_CONVERTER_URL }));
+  app.use('/api', fxRoutes({ fx, currencyConverterUrl: config.CURRENCY_CONVERTER_URL, fetchImpl: fxFetch }));
   app.use('/api', reportRoutes({ repos }));
   app.use('/api', invoiceRoutes({ repos }));
   app.use('/api', notificationRoutes({ repos, runAnomalyScan }));
