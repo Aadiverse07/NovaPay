@@ -230,9 +230,11 @@ Requires bearer token and `X-Org-Id`; updates only the matching organization's n
 
 Requires bearer token and `X-Org-Id`; roles `owner`, `admin`, and `accountant` may run a deterministic scan. Returns scan time, transaction/event counts, finding/created counts, and newly persisted findings. Duplicate findings are deduplicated by organization/rule/evidence/day. Re-running does not create duplicate notifications. Scan/database errors use the standard structured error shape.
 
-## Phase 6 campaigns and maintenance operations (T1–T4)
+## Optional legacy module contract: Community Funds and Maintenance (off by default)
 
-All routes require `Authorization: Bearer <Supabase JWT>` and `X-Org-Id`. New fund errors use `{ "error": { "code": "...", "message": "..." } }`; invalid bodies, IDs, and filters return 400 `VALIDATION_ERROR`, role failures return 403 `ROLE_FORBIDDEN` or `FUND_FORBIDDEN`, illegal workflow transitions return 409 `FUND_STATE_CONFLICT`, and missing/cross-org resources return 404. Every API call is limited to 300 requests per IP per 15 minutes; authenticated requests also have a 240-request per-user limit per 15 minutes. Payment and approval routes inherit these limits and return structured `RATE_LIMITED` or `USER_RATE_LIMITED` responses with HTTP 429. State-changing database RPCs append audit-log records.
+The routes below describe compatibility behavior when the corresponding server flag is enabled. Set `ENABLE_COMMUNITY_FUNDS=true` and/or `ENABLE_MAINTENANCE=true` to restore the relevant module; otherwise the route family responds with structured `404 MODULE_NOT_ENABLED`. Existing contribution transaction and ledger entries remain in financial views.
+
+All enabled routes require `Authorization: Bearer <Supabase JWT>` and `X-Org-Id`. New fund errors use `{ "error": { "code": "...", "message": "..." } }`; invalid bodies, IDs, and filters return 400 `VALIDATION_ERROR`, role failures return 403 `ROLE_FORBIDDEN` or `FUND_FORBIDDEN`, illegal workflow transitions return 409 `FUND_STATE_CONFLICT`, and missing/cross-org resources return 404. Every API call is limited to 300 requests per IP per 15 minutes; authenticated requests also have a 240-request per-user limit per 15 minutes. Payment and approval routes inherit these limits and return structured `RATE_LIMITED` or `USER_RATE_LIMITED` responses with HTTP 429. State-changing database RPCs append audit-log records.
 
 | Method and route | Minimum roles |
 |---|---|

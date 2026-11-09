@@ -104,3 +104,7 @@ npm run check:migrations
 - Live Supabase AI proposal cards with an approval ID show a review-pending message and Open Approvals button; missing approval IDs show no card. Demo mode behavior is preserved.
 - `/api/status` model is shown with a provider label inferred from the model name; initial and failed status copy does not claim Anthropic. Connected PayPal Sandbox hides the unavailable notice.
 - Focused UI tests PASS 16/16; syntax and diff whitespace checks PASS. Browser verification UNVERIFIED. Hard-reload the browser; no server restart required because server code did not change.
+
+## 2026-11-09 Optional module visibility
+- Community Funds and Maintenance are disabled by default through environment flags. Existing fund tables and records are preserved; transactions and ledger continue reading saved activity. No migration was added.
+- Routes return structured `MODULE_NOT_ENABLED` 404s when their corresponding flag is off. `/api/status` advertises module capabilities for the UI.

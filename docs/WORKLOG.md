@@ -5871,3 +5871,10 @@ ABOUT TO stage only task files; no .env path is included.
 - Added SMTP mail delivery with HTML escaping and safe error classes. Recipients come from server-side Supabase account lookup. Public replies and status emails go to the user; internal notes never send.
 - Regular-user API responses and UI now expose only ticket number and purpose. Staff keep queue filters, assignment, status/priority, thread and failed-email retry; the ticket creator cannot post in-app replies.
 - Added nodemailer 10.4.0 after checking/fixing the initial dependency advisory; production dependency audit reports zero vulnerabilities.
+
+## 2026-11-09 Optional modules hidden by default
+
+- Added server flags for Community Funds and Maintenance, both defaulting to off, and exposed them through `/api/status`.
+- Disabled module routes return structured 404s; existing contribution data and financial posting paths remain in place.
+- Hid disabled navigation, start-page options and maintenance approval filtering; notification and assistant deep links honor capabilities.
+- Updated product copy and documented how to re-enable each module. No migration was added.

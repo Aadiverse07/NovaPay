@@ -2,7 +2,7 @@
 
 NovaPay helps PayPal merchants review their activity. The AI suggests actions, a human approves them, and PayPal Sandbox executes the supported test actions. Built for the PayPal AI Hackathon.
 
-NovaPay is for testing and evaluation. It does not move real money and does not support production payments or fundraising.
+NovaPay is for testing and evaluation. It does not move real money or support production payments.
 
 ## What is real and what is simulated
 
@@ -15,7 +15,6 @@ NovaPay is for testing and evaluation. It does not move real money and does not 
 
 **Simulated:**
 - Invoice sending. No PayPal invoice is created and no recipient is notified.
-- Maintenance payouts. PayPal Payouts Sandbox is unavailable, so approval only queues the workflow. No money is sent and no ledger entry is made. A simulated payment must never be presented as a completed payout.
 - Dashboard seed figures, illustrative transactions and starter proposals. They are labeled as illustrative in the UI.
 - No external help desk is connected. When SMTP is not configured, support requests are stored but no email is sent.
 
@@ -33,7 +32,11 @@ Support cases receive sequential organization-local numbers such as NP-0007. Reg
 
 ## Modules
 
-Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox, Ledger, Invoices, Reports, Documents, Community Funds and Maintenance. Fundraising, Maintenance and Transparency views read from `/api/funds/*`.
+Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox, Ledger, Invoices, Reports, Documents, Security and Help & support.
+
+## Optional modules (off by default)
+
+Community Funds and Maintenance are hidden and their API routes return a structured `MODULE_NOT_ENABLED` 404 by default. Existing contribution transactions and ledger entries remain available in the financial views. Set `ENABLE_COMMUNITY_FUNDS=true` and/or `ENABLE_MAINTENANCE=true` on the server to restore either module; restart the server after changing flags. No migration is needed.
 
 ## Run it
 
@@ -79,7 +82,7 @@ The queue shows source, action type, reason, transaction reference, amount, evid
 
 - Only a refund tied to an exact completed USD capture can execute against PayPal Sandbox. The backend registers the proposal ID, capture ID, amount and currency, then checks the link and the remaining refundable amount before sending. It never falls back to the latest capture.
 - A refund is marked Completed and added to Transactions only after PayPal returns `COMPLETED`.
-- Dispute evidence, payout holds, illustrative refunds, and unsupported or unlinked proposals are simulated or informational. Approving them does not call PayPal.
+- Dispute evidence, payout holds, and unsupported or unlinked proposals are simulated or informational. Approving them does not call PayPal.
 - Failed requests stay in the queue and can be retried or rejected. If PayPal returns an uncertain status, duplicate submission is blocked until the Sandbox state is checked.
 - Rejection never calls PayPal and can carry a note.
 - The newest-first audit trail records proposal ID, action type, decision, decision time, reviewer, reference, PayPal result ID and status, and any errors.
@@ -88,13 +91,14 @@ The queue shows source, action type, reason, transaction reference, amount, evid
 
 ## Three-minute demo
 
-Use the existing fixed test organization and records. This walkthrough creates no PayPal order.
+Use the fixed test organization and PayPal Sandbox buyer/seller accounts. The payment and refund in this walkthrough are Sandbox operations.
 
-1. **Sign in and confirm the payment.** Sign in with a fixed test account, open Transactions and find a completed PayPal Sandbox capture.
+1. **Make a Sandbox payment.** Sign in with a fixed test account, create an order in PayPal Sandbox, approve it as the Sandbox buyer, and capture it in NovaPay.
 2. **Show the books.** Open Ledger and confirm the capture is posted and the USD trial balance balances. Open Approvals and show the pending count.
 3. **Show both AI routes.** Ask `What is 7 + 5?` and point out the `code` route. Then ask `Is the latest PayPal capture consistent with its ledger record? Cite the records used.` and show the `llm` route and its citation chips.
-4. **Follow the fund.** Open Fundraising and review the campaign summary. Open Maintenance and show the closed request, the accepted evidence and the `SIMULATED` payment status. Open Transparency and point out the explicit gaps, including `no payment reference` and `simulated, no ledger entry`. Owner and admin users can download the audit CSV.
-5. **Close with the boundary.** Captures and refunds are PayPal Sandbox operations with signed webhook verification. Maintenance payouts and invoice sending are simulated. No production funds move.
+4. **Diagnose a failure.** Open PayPal Sandbox and show the cause category, safe retry guidance, and next step for a failed request.
+5. **Review a refund proposal.** Ask NovaPay AI to explain a completed capture and propose a refund, then send it to Approvals. Show the human review and step-up check.
+6. **Review risk and support.** Open Settings → Security to show sign-in risk and device history, then create or review a support ticket.
 
 For the sandbox-first flow: create and capture an order, ask the assistant about the activity, send its proposal to Approvals and approve the refund. The refund executes in Sandbox, a transaction row appears and the audit trail records it.
 
