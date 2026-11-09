@@ -19,6 +19,7 @@ export function inspectSuspiciousMessage(text) {
 }
 
 const sessionSchema = z.object({ deviceId: z.string().uuid() }).strict();
+const otpProofSchema = z.object({ deviceId:z.string().uuid(), accessToken:z.string().min(1).max(8192) }).strict();
 const stepUpSchema = z.discriminatedUnion('method',[
   z.object({method:z.literal('password'),password:z.string().min(1).max(256),deviceId:z.string().uuid()}).strict(),
   z.object({method:z.literal('email_otp'),code:z.string().regex(/^\d{6,8}$/),deviceId:z.string().uuid()}).strict(),
@@ -97,15 +98,22 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
       return res.json({granted:true,expiresAt:expiresAt.toISOString()});
     }catch(error){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'verification_unavailable'}}).catch(()=>{});return next(error)}
   });
-  router.post('/security/step-up/otp',async(req,res,next)=>{
+  router.post('/security/step-up/otp',(_req,res)=>res.status(400).json(structuredErrorBody('STEP_UP_CLIENT_REQUIRED','Use the secure email-code prompt to request a code.')));
+  router.post('/security/step-up/otp/verify',async(req,res,next)=>{
+    const parsed=otpProofSchema.safeParse(req.body);
+    if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Email verification proof is invalid.'));
     try{
-      const email=req.user.email;
-      if(!email){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'email_unavailable'}});return res.status(400).json(structuredErrorBody('STEP_UP_EMAIL_UNAVAILABLE','A verified email address is not available.'))}
-      const result=await identity?.sendStepUpOtp?.(email);
-      if(!result){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'email_code_unavailable'}});return res.status(503).json(structuredErrorBody('STEP_UP_OTP_UNAVAILABLE','An email code could not be sent. Try again later.'))}
-      await auditApiAction(identity,req,{action:'security.step_up_otp_sent',entity:'user',entityId:req.user.id});
-      return res.json({sent:true,message:'A re-authentication code was sent to your account email.'});
-    }catch(error){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'email_code_unavailable'}}).catch(()=>{});return next(error)}
+      const device=await repos.security.getDevice(req.orgId,req.user.id,parsed.data.deviceId);
+      if(!device)return res.status(403).json(structuredErrorBody('DEVICE_SESSION_REQUIRED','This device session is not registered. Sign in again and retry.'));
+      const proof=await identity?.verifyStepUpToken?.(parsed.data.accessToken);
+      const recent=proof&&proof.issuedAt>0&&Math.floor(Date.now()/1000)-proof.issuedAt<=120&&proof.issuedAt<=Math.floor(Date.now()/1000)+10;
+      const emailOtp=proof?.authMethods?.some((method)=>method?.method==='otp')&&proof?.provider==='email';
+      if(!proof||proof.userId!==req.user.id||!recent||!emailOtp)return res.status(403).json(structuredErrorBody('STEP_UP_INVALID',!proof||proof.userId!==req.user.id?'The code was wrong or expired.':'Email verification must be completed within two minutes.'));
+      const now=new Date(),expiresAt=new Date(now.getTime()+Number(config.STEP_UP_TTL_MINUTES||10)*60000);
+      const grant=await repos.security.grantStepUp({org_id:req.orgId,user_id:req.user.id,device_id:parsed.data.deviceId,granted_at:now.toISOString(),expires_at:expiresAt.toISOString()});
+      await auditApiAction(identity,req,{action:'security.step_up_granted',entity:'step_up_grant',entityId:grant?.id||null,metadata:{method:'email_otp',expiresAt:expiresAt.toISOString()}});
+      return res.json({granted:true,expiresAt:expiresAt.toISOString()});
+    }catch(error){return next(error)}
   });
   router.post('/security/check-message', (req,res) => {
     const parsed = schema.safeParse(req.body);

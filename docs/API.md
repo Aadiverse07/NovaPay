@@ -207,3 +207,7 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 ### Step-up password verification
 
 `POST /api/security/step-up` with `{ "method":"password", "password":"…", "deviceId":"…" }` uses the authenticated user's normalized account email and a stateless Supabase Auth password grant with the anon key. Password text is passed unchanged. Errors use distinct codes for invalid password, unconfirmed email, rate limit and temporary provider outage. Step-up attempts have a separate per-user limit (5 failures per 10 minutes); they do not modify login lockout state. Use `node scripts/verify-step-up-live.js` with the `STEP_UP_TEST_*` environment values to check a configured test account.
+
+### Step-up email code
+
+The browser requests email OTP with a separate non-persisting Supabase Auth client, then verifies it with `verifyOtp({ email, token, type: 'email' })`. `POST /api/security/step-up/otp/verify` accepts only `{ deviceId, accessToken }`; the server verifies the access token against Supabase and grants only when its subject matches the signed-in user, its provider/method indicate email OTP, and its issue time is within the last 120 seconds. The legacy `/api/security/step-up/otp` server-send route returns `STEP_UP_CLIENT_REQUIRED`.

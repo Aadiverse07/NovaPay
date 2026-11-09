@@ -13,6 +13,8 @@
   var workspaceState = "idle";
   var workspaceRetryAt = 0;
   var securityStartedToken = "";
+  var publicConfig = null;
+  var stepUpClient = null;
 
   function notifyAuth() {
     document.dispatchEvent(new CustomEvent("novapay:auth", { detail: { mode: mode, signedIn: isAuthenticated(), workspaceRequired: workspaceState === "missing", workspaceState: workspaceState } }));
@@ -342,9 +344,21 @@
 
   async function sendStepUpOtp() {
     await api.ready;
-    if(mode!=="supabase"||!client||!session||!session.user.email)throw new Error("Email re-authentication is unavailable.");
-    var result=await client.auth.signInWithOtp({email:session.user.email,options:{shouldCreateUser:false}});
-    if(result.error)throw new Error("An email code could not be sent. Try again later.");
+    if(mode!=="supabase"||!client||!session||!session.user.email||!publicConfig)throw new Error("Email re-authentication is unavailable.");
+    if(!stepUpClient) stepUpClient=window.supabase.createClient(publicConfig.supabaseUrl,publicConfig.supabaseAnonKey,{auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false,flowType:"implicit"}});
+    var result=await stepUpClient.auth.signInWithOtp({email:String(session.user.email).trim().toLowerCase(),options:{shouldCreateUser:false}});
+    if(result.error){var e=new Error(result.error.status===429?"Too many code requests. Wait before trying again.":/smtp|email.*disabled|not configured/i.test(result.error.message||"")?"Email delivery is not configured. Contact support.":"An email code could not be sent. Try again later.");e.code=result.error.code||result.error.name;e.status=result.error.status;throw e;}
+  }
+
+  async function verifyStepUpOtp(code,deviceId) {
+    await api.ready;
+    if(!stepUpClient||!session||!session.user.email)throw new Error("Request an email code first.");
+    var result=await stepUpClient.auth.verifyOtp({email:String(session.user.email).trim().toLowerCase(),token:normalizeOtp(code),type:"email"});
+    if(result.error){var e=new Error(result.error.status===429?"Too many code attempts. Wait a minute.":"That code is wrong or expired.");e.code=result.error.code||result.error.name;e.status=result.error.status;throw e;}
+    var temporary=result.data&&result.data.session;
+    if(!temporary||!temporary.access_token)throw new Error("The verification code did not create a valid proof.");
+    try{return await window.NovaPayApi.request("/api/security/step-up/otp/verify",{method:"POST",body:{deviceId:deviceId,accessToken:temporary.access_token}});}
+    finally{try{await stepUpClient.auth.signOut({scope:"local"});}catch(_){} stepUpClient=null;}
   }
 
   async function resetPassword(email) {
@@ -417,6 +431,7 @@
     currentOrgId: currentOrgId,
     securityDeviceId: persistentDeviceId,
     sendStepUpOtp: sendStepUpOtp,
+    verifyStepUpOtp: verifyStepUpOtp,
     ensureWorkspace: ensureWorkspace,
     loginErrorCategory: loginErrorCategory,
     loginErrorMessage: loginErrorMessage,
@@ -443,6 +458,7 @@
       } finally { if (timeout) clearTimeout(timeout); }
       if (!response.ok) throw new Error("The NovaPay API is not reachable.");
       config = await response.json();
+      publicConfig = config;
     } catch (error) {
       mode = "demo";
       demoReason = error && error.message ? error.message : "Backend authentication is unavailable.";

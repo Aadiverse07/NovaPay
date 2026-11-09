@@ -91,3 +91,8 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 - Root cause reproduced with mock provider responses: Supabase grant failures were collapsed to `null`, leading the route to call all cases an incorrect password. The grant request itself uses the correct endpoint and anon key; it sends the authenticated account's lower-cased/trimmed email and preserves the password exactly.
 - Fixed distinct provider outcomes and separate five-per-ten-minute step-up failure limiting. `node scripts/verify-step-up-live.js` is available for a dedicated test user; not run without supplied env credentials.
 - Next follow-up items from the user report: isolated email-code flow, password change handling, modal finish, and email-based support ticket redesign.
+
+## 2026-11-09 isolated email-code follow-up
+
+- Replaced server-side OTP send/verify with a dedicated non-persisting Supabase browser client and a signed proof checked by the backend. Proof must match the signed-in subject, use email OTP, and be at most 120 seconds old.
+- Modal shows masked email and resend cooldown. Automated route checks pass; actual delivery requires the Supabase Magic Link and Reauthentication templates to include `{{ .Token }}` and was not tested against a live inbox.

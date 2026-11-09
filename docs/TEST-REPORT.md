@@ -1584,3 +1584,8 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Reproduced root cause with mock Supabase password grant outcomes: provider errors had been collapsed to null and mislabeled as incorrect password. Request endpoint/key/content-type/body field names were correct in code inspection; email was sourced from the verified user and normalized; password was not transformed.
 - Added regression checks for success/grant creation, wrong password, provider rate limiting, unconfirmed email, outage, anon-key request headers, and password preservation.
 - Live verification: NOT RUN; requires a dedicated test account and the documented environment values.
+
+## Step-up email-code follow-up (2026-11-09)
+
+- Verified route acceptance requires a matching user subject, email provider, OTP auth method, and token issued no more than 120 seconds ago; old and other-user proofs are rejected.
+- UI now uses an isolated non-persisting Supabase client, masks the account email, and shows a 60-second resend cooldown. Automated tests do not send email. Supabase Dashboard Magic Link and Reauthentication templates still require `{{ .Token }}`; live delivery remains unverified.

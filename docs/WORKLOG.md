@@ -5847,3 +5847,9 @@ ABOUT TO stage only task files; no .env path is included.
 - Reproduced the failure using mocked Supabase password-grant responses. The endpoint, anon key, JSON content type, payload field names, authenticated email source, and unchanged password value were correct. Root cause: the service returned `null` for every non-2xx response, so the route mislabeled provider rate limits, unconfirmed email and outages as an incorrect password.
 - Preserved safe provider status/error codes, added distinct messages and a separate step-up attempt limiter, and tested successful grant creation with the authenticated device.
 - Added `scripts/verify-step-up-live.js`; no live account credentials were available or used in this run.
+
+## 2026-11-09 — Isolated step-up email code
+
+- Reproduced the empty-send behavior: the route sent OTP from the server via `/auth/v1/otp`, and its helper discarded the Supabase response; code verification also happened server-side without a short-lived signed proof.
+- Switched to a separate browser Supabase client with persistence/refresh disabled. It sends and verifies email OTP without replacing the primary session, then posts the temporary token to NovaPay. The server checks the verified subject, email provider, OTP auth method, and token issue time (120 seconds).
+- Added masked email display and 60-second resend cooldown. Live delivery was not tested; see the dashboard template configuration in the Runbook.

@@ -81,3 +81,11 @@ Email-code step-up and password re-authentication use Supabase Auth with the ser
 ### Verify refund step-up password
 
 Use a dedicated test user and set `STEP_UP_TEST_API_URL`, `STEP_UP_TEST_ACCESS_TOKEN`, `STEP_UP_TEST_ORG_ID`, `STEP_UP_TEST_DEVICE_ID`, and `STEP_UP_TEST_PASSWORD` in the process environment, then run `node scripts/verify-step-up-live.js`. The script does not print credentials. A device must already be registered by a signed-in session. Do not use production credentials.
+
+### Step-up email-code templates
+
+In Supabase Dashboard → Authentication → Email Templates, edit **Magic Link** and **Reauthentication** to include the OTP token variable. Use this short template:
+
+> Your NovaPay verification code is {{ .Token }}. It expires in a few minutes. NovaPay will never ask you for your password.
+
+The step-up prompt uses a temporary, non-persisting Auth client and requires a code-based `email` verification token issued within two minutes. Supabase Auth rate limits and configured SMTP still apply. If email delivery is disabled or SMTP is unavailable, the prompt reports that and password verification remains available.

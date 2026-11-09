@@ -26,3 +26,11 @@ test('step-up attempt limiter is separate and returns a service message after pr
  const {app}=await setup({async verifyReauthPassword(){return{userId:null,status:503,errorCode:'server_error'}}});
  await withServer(app,async base=>{const response=await req(base,{method:'password',password:'Secret123',deviceId:device});const body=await response.json();assert.equal(response.status,503);assert.equal(body.error.code,'STEP_UP_UNAVAILABLE')});
 });
+
+test('email OTP proof must be recent, email-provider issued and match the signed-in user',async()=>{
+ const {app,repos}=await setup({async verifyStepUpToken(token){return token==='good'?{userId:user,issuedAt:Math.floor(Date.now()/1000),provider:'email',authMethods:[{method:'otp'}]}:token==='old'?{userId:user,issuedAt:Math.floor(Date.now()/1000)-121,provider:'email',authMethods:[{method:'otp'}]}:{userId:'other',issuedAt:Math.floor(Date.now()/1000),provider:'email',authMethods:[{method:'otp'}]}}});
+ await withServer(app,async base=>{
+  for(const [accessToken,status] of [['old',403],['other',403],['good',200]]){const response=await fetch(base+'/api/security/step-up/otp/verify',{method:'POST',headers:{authorization:'Bearer valid-token','x-org-id':org,'content-type':'application/json'},body:JSON.stringify({deviceId:device,accessToken})});assert.equal(response.status,status)}
+ });
+ assert.equal(await repos.security.hasStepUpGrant(org,user,device),true);
+});

@@ -139,6 +139,7 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       return Boolean(response.ok);
     } catch { return false; }
   }
+  function jwtClaims(token) { try { const part=String(token||'').split('.')[1]; if(!part)return null; return JSON.parse(Buffer.from(part.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString('utf8')); } catch { return null; } }
   return {
     database,
     storage,
@@ -161,6 +162,7 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (error) throw new Error('Membership lookup failed.');
       return Array.isArray(data) ? data[0] || null : null;
     },
+    async verifyStepUpToken(token) { const verified=await this.verifyToken(token); if(!verified)return null; const claims=jwtClaims(token); if(!claims)return null; return {userId:verified.id,issuedAt:Number(claims.iat||0),authMethods:Array.isArray(claims.amr)?claims.amr:[],provider:claims.app_metadata?.provider||null}; },
     async verifyReauthPassword(email,password) { if(typeof email!=='string'||typeof password!=='string'||!password)return {userId:null,status:400,errorCode:'invalid_request'};return authVerify('/auth/v1/token?grant_type=password',{email:email.trim().toLowerCase(),password}); },
     async verifyStepUpEmailOtp(email,token) { if(typeof email!=='string'||typeof token!=='string'||!/^\d{6,8}$/.test(token))return null;return authVerify('/auth/v1/verify',{email,token,type:'email'}); },
     async sendStepUpOtp(email) { if(typeof email!=='string'||!email)return false;return authPost('/auth/v1/otp',{email,create_user:false}); },
