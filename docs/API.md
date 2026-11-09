@@ -213,3 +213,5 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 The browser requests email OTP with a separate non-persisting Supabase Auth client, then verifies it with `verifyOtp({ email, token, type: 'email' })`. `POST /api/security/step-up/otp/verify` accepts only `{ deviceId, accessToken }`; the server verifies the access token against Supabase and grants only when its subject matches the signed-in user, its provider/method indicate email OTP, and its issue time is within the last 120 seconds. The legacy `/api/security/step-up/otp` server-send route returns `STEP_UP_CLIENT_REQUIRED`.
 
 `POST /api/security/credential-changed` accepts `{ "deviceId":"…" }` after Supabase reports a successful password update. It audits the event and revokes other device-bound step-up grants; the current authenticated session and device grant remain valid.
+
+The step-up prompt presents password and isolated email-code methods in an accessible native dialog. Cancelling closes the prompt and rejects the gated operation; the approval confirmation returns to its ready state.

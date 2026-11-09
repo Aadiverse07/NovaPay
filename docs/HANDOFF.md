@@ -101,3 +101,7 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 
 - Settings no longer erases Supabase password-update errors. It handles secure-change nonce flow, maps weak/same/invalid-session/rate-limit outcomes, and records a successful credential change through the backend, revoking other device grants while preserving the current session.
 - Test fixtures cover error mapping and grant revocation. A real password change/code delivery remains a manual check.
+
+## 2026-11-09 step-up modal follow-up
+
+- Modal now uses NovaPay theme tokens and glass surface styling with a backdrop, responsive width, keyboard/focus behavior, password visibility control, method switch and inline states. Automated source checks pass; visual browser confirmation remains a manual check.

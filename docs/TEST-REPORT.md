@@ -1595,3 +1595,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Added mapping tests for `reauthentication_needed`, invalid nonce, `same_password`, `weak_password` details, absent/expired session, and rate limiting.
 - Added route/repository coverage showing a credential-change event revokes other step-up device grants while preserving the current one and writing an audit entry.
 - Live Supabase password update and nonce email flow were not exercised.
+
+## Step-up modal follow-up (2026-11-09)
+
+- Source-level checks cover accessible dialog roles/labels, method switching, responsive theme styling, focus restoration and cancel cleanup. Browser visual testing is not available in this run.

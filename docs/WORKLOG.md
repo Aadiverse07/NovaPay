@@ -5859,3 +5859,8 @@ ABOUT TO stage only task files; no .env path is included.
 - Reproduced the generic error path: Settings discarded the Supabase error and always showed one message. Added a live-session check, distinct mappings for reauthentication, same/weak password, missing/expired session, rate limit, and invalid nonce.
 - Secure-password-change errors trigger Supabase `reauthenticate()` and expose a code field; `updateUser` retries with the submitted nonce. On success the backend records an audit event and revokes the user's other device grants while retaining the current one.
 - No live account password was changed during verification.
+
+## 2026-11-09 — Step-up confirmation modal
+
+- Replaced the bare dialog with a theme-token glass modal, responsive width, dimmed backdrop, labeled password/code inputs, show/hide control, password/email method switch, resend state, inline status, and cancel behavior.
+- The native dialog provides focus containment and Escape handling; the opener receives focus after close. Approval's existing finalizer resets the underlying confirmation button after cancel or failure.
