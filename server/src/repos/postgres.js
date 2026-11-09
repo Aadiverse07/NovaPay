@@ -344,6 +344,9 @@ export function createPostgresRepositories(database) {
     async loginCount(orgId,userId) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,limit:'1'}));return rows?.length?1:0; },
     async hasNetwork(orgId,userId,ipHash) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,ip_hash:`eq.${ipHash}`,limit:'1'}));return Boolean(rows?.length); },
     async failedLoginCount(orgId,userId,minutes=15) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,success:'eq.false',occurred_at:`gte.${new Date(Date.now()-minutes*60000).toISOString()}`,limit:'100'}));return rows?.length||0; },
+    async grantStepUp(input) { const rows=await database.upsert('step_up_grants',input,'org_id,user_id,device_id');return rows?.[0]||null; },
+    async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const rows=await database.select('step_up_grants',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`,expires_at:`gt.${now.toISOString()}`,limit:'1'}));return Boolean(rows?.length); },
+    async deleteStepUpGrant(orgId,userId,deviceId) { return database.delete('step_up_grants',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`})); },
   };
 
   const supportTickets = {

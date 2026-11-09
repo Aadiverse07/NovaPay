@@ -106,7 +106,7 @@ export function paypalRoutes({ config, paypal, repos, identity, fx }) {
       try { refundMinor = moneyToMinor(body.amount); } catch { return res.status(400).json({ error: 'Refund amount must be a positive USD amount with at most two decimal places.' }); }
       if (!/^\d+(?:\.\d{1,2})?$/.test(String(body.amount || '')) || refundMinor <= 0) return res.status(400).json({ error: 'Refund amount must be a positive USD amount with at most two decimal places.' });
       if (approval.amount !== (refundMinor / 100).toFixed(2)) return res.status(403).json({ error: 'This refund does not match a server-registered approval, capture, amount, and currency.' });
-      const result = await decideApproval({ repos, paypal, identity, req, approvalId, decision: 'approve', note: String(body.note || '').slice(0, 500) });
+      const result = await decideApproval({ config, repos, paypal, identity, req, approvalId, decision: 'approve', note: String(body.note || '').slice(0, 500) });
       return res.status(result.status).json(result.body);
     } catch (error) { return next(error); }
   });

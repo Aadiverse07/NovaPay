@@ -114,3 +114,7 @@ For the sandbox-first flow: create and capture an order, ask the assistant about
 Phase-by-phase notes live in `CHANGELOG.md`, with test results in `PHASE-8-TEST-REPORT.md` and `docs/TEST-REPORT.md`.
 
 [Needs input: the static demo login (`user@novapay.app` / `novapay123`) still appears in `src/landing.js` and `src/dashboard.js`. Confirm whether it is still a supported path next to Supabase Auth before documenting it here.]
+
+## Security hardening
+
+Login and device risk are recorded with salted hashes for network range and browser signature; raw IP addresses are not stored. Sensitive refund approvals and invoice sends can require password or email-code re-authentication, with short-lived grants tied to a registered device. MFA enrollment and TOTP challenges are not part of this release. The browser security policy runs in report-only mode while existing inline UI behavior is monitored. Suspicious-message checks use deterministic heuristics and are not a guarantee. Supabase Auth still provides real account sign-in and verification; risk scoring and policy checks are NovaPay application behavior.

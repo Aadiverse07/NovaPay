@@ -327,6 +327,13 @@
     if (result.error) throw result.error;
   }
 
+  async function sendStepUpOtp() {
+    await api.ready;
+    if(mode!=="supabase"||!client||!session||!session.user.email)throw new Error("Email re-authentication is unavailable.");
+    var result=await client.auth.signInWithOtp({email:session.user.email,options:{shouldCreateUser:false}});
+    if(result.error)throw new Error("An email code could not be sent. Try again later.");
+  }
+
   async function resetPassword(email) {
     await api.ready;
     if (mode !== "supabase") throw new Error("Password recovery is unavailable in demo mode.");
@@ -395,6 +402,8 @@
     isAuthenticated: isAuthenticated,
     currentSession: currentSession,
     currentOrgId: currentOrgId,
+    securityDeviceId: persistentDeviceId,
+    sendStepUpOtp: sendStepUpOtp,
     ensureWorkspace: ensureWorkspace,
     loginErrorCategory: loginErrorCategory,
     loginErrorMessage: loginErrorMessage,

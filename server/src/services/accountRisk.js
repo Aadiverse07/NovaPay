@@ -98,13 +98,3 @@ export async function computeAccountRisk({ repos, orgId, userId, config = {}, us
   const risk=scoreAccountRisk({newDevice,newIpRange,failedLogins:Number(failedLogins)>0,recentCredentialChange,sensitiveActionAfterNewDevice,requestBurst},config);
   return {...risk,signals:{newDevice,newIpRange,failedLogins:Number(failedLogins)>0,recentCredentialChange,sensitiveActionAfterNewDevice,requestBurst},devicesKnown:devices?.length||0,sessionDeviceId:latest?.device_id||null};
 }
-
-export function recentStepUp(auth = {}, now = Date.now(), maxAgeSeconds = 300) {
-  const authTime = Number(auth.authTime || auth.auth_time || 0);
-  const factors = Array.isArray(auth.amr) ? auth.amr.map((item) => typeof item === 'string' ? item : item?.method) : [];
-  return Number.isFinite(authTime) && authTime > 0 && now / 1000 - authTime <= maxAgeSeconds && (auth.aal === 'aal2' || factors.includes('totp') || factors.includes('password'));
-}
-
-export function requiresSensitiveStepUp({ riskLevel = 'low', newDevice = false, hasRecentStepUp = false } = {}) {
-  return !hasRecentStepUp && (riskLevel === 'medium' || riskLevel === 'high' || newDevice);
-}

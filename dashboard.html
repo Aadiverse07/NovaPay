@@ -621,6 +621,7 @@
 <script src="src/invoices-live.js"></script>
 <script src="src/documents.js"></script>
 <script src="src/notifications-live.js"></script>
+<dialog id="security-step-up-modal" aria-labelledby="security-step-up-title"><form id="security-step-up-form"><h2 id="security-step-up-title">Confirm it's you</h2><p id="security-step-up-help">Re-enter your password to continue this sensitive action.</p><label id="security-step-up-password-label">Password<input id="security-step-up-password" type="password" autocomplete="current-password" maxlength="256"></label><label id="security-step-up-code-label" hidden>Email code<input id="security-step-up-code" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label><p id="security-step-up-status" role="status" aria-live="polite"></p><div class="settings-actions"><button id="security-step-up-otp" class="btn btn--ghost" type="button">Use email code</button><button id="security-step-up-cancel" class="btn btn--ghost" type="button">Cancel</button><button class="btn btn--primary" type="submit">Verify and continue</button></div></form></dialog>
 <script src="src/transaction-effects.js"></script>
 <script src="src/transaction-premium.js?v=6"></script>
 <script src="src/tx-icons.js"></script>

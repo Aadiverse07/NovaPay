@@ -1,6 +1,7 @@
 import { paypalRequestId } from './paypal.js';
 import { auditApiAction } from './audit.js';
 import { classifyFailure } from './failureClassifier.js';
+import { checkSensitiveAction } from './securityStepUp.js';
 
 const problem = (status, code, message, retryBlocked = false, extra = {}) => ({ status, body: { error: { code, message }, ...extra, ...(retryBlocked ? { retryBlocked: true } : {}) } });
 
@@ -11,11 +12,12 @@ function legacyRefundShape(approval) {
   return { refundId: result.id, status: result.status, captureId: approval.captureId, amount: approval.amount, currency: approval.currency };
 }
 
-export async function decideApproval({ repos, paypal, identity, req, approvalId, decision, note = '' }) {
+export async function decideApproval({ repos, paypal, identity, req, config = {}, approvalId, decision, note = '' }) {
   const current = await repos.approvals.get(approvalId, req.orgId);
   if (!current) return problem(404, 'APPROVAL_NOT_FOUND', 'The approval was not found in this organization.');
   if (current.proposalType !== 'refund') return problem(400, 'APPROVAL_TYPE_UNSUPPORTED', 'Only linked refund approvals can be processed in this phase.');
   if (decision === 'approve' && current.status?.toLowerCase() === 'completed') return { status: 200, body: legacyRefundShape(current), completed: true };
+  if(decision==='approve') { const stepUp=await checkSensitiveAction({req,repos,identity,config,action:'refund'});if(stepUp.body)return{status:stepUp.status,body:stepUp.body}; }
 
   if (!identity?.database) await auditApiAction(identity, req, { action: `approval.${decision}`, entity: 'approval', entityId: approvalId, metadata: { decision, note } });
   let result;

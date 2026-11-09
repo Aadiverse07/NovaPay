@@ -180,3 +180,9 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 - `GET /api/support/tickets/:id` returns the ticket thread, excluding internal notes from the creator.
 - `POST /api/support/tickets/:id/messages` adds a reply; only support, owner and admin can set `internalNote`.
 - `PATCH /api/support/tickets/:id` updates status, priority or assignee for support, owner and admin.
+
+## Sensitive-action re-authentication
+
+- `POST /api/security/step-up/otp` sends a re-authentication email code to the signed-in account.
+- `POST /api/security/step-up` accepts either `{ "method": "password", "password": "…", "deviceId": "<registered-device-uuid>" }` or `{ "method": "email_otp", "code": "<code>", "deviceId": "<registered-device-uuid>" }`. Successful verification creates a device-bound grant for `STEP_UP_TTL_MINUTES` (default 10).
+- Refund approvals and invoice sends can return HTTP 403 with `error.code: "STEP_UP_REQUIRED"`; the client prompts and retries that action once after verification. Risk weights, thresholds and the optional always-step-up refund policy are configured by `SECURITY_RISK_*` and `STEP_UP_ALWAYS_FOR_REFUNDS`.

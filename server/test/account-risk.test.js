@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeAccountRisk, createRequestBurstTracker, recentStepUp, requiresSensitiveStepUp, scoreAccountRisk } from '../src/services/accountRisk.js';
+import { computeAccountRisk, createRequestBurstTracker, scoreAccountRisk } from '../src/services/accountRisk.js';
+import { checkSensitiveAction } from '../src/services/securityStepUp.js';
 import { LoginThrottle } from '../src/services/loginThrottle.js';
 import { inspectSuspiciousMessage } from '../src/routes/security.js';
 
@@ -35,12 +36,19 @@ test('suspicious message checks are deterministic and state their limits', () =>
   assert.match(result.notice, /not a guarantee/);
 });
 
-test('step-up accepts only a recent verified authentication context', () => {
-  const now = 1_800_000_000_000;
-  assert.equal(recentStepUp({ aal: 'aal2', auth_time: now / 1000 - 60 }, now), true);
-  assert.equal(recentStepUp({ aal: 'aal1', auth_time: now / 1000 - 900 }, now), false);
-  assert.equal(requiresSensitiveStepUp({ riskLevel: 'high', newDevice: true, hasRecentStepUp: false }), true);
-  assert.equal(requiresSensitiveStepUp({ riskLevel: 'high', hasRecentStepUp: true }), false);
+test('sensitive refund requires step-up at medium risk and accepts an active device grant', async () => {
+  const req={orgId:'org-a',user:{id:'user-a'},securityRequestBurst:false,id:'req-a'};
+  const repos={security:{
+    async listLogins(){return[{occurred_at:'2026-11-09T00:09:00Z',device_id:'device-a',risk_reasons:['A device not seen before signed in.']}];},
+    async failedLoginCount(){return 0;},async listDevices(){return[];},async getDevice(){return{device_id:'device-a',trusted:false};},
+    async hasStepUpGrant(){return false;},
+  }};
+  const config={SECURITY_RISK_WEIGHT_NEW_DEVICE:35,SECURITY_RISK_MEDIUM_THRESHOLD:35,SECURITY_RISK_HIGH_THRESHOLD:70};
+  const blocked=await checkSensitiveAction({req,repos,identity:null,config,action:'refund',now:new Date('2026-11-09T00:10:00Z')});
+  assert.equal(blocked.body.error.code,'STEP_UP_REQUIRED');
+  repos.security.hasStepUpGrant=async()=>true;
+  const allowed=await checkSensitiveAction({req,repos,identity:null,config,action:'refund',now:new Date('2026-11-09T00:10:00Z')});
+  assert.equal(allowed.valid,true);
 });
 
 test('login lockout backs off by account and IP with a generic response', () => {

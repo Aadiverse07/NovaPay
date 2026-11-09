@@ -773,3 +773,9 @@
 
 - Choice: add a `support` organization membership role, while retaining owner/admin access to the queue.
 - Reason: existing RBAC already operates on organization roles, so this is the smallest explicit way to designate staff without widening ordinary member access. Ticket reads remain creator-scoped; internal notes have a separate staff-only policy.
+
+# Sensitive-action step-up (2026-11-09)
+
+- Choice: require a recent server-verified password or email one-time-code check when risk is medium/high or a refund policy requires it; store a short-lived grant bound to the current registered device. Invoice sends use the same risk gate.
+- Reason: the browser cannot grant itself authorization; only Supabase Auth verification on the server creates a grant, and the grant expires and is removed with its device.
+- Scope: email code is re-authentication, not MFA enrollment. TOTP/MFA remains outside this follow-up scope.

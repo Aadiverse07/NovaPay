@@ -119,7 +119,7 @@ export class EventsRepo {
 
 export function createRepositories() {
   const failureRows = [];
-  const loginEventRows = [], deviceRows = new Map();
+  const loginEventRows = [], deviceRows = new Map(), stepUpGrantRows = new Map();
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
@@ -361,6 +361,9 @@ export function createRepositories() {
     async loginCount(orgId,userId) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).length; },
     async hasNetwork(orgId,userId,ipHash) { return loginEventRows.some((row)=>row.org_id===orgId&&row.user_id===userId&&row.ip_hash===ipHash); },
     async failedLoginCount(orgId,userId,minutes=15) { const since=Date.now()-minutes*60000;return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
+    async grantStepUp(input) { const row={id:randomUUID(),granted_at:new Date().toISOString(),...input};stepUpGrantRows.set(`${input.org_id}:${input.user_id}:${input.device_id}`,row);return row; },
+    async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const row=stepUpGrantRows.get(`${orgId}:${userId}:${deviceId}`);return Boolean(row&&Date.parse(row.expires_at)>now.getTime()); },
+    async deleteStepUpGrant(orgId,userId,deviceId) { return stepUpGrantRows.delete(`${orgId}:${userId}:${deviceId}`); },
   };
   const ticketRows = new Map(), ticketMessages = [];
   repos.supportTickets = {

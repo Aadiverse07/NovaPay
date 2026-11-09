@@ -118,7 +118,27 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (result.error) throw Object.assign(new Error('Financial database write failed.'), { statusCode: 503, code: 'DATABASE_UNAVAILABLE', databaseCode: result.data?.code || null });
       return result.data;
     },
+    async delete(table, query) {
+      if (!/^[a-z][a-z0-9_]*$/.test(table)) throw new Error('Invalid database table.');
+      const result=await request(`/rest/v1/${table}?${query}`,{method:'DELETE',prefer:'return=representation'});
+      if(result.error)throw Object.assign(new Error('Financial database write failed.'),{statusCode:503,code:'DATABASE_UNAVAILABLE',databaseCode:result.data?.code||null});
+      return result.data;
+    },
   };
+  async function authVerify(path,payload) {
+    let response;
+    try { response=await fetchImpl(`${apiUrl}${path}`,{method:'POST',headers:{apikey:config.SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)}); }
+    catch { return null; }
+    const data=await readResponse(response);
+    return response.ok&&data?.user?.id?data.user.id:null;
+  }
+  async function authPost(path,payload) {
+    try {
+      const response=await fetchImpl(`${apiUrl}${path}`,{method:'POST',headers:{apikey:config.SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(10000)});
+      await readResponse(response);
+      return Boolean(response.ok);
+    } catch { return false; }
+  }
   return {
     database,
     storage,
@@ -141,6 +161,9 @@ export function createSupabaseServices(config, fetchImpl = fetch) {
       if (error) throw new Error('Membership lookup failed.');
       return Array.isArray(data) ? data[0] || null : null;
     },
+    async verifyReauthPassword(email,password) { if(typeof email!=='string'||typeof password!=='string'||!password)return null;return authVerify('/auth/v1/token?grant_type=password',{email,password}); },
+    async verifyStepUpEmailOtp(email,token) { if(typeof email!=='string'||typeof token!=='string'||!/^\d{6,8}$/.test(token))return null;return authVerify('/auth/v1/verify',{email,token,type:'email'}); },
+    async sendStepUpOtp(email) { if(typeof email!=='string'||!email)return false;return authPost('/auth/v1/otp',{email,create_user:false}); },
     async onboard(userId, name, requestId) {
       const { response, data, error } = await request('/rest/v1/rpc/create_organization_for_user', {
         method: 'POST', body: { p_user_id: userId, p_name: name, p_request_id: requestId },
