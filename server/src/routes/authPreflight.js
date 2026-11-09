@@ -62,7 +62,10 @@ export function authPreflightRoutes({ now = Date.now, buckets = new Map(), repos
       }
       const keys=loginAttemptKeys(parsed.data.email,req.ip||req.socket.remoteAddress,config.SECURITY_HASH_SALT||'');
       const outcome=await repos.security.recordLoginAttempt({orgId:null,userId,...keys,success:parsed.data.success,config});
-      if(outcome.locked)await identity?.audit?.({orgId:null,actorId:null,action:'security.login_locked',entity:'login_attempt',entityId:null,metadata:{failureCount:outcome.failureCount,lockCount:outcome.lockCount},requestId:req.id}).catch(()=>{});
+      if(outcome.locked){
+        let prior=null;try{prior=await repos.security.loginIdentityForHash?.(keys.accountHash)}catch{}
+        if(prior?.orgId&&prior?.userId){try{await identity?.audit?.({orgId:prior.orgId,actorId:prior.userId,action:'security.login_locked',entity:'login_attempt',entityId:null,metadata:{failureCount:outcome.failureCount,lockCount:outcome.lockCount},requestId:req.id})}catch{}}
+      }
       return res.json({recorded:true,locked:Boolean(outcome.locked),message:outcome.locked?'Sign-in could not be completed. Wait a little and try again.':undefined});
     }catch(error){return next(error)}
   });

@@ -23,11 +23,11 @@ PayPal Sandbox API errors are classified from documented provider issue codes an
 
 ## Security hardening
 
-The browser security policy currently runs in report-only mode so violations can be observed while the existing inline UI remains functional. Suspicious-message checks use deterministic heuristics for urgency, non-PayPal links and password/OTP requests; they are not a guarantee. Sign-in and MFA continue to use Supabase Auth.
+Login and device risk are recorded using salted hashes for network range and browser signature; raw IP addresses are not stored. Password or email-code re-authentication protects sensitive refund approvals and invoice sends. MFA enrollment and TOTP challenges are out of scope. The Security panel shows real recent sign-ins, known devices, explainable risk and lock status; owners/admins can unlock a member. The browser security policy runs in report-only mode, and suspicious-message checks use deterministic heuristics that are not a guarantee. Supabase Auth provides real account sign-in and verification; risk checks and lockout enforcement are NovaPay application behavior. Direct Supabase Auth attempts remain subject to Supabase's own rate limits.
 
 ## Support tickets
 
-Tickets and replies are stored in the organization database when Supabase is configured, with creator scoping and hidden internal notes. The support queue is available to members assigned the `support` role, plus owners and admins. Ticket delivery is in-app; no external help desk or email delivery is configured.
+Tickets and replies are stored in the organization database when Supabase is configured, with creator scoping and hidden internal notes. The support queue is available to members assigned the `support` role, plus owners and admins. Per-user in-app notifications route ticket replies/status changes to the other party and security alerts to the affected user; no external help desk or email delivery is configured. Grant the role with `node scripts/grant-support-role.js <org-uuid> <user-uuid>` from an administrator's environment.
 
 ## Modules
 

@@ -1,5 +1,5 @@
 alter table public.memberships drop constraint if exists memberships_role_check;
-alter table public.memberships add constraint memberships_role_check check (role in ('owner','admin','accountant','approver','viewer','support'));
+alter table public.memberships add constraint memberships_role_check check (role in ('owner','admin','accountant','approver','viewer','donor','resident','support'));
 
 create table public.support_tickets (
   id uuid primary key default gen_random_uuid(), org_id uuid not null references public.organizations(id) on delete cascade,

@@ -15,7 +15,7 @@ export function notificationRoutes({ repos, runAnomalyScan }) {
     const parsed = querySchema.safeParse(req.query);
     if (!parsed.success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR', 'Notification filters are invalid.'));
     try {
-      const notifications = await repos.notifications.list(req.orgId, parsed.data);
+      const notifications = await repos.notifications.list(req.orgId, req.user.id, parsed.data);
       return res.json({ notifications, page: { limit: parsed.data.limit, offset: parsed.data.offset } });
     } catch (error) { return next(error); }
   });
@@ -25,7 +25,7 @@ export function notificationRoutes({ repos, runAnomalyScan }) {
     const action = z.enum(['read', 'dismiss']).safeParse(req.params.action);
     if (!id.success || !action.success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR', 'Notification action is invalid.'));
     try {
-      const notification = await repos.notifications.setStatus(req.orgId, id.data, action.data === 'read' ? 'read' : 'dismissed');
+      const notification = await repos.notifications.setStatus(req.orgId, id.data, action.data === 'read' ? 'read' : 'dismissed', req.user.id);
       if (!notification) return res.status(404).json(structuredErrorBody('NOTIFICATION_NOT_FOUND', 'The notification was not found.'));
       return res.json({ notification });
     } catch (error) { return next(error); }

@@ -378,7 +378,8 @@ export function createRepositories() {
     async listOrgMembers() { return []; },
     async memberLock(orgId,userId) { const now=Date.now();return loginAttemptRows.filter(row=>row.user_id===userId&&row.locked_until&&Date.parse(row.locked_until)>now).sort((a,b)=>Date.parse(b.locked_until)-Date.parse(a.locked_until))[0]?.locked_until||null; },
     async clearAccountLock(accountHash) { const before=loginAttemptRows.length;for(let i=loginAttemptRows.length-1;i>=0;i--)if(loginAttemptRows[i].account_hash===accountHash&&!loginAttemptRows[i].success)loginAttemptRows.splice(i,1);return before-loginAttemptRows.length; },
-    async linkLoginAttempts(accountHash,userId,orgId) { for(const row of loginAttemptRows)if(row.account_hash===accountHash&&!row.success){row.user_id=userId;row.org_id=orgId}return true; },
+    async linkLoginAttempts(accountHash,userId,orgId) { for(const row of loginAttemptRows)if(row.account_hash===accountHash){row.user_id=userId;row.org_id=orgId}return true; },
+    async loginIdentityForHash(accountHash) { const row=loginAttemptRows.find(item=>item.account_hash===accountHash&&item.user_id&&item.org_id);return row?{userId:row.user_id,orgId:row.org_id}:null; },
   };
   const ticketRows = new Map(), ticketMessages = [];
   repos.supportTickets = {
@@ -388,6 +389,7 @@ export function createRepositories() {
     async list(orgId,userId,staff,{limit,offset,status,priority,category}) { return [...ticketRows.values()].filter(t=>t.org_id===orgId&&(staff||t.created_by===userId)&&(!status||t.status===status)&&(!priority||t.priority===priority)&&(!category||t.category===category)).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(offset,offset+limit); },
     async messages(orgId,ticketId,staff) { return ticketMessages.filter(m=>m.org_id===orgId&&m.ticket_id===ticketId&&(staff||!m.internal_note)); },
     async update(orgId,id,input) { const row=ticketRows.get(`${orgId}:${id}`);if(!row)return null;Object.assign(row,{...(input.status?{status:input.status}:{}),...(input.priority?{priority:input.priority}:{}),...(input.assigneeId!==undefined?{assignee_id:input.assigneeId}:{}),updated_at:new Date().toISOString(),...(input.status==='resolved'?{resolved_at:new Date().toISOString()}:{})});return row; },
+    async staffRecipients() { return []; },
   };
   repos.anomalies = new MemoryAnomaliesRepo(notifications);
   repos.ai = {

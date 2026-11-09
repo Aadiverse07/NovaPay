@@ -23,6 +23,7 @@ const stepUpSchema = z.discriminatedUnion('method',[
   z.object({method:z.literal('password'),password:z.string().min(1).max(256),deviceId:z.string().uuid()}).strict(),
   z.object({method:z.literal('email_otp'),code:z.string().regex(/^\d{6,8}$/),deviceId:z.string().uuid()}).strict(),
 ]);
+const visibleLogin = (row) => ({id:row.id,occurred_at:row.occurred_at,device_id:row.device_id,device_label:`Device …${String(row.device_id||'').slice(-6)}`,network_label:row.network_label||'Unknown network',success:Boolean(row.success),risk_score:Number(row.risk_score||0),risk_level:row.risk_level||'low',risk_reasons:Array.isArray(row.risk_reasons)?row.risk_reasons:[]});
 export function securityRoutes({ config = {}, identity, repos } = {}) {
   const router = Router();
   router.get('/security/overview',async(req,res,next)=>{
@@ -30,13 +31,13 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
       const [risk,devices,logins]=await Promise.all([computeAccountRisk({repos,orgId:req.orgId,userId:req.user.id,config,user:req.user,requestBurst:Boolean(req.securityRequestBurst?.burst)}),repos.security.listDevices(req.orgId,req.user.id),repos.security.listLogins(req.orgId,req.user.id,{limit:10,offset:0})]);
       const keys=loginAttemptKeys(req.user.email,req.ip||req.socket?.remoteAddress,config.SECURITY_HASH_SALT||'');
       const lockedUntil=await repos.security.loginLock(keys.accountHash,keys.ipHash);
-      return res.json({risk:{score:risk.score,level:risk.level,reasons:risk.reasons},devices,logins,lockedUntil,role:req.orgRole});
+      return res.json({risk:{score:risk.score,level:risk.level,reasons:risk.reasons},devices,logins:logins.map(visibleLogin),lockedUntil,role:req.orgRole});
     }catch(error){return next(error)}
   });
   router.get('/security/logins',async(req,res,next)=>{
     const parsed=z.object({limit:z.coerce.number().int().min(1).max(100).default(50),offset:z.coerce.number().int().min(0).max(10000).default(0)}).safeParse(req.query);
     if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Login history pagination is invalid.'));
-    try{return res.json({logins:await repos.security.listLogins(req.orgId,req.user.id,parsed.data)})}catch(error){return next(error)}
+    try{return res.json({logins:(await repos.security.listLogins(req.orgId,req.user.id,parsed.data)).map(visibleLogin)})}catch(error){return next(error)}
   });
   router.get('/security/devices/:id',async(req,res,next)=>{
     const parsed=z.string().uuid().safeParse(req.params.id);if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid device ID is required.'));
@@ -66,11 +67,11 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
   });
   router.post('/security/step-up',async(req,res,next)=>{
     const parsed=stepUpSchema.safeParse(req.body);
-    if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Re-authentication details are invalid.'));
+    if(!parsed.success){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'invalid_request'}});return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Re-authentication details are invalid.'))}
     const {method,deviceId}=parsed.data;
     try{
       const device=await repos.security.getDevice(req.orgId,req.user.id,deviceId);
-      if(!device)return res.status(403).json(structuredErrorBody('DEVICE_SESSION_REQUIRED','This device session is not registered. Sign in again and retry.'));
+      if(!device){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'device_session_missing'}});return res.status(403).json(structuredErrorBody('DEVICE_SESSION_REQUIRED','This device session is not registered. Sign in again and retry.'))}
       const verifiedUserId=method==='password'
         ? await identity?.verifyReauthPassword?.(req.user.email,parsed.data.password)
         : await identity?.verifyStepUpEmailOtp?.(req.user.email,parsed.data.code);
@@ -79,17 +80,17 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
       const grant=await repos.security.grantStepUp({org_id:req.orgId,user_id:req.user.id,device_id:deviceId,granted_at:now.toISOString(),expires_at:expiresAt.toISOString()});
       await auditApiAction(identity,req,{action:'security.step_up_granted',entity:'step_up_grant',entityId:grant?.id||null,metadata:{method,expiresAt:expiresAt.toISOString()}});
       return res.json({granted:true,expiresAt:expiresAt.toISOString()});
-    }catch(error){return next(error)}
+    }catch(error){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'verification_unavailable'}}).catch(()=>{});return next(error)}
   });
   router.post('/security/step-up/otp',async(req,res,next)=>{
     try{
       const email=req.user.email;
-      if(!email)return res.status(400).json(structuredErrorBody('STEP_UP_EMAIL_UNAVAILABLE','A verified email address is not available.'));
+      if(!email){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'email_unavailable'}});return res.status(400).json(structuredErrorBody('STEP_UP_EMAIL_UNAVAILABLE','A verified email address is not available.'))}
       const result=await identity?.sendStepUpOtp?.(email);
-      if(!result)return res.status(503).json(structuredErrorBody('STEP_UP_OTP_UNAVAILABLE','An email code could not be sent. Try again later.'));
+      if(!result){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'email_code_unavailable'}});return res.status(503).json(structuredErrorBody('STEP_UP_OTP_UNAVAILABLE','An email code could not be sent. Try again later.'))}
       await auditApiAction(identity,req,{action:'security.step_up_otp_sent',entity:'user',entityId:req.user.id});
       return res.json({sent:true,message:'A re-authentication code was sent to your account email.'});
-    }catch(error){return next(error)}
+    }catch(error){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'email_code_unavailable'}}).catch(()=>{});return next(error)}
   });
   router.post('/security/check-message', (req,res) => {
     const parsed = schema.safeParse(req.body);

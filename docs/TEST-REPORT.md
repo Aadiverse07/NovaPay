@@ -1571,3 +1571,10 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 
 - Memory repository tests verify org isolation, creator scoping and internal-note visibility. Migration syntax for `0024_support_tickets.sql` passes.
 - Live Supabase RLS and notification delivery are not verified. The current full suite has one unrelated Community Funds script-tag fixture failure (400/401).
+
+# Security and support completion checkpoint (2026-11-09)
+
+- `npm test`: PASS, 409/409. Migration syntax check passed for migrations 0001–0028.
+- Added endpoint coverage for persistent login lockout and generic auth middleware blocking; Security overview/device removal/admin unlock role tests; recipient-filtered ticket/security notifications and internal-note notification silence.
+- Updated `server/test/fund-campaign-live-view.test.js` to accept the current versioned `src/fund-views.js?v=2` script URL; no dashboard behavior changed for that test.
+- Live Supabase RLS verifier and support-role assignment script were syntax-checked but not run. New migrations were not applied to the live project. Live PayPal Sandbox failure and browser flow checks remain unverified.

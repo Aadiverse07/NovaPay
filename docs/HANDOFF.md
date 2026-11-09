@@ -1,19 +1,25 @@
-# 2026-11-09 feature checkpoint
+# 2026-11-09 security and support handoff
 
-Commits on the current branch: `67d8ba4` payment failure diagnosis, `6f7d515` security hardening foundations, and `e5a1f93` support ticketing.
+Current branch: `ui-declutter-modules`.
 
-## Current implementation state
+## Current implementation
 
-- Failure diagnosis includes PayPal provider metadata, documented issue classification, organization-scoped persistence/API, repeated-failure anomaly detection, AI evidence, and Sandbox/Approval cause display. Live PayPal outcomes and visual browser behavior remain unverified.
-- Security hardening includes risk and step-up helper functions, a generic process-local throttle, suspicious-message heuristics, report-only CSP, security migration and password-protection runbook. Supabase login-event ingestion, MFA enrollment/challenges, integrated throttling and risk-based step-up enforcement remain unfinished.
-- Ticketing includes `support` membership role, org-scoped APIs/repos, author/staff visibility rules, internal notes, creation rate limit, UI queue/thread, assignment to self and status updates. Live Supabase RLS, notification visibility/delivery and ticket route role tests remain unverified.
+- Payment failures are classified from documented PayPal issue identifiers and HTTP/network outcomes, persisted by organization, exposed through `/api/failures`, used in anomaly and AI evidence, and shown with retry guidance. Failure causes are real PayPal Sandbox results; no live PayPal failure scenario was executed in this handoff.
+- Security sessions record salted hashes of network prefix and user-agent signature, device and login history, risk scores/reasons, and per-user notifications. Risk-based step-up is server-enforced for refund approvals and invoice sends through short-lived device grants. Login attempts are persisted with generic account/network lockouts and owner/admin unlock controls. Supabase direct Auth requests still rely on Supabase's rate limits.
+- Settings → Security shows the signed-in user's activity, risk and known devices. Supabase password/email-code re-authentication is real when configured; MFA/TOTP is out of scope. CSP remains report-only; phishing detection is deterministic heuristic behavior.
+- Support tickets persist in Supabase with creator-scoped RLS and staff-only internal notes. Notifications target ticket counterparts or the support queue. The `support` membership role can be granted using `scripts/grant-support-role.js`; live RLS checks are available in `scripts/verify-support-rls-live.js`.
+- Ticket UI and notifications are in-app only; no external email or help-desk connection exists. PayPal Sandbox remains test-money only; illustrative and unsupported financial actions remain labeled simulated.
 
 ## Verification
 
-- `npm test`: 400/401 passed. The only failure is the pre-existing `server/test/fund-campaign-live-view.test.js` assertion expecting `<script src="src/fund-views.js">`; it does not relate to these feature changes.
-- Migration syntax checker passed for all 24 migrations, including `0022_payment_failures.sql`, `0023_security.sql` and `0024_support_tickets.sql`.
-- Focused added tests cover failure categories, repeated failure detection, account-risk helpers, phishing heuristics, support repository organization isolation and internal-note visibility.
-- No live Supabase migration or PayPal Sandbox request was made.
+- `npm test`: PASS, 409/409 tests. `scripts/check-migrations.js` parses migrations 0001–0028.
+- Focused tests cover classifier and failure persistence, risk and step-up, login lockout, Security panel roles/device removal, per-user notification scope, ticket counterpart delivery and internal-note silence.
+- The live Supabase RLS script was written but not run; it requires existing creator, other-user and support-role test accounts and the migrations below. No live migration or PayPal call was made.
+- Protected user edits in `dashboard.html`, `src/date-picker.css`, and `src/module-header-align.css` were preserved; only additive dashboard markup/scripts/styles for the requested Security panel were staged.
+
+## Required Supabase migrations
+
+The live project already has 0001–0024. Apply these new migrations in order: `0025_security_session_details.sql`, `0026_step_up_grants.sql`, `0027_login_attempts.sql`, `0028_notification_recipients.sql`. `0024_support_tickets.sql` is synced in this repository only for the already-live membership role list (`donor`, `resident`, `support`).
 
 # Phase 1 handoff
 

@@ -12,11 +12,13 @@ export async function recordSecuritySession({ req, repos, config, identity, now 
   const updatedAt=Date.parse(req.user.updatedAt||'');
   const credentialWindow=Number(config.SECURITY_CREDENTIAL_CHANGE_WINDOW_MINUTES||30)*60000;
   const recentCredentialChange=Number.isFinite(updatedAt)&&now.getTime()-updatedAt>=0&&now.getTime()-updatedAt<credentialWindow;
-  const risk=scoreAccountRisk({newDevice,newIpRange:newNetwork,recentCredentialChange,requestBurst:Boolean(req.securityRequestBurst?.burst)},config);
+  const failedLogins=await repos.security.failedLoginCountByHash?.(accountLoginHash(req.user.email,config.SECURITY_HASH_SALT||''),Number(config.SECURITY_FAILED_LOGIN_WINDOW_MINUTES||15))||0;
+  const risk=scoreAccountRisk({newDevice,newIpRange:newNetwork,failedLogins:Number(failedLogins)>0,recentCredentialChange,requestBurst:Boolean(req.securityRequestBurst?.burst)},config);
   const row=await repos.security.recordLogin({org_id:orgId,user_id:userId,occurred_at:at,ip_hash:network.ipHash,user_agent_hash:hashUserAgent(req.get('user-agent')||'',config.SECURITY_HASH_SALT),device_id:deviceId,success:true,failure_reason:null,risk_score:risk.score,risk_level:risk.level,risk_reasons:risk.reasons,network_label:network.networkLabel});
   await repos.security.linkLoginAttempts?.(accountLoginHash(req.user.email,config.SECURITY_HASH_SALT||''),userId,orgId);
   await repos.security.upsertDevice({org_id:orgId,user_id:userId,device_id:deviceId,last_seen:at,trusted:Boolean(knownDevice?.trusted)});
   await auditApiAction(identity,req,{action:'security.session_started',entity:'login_event',entityId:row?.id||null,metadata:{riskLevel:risk.level,riskScore:risk.score,newDevice}});
   if(risk.level==='medium'||risk.level==='high')await auditApiAction(identity,req,{action:'security.risk_detected',entity:'login_event',entityId:row?.id||null,metadata:{riskLevel:risk.level,riskScore:risk.score,reasons:risk.reasons}});
+  if(risk.level==='medium'||risk.level==='high')await repos.notifications?.addSecurity?.(orgId,userId,row?.id,risk,now);
   return {loginEventId:row?.id||null,risk,newDevice,networkLabel:network.networkLabel};
 }

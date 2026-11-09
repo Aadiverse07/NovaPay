@@ -350,7 +350,8 @@ export function createPostgresRepositories(database) {
     async listOrgMembers(orgId) { return database.select('memberships',q({select:'user_id,role',org_id:`eq.${orgId}`,order:'created_at.asc',limit:'200'})); },
     async memberLock(orgId,userId) { const rows=await database.select('login_attempts',q({select:'locked_until',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,locked_until:`gt.${new Date().toISOString()}`,order:'locked_until.desc',limit:'1'}));return rows?.[0]?.locked_until||null; },
     async clearAccountLock(accountHash) { return database.delete('login_attempts',q({account_hash:`eq.${accountHash}`,success:'eq.false'})); },
-    async linkLoginAttempts(accountHash,userId,orgId) { return database.patch('login_attempts',q({account_hash:`eq.${accountHash}`,success:'eq.false'}),{user_id:userId,org_id:orgId}); },
+    async linkLoginAttempts(accountHash,userId,orgId) { return database.patch('login_attempts',q({account_hash:`eq.${accountHash}`}),{user_id:userId,org_id:orgId}); },
+    async loginIdentityForHash(accountHash) { const rows=await database.select('login_attempts',q({select:'user_id,org_id',account_hash:`eq.${accountHash}`,user_id:'not.is.null',org_id:'not.is.null',order:'occurred_at.desc',limit:'1'}));return rows?.[0]?{userId:rows[0].user_id,orgId:rows[0].org_id}:null; },
     async grantStepUp(input) { const rows=await database.upsert('step_up_grants',input,'org_id,user_id,device_id');return rows?.[0]||null; },
     async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const rows=await database.select('step_up_grants',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`,expires_at:`gt.${now.toISOString()}`,limit:'1'}));return Boolean(rows?.length); },
     async deleteStepUpGrant(orgId,userId,deviceId) { return database.delete('step_up_grants',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`})); },
@@ -363,17 +364,22 @@ export function createPostgresRepositories(database) {
     async list(orgId,userId,staff,filters) { const p={select:'*',org_id:`eq.${orgId}`,order:'created_at.desc',limit:String(filters.limit),offset:String(filters.offset)};if(!staff)p.created_by=`eq.${userId}`;for(const key of ['status','priority','category'])if(filters[key])p[key]=`eq.${filters[key]}`;return database.select('support_tickets',q(p)); },
     async messages(orgId,ticketId,staff) { const p={select:'*',org_id:`eq.${orgId}`,ticket_id:`eq.${ticketId}`,order:'created_at.asc',limit:'500'};if(!staff)p.internal_note='eq.false';return database.select('support_ticket_messages',q(p)); },
     async update(orgId,id,input) { const p={};if(input.status)p.status=input.status;if(input.priority)p.priority=input.priority;if(input.assigneeId!==undefined)p.assignee_id=input.assigneeId;p.updated_at=new Date().toISOString();if(input.status==='resolved')p.resolved_at=new Date().toISOString();const rows=await database.patch('support_tickets',q({org_id:`eq.${orgId}`,id:`eq.${id}`}),p);return rows?.[0]||null; },
+    async staffRecipients(orgId) { const rows=await database.select('memberships',q({select:'user_id',org_id:`eq.${orgId}`,role:'in.(support,owner,admin)',limit:'500'}));return(rows||[]).map(row=>row.user_id); },
   };
 
   const notifications = {
-    async addSupport(orgId, ticketId) { const rows=await database.insert('notifications',{org_id:orgId,anomaly_id:null,rule:'support_ticket_update',severity:'info',evidence_ids:[`support_ticket:${ticketId}`],status:'unread'});return rows?.[0]||null; },
-    async list(orgId, { status, limit = 50, offset = 0 } = {}) {
+    async addSupport(orgId, ticketId, recipientUserId) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId||null,anomaly_id:null,rule:'support_ticket_update',severity:'info',evidence_ids:[`support_ticket:${ticketId}`],status:'unread'});return rows?.[0]||null; },
+    async addSecurity(orgId,recipientUserId,loginEventId,risk) { const rows=await database.insert('notifications',{org_id:orgId,recipient_user_id:recipientUserId,anomaly_id:null,rule:'security_new_device',severity:risk.level==='high'?'high':'warning',evidence_ids:[`login_event:${loginEventId}`],status:'unread'});return rows?.[0]||null; },
+    async list(orgId, userId, options = {}) {
+      if(userId&&typeof userId==='object'){options=userId;userId=null}
+      const {status,limit=50,offset=0}=options;
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(limit), offset: String(offset) };
       if (status) params.status = `eq.${status}`;
+      if(userId)params.or=`(recipient_user_id.is.null,recipient_user_id.eq.${userId})`;
       return database.select('notifications', q(params));
     },
-    async setStatus(orgId, id, status) {
-      return database.rpc('set_notification_status', { p_org: orgId, p_notification_id: id, p_status: status });
+    async setStatus(orgId, id, status, userId) {
+      return database.rpc('set_notification_status_for_user', { p_org: orgId, p_notification_id: id, p_status: status, p_user:userId||null });
     },
   };
 

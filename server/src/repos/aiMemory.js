@@ -84,19 +84,22 @@ export class MemoryNotificationsRepo {
     this.rows.set(this.key(orgId, id), row);
     return row;
   }
-  addSupport(orgId, ticketId, now = new Date()) {
+  addSupport(orgId, ticketId, recipientUserId, now = new Date()) {
     const id = `NTF-${++this.sequence}`;
-    const row = { id, orgId, anomalyId: null, rule: 'support_ticket_update', severity: 'info', evidenceIds: [`support_ticket:${ticketId}`], status: 'unread', createdAt: now.toISOString() };
+    const row = { id, orgId, recipientUserId: recipientUserId || null, anomalyId: null, rule: 'support_ticket_update', severity: 'info', evidenceIds: [`support_ticket:${ticketId}`], status: 'unread', createdAt: now.toISOString() };
     this.rows.set(this.key(orgId, id), row);
     return row;
   }
-  async list(orgId, { status, limit = 50, offset = 0 } = {}) {
-    return [...this.rows.values()].filter((row) => row.orgId === orgId && (!status || row.status === status))
+  addSecurity(orgId,recipientUserId,loginEventId,risk,now=new Date()) { const id=`NTF-${++this.sequence}`,row={id,orgId,recipientUserId,anomalyId:null,rule:'security_new_device',severity:risk.level==='high'?'high':'warning',evidenceIds:[`login_event:${loginEventId}`],status:'unread',createdAt:now.toISOString(),metadata:{riskLevel:risk.level,score:risk.score,reasons:risk.reasons}};this.rows.set(this.key(orgId,id),row);return row; }
+  async list(orgId, userId, options = {}) {
+    if(userId&&typeof userId==='object'){options=userId;userId=null}
+    const {status,limit=50,offset=0}=options;
+    return [...this.rows.values()].filter((row) => row.orgId === orgId && (!row.recipientUserId||row.recipientUserId===userId) && (!status || row.status === status))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(offset, offset + limit);
   }
-  async setStatus(orgId, id, status, now = new Date()) {
+  async setStatus(orgId, id, status, userId, now = new Date()) {
     const row = this.rows.get(this.key(orgId, id));
-    if (!row) return null;
+    if (!row||row.recipientUserId&&row.recipientUserId!==userId) return null;
     row.status = status;
     if (status === 'read') row.readAt = now.toISOString();
     if (status === 'dismissed') row.dismissedAt = now.toISOString();

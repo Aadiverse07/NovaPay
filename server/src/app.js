@@ -87,7 +87,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
     next();
   });
   const publicPaths = ['/status', '/public-config', '/webhook', '/auth/preflight', '/auth/login-attempt', '/security/csp-report'];
-  const generalIpLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_IP) || 1500, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) });
+  const generalIpLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_IP) || 1500, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) && req.path !== '/auth/login-attempt' });
   app.use('/api', generalIpLimit);
   app.use('/api/auth/login-attempt', express.json({ limit: '8kb' }));
   app.use('/api', authPreflightRoutes({ repos, identity, config }));

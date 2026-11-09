@@ -784,3 +784,9 @@
 
 - Choice: expose only the signed-in user's login/device history; owners/admins can inspect workspace member roles and clear a member's lock by resolving their account through the server-side Supabase Admin Auth API.
 - Reason: membership data provides the org boundary, while authentication account details and security hashes remain server-only. Removing a device cascades its short-lived step-up grant.
+
+# Per-user notifications and support role operations (2026-11-09)
+
+- Choice: keep org-wide anomaly notifications nullable-recipient and target ticket/security notifications to explicit user IDs. The notification RLS policy exposes org-wide rows plus the current user's rows; status mutation checks the same recipient boundary.
+- Choice: retain `support` as an organization membership role and provide a narrowly scoped administrator script to assign it; avoid a second member permission system.
+- Reason: in-app ticket replies reach only the other party or the designated support queue, while Supabase remains the source of org membership and RLS authority.

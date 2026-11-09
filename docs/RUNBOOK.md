@@ -65,3 +65,15 @@ A switch appears in the server/API activity log as a safe slot-only message, suc
 # Supabase password breach protection
 
 Enable leaked-password protection in the Supabase Dashboard under Authentication → Security and Protection. NovaPay does not call a leaked-password service in the sign-in request path.
+
+## NovaPay security and support operations
+
+Apply new project migrations through the Supabase SQL Editor in numeric order after reviewing each file and running `npm run check:migrations`: `0025_security_session_details.sql`, `0026_step_up_grants.sql`, `0027_login_attempts.sql`, and `0028_notification_recipients.sql`. Migrations 0001–0024 are already applied in the live project; `0024_support_tickets.sql` is only synced in this repository to the already-live memberships role list.
+
+Set `SECURITY_HASH_SALT` to a random server-only value of at least 32 characters in production. Never rotate it casually: existing device/network/account hashes will no longer compare. Defaults for lockouts are 5 failures in 15 minutes and a 15-minute initial lock; repeated lockouts increase exponentially up to 24 hours. Direct requests to Supabase Auth do not pass through NovaPay's preflight; Supabase Auth's own rate limits protect that route.
+
+To grant the support role, an authorized project operator runs `node scripts/grant-support-role.js <org-uuid> <user-uuid>` with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the environment. Confirm the target user and org before running; the script changes only that membership role and never prints the service key.
+
+To verify live ticket RLS after the migrations are applied, set `SUPPORT_RLS_ORG_ID`, `SUPPORT_RLS_CREATOR_EMAIL`, `SUPPORT_RLS_OTHER_EMAIL`, and `SUPPORT_RLS_SUPPORT_EMAIL` to existing test fixtures (the last must have the `support` role), then run `node scripts/verify-support-rls-live.js`. It uses Supabase Admin Auth to obtain short-lived sign-in links for existing fixtures, creates one temporary ticket and two messages with service role, checks creator/other-user/support visibility with ordinary user JWTs, and deletes the temporary ticket in a `finally` cleanup. Use a disposable test org and test accounts; the script does not create users or organizations. Tokens and keys remain in process memory and are never printed.
+
+Email-code step-up and password re-authentication use Supabase Auth with the server-side anon key; passwords and codes are never persisted. Refund and invoice actions still require the existing human approval; PayPal execution remains Sandbox-only where configured. No MFA/TOTP enrollment is included.

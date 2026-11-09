@@ -198,3 +198,8 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 - `GET /api/security/overview` returns the signed-in user's risk summary, login history, known devices and current lock status.
 - `GET /api/security/logins?limit=50&offset=0` and `GET /api/security/devices` return only the signed-in user's records. `GET /api/security/devices/:id` checks ownership; `DELETE /api/security/devices/:id` removes that device and cascades its step-up grants.
 - `GET /api/security/members` and `POST /api/security/members/:id/unlock` are owner/admin only. Unlock resolves the member through Supabase Admin Auth on the server, clears that member's failed-attempt lock records and audits the action.
+
+## Notification recipients
+
+- `GET /api/notifications` returns organization-wide notifications plus rows addressed to the signed-in user.
+- `POST /api/notifications/:id/read` and `POST /api/notifications/:id/dismiss` can update only those same visible rows. Support replies/status changes notify the ticket creator; user replies notify the assignee or support queue; security risk alerts notify the affected user. Internal notes do not send a customer notification.
