@@ -119,6 +119,7 @@ export class EventsRepo {
 
 export function createRepositories() {
   const failureRows = [];
+  const loginEventRows = [], deviceRows = new Map();
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
@@ -350,6 +351,16 @@ export function createRepositories() {
   captures.funds = funds;
   const notifications = new MemoryNotificationsRepo();
   const repos = { orders, captures, approvals: approvalRepo, events: new EventsRepo(), notifications, funds };
+  repos.security = {
+    async listLogins(orgId,userId,{limit=50,offset=0}={}) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).slice().sort((a,b)=>b.occurred_at.localeCompare(a.occurred_at)).slice(offset,offset+limit); },
+    async recordLogin(input) { const row={id:randomUUID(),occurred_at:new Date().toISOString(),...input};loginEventRows.unshift(row);return row; },
+    async listDevices(orgId,userId) { return [...deviceRows.values()].filter((row)=>row.org_id===orgId&&row.user_id===userId).sort((a,b)=>b.last_seen.localeCompare(a.last_seen)); },
+    async getDevice(orgId,userId,deviceId) { return deviceRows.get(`${orgId}:${userId}:${deviceId}`)||null; },
+    async upsertDevice(input) { const key=`${input.org_id}:${input.user_id}:${input.device_id}`,old=deviceRows.get(key);const row={first_seen:old?.first_seen||input.last_seen,...old,...input};deviceRows.set(key,row);return row; },
+    async deleteDevice(orgId,userId,deviceId) { return deviceRows.delete(`${orgId}:${userId}:${deviceId}`); },
+    async loginCount(orgId,userId) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).length; },
+    async hasNetwork(orgId,userId,ipHash) { return loginEventRows.some((row)=>row.org_id===orgId&&row.user_id===userId&&row.ip_hash===ipHash); },
+  };
   const ticketRows = new Map(), ticketMessages = [];
   repos.supportTickets = {
     async create(orgId,userId,input) { const at=new Date().toISOString(); const row={id:randomUUID(),org_id:orgId,created_by:userId,assignee_id:null,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null,created_at:at,updated_at:at,resolved_at:null};ticketRows.set(`${orgId}:${row.id}`,row);return row; },

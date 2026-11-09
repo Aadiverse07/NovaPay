@@ -12,6 +12,7 @@
   var workspaceError = "";
   var workspaceState = "idle";
   var workspaceRetryAt = 0;
+  var securityStartedToken = "";
 
   function notifyAuth() {
     document.dispatchEvent(new CustomEvent("novapay:auth", { detail: { mode: mode, signedIn: isAuthenticated(), workspaceRequired: workspaceState === "missing", workspaceState: workspaceState } }));
@@ -239,6 +240,24 @@
     try { return localStorage.getItem(AUTH_ORG_KEY + userId) || ""; } catch (_) { return ""; }
   }
 
+  function persistentDeviceId() {
+    var key = "novapay-security-device-id", id = "";
+    try { id = localStorage.getItem(key) || ""; } catch (_) {}
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return id;
+    id = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){var r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
+    try { localStorage.setItem(key,id); } catch (_) {}
+    return id;
+  }
+
+  function startSecuritySession(authSession) {
+    if (mode !== "supabase" || !authSession || !authSession.access_token || !authSession.user) return Promise.resolve();
+    if (securityStartedToken === authSession.access_token) return Promise.resolve();
+    var orgId = currentOrgId(authSession.user.id);
+    if (!orgId) return Promise.resolve();
+    securityStartedToken = authSession.access_token;
+    return fetch("/api/security/session-start", { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: "Bearer " + authSession.access_token, "X-Org-Id": orgId }, body: JSON.stringify({ deviceId: persistentDeviceId() }), cache: "no-store" }).then(function(){},function(){});
+  }
+
   async function currentSession() {
     await api.ready;
     if (mode !== "supabase" || !client) return null;
@@ -255,6 +274,7 @@
     if (result.error) throw result.error;
     session = result.data.session;
     await ensureWorkspace(session, displayName(session.user), { forceRefresh: true });
+    await startSecuritySession(session);
     notifyAuth();
     return session;
   }
@@ -293,6 +313,7 @@
     session = result.data.session;
     if (!session) throw new Error("Email verification succeeded, but no sign-in session was returned. Sign in to continue.");
     await ensureWorkspace(session, displayName(session.user), { forceRefresh: true });
+    await startSecuritySession(session);
     notifyAuth();
     return session;
   }
@@ -431,8 +452,10 @@
       } catch (_) { demoReason = "Supabase Auth could not verify the saved session."; }
       client.auth.onAuthStateChange(function (_event, nextSession) {
         session = nextSession;
+        if (_event === "SIGNED_IN") startSecuritySession(nextSession);
         notifyAuth();
       });
+      if (session) await startSecuritySession(session);
     }
     updateModeLabels();
     notifyAuth();

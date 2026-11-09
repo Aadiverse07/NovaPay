@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { structuredErrorBody } from '../middleware/errorResponses.js';
+import { recordSecuritySession } from '../services/security.js';
 
 const schema = z.object({ text: z.string().min(1).max(5000) }).strict();
 export function inspectSuspiciousMessage(text) {
@@ -13,8 +14,15 @@ export function inspectSuspiciousMessage(text) {
   return { suspicious: reasons.length > 0, reasons, notice: 'This is a heuristic check, not a guarantee.' };
 }
 
-export function securityRoutes() {
+const sessionSchema = z.object({ deviceId: z.string().uuid() }).strict();
+export function securityRoutes({ config = {}, identity, repos } = {}) {
   const router = Router();
+  router.post('/security/session-start', async (req,res,next) => {
+    const parsed=sessionSchema.safeParse(req.body);
+    if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid device ID is required.'));
+    try { return res.status(201).json(await recordSecuritySession({req,repos,config,identity})); }
+    catch(error){return next(error)}
+  });
   router.post('/security/check-message', (req,res) => {
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Provide a message of up to 5,000 characters.'));

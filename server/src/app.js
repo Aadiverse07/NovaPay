@@ -98,7 +98,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, keyPool: geminiKeyPool, rag: documentRag, events: repos.events }));
   app.use('/api/ai/transcribe', express.raw({ type: 'application/octet-stream', limit: '8mb' }));
   app.use(express.json({ limit: '64kb' }));
-  app.use('/api', securityRoutes());
+  app.use('/api', securityRoutes({ config, identity, repos }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/') && req.path !== '/api/ai/transcribe' && req.method === 'POST' && !requestBody.safeParse(req.body).success) return res.status(400).json({ error: 'Request body must be valid JSON.' });
@@ -137,7 +137,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
     const status = databaseStatus || error.statusCode || error.status || (error.type === 'entity.too.large' ? 413 : 500);
     const message = error.type === 'entity.too.large' ? 'Request body is too large.' : error.type === 'entity.parse.failed' ? 'Request body must be valid JSON.' : error.message || 'The request could not be completed.';
     if (status >= 500) Promise.resolve(repos.events.addCall({ t: new Date().toISOString(), m: `${req.path} failed`, ok: false }, req.orgId)).catch(() => {});
-    const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path.startsWith('/api/documents') || req.path.startsWith('/api/fx/') || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path.startsWith('/api/funds') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
+    const structuredRoute = req.path === '/api/onboarding' || req.path === '/api/public-config' || req.path.startsWith('/api/security') || req.path.startsWith('/api/documents') || req.path.startsWith('/api/fx/') || req.path.startsWith('/api/reports') || req.path.startsWith('/api/invoices') || req.path.startsWith('/api/notifications') || req.path.startsWith('/api/anomalies') || req.path.startsWith('/api/funds') || req.path === '/api/transactions' || req.path.startsWith('/api/ledger/') || req.path.startsWith('/api/reconciliation') || (req.path.startsWith('/api/approvals') && req.path !== '/api/approvals/register');
     if (structuredRoute) {
       const code = /^[A-Z][A-Z0-9_]+$/.test(error.code || '') ? error.code : (status === 413 ? 'BODY_TOO_LARGE' : error.databaseCode ? ({ '22003': 'REFUND_AMOUNT_EXCEEDED', '22023': 'VALIDATION_ERROR', '23505': 'CONFLICT', '23514': 'LEDGER_UNBALANCED', P0002: 'NOT_FOUND' })[error.databaseCode] : status === 400 ? 'BAD_JSON' : 'INTERNAL_ERROR');
       const fields = Array.isArray(error.validationIssues) ? error.validationIssues.slice(0, 24).filter((item) =>

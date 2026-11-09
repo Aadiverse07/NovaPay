@@ -334,6 +334,17 @@ export function createPostgresRepositories(database) {
     async recent(orgId, minutes = 15) { return database.select('payment_failures', q({ select: '*', org_id: `eq.${orgId}`, occurred_at: `gte.${new Date(Date.now() - minutes * 60000).toISOString()}`, order: 'occurred_at.desc', limit: '100' })); },
   };
 
+  const security = {
+    async listLogins(orgId,userId,{limit=50,offset=0}={}) { return database.select('login_events',q({select:'*',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,order:'occurred_at.desc',limit:String(limit),offset:String(offset)})); },
+    async recordLogin(input) { const rows=await database.insert('login_events',input);return rows?.[0]||null; },
+    async listDevices(orgId,userId) { return database.select('user_devices',q({select:'*',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,order:'last_seen.desc',limit:'100'})); },
+    async getDevice(orgId,userId,deviceId) { const rows=await database.select('user_devices',q({select:'*',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`,limit:'1'}));return rows?.[0]||null; },
+    async upsertDevice(input) { const rows=await database.upsert('user_devices',input,'org_id,user_id,device_id');return rows?.[0]||null; },
+    async deleteDevice(orgId,userId,deviceId) { return database.rpc('remove_user_device',{p_org:orgId,p_user:userId,p_device:deviceId}); },
+    async loginCount(orgId,userId) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,limit:'1'}));return rows?.length?1:0; },
+    async hasNetwork(orgId,userId,ipHash) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,ip_hash:`eq.${ipHash}`,limit:'1'}));return Boolean(rows?.length); },
+  };
+
   const supportTickets = {
     async create(orgId,userId,input) { const rows=await database.insert('support_tickets',{org_id:orgId,created_by:userId,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null});return rows?.[0]||null; },
     async addMessage(orgId,ticketId,authorId,body,internalNote) { const rows=await database.insert('support_ticket_messages',{org_id:orgId,ticket_id:ticketId,author_id:authorId,body,internal_note:internalNote});return rows?.[0]||null; },
@@ -452,7 +463,7 @@ export function createPostgresRepositories(database) {
   };
 
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds, failures, supportTickets,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds, failures, supportTickets, security,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

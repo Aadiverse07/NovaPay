@@ -15,7 +15,7 @@ test('Supabase service verifies bearer tokens with anon key and uses service rol
     throw new Error('unexpected request');
   };
   const services = createSupabaseServices(config, fetchImpl);
-  assert.deepEqual(await services.verifyToken('jwt-token'), { id: 'user-a', email: 'a@example.test', emailConfirmedAt: '2026-01-01T00:00:00Z' });
+  assert.deepEqual(await services.verifyToken('jwt-token'), { id: 'user-a', email: 'a@example.test', emailConfirmedAt: '2026-01-01T00:00:00Z', updatedAt: null, createdAt: null, lastSignInAt: null });
   assert.equal((await services.membership('user-a', 'org-a')).role, 'owner');
   assert.deepEqual(await services.organizationsForUser('user-a'), [{ org_id: 'org-a', user_id: 'user-a', role: 'owner' }]);
   assert.deepEqual(await services.onboard('user-a', 'Org A', 'request-1'), { organizationId: 'org-a', created: true });
