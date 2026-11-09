@@ -334,7 +334,17 @@ export function createPostgresRepositories(database) {
     async recent(orgId, minutes = 15) { return database.select('payment_failures', q({ select: '*', org_id: `eq.${orgId}`, occurred_at: `gte.${new Date(Date.now() - minutes * 60000).toISOString()}`, order: 'occurred_at.desc', limit: '100' })); },
   };
 
+  const supportTickets = {
+    async create(orgId,userId,input) { const rows=await database.insert('support_tickets',{org_id:orgId,created_by:userId,subject:input.subject,category:input.category,priority:input.priority,status:'open',related_type:input.relatedType||null,related_id:input.relatedId||null});return rows?.[0]||null; },
+    async addMessage(orgId,ticketId,authorId,body,internalNote) { const rows=await database.insert('support_ticket_messages',{org_id:orgId,ticket_id:ticketId,author_id:authorId,body,internal_note:internalNote});return rows?.[0]||null; },
+    async get(orgId,id) { const rows=await database.select('support_tickets',q({select:'*',org_id:`eq.${orgId}`,id:`eq.${id}`,limit:'1'}));return rows?.[0]||null; },
+    async list(orgId,userId,staff,filters) { const p={select:'*',org_id:`eq.${orgId}`,order:'created_at.desc',limit:String(filters.limit),offset:String(filters.offset)};if(!staff)p.created_by=`eq.${userId}`;for(const key of ['status','priority','category'])if(filters[key])p[key]=`eq.${filters[key]}`;return database.select('support_tickets',q(p)); },
+    async messages(orgId,ticketId,staff) { const p={select:'*',org_id:`eq.${orgId}`,ticket_id:`eq.${ticketId}`,order:'created_at.asc',limit:'500'};if(!staff)p.internal_note='eq.false';return database.select('support_ticket_messages',q(p)); },
+    async update(orgId,id,input) { const p={};if(input.status)p.status=input.status;if(input.priority)p.priority=input.priority;if(input.assigneeId!==undefined)p.assignee_id=input.assigneeId;p.updated_at=new Date().toISOString();if(input.status==='resolved')p.resolved_at=new Date().toISOString();const rows=await database.patch('support_tickets',q({org_id:`eq.${orgId}`,id:`eq.${id}`}),p);return rows?.[0]||null; },
+  };
+
   const notifications = {
+    async addSupport(orgId, ticketId) { const rows=await database.insert('notifications',{org_id:orgId,anomaly_id:null,rule:'support_ticket_update',severity:'info',evidence_ids:[`support_ticket:${ticketId}`],status:'unread'});return rows?.[0]||null; },
     async list(orgId, { status, limit = 50, offset = 0 } = {}) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(limit), offset: String(offset) };
       if (status) params.status = `eq.${status}`;
@@ -442,7 +452,7 @@ export function createPostgresRepositories(database) {
   };
 
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds, failures,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds, failures, supportTickets,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

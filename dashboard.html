@@ -428,11 +428,14 @@
             </section>
             <section class="set-group"><h4 class="set-group-title">Contact support</h4>
               <form class="settings-card" id="help-form" novalidate>
-                <label for="help-topic"><span><b>Topic</b><small>Pick what your message is about.</small></span><select id="help-topic"><option>Payment issue</option><option>Refund question</option><option>Dispute question</option><option>Payout question</option><option>PayPal Sandbox</option><option>Other</option></select></label>
+                <label for="help-topic"><span><b>Topic</b><small>Pick what your message is about.</small></span><select id="help-topic"><option value="payment_failure">Payment issue</option><option value="refund">Refund question</option><option value="account">Account question</option><option value="invoice">Invoice question</option><option value="other">Other</option></select></label>
+                <label for="help-subject"><span><b>Subject</b></span><input id="help-subject" maxlength="160" required></label>
                 <label for="help-message" class="help-msg"><span><b>Message</b><small>Describe what you need. Please don't include passwords.</small></span><textarea id="help-message" rows="4" maxlength="1500" placeholder="How can we help?"></textarea></label>
                 <p class="set-status" id="help-status" role="status" aria-live="polite"></p>
-                <div class="settings-actions help-actions"><button class="btn btn--ghost" id="help-copy" type="button">Copy support email</button><button class="btn btn--primary" id="help-send" type="submit">Send message</button></div>
+                <div class="settings-actions help-actions"><button class="btn btn--primary" id="help-send" type="submit">Create ticket</button></div>
               </form>
+              <section class="settings-card"><h4>My tickets</h4><div id="help-tickets" aria-live="polite"></div><div id="help-ticket-thread" hidden></div></section>
+              <section class="settings-card" id="support-queue-panel" hidden><h4>Support queue</h4><div class="filter-row"><select id="support-filter-status" aria-label="Filter support tickets by status"><option value="">All statuses</option><option>open</option><option>in_progress</option><option>waiting_on_user</option><option>resolved</option><option>closed</option></select><select id="support-filter-priority" aria-label="Filter support tickets by priority"><option value="">All priorities</option><option>low</option><option>normal</option><option>high</option><option>urgent</option></select><select id="support-filter-category" aria-label="Filter support tickets by category"><option value="">All categories</option><option>payment_failure</option><option>refund</option><option>account</option><option>invoice</option><option>other</option></select></div><div id="support-ticket-queue"></div></section>
             </section>
           </article>
           </div>

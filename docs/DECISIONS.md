@@ -769,3 +769,7 @@
 - Choice: add org-scoped login/device schemas, explainable risk scoring primitives, a deterministic suspicious-message checker and report-only CSP. Supabase remains the sign-in authority.
 - Reason: these foundations avoid storing raw network identifiers and permit observing CSP reports before enforcing a policy against existing inline UI.
 - Limitation: login event ingestion, Supabase MFA enrollment/challenges, integrated lockout and risk-based step-up enforcement remain to be wired.
+# Support access model (2026-11-09)
+
+- Choice: add a `support` organization membership role, while retaining owner/admin access to the queue.
+- Reason: existing RBAC already operates on organization roles, so this is the smallest explicit way to designate staff without widening ordinary member access. Ticket reads remain creator-scoped; internal notes have a separate staff-only policy.

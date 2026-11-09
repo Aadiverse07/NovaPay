@@ -5826,3 +5826,8 @@ ABOUT TO stage only task files; no .env path is included.
 
 - Added migration `0023_security.sql`, account-risk scoring and recent-auth step-up helpers, process-local login throttling primitive, a deterministic suspicious-message endpoint, report-only CSP headers, login/OTP phishing notice, and Supabase Dashboard leaked-password-protection instructions.
 - Automated risk, step-up helper, throttling, phishing and migration syntax checks pass. Browser CSP reports and Supabase MFA integration have not been verified.
+# 2026-11-09 Support ticketing implementation
+
+- Added migration `0024_support_tickets.sql`, `support` role, org-scoped memory/Postgres repositories, zod-validated ticket routes, account-level creation limiting, audit events, creator-only ticket access and staff-only internal notes.
+- Replaced the support email form with ticket creation, My tickets, ticket threads, a support queue, assignment to self and status/category/priority filters. Failure reports prefill the ticket form with the failure ID.
+- The ticketing backend is in-app only. User notifications to the other party and live Postgres/Supabase behavior still need verification.

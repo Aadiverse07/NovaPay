@@ -27,3 +27,4 @@
 @media (max-width:760px){.help-cards{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.help-card,.help-card-ico,.help-faq summary svg{transition:none}.help-faq[open] p{animation:none}}
 .reduce-motion .help-card,.reduce-motion .help-card-ico{transition:none}
+.help-ticket-thread article{border-top:1px solid var(--border,#dbe3ef);padding:12px 0}.help-ticket-thread textarea{width:100%;min-height:90px}.support-ticket-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}

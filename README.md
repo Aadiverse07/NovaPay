@@ -25,6 +25,10 @@ PayPal Sandbox API errors are classified from documented provider issue codes an
 
 The browser security policy currently runs in report-only mode so violations can be observed while the existing inline UI remains functional. Suspicious-message checks use deterministic heuristics for urgency, non-PayPal links and password/OTP requests; they are not a guarantee. Sign-in and MFA continue to use Supabase Auth.
 
+## Support tickets
+
+Tickets and replies are stored in the organization database when Supabase is configured, with creator scoping and hidden internal notes. The support queue is available to members assigned the `support` role, plus owners and admins. Ticket delivery is in-app; no external help desk or email delivery is configured.
+
 ## Modules
 
 Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox, Ledger, Invoices, Reports, Documents, Community Funds and Maintenance. Fundraising, Maintenance and Transparency views read from `/api/funds/*`.

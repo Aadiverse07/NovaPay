@@ -172,3 +172,11 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 # Payment failures
 
 `GET /api/failures?limit=50&offset=0` returns recent organization-scoped failure records for owner, admin, accountant and approver roles. Records retain sanitized provider issue codes and debug identifiers only; they do not include provider response bodies.
+
+## Support tickets
+
+- `POST /api/support/tickets` creates a ticket and first message (maximum 10 per user per hour).
+- `GET /api/support/tickets` lists the caller's tickets; support, owner and admin can list the organization queue. Supports `status`, `priority`, `category`, `limit`, and `offset` filters.
+- `GET /api/support/tickets/:id` returns the ticket thread, excluding internal notes from the creator.
+- `POST /api/support/tickets/:id/messages` adds a reply; only support, owner and admin can set `internalNote`.
+- `PATCH /api/support/tickets/:id` updates status, priority or assignee for support, owner and admin.

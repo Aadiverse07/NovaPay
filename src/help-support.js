@@ -1,32 +1,14 @@
-/* Settings → Help & support: quick links, support message form. */
-(function () {
-  "use strict";
-  var SUPPORT_EMAIL = "support@novapay.example"; /* replace with your real support address */
-  var $ = function (id) { return document.getElementById(id); };
-
-  document.querySelectorAll("[data-help-view]").forEach(function (b) {
-    b.addEventListener("click", function () {
-      var link = document.querySelector('.dashboard-nav a[data-view="' + b.dataset.helpView + '"]');
-      if (link) link.click();
-    });
-  });
-
-  var form = $("help-form"), msg = $("help-message"), status = $("help-status");
-  if (!form) return;
-  function say(t, ok) { status.textContent = t; status.className = "set-status" + (ok === true ? " is-ok" : ok === false ? " is-error" : ""); }
-
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var text = (msg.value || "").trim();
-    if (text.length < 10) { say("Please write at least 10 characters so we can help.", false); msg.focus(); return; }
-    var topic = $("help-topic").value;
-    window.location.href = "mailto:" + SUPPORT_EMAIL + "?subject=" + encodeURIComponent("NovaPay support: " + topic) + "&body=" + encodeURIComponent(text);
-    say("Your email app should open with the message ready to send.", true);
-  });
-
-  $("help-copy").addEventListener("click", function () {
-    function ok() { say("Support email copied: " + SUPPORT_EMAIL, true); }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(SUPPORT_EMAIL).then(ok, function () { say("Support email: " + SUPPORT_EMAIL); });
-    else say("Support email: " + SUPPORT_EMAIL);
-  });
+/* Organization scoped support ticket UI. */
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id)}, form=$('help-form'), status=$('help-status');
+  function request(path,method,body){if(!window.NovaPayApi)return Promise.reject(new Error('Sign in to use support tickets.'));return window.NovaPayApi.request(path,{method:method||'GET',body:body});}
+  function say(message,ok){if(status){status.textContent=message;status.className='set-status'+(ok===true?' is-ok':ok===false?' is-error':'')}}
+  function node(tag,text){var el=document.createElement(tag);el.textContent=text||'';return el}
+  function loadTickets(){return request('/api/support/tickets?limit=50').then(function(data){var box=$('help-tickets');if(!box)return;box.textContent='';(data.tickets||[]).forEach(function(ticket){var b=node('button',ticket.subject+' · '+ticket.status+' · '+ticket.priority);b.type='button';b.className='btn btn--ghost';b.addEventListener('click',function(){openTicket(ticket.id)});box.appendChild(b)});if(!data.tickets||!data.tickets.length)box.textContent='No tickets yet.';var queue=$('support-queue-panel');if(queue&&data.isSupport){queue.hidden=false;loadQueue()}}).catch(function(){say('Could not load tickets. Sign in and try again.',false)})}
+  function openTicket(id){request('/api/support/tickets/'+encodeURIComponent(id)).then(function(data){var box=$('help-ticket-thread');box.hidden=false;box.className='help-ticket-thread';box.textContent='';box.appendChild(node('h5',data.ticket.subject+' · '+data.ticket.status));(data.messages||[]).forEach(function(message){var article=node('article');article.appendChild(node('small',(message.internal_note?'Internal note':'Reply')+' · '+message.created_at));article.appendChild(node('p',message.body));box.appendChild(article)});var f=document.createElement('form'),input=document.createElement('textarea'),send=node('button','Reply');input.required=true;input.maxLength=4000;input.setAttribute('aria-label','Reply');send.type='submit';f.append(input,send);f.addEventListener('submit',function(e){e.preventDefault();request('/api/support/tickets/'+encodeURIComponent(id)+'/messages','POST',{body:input.value}).then(loadTickets).then(function(){openTicket(id)})});box.appendChild(f)}).catch(function(){say('Could not open this ticket.',false)})}
+  function loadQueue(){var q=new URLSearchParams({limit:'100'});['status','priority','category'].forEach(function(k){var field=$('support-filter-'+k);if(field&&field.value)q.set(k,field.value)});request('/api/support/tickets?'+q.toString()).then(function(data){var box=$('support-ticket-queue');box.textContent='';(data.tickets||[]).forEach(function(t){var row=node('article');row.className='support-ticket-row';row.appendChild(node('b',t.subject+' · '+t.priority));row.appendChild(node('p',t.category+' · '+t.status));var reply=node('button','Open ticket');reply.type='button';reply.addEventListener('click',function(){openTicket(t.id)});row.appendChild(reply);var assign=node('button','Assign to me');assign.type='button';assign.addEventListener('click',function(){var auth=window.NovaPayAuth;auth.currentSession().then(function(session){return request('/api/support/tickets/'+encodeURIComponent(t.id),'PATCH',{assigneeId:session.user.id})}).then(loadQueue)});row.appendChild(assign);var select=document.createElement('select');['open','in_progress','waiting_on_user','resolved','closed'].forEach(function(v){var o=node('option',v);o.value=v;o.selected=t.status===v;select.appendChild(o)});select.addEventListener('change',function(){request('/api/support/tickets/'+encodeURIComponent(t.id),'PATCH',{status:select.value}).then(loadQueue)});row.appendChild(select);box.appendChild(row)})})}
+  if(form)form.addEventListener('submit',function(e){e.preventDefault();var text=($('help-message').value||'').trim(),subject=($('help-subject').value||'').trim();if(text.length<10||subject.length<5){say('Add a subject and at least 10 characters so we can help.',false);return}var relatedId='';try{relatedId=sessionStorage.getItem('novapay-prefill-failure')||'';sessionStorage.removeItem('novapay-prefill-failure')}catch(_){}request('/api/support/tickets','POST',{subject:subject,category:$('help-topic').value,relatedType:relatedId?'failure':undefined,relatedId:relatedId||undefined,body:text}).then(function(){say('Ticket created. Support can now review it.',true);form.reset();loadTickets()}).catch(function(error){say(error.message||'Ticket could not be created.',false)})});
+  document.querySelectorAll('[data-help-view]').forEach(function(b){b.addEventListener('click',function(){var link=document.querySelector('.dashboard-nav a[data-view="'+b.dataset.helpView+'"]');if(link)link.click()})});
+  ['status','priority','category'].forEach(function(k){var filter=$('support-filter-'+k);if(filter)filter.addEventListener('change',loadQueue)});if(form){loadTickets();var failure='';try{failure=sessionStorage.getItem('novapay-prefill-failure')||''}catch(_){}if(failure){$('help-topic').value='payment_failure';$('help-subject').value='Payment failure report';$('help-message').value='Failure record ID: '+failure}}
 })();

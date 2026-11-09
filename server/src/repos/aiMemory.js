@@ -84,6 +84,12 @@ export class MemoryNotificationsRepo {
     this.rows.set(this.key(orgId, id), row);
     return row;
   }
+  addSupport(orgId, ticketId, now = new Date()) {
+    const id = `NTF-${++this.sequence}`;
+    const row = { id, orgId, anomalyId: null, rule: 'support_ticket_update', severity: 'info', evidenceIds: [`support_ticket:${ticketId}`], status: 'unread', createdAt: now.toISOString() };
+    this.rows.set(this.key(orgId, id), row);
+    return row;
+  }
   async list(orgId, { status, limit = 50, offset = 0 } = {}) {
     return [...this.rows.values()].filter((row) => row.orgId === orgId && (!status || row.status === status))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(offset, offset + limit);

@@ -1561,3 +1561,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - New account risk, step-up helper, generic throttling, and suspicious-message checks pass. Migration syntax for `0023_security.sql` passes.
 - The full suite remains 400/401 because of the same unrelated Community Funds fixture expecting `src/fund-views.js`.
 - Supabase login-event ingestion, MFA enrollment/challenge UX, real lockout wiring and sensitive-action enforcement are not implemented or verified in this checkpoint.
+# Support ticket checkpoint (2026-11-09)
+
+- Memory repository tests verify org isolation, creator scoping and internal-note visibility. Migration syntax for `0024_support_tickets.sql` passes.
+- Live Supabase RLS and notification delivery are not verified. The current full suite has one unrelated Community Funds script-tag fixture failure (400/401).
