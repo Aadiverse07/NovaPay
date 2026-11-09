@@ -63,7 +63,7 @@ test('campaign and pledge API labels intent only and creates an idempotent linke
   const repos=createRepositories();
   const orgId='a0000000-0000-4000-8000-000000000001';
   let providerOrderCalls=0;
-  const config={PORT:3000,STATIC_DIR:process.cwd(),hasSupabase:true,hasPayPal:true,hasAI:false,SUPABASE_URL:'https://example.supabase.co',SUPABASE_ANON_KEY:'public-key',SUPABASE_SERVICE_ROLE_KEY:'server-key'};
+  const config={ENABLE_COMMUNITY_FUNDS:true,ENABLE_MAINTENANCE:true,PORT:3000,STATIC_DIR:process.cwd(),hasSupabase:true,hasPayPal:true,hasAI:false,SUPABASE_URL:'https://example.supabase.co',SUPABASE_ANON_KEY:'public-key',SUPABASE_SERVICE_ROLE_KEY:'server-key'};
   const identity={async verifyToken(){return{id:'user-phase6'}} ,async membership(){return{role:'owner'}}};
   const paypal={async pp(_method,url,body){
     if(url!=='/v2/checkout/orders') throw new Error('unexpected provider request');

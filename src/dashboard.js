@@ -37,6 +37,8 @@
   $("dashboard-theme").addEventListener("click",function(){var t=currentTheme()==="dark"?"light":"dark";try{localStorage.setItem(THEME_KEY,t)}catch(e){}applyTheme(t)});
   applyTheme(currentTheme());
 
+  window.NovaPayFeatures=window.NovaPayFeatures||{communityFunds:null,maintenance:null};
+  function availableAssistantActions(){return (window.NovaPayAssistantActions&&window.NovaPayAssistantActions.registry||[]).filter(function(item){return (window.NovaPayFeatures.communityFunds||!(item.id.indexOf("funds.")===0||item.id==="ui.click"&&item.args.properties.uiAction.enum.some(function(x){return x.indexOf("campaign-")===0})))&&(window.NovaPayFeatures.maintenance||!(item.id.indexOf("maintenance.")===0||item.id==="ui.click"&&item.args.properties.uiAction.enum.some(function(x){return x.indexOf("maintenance-")===0})))})}
   var panels=document.querySelectorAll("[data-view-panel]"), nav=document.querySelectorAll("#dashboard-nav a[data-view]"), title=$("page-title");
   var titles={dashboard:"Dashboard",transactions:"Transactions","ai-assistant":"AI Assistant",approvals:"Approvals",sandbox:"PayPal Sandbox",ledger:"Ledger",invoices:"Invoices",reports:"Reports",documents:"Documents","community-funds":"Community Funds",maintenance:"Maintenance",settings:"Settings"};
   function canonicalView(view){return view==="fundraising"||view==="transparency"?"community-funds":view;}
@@ -44,6 +46,7 @@
   function handleViewTransitionError(error){if(error&&error.name!=="AbortError"&&window.console)console.error("Could not finish dashboard view transition",error);}
   function applyView(view,writeHash,preserveScroll){
     view=canonicalView(view);
+    if(view==="community-funds"&&window.NovaPayFeatures.communityFunds===false||view==="maintenance"&&window.NovaPayFeatures.maintenance===false)view="dashboard";
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
@@ -54,6 +57,7 @@
   }
   function activate(view,writeHash,preserveScroll){
     view=canonicalView(view);
+    if(view==="community-funds"&&window.NovaPayFeatures.communityFunds===false||view==="maintenance"&&window.NovaPayFeatures.maintenance===false)view="dashboard";
     if(!titles[view])view="dashboard";
     var current=document.querySelector("[data-view-panel]:not([hidden])");
     var next=$("view-"+view), reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -97,7 +101,7 @@
     if(id==="nav.open"||id==="report.open"){activate(id==="report.open"?"reports":args.view,true);return}
     if(id==="assistant.stopSpeaking"){if(window.NovaPayVoiceAssistantController)window.NovaPayVoiceAssistantController.stopSpeaking();else if(speechOutput)speechOutput.cancel();return}
     if(id==="assistant.repeat"){var repeatText=previousAssistantReply||"There is no answer to repeat yet.";if(speechOutput)speechOutput.speak(repeatText);return}
-    if(id==="assistant.help"){var list=(window.NovaPayAssistantActions.registry||[]).map(function(item){return item.speakableName}).filter(Boolean);showToast("I can " + [...new Set(list)].slice(0,8).join(", ") + ".");return}
+    if(id==="assistant.help"){var list=availableAssistantActions().map(function(item){return item.speakableName}).filter(Boolean);showToast("I can " + [...new Set(list)].slice(0,8).join(", ") + ".");return}
     if(id==="documents.promptUpload"){activate("documents",true);var file=$("document-upload"),label=document.querySelector('label[for="document-upload"]');if(label){label.tabIndex=-1;label.focus();label.scrollIntoView({block:"center"})}else if(file){file.focus();file.scrollIntoView({block:"center"})}return}
     if(id==="documents.readReview"||id==="documents.proposeConfirm"){activate("documents",true);$("ai-live-status").textContent=id==="documents.proposeConfirm"?"Review the extracted fields and confirm or reject in Documents. Voice cannot confirm records into the books.":"Open the document row in Documents to read its stored review.";var row=document.querySelector('[data-document-id="'+CSS.escape(String(args.documentId||""))+'"]');if(row)row.scrollIntoView({block:"center"});return}
     if(id==="maintenance.openNew"){activate("maintenance",true);var maintenanceButton=document.querySelector('[data-ui-action="maintenance-new-live"]');if(maintenanceButton&&!maintenanceButton.disabled)maintenanceButton.click();return}
@@ -136,7 +140,7 @@
   }
   function summarizeAssistantAction(action){var a=action.args||{};if(action.id==="invoice.createDraft")return"Create a draft invoice for "+a.customerName+" with "+a.lines.length+" line item(s), due "+a.dueDate+". Confirm?";if(action.id==="invoice.downloadPdf")return"Download the latest invoice PDF from this organization. Confirm?";if(action.id==="funds.createCampaignDraft")return"Create the campaign “"+a.title+"” with target "+currencyMinorToMajor(a.targetMinor,a.currency)+" "+a.currency+". Confirm?";return"This action needs your confirmation before NovaPay proceeds."}
   function renderAssistantActions(actions){
-    var slot=$("ai-proposal-slot"),catalog=window.NovaPayAssistantActions&&window.NovaPayAssistantActions.registry||[];
+    var slot=$("ai-proposal-slot"),catalog=availableAssistantActions();
     (Array.isArray(actions)?actions:[]).slice(0,5).forEach(function(action){
       if(action.id==="data.query")return;
       var definition=catalog.find(function(item){return item.id===action.id});if(!definition)return;

@@ -9,7 +9,8 @@
   function targetFor(rule) {
     var value = String(rule || "").toLowerCase();
     if (value.indexOf("invoice") >= 0) return "invoices";
-    if (value.indexOf("maintenance") >= 0 || value.indexOf("fund") >= 0) return "community-funds";
+    if (value.indexOf("maintenance") >= 0) return window.NovaPayFeatures && window.NovaPayFeatures.maintenance ? "maintenance" : "dashboard";
+    if (value.indexOf("fund") >= 0) return window.NovaPayFeatures && window.NovaPayFeatures.communityFunds ? "community-funds" : "dashboard";
     if (value.indexOf("transaction") >= 0 || value.indexOf("refund") >= 0 || value.indexOf("fee") >= 0) return "transactions";
     return "approvals";
   }

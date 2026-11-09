@@ -39,6 +39,7 @@ import { securityRoutes } from './routes/security.js';
 import { supportRoutes } from './routes/support.js';
 import { createSupportMail } from './services/supportMail.js';
 import { createRequestBurstTracker } from './services/accountRisk.js';
+import { structuredErrorBody } from './middleware/errorResponses.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
@@ -124,7 +125,13 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', invoiceRoutes({ repos }));
   app.use('/api', notificationRoutes({ repos, runAnomalyScan }));
   app.use('/api', paypalRoutes({ config, paypal, repos, identity, fx }));
-  app.use('/api', fundRoutes({ config, paypal, repos }));
+  app.use('/api/funds', (req, res, next) => {
+    const maintenance = req.path === '/maintenance' || req.path.startsWith('/maintenance/');
+    if (maintenance ? !config.ENABLE_MAINTENANCE : !config.ENABLE_COMMUNITY_FUNDS) return res.status(404).json(structuredErrorBody('MODULE_NOT_ENABLED', 'This module is not enabled.'));
+    return next();
+  });
+  if (config.ENABLE_COMMUNITY_FUNDS || config.ENABLE_MAINTENANCE) app.use('/api', fundRoutes({ config, paypal, repos }));
+  app.use('/api/funds', (_req, res) => res.status(404).json(structuredErrorBody('NOT_FOUND', 'The requested resource was not found.')));
 
   app.use('/api', (req, res) => {
     if (req.path === '/status') return res.status(405).json({ error: 'Use GET for integration status.' });

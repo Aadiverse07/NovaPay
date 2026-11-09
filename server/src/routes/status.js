@@ -8,7 +8,7 @@ export function statusRoutes({ config, paypal, repos }) {
     try {
       let connected = false;
       if (config.hasPayPal) { try { await paypal.ppToken(); connected = true; } catch {} }
-      res.json({ backend: true, mode: config.hasSupabase ? 'authenticated' : 'degraded', supabaseConfigured: Boolean(config.hasSupabase), paypal: config.hasPayPal, paypalConnected: connected, paypalIssue: !config.hasPayPal ? 'configuration-incomplete' : !connected ? 'connection-unavailable' : null, ai: config.hasAI, model: config.hasAI ? (config.resolvedLLMModel || config.LLM_MODEL || config.ANTHROPIC_MODEL) : null, webhookConfigured: Boolean(config.PAYPAL_WEBHOOK_ID), webhookEndpoint: '/api/webhook', captures: [] });
+      res.json({ backend: true, mode: config.hasSupabase ? 'authenticated' : 'degraded', supabaseConfigured: Boolean(config.hasSupabase), paypal: config.hasPayPal, paypalConnected: connected, paypalIssue: !config.hasPayPal ? 'configuration-incomplete' : !connected ? 'connection-unavailable' : null, ai: config.hasAI, model: config.hasAI ? (config.resolvedLLMModel || config.LLM_MODEL || config.ANTHROPIC_MODEL) : null, webhookConfigured: Boolean(config.PAYPAL_WEBHOOK_ID), webhookEndpoint: '/api/webhook', capabilities: { communityFunds: config.ENABLE_COMMUNITY_FUNDS === true, maintenance: config.ENABLE_MAINTENANCE === true }, captures: [] });
     } catch (error) { next(error); }
   });
   router.get('/events', async (req, res) => {

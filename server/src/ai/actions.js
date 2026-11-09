@@ -49,13 +49,16 @@ function fromJsonSchema(definition) {
   return z.never();
 }
 
-export function validateAssistantActions(candidates, message, role = 'viewer') {
+export function validateAssistantActions(candidates, message, role = 'viewer', capabilities = {}) {
   if (!Array.isArray(candidates) || candidates.length > 5) return [];
   const text = String(message || '').toLocaleLowerCase('en-US');
   const result = [];
   for (const candidate of candidates) {
     const definition = registry.get(candidate?.id);
     if (!definition || !definition.roles.includes(role)) continue;
+    if (definition.id === 'data.query' && ((candidate.args?.topic === 'funds' && !capabilities.ENABLE_COMMUNITY_FUNDS) || (candidate.args?.topic === 'maintenance' && !capabilities.ENABLE_MAINTENANCE))) continue;
+    if (!capabilities.ENABLE_COMMUNITY_FUNDS && (definition.id.startsWith('funds.') || (definition.id === 'nav.open' && candidate.args?.view === 'community-funds') || (definition.id === 'ui.click' && ['campaign-view','campaign-create'].includes(candidate.args?.uiAction)))) continue;
+    if (!capabilities.ENABLE_MAINTENANCE && (definition.id.startsWith('maintenance.') || (definition.id === 'nav.open' && candidate.args?.view === 'maintenance') || (definition.id === 'ui.click' && ['maintenance-view','maintenance-new'].includes(candidate.args?.uiAction)))) continue;
     const parsed = fromJsonSchema(definition.args).safeParse(candidate.args || {});
     if (!parsed.success) continue;
     const args = parsed.data;
@@ -115,17 +118,17 @@ export function parseNavigationCommand(value) {
     : null;
 }
 
-export function parseFastAssistantCommand(message, role = 'viewer') {
+export function parseFastAssistantCommand(message, role = 'viewer', capabilities = {}) {
   const text = String(message || '').toLocaleLowerCase('en-US').replace(/[’‘]/g, "'").trim();
   let action;
   const navigation = parseNavigationCommand(text);
-  if (navigation) action = { id: 'nav.open', tier: 0, args: navigation };
+  if (navigation && (navigation.view !== 'community-funds' || capabilities.ENABLE_COMMUNITY_FUNDS) && (navigation.view !== 'maintenance' || capabilities.ENABLE_MAINTENANCE)) action = { id: 'nav.open', tier: 0, args: navigation };
   else if (/^(?:stop|stop speaking|cancel|be quiet|quiet)[.! ]*$/.test(text)) action = { id: 'assistant.stopSpeaking', tier: 0, args: {} };
   else if (/^(?:repeat|say that again|again)[.! ]*$/.test(text)) action = { id: 'assistant.repeat', tier: 0, args: {} };
   else if (/^(?:help|what can you do\??|capabilities\??)[.! ]*$/.test(text)) action = { id: 'assistant.help', tier: 0, args: {} };
   else if (/^(?:(?:download|save) (?:my |the )?(?:last|latest) invoice(?: pdf)?|download (?:it|that))[.! ]*$/.test(text)) action = { id: 'invoice.downloadPdf', tier: 1, args: {} };
   else if (/^(?:upload|attach|process) (?:my |the )?(?:document|file|receipt|invoice|pdf)[.! ]*$/.test(text)) action = { id: 'documents.promptUpload', tier: 0, args: {} };
-  else if (/^(?:new|create|open|start) (?:a )?maintenance request[.! ]*$/.test(text)) action = { id: 'maintenance.openNew', tier: 0, args: {} };
+  else if (capabilities.ENABLE_MAINTENANCE && /^(?:new|create|open|start) (?:a )?maintenance request[.! ]*$/.test(text)) action = { id: 'maintenance.openNew', tier: 0, args: {} };
   if (!action) return null;
   const registered = registry.get(action.id);
   if (!registered || !registered.roles.includes(role)) return null;

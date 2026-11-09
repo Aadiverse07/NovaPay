@@ -7,6 +7,8 @@ import { createAIService } from '../src/services/ai.js';
 import { createRepositories } from '../src/repos/memory.js';
 
 const baseConfig = {
+  ENABLE_COMMUNITY_FUNDS: true,
+  ENABLE_MAINTENANCE: true,
   PORT: 3000,
   STATIC_DIR: process.cwd(),
   PAYPAL_CLIENT_ID: 'test-client-id',

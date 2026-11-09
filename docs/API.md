@@ -53,16 +53,18 @@ No request body. Roles `owner`, `admin`, and `accountant` may trigger a determin
 Migration `supabase/migrations/0005_ai.sql` defines `ai_usage`, `ai_cache`, `anomalies`, and `notifications`. RLS permits member reads only; authenticated clients have no direct write grants. All write and privileged RPCs are callable only by `service_role`. Apply numbered migrations in order and run `npm run check:migrations` before applying a new SQL file.
 
 
-## Fundraising and maintenance operations (Phase 6 T1–T3)
+## Optional legacy modules: Community Funds and Maintenance (off by default)
 
-All `/api/funds/*` endpoints require the Supabase bearer JWT and `X-Org-Id`. Campaign, pledge, PayPal-order, maintenance-request, contractor, quotation, approval, and payment-request operations are described with request/response examples and minimum roles in [FRONTEND-CONTRACT.md](./FRONTEND-CONTRACT.md#phase-6-campaigns-and-maintenance-operations-t1t4). Mutations call tenant-scoped service-only RPCs and append audit records. Pledges remain intent only until a verified posted capture. Payment requests enter the existing Approvals queue and are labelled `SIMULATED`; no payout or ledger entry occurs.
+These endpoints are retained for existing data and are hidden unless enabled with `ENABLE_COMMUNITY_FUNDS=true` and/or `ENABLE_MAINTENANCE=true`. Disabled route families return structured `404 MODULE_NOT_ENABLED`. Existing contribution transactions and ledger postings remain available through financial endpoints.
+
+When enabled, `/api/funds/*` endpoints require the Supabase bearer JWT and `X-Org-Id`. Campaign, pledge, PayPal-order, maintenance-request, contractor, quotation, approval, and payment-request operations are described with request/response examples and minimum roles in [FRONTEND-CONTRACT.md](./FRONTEND-CONTRACT.md#phase-6-campaigns-and-maintenance-operations-t1t4). Mutations call tenant-scoped service-only RPCs and append audit records. Pledges remain intent only until a verified posted capture. Payment requests enter the existing Approvals queue and are labelled `SIMULATED`; no payout or ledger entry occurs.
 
 
-The Maintenance view reads the org-scoped operational request list/detail APIs and shows an honest empty state in authenticated mode. The form maps description/location/category/priority into labeled lines in the existing `scope` column, converts USD major-unit estimates to minor units with the ISO currency exponent, and posts through the existing audited create RPC. Its submit lock prevents double-click duplicate posts. Only owner/admin/accountant see the create button; the pre-existing API role policy is unchanged. Payouts remain SIMULATED. No direct browser fund-table reads occur. The existing request schema has no linked invoice field, so UI payment queueing stays blocked until an invoice link is available.
+When Maintenance is enabled, its view reads the org-scoped operational request list/detail APIs and shows an honest empty state in authenticated mode. The form maps description/location/category/priority into labeled lines in the existing `scope` column, converts USD major-unit estimates to minor units with the ISO currency exponent, and posts through the existing audited create RPC. Its submit lock prevents double-click duplicate posts. Only owner/admin/accountant see the create button; the pre-existing API role policy is unchanged. Payouts remain SIMULATED. No direct browser fund-table reads occur. The existing request schema has no linked invoice field, so UI payment queueing stays blocked until an invoice link is available.
 
 The application defaults to 1,500 requests per IP and 1,200 authenticated write/action requests per user per 15 minutes; cheap authenticated read-only module endpoints have a separate 2,400-per-user budget. Configure them with server-only `RATE_LIMIT_IP`, `RATE_LIMIT_USER`, and `RATE_LIMIT_READ_USER`; targeted onboarding, auth/OTP, AI, transcription, FX, document and invoice-download limits remain in place. HTTP 429 responses include `Retry-After` and `{ "error": { "code": "RATE_LIMITED" | "USER_RATE_LIMITED", "message": "..." } }`. Invalid inputs and business transition failures use structured errors.
 
-## Fund maintenance payments (Phase 6 T4)
+## Optional Maintenance payments (Phase 6 T4; module off by default)
 
 ### `GET /api/funds/maintenance`
 
@@ -78,7 +80,7 @@ No request body. Requires `owner`, `admin`, `accountant`, or `approver`. The req
 
 The queue decision is made with `POST /api/approvals/:approvalId/decision` by an `owner`, `admin`, or `approver` other than the maintenance requester. The resulting payment is explicitly `SIMULATED`; `paypalPayoutRef` and `ledgerEntryId` are null, no money is sent, and no ledger entry is posted. Responses include `gap: "simulated, no ledger entry"`. Repeated requests or approvals return the same queued/payment result. PayPal Payouts Sandbox returned `PAYOUT_NOT_AVAILABLE` for this application, so real payouts are disabled.
 
-## Completion evidence and maintenance close (Phase 6 T5)
+## Optional Maintenance completion evidence and close (Phase 6 T5)
 
 Evidence stores metadata only. `fileRef` is an optional reference string; NovaPay does not upload or store file contents. The response caution is: “Evidence supports, but does not prove, that work was done correctly.”
 
@@ -115,7 +117,8 @@ Allowed roles: `owner`, `admin`, `approver`; the requester cannot close their ow
 All three writes use tenant-checked service-role RPCs and write audit-log records for evidence and workflow changes. Fund table access is through the scoped API/RPC; authenticated clients cannot query these tables directly.
 
 
-## Fund transparency and audit export (Phase 6 T6)
+## Optional Community Funds transparency and audit export (Phase 6 T6)
+
 
 ### `GET /api/funds/transparency`
 

@@ -801,3 +801,7 @@
 
 2026-11-09 | Question: How should support tickets be exposed to creators? | Choice: Show only sequential ticket number, topic/category and subject; send all staff replies to the account email on file and keep thread, status, priority and internal notes in staff-only views. | Reason: this follows the project owner's product decision and avoids exposing staff workflows or internal notes in the customer view. | Source: user follow-up prompt; support route, role model and migration 0024 inspected 2026-11-09.
 2026-11-09 | Question: How should email failures affect ticket creation? | Choice: Persist the ticket even if delivery is unavailable, store each public message's sent/failed/not_configured state and safe error class, and let staff retry failures. | Reason: a mail outage should not lose a support request or imply a message was sent. | Source: support ticket manual-test requirements.
+
+## Optional module visibility (2026-11-09)
+
+Community Funds and Maintenance are soft-disabled by default with `ENABLE_COMMUNITY_FUNDS` and `ENABLE_MAINTENANCE`. Their tables, migrations, repositories, and transaction/ledger records are retained. The flags are exposed in `/api/status`; disabled routes return a structured `404 MODULE_NOT_ENABLED`, and the browser hides module entry points and assistant actions. Set either environment variable to `true` to re-enable its module. No migration is added.

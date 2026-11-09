@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const envBoolean = z.preprocess((value) => value === 'true' ? true : value === 'false' ? false : value, z.boolean().default(false));
 const schema = z.object({
+  ENABLE_COMMUNITY_FUNDS: envBoolean,
+  ENABLE_MAINTENANCE: envBoolean,
   PAYPAL_CLIENT_ID: z.string().optional().default(''),
   PAYPAL_CLIENT_SECRET: z.string().optional().default(''),
   PAYPAL_WEBHOOK_ID: z.string().optional().default(''),
