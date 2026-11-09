@@ -1556,3 +1556,8 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 
 - `npm test`: migration syntax passed; 395/396 tests passed. One unrelated existing failure remains in `server/test/fund-campaign-live-view.test.js`, whose fixture expects the obsolete `src/fund-views.js` script tag. The legacy PayPal error `statusCode: 502` contract is preserved while actual provider status is exposed separately.
 - New classifier, repository isolation and repeated-category anomaly tests pass. UI is wired to display returned failure causes; visual and live PayPal provider failure cases are not verified.
+# Security groundwork checkpoint (2026-11-09)
+
+- New account risk, step-up helper, generic throttling, and suspicious-message checks pass. Migration syntax for `0023_security.sql` passes.
+- The full suite remains 400/401 because of the same unrelated Community Funds fixture expecting `src/fund-views.js`.
+- Supabase login-event ingestion, MFA enrollment/challenge UX, real lockout wiring and sensitive-action enforcement are not implemented or verified in this checkpoint.

@@ -34,6 +34,7 @@ import { documentRoutes } from './routes/documents.js';
 import { createDocumentRag } from './services/documentRag.js';
 import { authPreflightRoutes } from './routes/authPreflight.js';
 import { failureRoutes } from './routes/failures.js';
+import { securityRoutes } from './routes/security.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
@@ -64,8 +65,13 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.locals.startAnomalyWorker = () => startAnomalyWorker({ repos, runAnomalyScan, intervalMs: config.ANOMALY_SCAN_INTERVAL_MS || 21600000 });
   app.use(requestId);
   app.use(legacyErrorCompatibility);
-  // The existing UI relies on inline scripts/styles; helmet remains enabled without a CSP that blocks them.
-  app.use(helmet({ contentSecurityPolicy: false }));
+  // Start CSP in report-only mode so existing inline UI behavior remains observable before enforcement.
+  app.use(helmet({ contentSecurityPolicy: { reportOnly: true, directives: {
+    defaultSrc: ["'self'"], scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+    imgSrc: ["'self'", 'data:', 'https:'], connectSrc: ["'self'", 'https://*.supabase.co', 'https://api-m.sandbox.paypal.com', 'https://generativelanguage.googleapis.com'],
+    objectSrc: ["'none'"], baseUri: ["'self'"], frameAncestors: ["'self'"], reportUri: '/api/security/csp-report',
+  } } }));
   app.use((req, res, next) => {
     const started = Date.now();
     res.on('finish', () => {
@@ -76,7 +82,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
     });
     next();
   });
-  const publicPaths = ['/status', '/public-config', '/webhook', '/auth/preflight'];
+  const publicPaths = ['/status', '/public-config', '/webhook', '/auth/preflight', '/security/csp-report'];
   const generalIpLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_IP) || 1500, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: { code: 'RATE_LIMITED', message: 'Too many requests. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) });
   app.use('/api', generalIpLimit);
   app.use('/api', authPreflightRoutes());
@@ -90,6 +96,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', documentRoutes({ config, identity, provider: documentOCRProvider, keyPool: geminiKeyPool, rag: documentRag, events: repos.events }));
   app.use('/api/ai/transcribe', express.raw({ type: 'application/octet-stream', limit: '8mb' }));
   app.use(express.json({ limit: '64kb' }));
+  app.use('/api', securityRoutes());
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/') && req.path !== '/api/ai/transcribe' && req.method === 'POST' && !requestBody.safeParse(req.body).success) return res.status(400).json({ error: 'Request body must be valid JSON.' });

@@ -46,6 +46,7 @@ const schema = z.object({
   ANOMALY_STALE_WEBHOOK_MINUTES: z.coerce.number().int().min(1).max(1440).default(10),
   ANOMALY_FAILURE_COUNT: z.coerce.number().int().min(2).max(100).default(3),
   ANOMALY_FAILURE_WINDOW_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+  SECURITY_HASH_SALT: z.string().min(32).optional().default(''),
   CURRENCY_CONVERTER_URL: z.string().url().default('https://currency-4mff.onrender.com'),
   ANOMALY_SCAN_INTERVAL_MS: z.coerce.number().int().min(60000).max(86400000).default(21600000),
   ANTHROPIC_API_KEY: z.string().optional().default(''),

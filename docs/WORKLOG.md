@@ -5822,3 +5822,7 @@ ABOUT TO stage only task files; no .env path is included.
 - Added `classifyFailure`, PayPal safe error fields, migration `0022_payment_failures.sql`, memory/Postgres failure repositories, org-scoped GET `/api/failures`, repeated-failure anomaly rule, and failure recording for order creation, capture, refund decision, and webhook dead-letter paths.
 - Regression coverage checks distinct network, provider outage, declined instrument, refund-limit and unknown causes, plus repeated-category detection.
 - PayPal issue mapping was checked against official Orders v2 and Payments v2 references. No live PayPal request was made.
+# 2026-11-09 Security hardening groundwork
+
+- Added migration `0023_security.sql`, account-risk scoring and recent-auth step-up helpers, process-local login throttling primitive, a deterministic suspicious-message endpoint, report-only CSP headers, login/OTP phishing notice, and Supabase Dashboard leaked-password-protection instructions.
+- Automated risk, step-up helper, throttling, phishing and migration syntax checks pass. Browser CSP reports and Supabase MFA integration have not been verified.

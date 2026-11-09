@@ -62,3 +62,6 @@ The backend accepts optional server-only `GEMINI_API_KEY_1` through `GEMINI_API_
 A switch appears in the server/API activity log as a safe slot-only message, such as `POST gemini gemini-3.5-flash-lite:generateContent -> 429 · key #1 exhausted, switching to key #2`; no key material is logged. When every configured key is cooling down or disabled, the provider returns the existing safe unavailable response immediately; it does not wait for a reset. Existing `LLM_API_KEY` (for Gemini) and `GEMINI_API_KEY` configurations continue to work without numbered variables.
 
 `AI_DAILY_USER_LIMIT` and `AI_DAILY_ORG_LIMIT` still apply before a model call (including document embeddings); therefore those application budgets can block judging traffic before a provider key is exhausted. Increase them only through server environment configuration when the demo requires it.
+# Supabase password breach protection
+
+Enable leaked-password protection in the Supabase Dashboard under Authentication → Security and Protection. NovaPay does not call a leaked-password service in the sign-in request path.

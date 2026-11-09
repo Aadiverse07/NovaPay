@@ -764,3 +764,8 @@
 - Choice: classify only documented PayPal issue identifiers before applying HTTP status fallback; preserve safe diagnostics with a failure record and keep `retryBlocked` on uncertain captures/refunds.
 - Reason: the UI can explain known causes without guessing and the existing idempotency and human approval controls remain in place. Unknown provider values stay unknown.
 - Sources: PayPal [Orders v2 errors](https://developer.paypal.com/serversdk/php/api-endpoints/orders/errors), [Payments v2 refund](https://developer.paypal.com/api/payments/v2/captures-refund), checked 2026-11-09.
+# Security groundwork (2026-11-09)
+
+- Choice: add org-scoped login/device schemas, explainable risk scoring primitives, a deterministic suspicious-message checker and report-only CSP. Supabase remains the sign-in authority.
+- Reason: these foundations avoid storing raw network identifiers and permit observing CSP reports before enforcing a policy against existing inline UI.
+- Limitation: login event ingestion, Supabase MFA enrollment/challenges, integrated lockout and risk-based step-up enforcement remain to be wired.
