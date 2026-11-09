@@ -360,6 +360,7 @@ export function createRepositories() {
     async deleteDevice(orgId,userId,deviceId) { return deviceRows.delete(`${orgId}:${userId}:${deviceId}`); },
     async loginCount(orgId,userId) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).length; },
     async hasNetwork(orgId,userId,ipHash) { return loginEventRows.some((row)=>row.org_id===orgId&&row.user_id===userId&&row.ip_hash===ipHash); },
+    async failedLoginCount(orgId,userId,minutes=15) { const since=Date.now()-minutes*60000;return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
   };
   const ticketRows = new Map(), ticketMessages = [];
   repos.supportTickets = {

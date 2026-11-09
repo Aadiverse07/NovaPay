@@ -70,6 +70,35 @@ export function hashUserAgent(value, salt) {
   return createHash('sha256').update(`${salt}:${String(value || 'unknown').slice(0, 500)}`).digest('hex');
 }
 
+export function createRequestBurstTracker({ windowMs = 60000, threshold = 30, now = () => Date.now() } = {}) {
+  const requests = new Map();
+  return {
+    hit(userId) {
+      const at=now(), times=(requests.get(userId)||[]).filter((time)=>at-time<windowMs);
+      times.push(at);requests.set(userId,times);
+      return { count:times.length, burst:times.length>=threshold };
+    },
+  };
+}
+
+export async function computeAccountRisk({ repos, orgId, userId, config = {}, user = {}, requestBurst = false, sensitiveAction = false, now = new Date() }) {
+  const [logins,failedLogins,devices]=await Promise.all([
+    repos.security.listLogins(orgId,userId,{limit:50,offset:0}),
+    repos.security.failedLoginCount?.(orgId,userId,Number(config.SECURITY_FAILED_LOGIN_WINDOW_MINUTES||15))||0,
+    repos.security.listDevices(orgId,userId),
+  ]);
+  const latest=logins?.[0], reasons=Array.isArray(latest?.risk_reasons)?latest.risk_reasons:[];
+  const newDevice=Boolean(latest&&reasons.some((reason)=>/device not seen before/i.test(reason)));
+  const newIpRange=Boolean(latest&&reasons.some((reason)=>/new network/i.test(reason)));
+  const updatedAt=Date.parse(user.updatedAt||'');
+  const age=now.getTime()-updatedAt;
+  const recentCredentialChange=Number.isFinite(age)&&age>=0&&age<Number(config.SECURITY_CREDENTIAL_CHANGE_WINDOW_MINUTES||30)*60000;
+  const loginAt=Date.parse(latest?.occurred_at||'');
+  const sensitiveActionAfterNewDevice=Boolean(sensitiveAction&&newDevice&&Number.isFinite(loginAt)&&now.getTime()-loginAt<=Number(config.SECURITY_SENSITIVE_AFTER_NEW_DEVICE_MINUTES||15)*60000);
+  const risk=scoreAccountRisk({newDevice,newIpRange,failedLogins:Number(failedLogins)>0,recentCredentialChange,sensitiveActionAfterNewDevice,requestBurst},config);
+  return {...risk,signals:{newDevice,newIpRange,failedLogins:Number(failedLogins)>0,recentCredentialChange,sensitiveActionAfterNewDevice,requestBurst},devicesKnown:devices?.length||0,sessionDeviceId:latest?.device_id||null};
+}
+
 export function recentStepUp(auth = {}, now = Date.now(), maxAgeSeconds = 300) {
   const authTime = Number(auth.authTime || auth.auth_time || 0);
   const factors = Array.isArray(auth.amr) ? auth.amr.map((item) => typeof item === 'string' ? item : item?.method) : [];

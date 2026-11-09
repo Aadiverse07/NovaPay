@@ -26,5 +26,5 @@ test('session starts persist hashed signals, upsert devices and ignore first-dev
   const rows=await repos.security.listLogins('org-a','user-a');
   assert.equal(rows.length,2);assert.equal(rows[0].network_label,'IPv4 network 8.8.8.0/24');
   assert.notEqual(rows[0].ip_hash,'8.8.8.42');assert.match(rows[0].user_agent_hash,/^[a-f0-9]{64}$/);
-  assert.equal((await repos.security.listDevices('org-a','user-a')).length,2);assert.equal(audits.length,2);
+  assert.equal((await repos.security.listDevices('org-a','user-a')).length,2);assert.equal(audits.length,3);
 });

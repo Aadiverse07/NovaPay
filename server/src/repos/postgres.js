@@ -343,6 +343,7 @@ export function createPostgresRepositories(database) {
     async deleteDevice(orgId,userId,deviceId) { return database.rpc('remove_user_device',{p_org:orgId,p_user:userId,p_device:deviceId}); },
     async loginCount(orgId,userId) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,limit:'1'}));return rows?.length?1:0; },
     async hasNetwork(orgId,userId,ipHash) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,ip_hash:`eq.${ipHash}`,limit:'1'}));return Boolean(rows?.length); },
+    async failedLoginCount(orgId,userId,minutes=15) { const rows=await database.select('login_events',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,success:'eq.false',occurred_at:`gte.${new Date(Date.now()-minutes*60000).toISOString()}`,limit:'100'}));return rows?.length||0; },
   };
 
   const supportTickets = {

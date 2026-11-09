@@ -37,6 +37,7 @@ import { failureRoutes } from './routes/failures.js';
 import { securityRoutes } from './routes/security.js';
 
 import { supportRoutes } from './routes/support.js';
+import { createRequestBurstTracker } from './services/accountRisk.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
@@ -61,6 +62,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   askAI ||= createAIService({ config, events: repos.events, repos, fx, provider: createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool }), documentSearch: documentRag });
   transcribeAudio ||= createLLMAdapter({ config, events: repos.events, keyPool: geminiKeyPool, purpose: 'transcription' }).transcribeAudio;
   const runAnomalyScan = createAnomalyService({ repos, config });
+  const requestBurstTracker=createRequestBurstTracker({windowMs:Number(config.SECURITY_REQUEST_BURST_WINDOW_SECONDS||60)*1000,threshold:Number(config.SECURITY_REQUEST_BURST_THRESHOLD||30)});
 
   app.disable('x-powered-by');
   app.locals.startWebhookWorker = () => startWebhookWorker({ repos, paypal });
@@ -91,6 +93,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_IP_RATE_LIMITED', message: 'Too many onboarding attempts from this network. Try again later.' } } }));
   app.use('/api', fxPublicRoutes({ currencyConverterUrl: config.CURRENCY_CONVERTER_URL }));
   app.use('/api', authMiddleware({ config, identity }));
+  app.use('/api', (req,_res,next)=>{if(req.user?.id)req.securityRequestBurst=requestBurstTracker.hit(req.user.id);next()});
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_USER) || 1200, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many requests for this account. Try again later.' } }, skip: (req) => publicPaths.includes(req.path) || isCheapReadOnlyRequest(req) }));
   app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: Number(config.RATE_LIMIT_READ_USER) || 2400, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => req.user.id, message: { error: { code: 'USER_RATE_LIMITED', message: 'Too many organization reads for this account. Try again later.' } }, skip: (req) => !isCheapReadOnlyRequest(req) }));
   app.use('/api', rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false, keyGenerator: (req) => `onboarding:${req.user.id}`, skip: (req) => req.path !== '/onboarding' || req.method !== 'POST', message: { error: { code: 'ONBOARDING_RATE_LIMITED', message: 'Too many onboarding attempts for this account. Try again later.' } } }));
