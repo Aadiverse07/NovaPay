@@ -5853,3 +5853,9 @@ ABOUT TO stage only task files; no .env path is included.
 - Reproduced the empty-send behavior: the route sent OTP from the server via `/auth/v1/otp`, and its helper discarded the Supabase response; code verification also happened server-side without a short-lived signed proof.
 - Switched to a separate browser Supabase client with persistence/refresh disabled. It sends and verifies email OTP without replacing the primary session, then posts the temporary token to NovaPay. The server checks the verified subject, email provider, OTP auth method, and token issue time (120 seconds).
 - Added masked email display and 60-second resend cooldown. Live delivery was not tested; see the dashboard template configuration in the Runbook.
+
+## 2026-11-09 — Password change recovery
+
+- Reproduced the generic error path: Settings discarded the Supabase error and always showed one message. Added a live-session check, distinct mappings for reauthentication, same/weak password, missing/expired session, rate limit, and invalid nonce.
+- Secure-password-change errors trigger Supabase `reauthenticate()` and expose a code field; `updateUser` retries with the submitted nonce. On success the backend records an audit event and revokes the user's other device grants while retaining the current one.
+- No live account password was changed during verification.

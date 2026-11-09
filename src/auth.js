@@ -15,6 +15,7 @@
   var securityStartedToken = "";
   var publicConfig = null;
   var stepUpClient = null;
+  var recoveryFlow = false;
 
   function notifyAuth() {
     document.dispatchEvent(new CustomEvent("novapay:auth", { detail: { mode: mode, signedIn: isAuthenticated(), workspaceRequired: workspaceState === "missing", workspaceState: workspaceState } }));
@@ -266,6 +267,7 @@
     var result = await client.auth.getSession();
     if (result.error) throw result.error;
     session = result.data.session;
+    recoveryFlow = true;
     return session;
   }
 
@@ -378,17 +380,29 @@
     var result = await client.auth.verifyOtp({ email: email, token: String(token || ""), type: "recovery" });
     if (result.error) throw result.error;
     session = result.data.session;
+    recoveryFlow = true;
     return session;
   }
 
-  async function updatePassword(password) {
+  async function updatePassword(password, nonce) {
     await api.ready;
-    if (mode !== "supabase" || !client) throw new Error("Password recovery is unavailable in demo mode.");
-    var result = await client.auth.updateUser({ password: password });
-    if (result.error) throw result.error;
-    if (session) await ensureWorkspace(session, displayName(session.user));
+    if (mode !== "supabase" || !client) throw Object.assign(new Error("Password recovery is unavailable in demo mode."),{code:"session_not_found"});
+    var current=await client.auth.getSession();
+    if(current.error)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found",status:401});
+    session=current.data.session||session;
+    if(!session||!session.access_token)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found",status:401});
+    if(recoveryFlow&& !session.user)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found",status:401});
+    var attrs={password:password};if(nonce)attrs.nonce=nonce;
+    var result=await client.auth.updateUser(attrs);
+    if(result.error)throw result.error;
+    session=(await client.auth.getSession()).data.session||session;recoveryFlow=false;
+    await ensureWorkspace(session,displayName(session.user));
+    if(window.NovaPayApi&&typeof window.NovaPayApi.request==="function")try{await window.NovaPayApi.request("/api/security/credential-changed",{method:"POST",body:{deviceId:persistentDeviceId()}})}catch(error){throw Object.assign(new Error("Password changed, but NovaPay could not record the security update. Refresh your session and try again."),{code:"credential_audit_failed",passwordChanged:true});}
     notifyAuth();
   }
+
+  async function reauthenticatePasswordChange(){await api.ready;if(mode!=="supabase"||!client||!session)throw Object.assign(new Error("Sign in again before changing your password."),{code:"session_not_found"});var result=await client.auth.reauthenticate();if(result.error)throw result.error;}
+
 
   async function signInWithGoogle() {
     await api.ready;
@@ -443,6 +457,7 @@
     resetPassword: resetPassword,
     verifyRecovery: verifyRecovery,
     updatePassword: updatePassword,
+    reauthenticatePasswordChange: reauthenticatePasswordChange,
     signInWithGoogle: signInWithGoogle,
     signOut: signOut
   };

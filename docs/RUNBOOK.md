@@ -89,3 +89,5 @@ In Supabase Dashboard → Authentication → Email Templates, edit **Magic Link*
 > Your NovaPay verification code is {{ .Token }}. It expires in a few minutes. NovaPay will never ask you for your password.
 
 The step-up prompt uses a temporary, non-persisting Auth client and requires a code-based `email` verification token issued within two minutes. Supabase Auth rate limits and configured SMTP still apply. If email delivery is disabled or SMTP is unavailable, the prompt reports that and password verification remains available.
+
+Settings → Security → Password now handles Supabase's Secure password change setting. If Supabase returns `reauthentication_needed`, a code is sent and the next update includes the nonce. For test accounts, verify successful update, same-password rejection, weak-password details, reauthentication code accepted/rejected, expired session, and Auth rate limiting. Never put passwords or codes in logs or issue reports.

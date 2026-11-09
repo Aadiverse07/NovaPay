@@ -355,6 +355,7 @@ export function createPostgresRepositories(database) {
     async grantStepUp(input) { const rows=await database.upsert('step_up_grants',input,'org_id,user_id,device_id');return rows?.[0]||null; },
     async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const rows=await database.select('step_up_grants',q({select:'id',org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`,expires_at:`gt.${now.toISOString()}`,limit:'1'}));return Boolean(rows?.length); },
     async deleteStepUpGrant(orgId,userId,deviceId) { return database.delete('step_up_grants',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`eq.${deviceId}`})); },
+    async deleteOtherStepUpGrants(orgId,userId,deviceId) { return database.delete('step_up_grants',q({org_id:`eq.${orgId}`,user_id:`eq.${userId}`,device_id:`neq.${deviceId}`})); },
   };
 
   const supportTickets = {

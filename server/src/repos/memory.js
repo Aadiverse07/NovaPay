@@ -365,6 +365,7 @@ export function createRepositories() {
     async grantStepUp(input) { const row={id:randomUUID(),granted_at:new Date().toISOString(),...input};stepUpGrantRows.set(`${input.org_id}:${input.user_id}:${input.device_id}`,row);return row; },
     async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const row=stepUpGrantRows.get(`${orgId}:${userId}:${deviceId}`);return Boolean(row&&Date.parse(row.expires_at)>now.getTime()); },
     async deleteStepUpGrant(orgId,userId,deviceId) { return stepUpGrantRows.delete(`${orgId}:${userId}:${deviceId}`); },
+    async deleteOtherStepUpGrants(orgId,userId,deviceId) { let deleted=0;for(const [key,row] of stepUpGrantRows){if(row.org_id===orgId&&row.user_id===userId&&row.device_id!==deviceId){stepUpGrantRows.delete(key);deleted++}}return deleted; },
     async loginLock(accountHash,ipHash) { const now=Date.now();return loginAttemptRows.filter((row)=>(row.account_hash===accountHash||row.ip_hash===ipHash)&&row.locked_until&&Date.parse(row.locked_until)>now).sort((a,b)=>Date.parse(b.locked_until)-Date.parse(a.locked_until))[0]?.locked_until||null; },
     async recordLoginAttempt({orgId=null,userId=null,accountHash,ipHash,success,config={}}) {
       const now=Date.now(),windowMs=Number(config.SECURITY_LOGIN_WINDOW_MINUTES||15)*60000,baseMs=Number(config.SECURITY_LOGIN_LOCK_MINUTES||15)*60000,threshold=Number(config.SECURITY_LOGIN_FAILURE_THRESHOLD||5);

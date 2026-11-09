@@ -63,7 +63,7 @@ test('Settings password updates use Supabase Auth and account deletion stays dem
     readFile(new URL('../../dashboard.html', import.meta.url), 'utf8'),
     readFile(new URL('../../src/dashboard.js', import.meta.url), 'utf8'),
   ]);
-  assert.match(source, /NovaPayAuth\.updatePassword\(next\)/);
+  assert.match(source, /NovaPayAuth\.updatePassword\(next/);
   assert.match(source, /button\.hidden=!demo/);
   assert.match(source, /if\(window\.NovaPayAuth&&NovaPayAuth\.mode==="supabase"\)\{showToast\("Account deletion is not available/);
   assert.match(html, /Delete demo profile/);

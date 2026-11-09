@@ -331,6 +331,7 @@
                 <label for="set-pw-current"><span><b>Current password</b><small>Required to set a new one.</small></span><input type="password" id="set-pw-current" autocomplete="current-password"></label>
                 <label for="set-pw-new"><span><b>New password</b><small>At least 8 characters, with a letter and a number.</small></span><input type="password" id="set-pw-new" autocomplete="new-password"></label>
                 <label for="set-pw-confirm"><span><b>Confirm new password</b><small>Type the new password again.</small></span><input type="password" id="set-pw-confirm" autocomplete="new-password"></label>
+                <label id="set-pw-nonce-label" for="set-pw-nonce" hidden><span><b>Email verification code</b><small>Enter the code Supabase sent to your account email.</small></span><input id="set-pw-nonce" inputmode="numeric" autocomplete="one-time-code" maxlength="8"></label>
                 <p class="set-status" id="set-pw-status" role="status" aria-live="polite"></p>
                 <div class="settings-actions"><button class="btn btn--primary" id="set-pw-submit" type="submit">Update password</button></div>
               </form>
@@ -592,6 +593,7 @@
 </div>
 <div class="toast" id="dashboard-toast" role="status" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3"></script>
+<script src="src/password-errors.js"></script>
 <script src="src/auth.js"></script>
 <script src="src/workspace-guard.js"></script>
 <script src="src/api-client.js"></script>

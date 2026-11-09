@@ -96,3 +96,8 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 
 - Replaced server-side OTP send/verify with a dedicated non-persisting Supabase browser client and a signed proof checked by the backend. Proof must match the signed-in subject, use email OTP, and be at most 120 seconds old.
 - Modal shows masked email and resend cooldown. Automated route checks pass; actual delivery requires the Supabase Magic Link and Reauthentication templates to include `{{ .Token }}` and was not tested against a live inbox.
+
+## 2026-11-09 password-change follow-up
+
+- Settings no longer erases Supabase password-update errors. It handles secure-change nonce flow, maps weak/same/invalid-session/rate-limit outcomes, and records a successful credential change through the backend, revoking other device grants while preserving the current session.
+- Test fixtures cover error mapping and grant revocation. A real password change/code delivery remains a manual check.

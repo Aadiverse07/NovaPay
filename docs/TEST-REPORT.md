@@ -1589,3 +1589,9 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 
 - Verified route acceptance requires a matching user subject, email provider, OTP auth method, and token issued no more than 120 seconds ago; old and other-user proofs are rejected.
 - UI now uses an isolated non-persisting Supabase client, masks the account email, and shows a 60-second resend cooldown. Automated tests do not send email. Supabase Dashboard Magic Link and Reauthentication templates still require `{{ .Token }}`; live delivery remains unverified.
+
+## Settings password change follow-up (2026-11-09)
+
+- Added mapping tests for `reauthentication_needed`, invalid nonce, `same_password`, `weak_password` details, absent/expired session, and rate limiting.
+- Added route/repository coverage showing a credential-change event revokes other step-up device grants while preserving the current one and writing an audit entry.
+- Live Supabase password update and nonce email flow were not exercised.

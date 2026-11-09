@@ -31,3 +31,11 @@ test('member lock controls are role-gated and owner unlock audits the member act
   const viewerApp=createApp({config,identity:{...identity,async membership(){return{role:'viewer'}}},repos});
   await withServer(viewerApp,async base=>{const denied=await request(base,'/api/security/members');assert.equal(denied.status,403)});
 });
+
+test('credential change records audit and revokes other device grants while preserving this device',async()=>{
+ const repos=createRepositories(),other='e0000000-0000-4000-8000-000000000005',audits=[];const identity={async verifyToken(){return{id:user,email:'owner@example.test'}},async membership(){return{role:'owner'}},async audit(event){audits.push(event)}};
+ await repos.security.upsertDevice({org_id:org,user_id:user,device_id:device,last_seen:new Date().toISOString()});await repos.security.upsertDevice({org_id:org,user_id:user,device_id:other,last_seen:new Date().toISOString()});
+ for(const id of [device,other])await repos.security.grantStepUp({org_id:org,user_id:user,device_id:id,expires_at:new Date(Date.now()+60000).toISOString()});
+ const app=createApp({config,identity,repos});await withServer(app,async base=>{const response=await fetch(base+'/api/security/credential-changed',{method:'POST',headers:{authorization:'Bearer valid-token','x-org-id':org,'content-type':'application/json'},body:JSON.stringify({deviceId:device})});assert.equal(response.status,200);assert.equal((await response.json()).revokedGrantCount,1)});
+ assert.equal(await repos.security.hasStepUpGrant(org,user,device),true);assert.equal(await repos.security.hasStepUpGrant(org,user,other),false);assert.equal(audits.at(-1).action,'security.credential_changed');
+});

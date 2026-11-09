@@ -72,6 +72,17 @@ export function securityRoutes({ config = {}, identity, repos } = {}) {
     try { return res.status(201).json(await recordSecuritySession({req,repos,config,identity})); }
     catch(error){return next(error)}
   });
+  router.post('/security/credential-changed',async(req,res,next)=>{
+    const parsed=sessionSchema.safeParse(req.body);
+    if(!parsed.success)return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','A valid device ID is required.'));
+    try{
+      const device=await repos.security.getDevice(req.orgId,req.user.id,parsed.data.deviceId);
+      if(!device)return res.status(403).json(structuredErrorBody('DEVICE_SESSION_REQUIRED','This device session is not registered.'));
+      const revoked=await repos.security.deleteOtherStepUpGrants(req.orgId,req.user.id,parsed.data.deviceId);
+      await auditApiAction(identity,req,{action:'security.credential_changed',entity:'user',entityId:req.user.id,metadata:{revokedGrantCount:Number(revoked)||0}});
+      return res.json({recorded:true,revokedGrantCount:Number(revoked)||0});
+    }catch(error){return next(error)}
+  });
   router.post('/security/step-up',async(req,res,next)=>{
     const parsed=stepUpSchema.safeParse(req.body);
     if(!parsed.success){await auditApiAction(identity,req,{action:'security.step_up_failed',entity:'user',entityId:req.user.id,metadata:{reason:'invalid_request'}});return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Re-authentication details are invalid.'))}
