@@ -12,7 +12,7 @@ const actorByToken={
   'owner-token':{id:'owner-user',role:'owner'},
   'viewer-token':{id:'viewer-user',role:'viewer'},
 };
-const config={hasPayPal:false,PAYPAL_INVOICE_SEND_MODE:'simulated'};
+const config={ENABLE_COMMUNITY_FUNDS:true,ENABLE_MAINTENANCE:true,hasPayPal:false,PAYPAL_INVOICE_SEND_MODE:'simulated'};
 
 test('T4 payment request enters existing approvals queue and completes once as SIMULATED without a ledger entry',async()=>{
   const repos=createRepositories();

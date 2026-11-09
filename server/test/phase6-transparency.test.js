@@ -16,7 +16,7 @@ const actors={
   'resident-token':{id:'resident-user',role:'resident'},
   'viewer-token':{id:'viewer-user',role:'viewer'},
 };
-const config={hasPayPal:true,PAYPAL_INVOICE_SEND_MODE:'simulated'};
+const config={ENABLE_COMMUNITY_FUNDS:true,ENABLE_MAINTENANCE:true,hasPayPal:true,PAYPAL_INVOICE_SEND_MODE:'simulated'};
 
 test('T6 transparency is org-scoped, privacy-safe, gap-explicit, and audit export is role-gated/formula-safe',async()=>{
   const repos=createRepositories();

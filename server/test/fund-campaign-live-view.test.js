@@ -15,7 +15,7 @@ const identity = {
   async verifyToken(token) { return users.has(token) ? { id: users.get(token).id } : null; },
   async membership(userId, orgId) { const user = [...users.values()].find((item) => item.id === userId); return user?.org === orgId ? { role: user.role } : null; },
 };
-const config = { PORT: 3000, STATIC_DIR: process.cwd(), hasPayPal: false, hasSupabase: true, hasAI: false };
+const config = { ENABLE_COMMUNITY_FUNDS: true, ENABLE_MAINTENANCE: true, PORT: 3000, STATIC_DIR: process.cwd(), hasPayPal: false, hasSupabase: true, hasAI: false };
 
 test('campaign list is live and organization scoped; owner can create, viewer receives 403', async () => {
   const repos = createRepositories();

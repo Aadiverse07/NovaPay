@@ -13,6 +13,7 @@
     var nav = text.match(/^(?:please\s+)?(?:open|go to|navigate to|switch to|take me to|show)(?:\s+the)?\s+(.+?)[.! ]*$/);
     if (nav && QUICK_VIEWS[nav[1].trim()]) {
       var view = QUICK_VIEWS[nav[1].trim()];
+      if (view === "community-funds" && !(root.NovaPayFeatures && root.NovaPayFeatures.communityFunds) || view === "maintenance" && !(root.NovaPayFeatures && root.NovaPayFeatures.maintenance)) return null;
       return { action: { id: "nav.open", tier: 0, args: { view: view } }, reply: "Opening " + (view === "community-funds" ? "Community Funds" : view[0].toUpperCase() + view.slice(1)) + ".", speak: true };
     }
     if (/^(?:stop|stop speaking|cancel|be quiet|quiet)[.! ]*$/.test(text)) return { action: { id: "assistant.stopSpeaking", tier: 0, args: {} }, reply: "Okay, I stopped speaking.", speak: false };

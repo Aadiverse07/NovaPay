@@ -11,7 +11,7 @@ const actorByToken={
   'approver-token':{id:'approver-user',role:'approver'},
   'viewer-token':{id:'viewer-user',role:'viewer'},
 };
-const config={hasPayPal:false,PAYPAL_INVOICE_SEND_MODE:'simulated'};
+const config={ENABLE_COMMUNITY_FUNDS:true,ENABLE_MAINTENANCE:true,hasPayPal:false,PAYPAL_INVOICE_SEND_MODE:'simulated'};
 
 test('T5 completion evidence requires paid state and reviewer acceptance before audited close',async()=>{
   const repos=createRepositories();

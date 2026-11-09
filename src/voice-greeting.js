@@ -1,7 +1,9 @@
 const GREETING_KEY = 'novapay-voice-greeting-spoken';
 
-export function buildVoiceGreeting(registry) {
-  const nav = registry?.registry?.find((item) => item.id === 'nav.open');
+export function buildVoiceGreeting(registry, featureFlags = globalThis.NovaPayFeatures || {}) {
+  const features = featureFlags;
+  const available = registry?.availableRegistry ? registry.availableRegistry(features) : registry?.registry;
+  const nav = available?.find((item) => item.id === 'nav.open');
   const views = nav?.args?.properties?.view?.enum || [];
   const names = views.filter((view) => view !== 'dashboard' && view !== 'ai-assistant').map((view) => ({
     'community-funds': 'community funds', sandbox: 'PayPal Sandbox',
