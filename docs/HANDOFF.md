@@ -1,3 +1,20 @@
+# 2026-11-09 feature checkpoint
+
+Commits on the current branch: `67d8ba4` payment failure diagnosis, `6f7d515` security hardening foundations, and `e5a1f93` support ticketing.
+
+## Current implementation state
+
+- Failure diagnosis includes PayPal provider metadata, documented issue classification, organization-scoped persistence/API, repeated-failure anomaly detection, AI evidence, and Sandbox/Approval cause display. Live PayPal outcomes and visual browser behavior remain unverified.
+- Security hardening includes risk and step-up helper functions, a generic process-local throttle, suspicious-message heuristics, report-only CSP, security migration and password-protection runbook. Supabase login-event ingestion, MFA enrollment/challenges, integrated throttling and risk-based step-up enforcement remain unfinished.
+- Ticketing includes `support` membership role, org-scoped APIs/repos, author/staff visibility rules, internal notes, creation rate limit, UI queue/thread, assignment to self and status updates. Live Supabase RLS, notification visibility/delivery and ticket route role tests remain unverified.
+
+## Verification
+
+- `npm test`: 400/401 passed. The only failure is the pre-existing `server/test/fund-campaign-live-view.test.js` assertion expecting `<script src="src/fund-views.js">`; it does not relate to these feature changes.
+- Migration syntax checker passed for all 24 migrations, including `0022_payment_failures.sql`, `0023_security.sql` and `0024_support_tickets.sql`.
+- Focused added tests cover failure categories, repeated failure detection, account-risk helpers, phishing heuristics, support repository organization isolation and internal-note visibility.
+- No live Supabase migration or PayPal Sandbox request was made.
+
 # Phase 1 handoff
 
 Branch: `backend`. Current phase: Phase 1 — Foundation.
