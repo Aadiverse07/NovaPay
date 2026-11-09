@@ -4,12 +4,13 @@ export function createAnomalyService({ repos, config, now = () => new Date() }) 
   return async function runAnomalyScan(orgId) {
     if (!orgId) throw new Error('Verified organization context is required.');
     const at = now();
-    const [transactions, events, reconciliation] = await Promise.all([
+    const [transactions, events, reconciliation, failures] = await Promise.all([
       repos.listTransactions(orgId, { limit: 1000, offset: 0 }),
       repos.events.anomalyCandidates(orgId, Number(config.ANOMALY_STALE_WEBHOOK_MINUTES || 10)),
       repos.reconcile(orgId, 'USD'),
+      repos.failures?.recent(orgId, Number(config.ANOMALY_FAILURE_WINDOW_MINUTES || 15)) || [],
     ]);
-    const findings = detectAnomalies({ transactions: transactions || [], events: events || [], reconciliation, config, now: at });
+    const findings = detectAnomalies({ transactions: transactions || [], events: events || [], failures: failures || [], reconciliation, config, now: at });
     const created = [];
     for (const finding of findings) {
       const result = await repos.anomalies.record(orgId, finding, at);
@@ -28,9 +29,9 @@ export function startAnomalyWorker({ repos, runAnomalyScan, intervalMs = 2160000
     try {
       const orgIds = await repos.ai.listOrgIds();
       for (const orgId of orgIds || []) {
-        try { await runAnomalyScan(orgId); } catch { logger.warn?.('NovaPay anomaly scan failed for an organization.'); }
+try { await runAnomalyScan(orgId); } catch (error) { logger.warn?.(`NovaPay anomaly scan failed for an organization. msg="${error?.message}" status=${error?.statusCode} code=${error?.code} db=${error?.databaseCode}`); }
       }
-    } catch { logger.warn?.('NovaPay anomaly scan could not list organizations.'); }
+       } catch (error) { logger.warn?.(`NovaPay anomaly scan could not list organizations. status=${error?.statusCode} code=${error?.code} db=${error?.databaseCode}`); }
     finally { running = false; }
   };
   const timer = setInterval(() => { void run(); }, intervalMs);

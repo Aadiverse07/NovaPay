@@ -12,6 +12,7 @@ export const AI_READ_ONLY_TOOLS = Object.freeze([
   { name: 'get_fee_breakdown', description: 'Read ledger fee totals by reporting period.' },
   { name: 'get_refunds', description: 'Read completed and pending refund transactions.' },
   { name: 'get_invoices', description: 'Read invoice status and totals without customer contact details.' },
+  { name: 'get_payment_failures', description: 'Read recent payment failure causes for the verified organization.' },
 ]);
 
 const toolNames = new Set(AI_READ_ONLY_TOOLS.map((tool) => tool.name));
@@ -181,6 +182,10 @@ function makeToolHandlers(repos, orgId) {
       const rows = await repos.invoices.list(orgId, { limit: boundedLimit(args.limit), offset: 0, ...(state ? { state } : {}) });
       return (rows || []).map((row) => invoiceEvidence(row, orgId)).filter(Boolean);
     },
+    async get_payment_failures() {
+      const rows = await repos.failures?.list(orgId, { limit: 10, offset: 0 }) || [];
+      return rows.length ? rows.map((row) => ({ id: String(row.id), recordType: 'payment_failure', operation: String(row.operation), category: String(row.category), code: String(row.code), retryable: Boolean(row.retryable), occurredAt: String(row.occurred_at || row.occurredAt || '') })) : [{ id: 'payment-failures:none', recordType: 'payment_failure_lookup', result: 'no_failure_record' }];
+    },
   };
 }
 
@@ -231,6 +236,7 @@ export function createReadOnlyAITools({ repos, orgId, maxCalls = AI_TOOL_MAX_CAL
 export function planEvidenceTools({ intent, message, now = new Date() }) {
   const args = { ...parsePeriod(message, now), limit: 12 };
   if (intent === 'fx' || intent === 'arithmetic') return [];
+  if (/\b(why|cause|reason).{0,40}\b(payment|transaction)\b.{0,20}\b(fail|failed|failure|declined)\b|\b(payment|transaction)\b.{0,20}\b(fail|failed|failure|declined)\b/i.test(String(message || ''))) return [{ name: 'get_payment_failures', args: {} }];
   if (intent === 'refunds') return [{ name: 'get_refunds', args }];
   if (intent === 'fees') return [{ name: 'get_fee_breakdown', args }];
   if (intent === 'top_customers' || intent === 'invoice_status') return [{ name: 'get_invoices', args }];

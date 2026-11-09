@@ -328,6 +328,12 @@ export function createPostgresRepositories(database) {
     },
   };
 
+  const failures = {
+    async record(input) { const rows = await database.insert('payment_failures', input); return rows?.[0] || null; },
+    async list(orgId, { limit = 50, offset = 0 } = {}) { return database.select('payment_failures', q({ select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(limit), offset: String(offset) })); },
+    async recent(orgId, minutes = 15) { return database.select('payment_failures', q({ select: '*', org_id: `eq.${orgId}`, occurred_at: `gte.${new Date(Date.now() - minutes * 60000).toISOString()}`, order: 'occurred_at.desc', limit: '100' })); },
+  };
+
   const notifications = {
     async list(orgId, { status, limit = 50, offset = 0 } = {}) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(limit), offset: String(offset) };
@@ -436,7 +442,7 @@ export function createPostgresRepositories(database) {
   };
 
   return {
-    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds,
+    orders, captures, approvals, events, fxRates, invoices, reports, ai, anomalies, notifications, funds, failures,
     async listTransactions(orgId, filters) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'occurred_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       if (filters.status) params.status = `eq.${filters.status}`;

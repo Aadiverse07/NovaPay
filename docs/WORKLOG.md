@@ -5817,3 +5817,8 @@ ABOUT TO stage only task files; no .env path is included.
 2026-11-07 21:02 IST | About to rerun and capture npm test summary after the shell used zsh reserved variable `status` and stopped before displaying results. Why: confirm the actual suite outcome and proceed with JS syntax/conflict checks. Next: commit the merge only if the sole failure is the known Community Funds assertion.
 2026-11-07 21:08 IST | About to record the merge commit and verification result in the append-only worklog, then commit only that file. Why: the merge commit succeeded, and a test-run log line was appended after the conflict resolution had been staged. Next: push the completed branch after the worktree is clean.
 2026-11-07 21:08 IST | Merge `origin/main` completed on `fix-payment-check-grid` as `a685f6d`; only conflicts were the four docs logs, with both sides retained. `npm test` 392/393; sole known Community Funds script-tag failure. Conflict-marker scan, changed-JS syntax checks, and diff checks passed. Next: stage this worklog entry only, commit it, then push fix-payment-check-grid.
+# 2026-11-09 Failure diagnosis implementation
+
+- Added `classifyFailure`, PayPal safe error fields, migration `0022_payment_failures.sql`, memory/Postgres failure repositories, org-scoped GET `/api/failures`, repeated-failure anomaly rule, and failure recording for order creation, capture, refund decision, and webhook dead-letter paths.
+- Regression coverage checks distinct network, provider outage, declined instrument, refund-limit and unknown causes, plus repeated-category detection.
+- PayPal issue mapping was checked against official Orders v2 and Payments v2 references. No live PayPal request was made.

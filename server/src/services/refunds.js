@@ -1,7 +1,8 @@
 import { paypalRequestId } from './paypal.js';
 import { auditApiAction } from './audit.js';
+import { classifyFailure } from './failureClassifier.js';
 
-const problem = (status, code, message, retryBlocked = false) => ({ status, body: { error: { code, message }, ...(retryBlocked ? { retryBlocked: true } : {}) } });
+const problem = (status, code, message, retryBlocked = false, extra = {}) => ({ status, body: { error: { code, message }, ...extra, ...(retryBlocked ? { retryBlocked: true } : {}) } });
 
 function legacyRefundShape(approval) {
   const result = approval?.result;
@@ -63,11 +64,13 @@ export async function decideApproval({ repos, paypal, identity, req, approvalId,
     const response = legacyRefundShape(saved);
     return { status: 200, body: response || { refundId: data.id, status: data.status, captureId: approval.captureId, amount, currency: approval.currency }, completed: true };
   } catch (error) {
+    const cause = classifyFailure(error);
+    const failure = await repos.failures?.record({ org_id: req.orgId, operation: 'refund', reference_id: approvalId, category: cause.category, code: cause.code, http_status: error.httpStatus || null, retryable: cause.retryable, provider_issues: error.providerIssues || [], debug_id: error.debugId || null, request_id: req.id || null }).catch(() => null);
     if (error.requestSent && !error.paypalResponse) {
       await repos.approvals.setRefundOutcome(approvalId, req.orgId, 'pending_verification', { status: 'UNKNOWN' });
-      return problem(503, 'REFUND_OUTCOME_UNCERTAIN', 'PayPal request outcome is uncertain. Verify PayPal Sandbox before taking further action.', true);
+      return problem(503, 'REFUND_OUTCOME_UNCERTAIN', 'PayPal request outcome is uncertain. Verify PayPal Sandbox before taking further action.', true, { category: cause.category, userMessage: cause.userMessage, nextStep: cause.nextStep, retryable: cause.retryable, failureId: failure?.id || null });
     }
     await repos.approvals.setRefundOutcome(approvalId, req.orgId, 'pending', { status: 'FAILED' });
-    throw error;
+    return problem(error.statusCode || 502, cause.code, error.message, false, { category: cause.category, userMessage: cause.userMessage, nextStep: cause.nextStep, retryable: cause.retryable, failureId: failure?.id || null });
   }
 }

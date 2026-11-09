@@ -1,3 +1,5 @@
+import { classifyFailure } from './failureClassifier.js';
+
 function asMoney(value) { return value == null ? null : String(value); }
 
 export function isWebhookEventTerminal(event) {
@@ -52,6 +54,11 @@ export async function processPayPalEvent({ eventId, repos, paypal }) {
   } catch (error) {
     const maxAttempts = 5;
     const state = Number(row.attempts || 1) >= maxAttempts ? 'dead_letter' : 'retry';
+    if (state === 'dead_letter' && repos.failures?.record) {
+      const related = await repos.orders.findByPayPalId(payload.resource?.supplementary_data?.related_ids?.order_id || '').catch(() => null);
+      const cause = classifyFailure(error);
+      if (related?.orgId) await repos.failures.record({ org_id: related.orgId, operation: 'webhook', reference_id: String(row.id || eventId), category: cause.category, code: cause.code, http_status: error.httpStatus || null, retryable: cause.retryable, provider_issues: error.providerIssues || [], debug_id: error.debugId || null, request_id: null }).catch(() => {});
+    }
     await repos.events.complete(row.id || eventId, 'verified', null, state, error instanceof Error ? error.message : 'event processing failed');
     return { claimed: true, verification: 'verified', posted: false, state };
   }

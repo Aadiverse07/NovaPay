@@ -118,6 +118,7 @@ export class EventsRepo {
 }
 
 export function createRepositories() {
+  const failureRows = [];
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
@@ -411,5 +412,10 @@ export function createRepositories() {
   };
   repos.approvals.decideInvoiceSend = async () => ({result:'missing',approval:null});
   repos.reports = { async rows() { return []; } };
+  repos.failures = {
+    async record(input) { const row = { id: randomUUID(), occurred_at: new Date().toISOString(), ...input }; failureRows.unshift(row); return row; },
+    async list(orgId, { limit = 50, offset = 0 } = {}) { return failureRows.filter((row) => row.org_id === orgId).slice(offset, offset + limit); },
+    async recent(orgId, minutes = 15) { const since = Date.now() - minutes * 60000; return failureRows.filter((row) => row.org_id === orgId && Date.parse(row.occurred_at) >= since); },
+  };
   return repos;
 }

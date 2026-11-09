@@ -1552,3 +1552,7 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 
 2026-11-07 | `node --check src/novapay-live.js && node --check src/dashboard.js && node --test server/test/approvals-live-data.test.js server/test/dashboard-demo-isolation.test.js server/test/novapay-live-api.test.js && git diff --check` | PASS | 16/16 tests; syntax and whitespace checks passed | Covers persisted refund wording, auth refresh + status GET without POST retry, AI live proposal link, status provider/Sandbox copy.
 2026-11-07 | Browser verification of approval auth recovery, live AI card and status notices | UNVERIFIED | Not run | Requires a hard reload and authenticated browser; no server restart needed.
+# Failure diagnosis checkpoint (2026-11-09)
+
+- `npm test`: migration syntax passed; 395/396 tests passed. One unrelated existing failure remains in `server/test/fund-campaign-live-view.test.js`, whose fixture expects the obsolete `src/fund-views.js` script tag. The legacy PayPal error `statusCode: 502` contract is preserved while actual provider status is exposed separately.
+- New classifier, repository isolation and repeated-category anomaly tests pass. UI is wired to display returned failure causes; visual and live PayPal provider failure cases are not verified.

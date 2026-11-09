@@ -17,6 +17,10 @@ NovaPay is for testing and evaluation. It does not move real money and does not 
 - Maintenance payouts. PayPal Payouts Sandbox is unavailable, so approval only queues the workflow. No money is sent and no ledger entry is made. A simulated payment must never be presented as a completed payout.
 - Dashboard seed figures, illustrative transactions and starter proposals. They are labeled as illustrative in the UI.
 
+## Failure diagnosis
+
+PayPal Sandbox API errors are classified from documented provider issue codes and HTTP status. The org-scoped `/api/failures` feed records the safe cause, retry guidance, request reference and sanitized provider issue identifiers; it never stores full provider payloads or credentials. A retry is only presented as safe when the classifier says the request can be retried. Network, provider and payment-method outcomes remain PayPal Sandbox results; anomaly detection and cause wording are local NovaPay behavior.
+
 ## Modules
 
 Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox, Ledger, Invoices, Reports, Documents, Community Funds and Maintenance. Fundraising, Maintenance and Transparency views read from `/api/funds/*`.

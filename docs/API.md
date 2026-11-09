@@ -169,3 +169,6 @@ The browser fetches the PDF with JWT and `X-Org-Id` headers, then saves the blob
 ### `POST /api/ai/transcribe`
 
 Authenticated, organization-scoped. Accepts an `application/octet-stream` audio body (maximum 8 MB) plus `X-Audio-Mime-Type` (`audio/webm`, `audio/mp4`, `audio/ogg`, `audio/wav`, `audio/mpeg`, or `audio/aac`). Limited to 10 clips per user per 15 minutes. Returns `{ "transcript": "..." }`; raw audio is not stored. This is the only voice path that sends audio to Gemini (Gemini 3.5 Transcribe via the server-side key pool). For Brave or browsers without a working SpeechRecognition service, hold the AI view mic button to record, then the transcript follows the same AI query pipeline as typed and recognized speech. Free-tier provider terms may allow submitted data to be used for product improvement; use only non-sensitive sample speech.
+# Payment failures
+
+`GET /api/failures?limit=50&offset=0` returns recent organization-scoped failure records for owner, admin, accountant and approver roles. Records retain sanitized provider issue codes and debug identifiers only; they do not include provider response bodies.

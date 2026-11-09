@@ -33,6 +33,7 @@ import { fundRoutes } from './routes/funds.js';
 import { documentRoutes } from './routes/documents.js';
 import { createDocumentRag } from './services/documentRag.js';
 import { authPreflightRoutes } from './routes/authPreflight.js';
+import { failureRoutes } from './routes/failures.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const requestBody = z.record(z.string(), z.unknown());
@@ -100,6 +101,7 @@ export function createApp({ config = defaultConfig, repos, paypal, askAI, transc
   app.use('/api', onboardingRoutes({ identity }));
   app.use('/api', aiRoutes({ config, askAI, identity, transcribeAudio }));
   app.use('/api', approvalRoutes({ config, repos, identity, paypal }));
+  app.use('/api', failureRoutes({ repos }));
   app.use('/api', financialRoutes({ repos }));
   app.use('/api', fxRoutes({ fx, currencyConverterUrl: config.CURRENCY_CONVERTER_URL }));
   app.use('/api', reportRoutes({ repos }));

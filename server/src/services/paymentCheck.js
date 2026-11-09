@@ -5,6 +5,7 @@ const RULE_REASONS = {
   large_payout: 'Large payout was flagged for review.',
   stale_webhook: 'Related PayPal webhook is delayed.',
   dead_letter_webhook: 'Related PayPal webhook could not be processed.',
+  repeated_payment_failures: 'Several payments failed for the same reason in a short period.',
 };
 
 export function paymentCheck({ status, transactionId, captureId, anomalies = [], webhookEvents = [], sellerProtection } = {}) {
