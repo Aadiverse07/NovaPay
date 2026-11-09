@@ -186,3 +186,9 @@ Authenticated, organization-scoped. Accepts an `application/octet-stream` audio 
 - `POST /api/security/step-up/otp` sends a re-authentication email code to the signed-in account.
 - `POST /api/security/step-up` accepts either `{ "method": "password", "password": "…", "deviceId": "<registered-device-uuid>" }` or `{ "method": "email_otp", "code": "<code>", "deviceId": "<registered-device-uuid>" }`. Successful verification creates a device-bound grant for `STEP_UP_TTL_MINUTES` (default 10).
 - Refund approvals and invoice sends can return HTTP 403 with `error.code: "STEP_UP_REQUIRED"`; the client prompts and retries that action once after verification. Risk weights, thresholds and the optional always-step-up refund policy are configured by `SECURITY_RISK_*` and `STEP_UP_ALWAYS_FOR_REFUNDS`.
+
+## Login throttling
+
+- `GET /api/auth/preflight?flow=login&email=…` checks the salted account and network-prefix lock before Supabase sign-in. A locked attempt receives a generic `LOGIN_TEMPORARILY_UNAVAILABLE` response.
+- `POST /api/auth/login-attempt` accepts `{ "email": "…", "success": true|false }` after the browser's Supabase password attempt. The server stores only salted account and network hashes, not the submitted email or raw IP.
+- Defaults: 5 failures in 15 minutes create a 15-minute lock; repeated locks back off exponentially, capped at 24 hours. Locked accounts are also refused at the NovaPay API boundary after token verification. Supabase's direct Auth endpoint remains protected by Supabase's own rate limits.

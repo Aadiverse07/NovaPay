@@ -6,6 +6,7 @@ const orgA = 'a0000000-0000-4000-8000-000000000001';
 const orgB = 'b0000000-0000-4000-8000-000000000002';
 const config = {
   PORT: 3000, STATIC_DIR: process.cwd(), hasSupabase: true,
+  SECURITY_HASH_SALT: 'test-security-hash-salt', SECURITY_LOGIN_FAILURE_THRESHOLD: 2, SECURITY_LOGIN_WINDOW_MINUTES: 15, SECURITY_LOGIN_LOCK_MINUTES: 15,
   SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'anon-visible', SUPABASE_SERVICE_ROLE_KEY: 'server-only-secret',
   hasPayPal: false, hasAI: false, PAYPAL_WEBHOOK_ID: '',
 };
@@ -168,6 +169,24 @@ test('auth preflight rate limits signup traffic per IP across distinct addresses
     }
     const limited = await fetch(`${base}/api/auth/preflight?flow=signup&email=another%40example.test`);
     assert.equal(limited.status, 429);
+  });
+});
+
+test('durable login-attempt reports lock account and API auth uses the same generic lock message', async () => {
+  const identity={async verifyToken(){return{id:'user-a',email:'person@example.test'};},async membership(){return{role:'owner'};}};
+  const app=createApp({config,identity});
+  await withServer(app,async(base)=>{
+    for(let i=0;i<2;i++){
+      const response=await fetch(`${base}/api/auth/login-attempt`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:'person@example.test',success:false})});
+      assert.equal(response.status,200);
+    }
+    const preflight=await fetch(`${base}/api/auth/preflight?flow=login&email=person%40example.test`);
+    assert.equal(preflight.status,429);
+    const body=await preflight.json();
+    assert.equal(body.error.message,'Sign-in could not be completed. Wait a little and try again.');
+    const locked=await authFetch(base,'/api/events');
+    assert.equal(locked.status,423);
+    assert.equal((await locked.json()).error.message,body.error.message);
   });
 });
 

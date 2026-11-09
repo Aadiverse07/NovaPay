@@ -270,8 +270,13 @@
   async function signIn(email, password) {
     await api.ready;
     if (mode !== "supabase") throw new Error("Real sign-in is unavailable in demo mode.");
-    var result = await client.auth.signInWithPassword({ email: email, password: password });
-    if (result.error) throw result.error;
+    email = String(email || "").trim().toLowerCase();
+    await authPreflight("login", email);
+    var result;
+    try { result = await client.auth.signInWithPassword({ email: email, password: password }); }
+    catch (error) { await reportLoginAttempt(email, false); throw error; }
+    if (result.error) { await reportLoginAttempt(email, false); throw result.error; }
+    await reportLoginAttempt(email, true);
     session = result.data.session;
     await ensureWorkspace(session, displayName(session.user), { forceRefresh: true });
     await startSecuritySession(session);
@@ -301,6 +306,12 @@
     var query = new URLSearchParams({ flow: flow, email: String(email || "").trim().toLowerCase() });
     var response = await fetch("/api/auth/preflight?" + query.toString(), { headers: { Accept: "application/json" }, cache: "no-store" });
     return readJson(response);
+  }
+
+  async function reportLoginAttempt(email, success) {
+    try {
+      await fetch("/api/auth/login-attempt", { method:"POST", headers:{Accept:"application/json","Content-Type":"application/json"}, body:JSON.stringify({email:email,success:Boolean(success)}), cache:"no-store" });
+    } catch (_) {}
   }
 
   async function verifySignup(email, token) {

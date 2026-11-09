@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { isIP } from 'node:net';
+import { accountLoginHash } from './loginThrottle.js';
 
 export function scoreAccountRisk(signals = {}, config = {}) {
   const weights = {
@@ -84,7 +85,7 @@ export function createRequestBurstTracker({ windowMs = 60000, threshold = 30, no
 export async function computeAccountRisk({ repos, orgId, userId, config = {}, user = {}, requestBurst = false, sensitiveAction = false, now = new Date() }) {
   const [logins,failedLogins,devices]=await Promise.all([
     repos.security.listLogins(orgId,userId,{limit:50,offset:0}),
-    repos.security.failedLoginCount?.(orgId,userId,Number(config.SECURITY_FAILED_LOGIN_WINDOW_MINUTES||15))||0,
+    repos.security.failedLoginCountByHash?.(accountLoginHash(user.email,config.SECURITY_HASH_SALT||''),Number(config.SECURITY_FAILED_LOGIN_WINDOW_MINUTES||15))||repos.security.failedLoginCount?.(orgId,userId,Number(config.SECURITY_FAILED_LOGIN_WINDOW_MINUTES||15))||0,
     repos.security.listDevices(orgId,userId),
   ]);
   const latest=logins?.[0], reasons=Array.isArray(latest?.risk_reasons)?latest.risk_reasons:[];

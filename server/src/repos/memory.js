@@ -119,7 +119,7 @@ export class EventsRepo {
 
 export function createRepositories() {
   const failureRows = [];
-  const loginEventRows = [], deviceRows = new Map(), stepUpGrantRows = new Map();
+  const loginEventRows = [], loginAttemptRows = [], deviceRows = new Map(), stepUpGrantRows = new Map();
   const captures = new CapturesRepo();
   const orders = new OrdersRepo();
   captures.orders = orders;
@@ -361,9 +361,19 @@ export function createRepositories() {
     async loginCount(orgId,userId) { return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId).length; },
     async hasNetwork(orgId,userId,ipHash) { return loginEventRows.some((row)=>row.org_id===orgId&&row.user_id===userId&&row.ip_hash===ipHash); },
     async failedLoginCount(orgId,userId,minutes=15) { const since=Date.now()-minutes*60000;return loginEventRows.filter((row)=>row.org_id===orgId&&row.user_id===userId&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
+    async failedLoginCountByHash(accountHash,minutes=15) { const since=Date.now()-minutes*60000;return loginAttemptRows.filter(row=>row.account_hash===accountHash&&!row.success&&Date.parse(row.occurred_at)>=since).length; },
     async grantStepUp(input) { const row={id:randomUUID(),granted_at:new Date().toISOString(),...input};stepUpGrantRows.set(`${input.org_id}:${input.user_id}:${input.device_id}`,row);return row; },
     async hasStepUpGrant(orgId,userId,deviceId,now=new Date()) { const row=stepUpGrantRows.get(`${orgId}:${userId}:${deviceId}`);return Boolean(row&&Date.parse(row.expires_at)>now.getTime()); },
     async deleteStepUpGrant(orgId,userId,deviceId) { return stepUpGrantRows.delete(`${orgId}:${userId}:${deviceId}`); },
+    async loginLock(accountHash,ipHash) { const now=Date.now();return loginAttemptRows.filter((row)=>(row.account_hash===accountHash||row.ip_hash===ipHash)&&row.locked_until&&Date.parse(row.locked_until)>now).sort((a,b)=>Date.parse(b.locked_until)-Date.parse(a.locked_until))[0]?.locked_until||null; },
+    async recordLoginAttempt({orgId=null,userId=null,accountHash,ipHash,success,config={}}) {
+      const now=Date.now(),windowMs=Number(config.SECURITY_LOGIN_WINDOW_MINUTES||15)*60000,baseMs=Number(config.SECURITY_LOGIN_LOCK_MINUTES||15)*60000,threshold=Number(config.SECURITY_LOGIN_FAILURE_THRESHOLD||5);
+      const failures=success?0:loginAttemptRows.filter(row=>!row.success&&now-Date.parse(row.occurred_at)<windowMs&&(row.account_hash===accountHash||row.ip_hash===ipHash)).length+1;
+      const previous=loginAttemptRows.filter(row=>row.account_hash===accountHash&&now-Date.parse(row.occurred_at)<30*86400000).reduce((count,row)=>Math.max(count,row.lock_count||0),0);
+      const locked=failures>=threshold,lockCount=locked?previous+1:previous,lockedUntil=locked?new Date(now+Math.min(24*3600000,baseMs*2**Math.min(6,lockCount-1))).toISOString():null;
+      loginAttemptRows.unshift({id:randomUUID(),org_id:orgId,user_id:userId,account_hash:accountHash,ip_hash:ipHash,occurred_at:new Date(now).toISOString(),success,failure_count:failures,lock_count:lockCount,locked_until:lockedUntil});
+      return{locked,failureCount:failures,lockCount,lockedUntil};
+    },
   };
   const ticketRows = new Map(), ticketMessages = [];
   repos.supportTickets = {

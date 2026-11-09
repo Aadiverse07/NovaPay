@@ -15,3 +15,17 @@ export class LoginThrottle {
   }
   success(accountKey, ipKey) { this.accounts.delete(accountKey); this.ips.delete(ipKey); }
 }
+import { createHash } from 'node:crypto';
+import { hashNetwork } from './accountRisk.js';
+
+export function loginAttemptKeys(email, ip, salt) {
+  const normalized=String(email||'').trim().toLowerCase();
+  return {
+    accountHash:createHash('sha256').update(`${salt}:account:${normalized}`).digest('hex'),
+    ...hashNetwork(ip,salt),
+  };
+}
+
+export function accountLoginHash(email,salt) {
+  return createHash('sha256').update(`${salt}:account:${String(email||'').trim().toLowerCase()}`).digest('hex');
+}
