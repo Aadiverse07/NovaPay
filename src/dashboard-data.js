@@ -10,11 +10,15 @@
     catch (_) { return 2; }
   }
   function formatMinor(value, currency) {
-    var code = String(currency || "USD").toUpperCase(), places = digits(code), amount;
-    try { amount = BigInt(value == null ? 0 : value); } catch (_) { return "—"; }
-    var negative = amount < 0n; if (negative) amount = -amount;
-    var scale = 10n ** BigInt(places), whole = amount / scale, fraction = places ? "." + String(amount % scale).padStart(places, "0") : "";
-    return code + " " + (negative ? "-" : "") + whole.toLocaleString("en-US") + fraction;
+    var code=String(currency||"USD").toUpperCase(),places=digits(code),amount;
+    try{amount=BigInt(value==null?0:value)}catch(_){return "—"}
+    var negative=amount<0n;if(negative)amount=-amount;var scale=10n**BigInt(places),whole=amount/scale,fraction=String(amount%scale).padStart(places,"0");
+    try{
+      var formatter=new Intl.NumberFormat(undefined,{style:"currency",currency:code,minimumFractionDigits:0,maximumFractionDigits:0});
+      var wholeText=formatter.format(whole),decimal=new Intl.NumberFormat(undefined).formatToParts(1.1).find(function(part){return part.type==="decimal"})?.value||".";
+      var fractionText=places?decimal+fraction.replace(/\d/g,function(d){return new Intl.NumberFormat(undefined,{useGrouping:false}).format(Number(d))}):"";
+      return (negative?"−":"")+wholeText+fractionText;
+    }catch(_){return code+" "+(negative?"−":"")+whole.toLocaleString()+ (places?"."+fraction:"")}
   }
   function formatMajor(value, currency) {
     if (value == null || value === "") return "—";

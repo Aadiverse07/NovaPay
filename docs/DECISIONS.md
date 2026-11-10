@@ -810,3 +810,8 @@ Community Funds and Maintenance are soft-disabled by default with `ENABLE_COMMUN
 - Choice: remove the Community Funds and Maintenance browser modules and assistant targets while retaining their existing server implementation, flags, database constraints, migrations and persisted records.
 - Reason: those modules do not support the current PayPal demo path, while historical contribution transactions and ledger entries remain part of the financial record. Old bookmarks fall back to Dashboard.
 - No schema change or migration was made.
+
+## 2026-11-10 — Keep cash flow ledger-native and currency-separated
+- Choice: derive the dashboard cash series from organization-filtered journal entries and the existing cash asset accounts, grouped by month and original currency. Do not convert or sum different currencies.
+- Reason: ledger lines are the saved accounting source used by Ledger and Reports; BigInt aggregation preserves minor units and net remains money in minus money out.
+- No schema change or migration was made.

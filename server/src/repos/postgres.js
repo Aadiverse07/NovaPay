@@ -508,7 +508,7 @@ export function createPostgresRepositories(database) {
       const params = { select: '*', org_id: `eq.${orgId}`, order: 'created_at.desc', limit: String(filters.limit), offset: String(filters.offset) };
       const dates = [];
       if (filters.from) dates.push(`created_at.gte.${filters.from}`);
-      if (filters.to) dates.push(`created_at.lte.${filters.to}`);
+      if (filters.to) dates.push(`created_at.lte.${/^\d{4}-\d{2}-\d{2}$/.test(filters.to) ? `${filters.to}T23:59:59.999Z` : filters.to}`);
       if (dates.length === 1) params.created_at = dates[0].slice('created_at.'.length);
       if (dates.length === 2) params.and = `(${dates.join(',')})`;
       const entries = await database.select('journal_entries', q(params));

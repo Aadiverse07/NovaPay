@@ -140,3 +140,7 @@ The browser requests email OTP with a separate non-persisting Supabase Auth clie
 `POST /api/security/credential-changed` accepts `{ "deviceId":"…" }` after Supabase reports a successful password update. It audits the event and revokes other device-bound step-up grants; the current authenticated session and device grant remain valid.
 
 The step-up prompt presents password and isolated email-code methods in an accessible native dialog. Cancelling closes the prompt and rejects the gated operation; the approval confirmation returns to its ready state.
+
+## Dashboard cash flow and failure summary
+
+`GET /api/reports/cash-flow-series?from=YYYY-MM-DD&to=YYYY-MM-DD&currency=USD` returns organization-scoped monthly Money In, Money Out and Net totals from ledger cash accounts. Each currency is a separate series; the endpoint never converts or combines currencies. `GET /api/failures?limit=100&offset=0` supplies recent classified payment failures for the dashboard's selected-period count and most common cause.

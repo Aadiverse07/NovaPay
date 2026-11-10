@@ -30,30 +30,26 @@
     try { return new Intl.NumberFormat(undefined, { style: "currency", currency: code, notation: "compact", maximumFractionDigits: 1 }).format(Number(minor) / Math.pow(10, places)); }
     catch (_) { return data.formatMinor(minor, currency); }
   }
+  var selectedCurrency = "";
+  function cashText(minor, currency) { return data.formatMinor(minor, currency); }
   function renderCash(rows) {
-    var movement = data.cashMovement(rows), plot = $("cf-plot");
-    ["cash-in-line", "cash-out-line", "cash-net-line"].forEach(function (id) {
-      var line = $(id); if (!line) return;
-      line.style.removeProperty("stroke-dasharray"); line.style.removeProperty("stroke-dashoffset"); line.style.removeProperty("transition");
-    });
-    ["cash-in-area", "cash-out-line", "cash-in-line", "cash-net-area"].forEach(function (id) { if ($(id)) $(id).setAttribute("d", ""); });
-    if (plot) plot.setAttribute("aria-label", "Organization net cash movement by month");
-    var sub = $("cf-sub");
-    if (movement.multiCurrency) { if ($("cash-in")) $("cash-in").parentElement.hidden = true; if ($("cash-out")) $("cash-out").parentElement.hidden = true; if ($("cf-x")) $("cf-x").replaceChildren(); if ($("cf-grid")) $("cf-grid").replaceChildren(); if ($("cf-y")) $("cf-y").replaceChildren(); if (sub) sub.textContent = "Net cash movement · currencies shown separately in reports"; if ($("cash-in")) $("cash-in").textContent = "Multiple currencies"; if ($("cash-out")) $("cash-out").textContent = "—"; if ($("cash-net")) $("cash-net").textContent = "See Reports"; return; }
-    var currency = currencyForSingle(movement.currency), points = movement.points.slice(-12), vals = points.map(function (p) { return Number(p.value); });
-    var total = vals.reduce(function (sum, n) { return sum + (Number.isFinite(n) ? n : 0); }, 0);
-    if ($("cash-in")) $("cash-in").textContent = "—";
-    if ($("cash-out")) $("cash-out").textContent = "—";
-    if ($("cash-in")) $("cash-in").parentElement.hidden = true;
-    if ($("cash-out")) $("cash-out").parentElement.hidden = true;
-    if ($("cash-net")) $("cash-net").textContent = rows.length ? data.formatMinor(total, currency) : "No activity";
-    if (sub) sub.textContent = rows.length ? "Net cash movement · monthly ledger totals · " + currency : "No cash movement recorded yet.";
-    var max = Math.max(1, ...vals.map(Math.abs)), grid = $("cf-grid"), axis = $("cf-y");
-    if (grid) { grid.replaceChildren(); for (var g = 0; g <= 4; g++) { var line = document.createElementNS("http://www.w3.org/2000/svg", "line"), y = 20 + g * 55; line.setAttribute("x1", "0"); line.setAttribute("y1", String(y)); line.setAttribute("x2", "900"); line.setAttribute("y2", String(y)); grid.appendChild(line); } }
-    if (axis) { axis.replaceChildren(); for (var a = 0; a <= 4; a++) { var label = document.createElement("span"); label.textContent = axisLabel(Math.round(max * (1 - a / 2)), currency); axis.appendChild(label); } }
-    var labels = $("cf-x"); if (labels) { labels.replaceChildren(); points.forEach(function (point) { var span = document.createElement("span"); span.textContent = point.period.slice(0, 7); labels.appendChild(span); }); }
-    var path = $("cash-net-line");
-    if (path && vals.length) { var coords = vals.map(function (v, i) { var x = vals.length === 1 ? 440 + i * 20 : 14 + i * (872 / (vals.length - 1)), y = 130 - (v / max) * 110; return (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); }); if (vals.length === 1) coords.push("L460.0 " + (130 - (vals[0] / max) * 110).toFixed(1)); path.setAttribute("d", coords.join(" ")); }
+    var currencies=[...new Set(rows.map(function(row){return row.currency}))], wrap=$("cashflow-currency-wrap"), selector=$("cashflow-currency");
+    if(selector){selector.replaceChildren();currencies.forEach(function(code){var option=document.createElement("option");option.value=code;option.textContent=code;selector.appendChild(option)});if(currencies.length>1){wrap.hidden=false;var activity=currencies.map(function(code){return {code:code,total:rows.filter(function(r){return r.currency===code}).reduce(function(sum,r){return sum+BigInt(r.money_in_minor||0)+BigInt(r.money_out_minor||0)},0n)}}).sort(function(a,b){return a.total===b.total?0:a.total>b.total?-1:1});selectedCurrency=currencies.includes(selectedCurrency)?selectedCurrency:(activity[0]&&activity[0].code)||currencies[0];selector.value=selectedCurrency}else{wrap.hidden=true;selectedCurrency=currencies[0]||""}}
+    var points=rows.filter(function(row){return !selectedCurrency||row.currency===selectedCurrency}), plot=$("cf-plot"),path=$("cash-net-line"),currency=selectedCurrency||"USD";
+    ["cash-in-line","cash-out-line","cash-net-line"].forEach(function(id){var line=$(id);if(line) ["stroke-dasharray","stroke-dashoffset","transition"].forEach(function(property){line.style.removeProperty(property)})});
+    var inTotal=points.reduce(function(sum,row){return sum+BigInt(row.money_in_minor||0)},0n),outTotal=points.reduce(function(sum,row){return sum+BigInt(row.money_out_minor||0)},0n),netTotal=points.reduce(function(sum,row){return sum+BigInt(row.net_minor||0)},0n);
+    $("cash-in").textContent=cashText(inTotal,currency);$("cash-out").textContent=cashText(outTotal,currency);$("cash-net").textContent=cashText(netTotal,currency);
+    if($("cf-sub"))$("cf-sub").textContent=points.length?"Live ledger cash flow · "+currency:"No activity in this period";
+    if(plot)plot.setAttribute("aria-label","Live cash flow in "+currency);
+    var nums=points.map(function(row){return Number(row.net_minor||0)}),max=Math.max(1,...nums.map(Math.abs)),W=900,H=260,P=14;
+    var x=nums.map(function(_,i){return nums.length===1?450:P+i*(W-P*2)/(nums.length-1)}), y=nums.map(function(v){return 130-v/max*110});
+    path.setAttribute("d",nums.length?nums.map(function(_,i){return(i?"L":"M")+x[i].toFixed(1)+" "+y[i].toFixed(1)}).join(" "):"");
+    ["cash-in-area","cash-net-area","cash-in-line","cash-out-line"].forEach(function(id){var node=$(id);if(node)node.setAttribute("d","")});
+    var grid=$("cf-grid"),axis=$("cf-y"),labels=$("cf-x");grid.replaceChildren();axis.replaceChildren();labels.replaceChildren();
+    for(var i=0;i<=4;i++){var line=document.createElementNS("http://www.w3.org/2000/svg","line");line.setAttribute("x1","0");line.setAttribute("x2","900");line.setAttribute("y1",String(20+i*55));line.setAttribute("y2",String(20+i*55));grid.appendChild(line);var label=document.createElement("span");label.textContent=cashText(BigInt(Math.round(max*(1-i/2))),currency);axis.appendChild(label)}
+    points.forEach(function(row){var label=document.createElement("span");label.textContent=row.period.slice(0,7);labels.appendChild(label)});
+    window.NovaPayLiveCash={points:points,currency:currency};document.dispatchEvent(new CustomEvent("novapay:cashflow-live",{detail:window.NovaPayLiveCash}));
+    if(!points.length&&$("cf-empty"))$("cf-empty").hidden=false;else if($("cf-empty"))$("cf-empty").hidden=true;
   }
   function renderRecent(rows, failed) {
     var recent = document.querySelector(".recent-card tbody"); if (!recent) return;
@@ -70,11 +66,11 @@
     busy = true; setStatus("Loading organization data…", false);
     try {
       var activeTab = document.querySelector("#cashflow-tabs button.active"), selection = $("dashboard-date") && $("dashboard-date").value || (activeTab && activeTab.dataset.range), range = periodRange(selection);
-      var responses = await Promise.all([api.request("/api/reports/profit-and-loss" + range), api.request("/api/reports/fees" + range), api.request("/api/reports/refunds" + range), api.request("/api/reports/cash-movement" + range), api.request("/api/transactions?limit=50&offset=0")]);
-      var metric = data.metrics(responses[0].rows || [], responses[1].rows || [], responses[2].rows || []), transactions = responses[4].transactions || [];
+      var responses = await Promise.all([api.request("/api/reports/profit-and-loss" + range), api.request("/api/reports/fees" + range), api.request("/api/reports/refunds" + range), api.request("/api/reports/cash-flow-series" + range), api.request("/api/transactions?limit=50&offset=0"), api.request("/api/failures?limit=100")]);
+      var metric = data.metrics(responses[0].rows || [], responses[1].rows || [], responses[2].rows || []), transactions = responses[4].transactions || [], failures=responses[5].failures||[];
       $("kpi-revenue").textContent = metric.revenue; $("kpi-fees").textContent = metric.fees; $("kpi-refunds").textContent = metric.refunds; $("kpi-net").textContent = metric.net;
-      $("kpi-disputes").textContent = "Unavailable";
-      ["revenue", "fees", "refunds", "net", "disputes"].forEach(function (key) { var trend = $("kpi-" + key + "-trend"); if (trend) trend.textContent = key === "disputes" ? "No disputes report endpoint" : "Organization ledger data · by currency"; });
+      var from=range.match(/from=([^&]+)/)?.[1],to=range.match(/to=([^&]+)/)?.[1],periodFailures=failures.filter(function(f){var day=String(f.occurred_at||f.occurredAt||"").slice(0,10);return (!from||day>=from)&&(!to||day<=to)}),top=periodFailures.reduce(function(map,f){var key=f.category||"unknown";map[key]=(map[key]||0)+1;return map},{}),cause=Object.keys(top).sort(function(a,b){return top[b]-top[a]})[0];$("kpi-disputes").textContent=String(periodFailures.length);
+      ["revenue", "fees", "refunds", "net", "disputes"].forEach(function (key) { var trend = $("kpi-" + key + "-trend"); if (trend) trend.textContent = key === "disputes" ? (cause?"Top cause · "+cause:"No failed payments") : "Organization ledger data · by currency"; });
       renderCash(responses[3].rows || []); renderRecent(transactions);
       var health = document.querySelector(".financial-health-card"); if (health) { var number = health.querySelector("[data-health-value]"), segment = health.querySelector(".health-segment-main"); if (number) number.textContent = "Live"; if (segment) segment.style.strokeDasharray = "0 100"; var caption = health.querySelector(".health-callout"); if (caption) caption.textContent = "Organization data loaded from Supabase"; }
       setStatus(transactions.length ? "Dashboard totals use organization-scoped reports. Amounts are separated by currency." : "No transactions yet. Create a sandbox payment to get started.", false);
@@ -86,6 +82,7 @@
   function refreshOnFocus() { if (!active() || auth.mode !== "supabase" || !auth.isAuthenticated()) return; var now = Date.now(); if (now - lastPassiveRefresh < 30000) return; lastPassiveRefresh = now; load(); }
   Promise.resolve(auth.ready).then(function () { if (auth.mode !== "supabase" || !auth.isAuthenticated()) return; document.querySelectorAll("[data-dashboard-sample]").forEach(function (node) { node.hidden = true; }); loadIfActive(); });
   document.addEventListener("novapay:dashboard-period", loadIfActive);
+  if($("cashflow-currency"))$("cashflow-currency").addEventListener("change",function(){selectedCurrency=this.value;loadIfActive()});
   document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("dashboard") !== -1) && active()) loadIfActive(); });
   document.addEventListener("novapay:auth", loadIfActive);
   window.addEventListener("hashchange", loadIfActive);
