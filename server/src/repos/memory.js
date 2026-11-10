@@ -431,6 +431,10 @@ export function createRepositories() {
     const rows = await repos.listTransactions(orgId, { limit: 500 });
     return rows.find((row) => row.id === id) || null;
   };
+  repos.getTransactionByCaptureId = async (orgId, captureId) => {
+    const rows = await repos.listTransactions(orgId, { limit: 500 });
+    return rows.find((row) => row.paypal_capture_id === captureId || row.source_id === captureId || row.sourceId === captureId) || null;
+  };
   repos.getTransactionsByIds = async (orgId, ids) => {
     const wanted = new Set((ids || []).slice(0, 20));
     const rows = await repos.listTransactions(orgId, { limit: 500 });

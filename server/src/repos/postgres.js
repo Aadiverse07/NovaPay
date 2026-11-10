@@ -499,6 +499,10 @@ export function createPostgresRepositories(database) {
       const rows = await database.select('transactions', q({ select: '*', org_id: `eq.${orgId}`, id: `eq.${id}`, limit: '1' }));
       return rows?.[0] || null;
     },
+    async getTransactionByCaptureId(orgId, captureId) {
+      const rows = await database.select('transactions', q({ select: '*', org_id: `eq.${orgId}`, paypal_capture_id: `eq.${captureId}`, limit: '1' }));
+      return rows?.[0] || null;
+    },
     async getTransactionsByIds(orgId, ids) {
       const safeIds = [...new Set((ids || []).filter((id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,150}$/.test(id)))].slice(0, 20);
       if (!safeIds.length) return [];

@@ -82,6 +82,44 @@ test('tool calls time out and result bodies are bounded', async () => {
   assert.ok(JSON.stringify(result.results[0].result).length <= 160);
 });
 
+test('capture ID in message adds direct organization-scoped transaction evidence even when recent tools time out', async () => {
+  const captureId = '6UV5767052048553J';
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const repos = makeRepos();
+  repos.listTransactions = async () => new Promise(() => {});
+  const scopes = [];
+  repos.getTransactionByCaptureId = async (orgId, id) => {
+    scopes.push({ orgId, id });
+    return orgId === 'org-a' && id === captureId ? { id: internalId, source_type: 'capture', source_id: captureId, status: 'COMPLETED', amount_minor: 700, currency: 'USD' } : null;
+  };
+  const logs = [];
+  const result = await buildAIEvidence({ repos, orgId: 'org-a', intent: 'refunds', message: `Propose a refund of the full amount for capture ${captureId}.`, toolLimits: { timeoutMs: 5, logger: { info: (...args) => logs.push(args), warn: (...args) => logs.push(args) } } });
+  assert.equal(result.records[0].id, internalId);
+  assert.equal(result.records[0].sourceId, captureId);
+  assert.deepEqual(scopes, [{ orgId: 'org-a', id: captureId }]);
+  assert.ok(result.toolErrors.some((item) => item.error === 'tool_timeout'));
+  assert.ok(logs.some(([message, meta]) => /timed out/.test(message) && meta.tool === 'get_refunds'));
+});
+
+test('capture ID belonging to another organization is not included', async () => {
+  const captureId = '6UV5767052048553J';
+  const repos = makeRepos();
+  repos.listTransactions = async () => [];
+  repos.getTransactionByCaptureId = async (orgId, id) => orgId === 'org-b' && id === captureId ? { id: 'foreign-internal-id', source_type: 'capture', source_id: captureId, amount_minor: 700, currency: 'USD' } : null;
+  const result = await buildAIEvidence({ repos, orgId: 'org-a', intent: 'refunds', message: `Refund capture ${captureId}` });
+  assert.deepEqual(result.records, []);
+  assert.equal(JSON.stringify(result).includes('foreign-internal-id'), false);
+});
+
+test('read-only tools log empty results without exposing record data', async () => {
+  const repos = makeRepos();
+  repos.listTransactions = async () => [];
+  const logs = [];
+  const tools = createReadOnlyAITools({ repos, orgId: 'org-a', logger: { info: (...args) => logs.push(args) } });
+  await tools.execute([{ name: 'get_transactions', args: {} }]);
+  assert.deepEqual(logs, [['[NovaPay AI] read-only tool returned empty', { tool: 'get_transactions' }]]);
+});
+
 test('invoice evidence drops names, emails, free-text descriptions, and model instructions', async () => {
   const repos = makeRepos();
   const result = await buildAIEvidence({ repos, orgId: 'org-a', intent: 'invoice_status', message: 'show invoices paid this month' });

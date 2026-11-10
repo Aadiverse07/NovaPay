@@ -47,6 +47,17 @@ test('AI proposal normalizes a known internal transaction ID to its PayPal sourc
   assert.equal(sanitizeAIResponse(JSON.stringify({ reply: 'Review foreign.', evidence: [], proposal: { type: 'refund', txId: 'foreign-id' } }), { records: [{ id: internalId, sourceId: captureId }] }).proposal, null);
 });
 
+test('AI proposal ID resolution ignores case, quotes, whitespace and a capture prefix', () => {
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const captureId = '5SV89196DB064134U';
+  const result = sanitizeAIResponse(JSON.stringify({
+    reply: 'Review this capture.', evidence: [`  "capture ${captureId.toLowerCase()}"  `],
+    proposal: { type: 'refund', txId: ` ' Capture ${captureId.toLowerCase()} ' ` },
+  }), { records: [{ id: internalId, sourceId: captureId, recordType: 'transaction' }] });
+  assert.equal(result.proposal.txId, captureId);
+  assert.deepEqual(result.evidence, [captureId]);
+});
+
 test('AI sanitizer rejects unknown top-level fields and oversized output', () => {
   assert.equal(sanitizeAIResponse('{"reply":"safe","evidence":[],"proposal":null,"tool":"refund"}').reply, UNSAFE_REPLY);
   assert.equal(sanitizeAIResponse(JSON.stringify({ reply: 'x'.repeat(12001), evidence: [], proposal: null })).reply, UNSAFE_REPLY);
@@ -180,6 +191,80 @@ test('spaced spoken capture ID reaches AI intact and resolves to the exact compl
   assert.equal(saved.amount, '7.00');
 });
 
+test('refund question with capture ID in prose produces direct evidence and a pending refund proposal', async () => {
+  const captureId = '6UV5767052048553J';
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '12.50', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  repos.listTransactions = async () => new Promise(() => {});
+  repos.getTransactionByCaptureId = async (orgId, id) => orgId === 'org-a' && id === captureId
+    ? { id: internalId, source_type: 'capture', source_id: captureId, amount_minor: 1250, currency: 'USD', status: 'COMPLETED' }
+    : null;
+  const provider = { async generate() { return JSON.stringify({ reply: 'I found the completed capture and prepared a refund for review.', evidence: [internalId], proposal: { type: 'refund', txId: internalId, title: 'Review full refund', reason: 'The customer cancelled the order.' } }); } };
+  const result = await createAIService({ config: { AI_TOOL_TIMEOUT_MS: 1000 }, repos, provider })('Propose a refund of the full amount for capture ' + captureId + '. The customer cancelled the order.', { orgId: 'org-a', userId: 'user-a' });
+  assert.equal(result.evidence.includes(internalId), true);
+  assert.equal(result.proposal?.status, 'pending');
+  assert.equal(result.proposal?.amount, '12.50');
+  const approval = await repos.approvals.get(result.proposal.approvalId, 'org-a');
+  assert.equal(approval.captureId, captureId);
+});
+
+test('reproduction: exact full-refund message resolves an LLM capture-prefixed ID deterministically', async () => {
+  const captureId = '5SV89196DB064134U';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '25.00', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  const record = { id: 'txn-internal-5sv', source_type: 'capture', source_id: captureId, amount_minor: 2500, currency: 'USD', status: 'COMPLETED' };
+  repos.listTransactions = async () => [];
+  repos.getTransactionByCaptureId = async (orgId, id) => orgId === 'org-a' && id === captureId ? record : null;
+  let prompt;
+  const provider = { async generate(input) { prompt = input.prompt; return JSON.stringify({ reply: 'I found the capture.', evidence: [], proposal: { type: 'refund', txId: `capture ${captureId.toLowerCase()}`, reason: 'LLM supplied reason must not be trusted here.' } }); } };
+  const result = await createAIService({ config: {}, repos, provider })('Propose a refund of the full amount for capture 5SV89196DB064134U. The customer cancelled the order.', { orgId: 'org-a', userId: 'user-a' });
+  assert.equal(result.proposal?.txId, captureId);
+  assert.equal(result.proposal?.amount, '25.00');
+  assert.equal(result.proposal?.reason, 'The customer cancelled the order');
+  assert.deepEqual(result.evidence, [record.id]);
+  assert.match(prompt, new RegExp(record.id));
+  assert.match(prompt, new RegExp(captureId));
+  const saved = await repos.approvals.get(result.proposal.approvalId, 'org-a');
+  assert.equal(saved.requestPayload.reason, 'The customer cancelled the order');
+});
+
+test('refund proposal for an ID in another organization says it was not found here', async () => {
+  const captureId = '5SV89196DB064134U';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '25.00', currency: 'USD', status: 'COMPLETED' }, 'org-b');
+  repos.listTransactions = async (orgId) => orgId === 'org-b' ? [{ id: 'foreign-txn', source_type: 'capture', source_id: captureId, amount_minor: 2500, currency: 'USD', status: 'COMPLETED' }] : [];
+  const provider = { async generate() { throw new Error('should not call the model for a missing org record'); } };
+  const result = await createAIService({ config: {}, repos, provider })(`Propose a refund for capture ${captureId}`, { orgId: 'org-a', userId: 'user-a' });
+  assert.match(result.reply, /could not find that capture in this organization/i);
+  assert.equal(result.proposal, null);
+  assert.deepEqual(result.evidence, []);
+});
+
+test('full-refund proposal for an already refunded capture returns a specific reply', async () => {
+  const captureId = '5SV89196DB064134U';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '25.00', refunded: '25.00', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  repos.listTransactions = async () => [{ id: 'txn-already-refunded', source_type: 'capture', source_id: captureId, amount_minor: 2500, currency: 'USD', status: 'COMPLETED' }];
+  const provider = { async generate() { return JSON.stringify({ reply: 'I found it.', evidence: [], proposal: null }); } };
+  const result = await createAIService({ config: {}, repos, provider })(`Propose a refund of the full amount for capture ${captureId}`, { orgId: 'org-a', userId: 'user-a' });
+  assert.match(result.reply, /already been fully refunded/i);
+  assert.equal(result.proposal, null);
+});
+
+test('refund proposal with two different PayPal IDs asks which capture to use', async () => {
+  const firstId = '5SV89196DB064134U';
+  const secondId = '6UV5767052048553J';
+  let providerCalls = 0;
+  const repos = createRepositories();
+  repos.listTransactions = async () => [];
+  const provider = { async generate() { providerCalls += 1; return '{}'; } };
+  const result = await createAIService({ config: {}, repos, provider })(`Propose a refund for capture ${firstId} or ${secondId}`, { orgId: 'org-a', userId: 'user-a' });
+  assert.match(result.reply, /which capture should i use/i);
+  assert.equal(providerCalls, 0);
+  assert.equal(result.proposal, null);
+});
+
 test('a mistyped capture reference is not guessed and returns a reason instead of a false proposal claim', async () => {
   const captureId = '6UV5767052048553J';
   const mistypedId = '6UV57670520485 3J';
@@ -193,7 +278,7 @@ test('a mistyped capture reference is not guessed and returns a reason instead o
   try {
     const result = await createAIService({ config: {}, repos, provider })('Prepare a refund proposal for transaction ' + mistypedId, { orgId: 'org-a', userId: 'user-a' });
     assert.equal(result.proposal, null);
-    assert.match(result.reply, /could not create a proposal: the transaction ID did not match a record in this organization/i);
+    assert.match(result.reply, /could not find that capture in this organization/i);
     assert.doesNotMatch(result.reply, /prepared/i);
     assert.match(logs.join('\n'), /PROPOSAL_REFERENCE_NOT_IN_ORG/);
     assert.equal(repos.approvals.items.size, 0);
