@@ -34,8 +34,13 @@
       try { storage.setItem(key(scope), JSON.stringify(turns)); } catch (_) {}
       return turns.slice();
     }
+    function replace(nextTurns) {
+      turns = (Array.isArray(nextTurns) ? nextTurns : []).filter(function (turn) { return turn && (turn.role === "user" || turn.role === "assistant"); }).slice(-MAX_TURNS).map(function (turn) { return { role: turn.role, text: redact(turn.text).trim() }; }).filter(function (turn) { return turn.text; });
+      if (scope && storage) { try { storage.setItem(key(scope), JSON.stringify(turns)); } catch (_) {} }
+      return turns.slice();
+    }
     function clear() { if (scope && storage) { try { storage.removeItem(key(scope)); } catch (_) {} } turns = []; }
-    return { load: load, append: append, clear: clear, turns: function () { return turns.slice(); } };
+    return { load: load, append: append, replace: replace, clear: clear, turns: function () { return turns.slice(); } };
   }
   return { create: createConversationStore, redact: redact, maxTurns: MAX_TURNS, maxText: MAX_TEXT };
 }));
