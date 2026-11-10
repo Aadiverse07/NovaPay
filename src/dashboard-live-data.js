@@ -36,12 +36,12 @@
   var selectedCurrency = "";
   function cashText(minor, currency) { return data.formatMinor(minor, currency); }
   function renderCash(rows) {
-    var currencies=[...new Set(rows.map(function(row){return row.currency}))], wrap=$("cashflow-currency-wrap"), selector=$("cashflow-currency");
-    if(selector){selector.replaceChildren();currencies.forEach(function(code){var option=document.createElement("option");option.value=code;option.textContent=code;selector.appendChild(option)});if(currencies.length>1){wrap.hidden=false;var activity=currencies.map(function(code){return {code:code,total:rows.filter(function(r){return r.currency===code}).reduce(function(sum,r){return sum+BigInt(r.money_in_minor||0)+BigInt(r.money_out_minor||0)},0n)}}).sort(function(a,b){return a.total===b.total?0:a.total>b.total?-1:1});selectedCurrency=currencies.includes(selectedCurrency)?selectedCurrency:(activity[0]&&activity[0].code)||currencies[0];selector.value=selectedCurrency}else{wrap.hidden=true;selectedCurrency=currencies[0]||""}}
+    var currencyGroups=data.cashCurrencies(rows),currencies=currencyGroups.currencies,wrap=$("cashflow-currency-wrap"),selector=$("cashflow-currency");
+    if(selector){selector.replaceChildren();currencies.forEach(function(code){var option=document.createElement("option");option.value=code;option.textContent=code;selector.appendChild(option)});if(currencies.length>1){wrap.hidden=false;selectedCurrency=currencies.includes(selectedCurrency)?selectedCurrency:currencyGroups.defaultCurrency;selector.value=selectedCurrency}else{wrap.hidden=true;selectedCurrency=currencies[0]||""}}
     var points=rows.filter(function(row){return !selectedCurrency||row.currency===selectedCurrency}), plot=$("cf-plot"),path=$("cash-net-line"),currency=selectedCurrency||"USD";
     ["cash-in-line","cash-out-line","cash-net-line"].forEach(function(id){var line=$(id);if(line) ["stroke-dasharray","stroke-dashoffset","transition"].forEach(function(property){line.style.removeProperty(property)})});
-    var inTotal=points.reduce(function(sum,row){return sum+BigInt(row.money_in_minor||0)},0n),outTotal=points.reduce(function(sum,row){return sum+BigInt(row.money_out_minor||0)},0n),netTotal=points.reduce(function(sum,row){return sum+BigInt(row.net_minor||0)},0n);
-    $("cash-in").textContent=cashText(inTotal,currency);$("cash-out").textContent=cashText(outTotal,currency);$("cash-net").textContent=cashText(netTotal,currency);
+    var totals=data.cashTotals(points,currency);
+    $("cash-in").textContent=cashText(totals.moneyIn,currency);$("cash-out").textContent=cashText(totals.moneyOut,currency);$("cash-net").textContent=cashText(totals.net,currency);
     if($("cf-sub"))$("cf-sub").textContent=points.length?"Live ledger cash flow · "+currency:"No activity in this period";
     if(plot)plot.setAttribute("aria-label","Live cash flow in "+currency);
     var nums=points.map(function(row){return Number(row.net_minor||0)}),max=Math.max(1,...nums.map(Math.abs)),W=900,H=260,P=14;

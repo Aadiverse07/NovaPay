@@ -55,6 +55,19 @@ test('cash flow uses currency separated cash series, live failures, and supports
   assert.match(loader, /cash-flow-series/);
   assert.match(loader, /periodOverride \|\|/);
   assert.match(loader, /cashflow-currency/);
-  assert.match(loader, /new Set\(rows\.map/);
-  assert.match(loader, /cashText\(netTotal,currency\)/);
+  assert.match(loader, /data\.cashCurrencies\(rows\)/);
+  assert.match(loader, /cashText\(totals\.net,currency\)/);
+});
+
+
+test('cash flow summaries keep currencies separate, choose the busiest currency, and handle empty periods', () => {
+  const rows=[
+    {period:'2026-11',currency:'USD',money_in_minor:'15000',money_out_minor:'2500',net_minor:'12500'},
+    {period:'2026-11',currency:'EUR',money_in_minor:'20000',money_out_minor:'1000',net_minor:'19000'},
+    {period:'2026-12',currency:'USD',money_in_minor:'5',money_out_minor:'0',net_minor:'5'}
+  ];
+  assert.deepEqual(data.cashCurrencies(rows),{currencies:['EUR','USD'],defaultCurrency:'EUR'});
+  assert.deepEqual(data.cashTotals(rows,'USD'),{moneyIn:'15005',moneyOut:'2500',net:'12505',count:2});
+  assert.deepEqual(data.cashTotals([], 'USD'),{moneyIn:'0',moneyOut:'0',net:'0',count:0});
+  assert.equal(data.formatMinor(data.cashTotals(rows,'USD').net,'USD'),'$125.05');
 });
