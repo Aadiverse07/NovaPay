@@ -348,7 +348,7 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       return withRoute({ ...result, usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false });
     }
     const evidence = repos && context?.orgId && classification.route !== 'ocr'
-      ? await buildAIEvidence({ repos, orgId: context.orgId, intent: classification.intent, message, focusId: requestContext.focusId })
+      ? await buildAIEvidence({ repos, orgId: context.orgId, intent: classification.intent, message, focusId: requestContext.focusId, toolLimits: { timeoutMs: Number(config.AI_TOOL_TIMEOUT_MS) || 6000 } })
       : { records: [], ids: [], toolCalls: 0 };
     let safeRecords = Array.isArray(evidence.records) ? evidence.records : Array.isArray(evidence.records?.rows) ? evidence.records.rows : [];
     if (documentSearch?.search && context?.orgId && context?.userId && ['ocr', 'retrieval'].includes(classification.route)) {

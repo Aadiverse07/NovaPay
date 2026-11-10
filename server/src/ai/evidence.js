@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { formatMinorAmount } from './money-units.js';
 
 export const AI_TOOL_MAX_CALLS = 3;
-export const AI_TOOL_TIMEOUT_MS = 1500;
+export const AI_TOOL_TIMEOUT_MS = 6000;
 export const AI_TOOL_MAX_ROWS = 20;
 export const AI_TOOL_MAX_RESULT_CHARS = 10000;
 
@@ -189,7 +189,7 @@ function makeToolHandlers(repos, orgId) {
   };
 }
 
-export function createReadOnlyAITools({ repos, orgId, maxCalls = AI_TOOL_MAX_CALLS, timeoutMs = AI_TOOL_TIMEOUT_MS, maxResultChars = AI_TOOL_MAX_RESULT_CHARS }) {
+export function createReadOnlyAITools({ repos, orgId, maxCalls = AI_TOOL_MAX_CALLS, timeoutMs = AI_TOOL_TIMEOUT_MS, maxResultChars = AI_TOOL_MAX_RESULT_CHARS, logger = console }) {
   if (!orgId) throw new Error('Verified organization context is required.');
   const handlers = makeToolHandlers(repos, orgId);
   const callLimit = Math.max(0, Math.min(Number(maxCalls) || 0, AI_TOOL_MAX_CALLS));
@@ -221,9 +221,13 @@ export function createReadOnlyAITools({ repos, orgId, maxCalls = AI_TOOL_MAX_CAL
           const work = Promise.resolve().then(() => handlers[name](args));
           const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('tool_timeout')), timeoutMs); });
           const value = await Promise.race([work, timeout]);
+          const empty = Array.isArray(value) ? value.length === 0 : value == null;
+          if (empty) logger?.info?.('[NovaPay AI] read-only tool returned empty', { tool: name });
           results.push({ name, result: trimResult(value, maxResultChars) });
         } catch (error) {
-          results.push({ name, error: error?.message === 'tool_timeout' ? 'tool_timeout' : 'tool_unavailable' });
+          const timedOut = error?.message === 'tool_timeout';
+          if (timedOut) logger?.warn?.('[NovaPay AI] read-only tool timed out', { tool: name });
+          results.push({ name, error: timedOut ? 'tool_timeout' : 'tool_unavailable' });
         } finally {
           clearTimeout(timer);
         }
@@ -254,10 +258,20 @@ export async function buildAIEvidence({ repos, orgId, intent, message, now, focu
   const tools = createReadOnlyAITools({ repos, orgId, ...toolLimits });
   const toolResults = await tools.execute(planEvidenceTools({ intent, message, now }));
   const records = toolResults.results.flatMap((item) => Array.isArray(item.result) ? item.result : item.result?.rows || (item.result && !item.error ? [item.result] : []));
-  if (focusId && typeof repos.getTransactionById === 'function' && !records.some((record) => record.id === focusId)) {
-    const focused = await repos.getTransactionById(orgId, focusId);
+  const messageIds = [...new Set(String(message || '').match(/\b[A-Z0-9]{15,20}\b/g) || [])];
+  const directIds = [...new Set([focusId, ...messageIds].filter((id) => typeof id === 'string' && id))];
+  for (const id of directIds) {
+    if (records.some((record) => record.id === id || record.sourceId === id)) continue;
+    let focused = null;
+    try {
+      if (typeof repos.getTransactionByCaptureId === 'function') focused = await repos.getTransactionByCaptureId(orgId, id);
+      if (!focused && typeof repos.getTransactionById === 'function') focused = await repos.getTransactionById(orgId, id);
+    } catch {
+      toolLimits.logger?.warn?.('[NovaPay AI] direct transaction lookup unavailable', { tool: 'get_transaction_by_id' });
+    }
+    if (!focused) toolLimits.logger?.info?.('[NovaPay AI] read-only tool returned empty', { tool: 'get_transaction_by_id' });
     const safeFocused = focused && transactionEvidence(focused);
-    if (safeFocused) records.unshift(safeFocused);
+    if (safeFocused && !records.some((record) => record.id === safeFocused.id)) records.unshift(safeFocused);
   }
   const ids = [...new Set(records.flatMap((record) => [record.id, record.sourceId].filter((id) => typeof id === 'string' && id)))];
   return {

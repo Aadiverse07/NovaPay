@@ -180,6 +180,24 @@ test('spaced spoken capture ID reaches AI intact and resolves to the exact compl
   assert.equal(saved.amount, '7.00');
 });
 
+test('refund question with capture ID in prose produces direct evidence and a pending refund proposal', async () => {
+  const captureId = '6UV5767052048553J';
+  const internalId = 'db88103f-edf5-42a2-9418-4b30f5906fd9';
+  const repos = createRepositories();
+  repos.captures.add({ id: captureId, value: '12.50', currency: 'USD', status: 'COMPLETED' }, 'org-a');
+  repos.listTransactions = async () => new Promise(() => {});
+  repos.getTransactionByCaptureId = async (orgId, id) => orgId === 'org-a' && id === captureId
+    ? { id: internalId, source_type: 'capture', source_id: captureId, amount_minor: 1250, currency: 'USD', status: 'COMPLETED' }
+    : null;
+  const provider = { async generate() { return JSON.stringify({ reply: 'I found the completed capture and prepared a refund for review.', evidence: [internalId], proposal: { type: 'refund', txId: internalId, title: 'Review full refund', reason: 'The customer cancelled the order.' } }); } };
+  const result = await createAIService({ config: { AI_TOOL_TIMEOUT_MS: 1000 }, repos, provider })('Propose a refund of the full amount for capture ' + captureId + '. The customer cancelled the order.', { orgId: 'org-a', userId: 'user-a' });
+  assert.equal(result.evidence.includes(internalId), true);
+  assert.equal(result.proposal?.status, 'pending');
+  assert.equal(result.proposal?.amount, '12.50');
+  const approval = await repos.approvals.get(result.proposal.approvalId, 'org-a');
+  assert.equal(approval.captureId, captureId);
+});
+
 test('a mistyped capture reference is not guessed and returns a reason instead of a false proposal claim', async () => {
   const captureId = '6UV5767052048553J';
   const mistypedId = '6UV57670520485 3J';

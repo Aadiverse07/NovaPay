@@ -31,6 +31,7 @@ const schema = z.object({
   DOCUMENT_EMBEDDING_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(25000),
   AI_DAILY_USER_LIMIT: z.coerce.number().int().min(1).max(1000).default(5),
   AI_DAILY_ORG_LIMIT: z.coerce.number().int().min(1).max(10000).default(20),
+  AI_TOOL_TIMEOUT_MS: z.coerce.number().int().min(1000).max(30000).default(6000),
   AI_MAX_INPUT_CHARS: z.coerce.number().int().min(100).max(1000).default(1000),
   AI_MAX_OUTPUT_TOKENS: z.coerce.number().int().min(64).max(400).default(400),
   AI_CACHE_TTL_SECONDS: z.coerce.number().int().min(0).max(3600).default(300),
