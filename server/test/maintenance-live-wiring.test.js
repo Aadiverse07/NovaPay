@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import express from 'express';
 import { fundRoutes } from '../src/routes/funds.js';
 import { createRepositories } from '../src/repos/memory.js';
@@ -44,37 +43,6 @@ test('maintenance live list and detail are org scoped; viewer can read but canno
   } finally { await new Promise((resolve) => server.close(resolve)); }
 });
 
-test('authenticated dashboard activates live maintenance and prevents duplicate create submits', async () => {
-  const [views, modules, html] = await Promise.all([
-    readFile(new URL('../../src/fund-views.js', import.meta.url), 'utf8'),
-    readFile(new URL('../../src/modules.js', import.meta.url), 'utf8'),
-    readFile(new URL('../../dashboard.html', import.meta.url), 'utf8'),
-  ]);
-  assert.match(views, /startMaintenance\(\)/);
-  assert.match(views, /NovaPayApi\.request\("\/api\/funds\/maintenance"/);
-  assert.match(views, /No maintenance requests yet/);
-  assert.match(views, /if \(isError\).*Retry/);
-  assert.match(views, /novapay:financial-refresh/);
-  assert.match(views, /maintenanceSubmitting/);
-  assert.match(views, /majorToMinor\(estimateRaw, currency\)/);
-  assert.match(views, /statusFilter/);
-  assert.match(views, /searchBox/);
-  assert.match(modules, /submitMaintenance/);
-  assert.match(views, /if \(maintenanceSubmitting\) return/);
-  assert.match(views, /await window\.NovaPayApi\.request\("\/api\/funds\/maintenance", \{ method: "POST"/);
-  assert.match(views, /if \(closeForm\) closeForm\(\); form\.reset\(\); await refresh\(\)/);
-  assert.match(views, /if \(!auth \|\| auth\.mode !== "supabase"\)[\s\S]*?Sign in to create a live maintenance request/);
-  assert.match(views, /if \(auth\.mode === "demo"\) \{ labelSampleViews\(\); return; \}/);
-  assert.match(views, /\["title", "description", "location", "category", "priority"\]/);
-  assert.match(views, /Payment request blocked: link the required invoice first/);
-  assert.match(views, /\["community-funds", "maintenance"\]/);
-  assert.match(views, /if \(auth.mode === "demo"\) \{ labelSampleViews\(\); return; \}/);
-  assert.match(html, /name="description"/);
-  assert.match(html, /name="location"/);
-  assert.match(html, /name="category"/);
-  assert.match(html, /name="priority"/);
-  assert.match(views, /"No maintenance requests yet"/);
-});
 
 test('maintenance budgets convert major units using the selected currency exponent', () => {
   assert.equal(globalThis.NovaPayCurrency.majorToMinor('12.34', 'USD'), 1234);

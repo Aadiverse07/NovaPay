@@ -44,6 +44,38 @@ export function reportTotals(report,rows) {
 
 export function reportRoutes({ repos }) {
   const router=Router();
+  router.get('/reports/cash-flow-series',async(req,res,next)=>{
+    const parsed=querySchema.safeParse(req.query);
+    if(!parsed.success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Cash flow filters are invalid.'));
+    const {from,to,currency}=parsed.data;
+    if(from&&to&&from>to) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','The from date must not be after the to date.'));
+    try{
+      const entries=[]; const limit=500;
+      for(let offset=0;offset<10000;offset+=limit){
+        const batch=await repos.listLedgerEntries(req.orgId,{from,to,limit,offset});
+        entries.push(...batch); if(batch.length<limit) break;
+      }
+      const groups=new Map();
+      for(const entry of entries){
+        const code=String(entry.currency||'').toUpperCase();
+        if(!/^[A-Z]{3}$/.test(code)||(currency&&code!==currency)) continue;
+        const date=String(entry.created_at||entry.entry_date||'').slice(0,10);
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||(from&&date<from)||(to&&date>to)) continue;
+        const bucket=date.slice(0,7), key=`${code}:${bucket}`;
+        const total=groups.get(key)||{period:bucket,currency:code,moneyIn:0n,moneyOut:0n,net:0n};
+        for(const line of entry.lines||[]){
+          const account=String((Array.isArray(line.accounts)?line.accounts[0]?.code:line.accounts?.code)||line.account_code||''); if(!['1000','1010'].includes(account)) continue;
+          const debit=BigInt(String(line.debit_minor||0)),credit=BigInt(String(line.credit_minor||0));
+          if(debit>credit) total.moneyIn+=debit-credit; else total.moneyOut+=credit-debit;
+          total.net+=debit-credit;
+        }
+        groups.set(key,total);
+      }
+      const rows=[...groups.values()].sort((a,b)=>a.period.localeCompare(b.period)||a.currency.localeCompare(b.currency)).map(row=>({period:row.period,currency:row.currency,money_in_minor:String(row.moneyIn),money_out_minor:String(row.moneyOut),net_minor:String(row.net)}));
+      const currencies=[...new Set(rows.map(row=>row.currency))];
+      return res.json({from:from||null,to:to||null,rows,currencies});
+    }catch(error){return next(error);}
+  });
   router.get('/reports/:report',async(req,res,next)=>{
     const parsed=querySchema.safeParse(req.query);
     if(!parsed.success) return res.status(400).json(structuredErrorBody('VALIDATION_ERROR','Report filters are invalid.'));

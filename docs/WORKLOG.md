@@ -5878,3 +5878,13 @@ ABOUT TO stage only task files; no .env path is included.
 - Disabled module routes return structured 404s; existing contribution data and financial posting paths remain in place.
 - Hid disabled navigation, start-page options and maintenance approval filtering; notification and assistant deep links honor capabilities.
 - Updated product copy and documented how to re-enable each module. No migration was added.
+
+## 2026-11-10 — Demo polish: removed optional module UI
+- Removed the Community Funds and Maintenance navigation, dashboard views, modal markup, browser-only client module and assistant action/navigation targets. Existing server routes, schema and financial records remain in place behind the existing default-off flags.
+- Historical notifications now fall back to the dashboard instead of linking to retired screens. Invalid old hashes resolve to Dashboard.
+- Removed active API/frontend contract feature guides and updated the demo script to focus on the PayPal safety/support flow. No migration was added.
+
+## 2026-11-10 — Live dashboard cash flow and failure KPI
+- Added `GET /api/reports/cash-flow-series`, which aggregates org-filtered cash account journal lines by month and currency using BigInt arithmetic. Cash flow chart data, axis, period labels, tooltip and totals now use the series and selected currency.
+- Replaced the unavailable Disputes KPI with the selected-period count and top cause from classified payment failures. No migration was added.
+- Added route aggregation and dashboard source regressions; updated `Intl.NumberFormat` currency display to retain exact minor-unit precision.

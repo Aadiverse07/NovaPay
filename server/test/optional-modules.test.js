@@ -55,19 +55,15 @@ test('disabled modules are absent from dashboard entry points, routing, and assi
     readFile(new URL('../../src/assistant-actions.js', import.meta.url), 'utf8'),
     readFile(new URL('../../src/notifications-live.js', import.meta.url), 'utf8'),
   ]);
-  assert.match(html, /data-view="community-funds"[^>]*hidden/);
-  assert.match(html, /data-view="maintenance"[^>]*hidden/);
-  assert.match(dashboard, /view==="community-funds"&&window\.NovaPayFeatures\.communityFunds===false/);
-  assert.match(dashboard, /view==="maintenance"&&window\.NovaPayFeatures\.maintenance===false/);
-  assert.match(actions, /funds\.openCampaign/);
-  assert.match(actions, /maintenance\.openNew/);
-  assert.match(notify, /window\.NovaPayFeatures\.maintenance \? "maintenance" : "dashboard"/);
-  assert.match(notify, /window\.NovaPayFeatures\.communityFunds \? "community-funds" : "dashboard"/);
+  assert.doesNotMatch(html, /data-view="(?:community-funds|maintenance)"|id="view-(?:community-funds|maintenance)"|fund-views\.js/);
+  assert.doesNotMatch(dashboard, /community-funds|maintenance|funds\./);
+  assert.doesNotMatch(actions, /community-funds|maintenance|funds\./);
+  assert.doesNotMatch(notify, /community-funds|maintenance/);
   const service = createAIService({ config, provider: { async generate() { throw new Error('disabled-module question must not reach the model'); } } });
   const answer = await service('Open Community Funds', { role: 'owner' });
-  assert.match(answer.reply, /not enabled/i);
+  assert.match(answer.reply, /not available/i);
   assert.deepEqual(answer.actions, []);
-  assert.equal(parseFastAssistantCommand('open maintenance', 'owner', config), null);
+  assert.equal(parseFastAssistantCommand('open maintenance', 'owner'), null);
   assert.deepEqual(validateAssistantActions([{ id: 'funds.openCampaign', args: {} }], 'open community funds', 'owner', config), []);
 });
 

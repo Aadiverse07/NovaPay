@@ -58,7 +58,8 @@ test('live cash chart resets demo animation, draws axes, and shows one monthly p
   const requests = [];
   const responses = {
     'profit-and-loss': { rows: [] }, fees: { rows: [] }, refunds: { rows: [] },
-    'cash-movement': { rows: [{ period: '2026-11-01', currency: 'USD', cash_movement_minor: '12500' }] },
+    'cash-flow-series': { rows: [{ period: '2026-11', currency: 'USD', money_in_minor: '15000', money_out_minor: '2500', net_minor: '12500' }] },
+    failures: { failures: [] },
     transactions: { transactions: [] }
   };
   const window = {
@@ -71,7 +72,7 @@ test('live cash chart resets demo animation, draws axes, and shows one monthly p
   await new Promise((resolve) => setTimeout(resolve, 0));
 
   const path = byId('cash-net-line').attributes.d;
-  assert.match(path, /^M440\.0 [\d.]+ L460\.0 [\d.]+$/);
+  assert.match(path, /^M450\.0 [\d.]+$/);
   for (const id of ['cash-in-line', 'cash-out-line', 'cash-net-line']) {
     assert.equal(byId(id).style.strokeDasharray, undefined);
     assert.equal(byId(id).style.strokeDashoffset, undefined);
@@ -80,11 +81,11 @@ test('live cash chart resets demo animation, draws axes, and shows one monthly p
   assert.equal(byId('cf-grid').children.length, 5);
   assert.equal(byId('cf-y').children.length, 5);
   assert.match(byId('cf-y').children[0].textContent, /\$/);
-  assert.ok(requests.some((path) => path.includes('/api/reports/cash-movement')));
+  assert.ok(requests.some((path) => path.includes('/api/reports/cash-flow-series')));
 });
 
 test('cashflow sample renderer is gated at call time and Sandbox sizing follows the container', () => {
-  assert.match(dashboardSource, /function renderCashflow\(range, animate\)\{\s*if\(window\.NovaPayAuth&&window\.NovaPayAuth\.mode==="supabase"\)return/);
+  assert.match(dashboardSource, /function renderCashflow\(range, animate\)\{\s*if\(!window\.NovaPayAuth\|\|window\.NovaPayAuth\.mode!=="demo"\|\|!window\.NovaPayAuth\.isAuthenticated\(\)\)return/);
   assert.match(heroCss, /\.hs-paypal \.hs-recv strong\{font-size:1em;max-width:calc\(100% - 2\.4em\);white-space:normal;overflow-wrap:normal\}/);
   assert.doesNotMatch(heroCss, /\.hs-paypal \.hs-recv strong\{[^}]*\b\d+(?:\.\d+)?vw/);
 });

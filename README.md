@@ -34,10 +34,6 @@ Support cases receive sequential organization-local numbers such as NP-0007. Reg
 
 Dashboard, Transactions, AI Assistant, Approvals, PayPal Sandbox, Ledger, Invoices, Reports, Documents, Security and Help & support.
 
-## Optional modules (off by default)
-
-Community Funds and Maintenance are hidden and their API routes return a structured `MODULE_NOT_ENABLED` 404 by default. Existing contribution transactions and ledger entries remain available in the financial views. Set `ENABLE_COMMUNITY_FUNDS=true` and/or `ENABLE_MAINTENANCE=true` on the server to restore either module; restart the server after changing flags. No migration is needed.
-
 ## Run it
 
 1. Copy `.env.example` to `.env` (git-ignored) and fill in the keys for the services you use: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODEL` and `PAYPAL_INVOICE_SEND_MODE`. Document OCR and embeddings use `GEMINI_API_KEY` (or the numbered key pool in `.env.example`). Keep the service-role and provider keys on the server. Never put them in browser code or commits.
@@ -94,11 +90,11 @@ The queue shows source, action type, reason, transaction reference, amount, evid
 Use the fixed test organization and PayPal Sandbox buyer/seller accounts. The payment and refund in this walkthrough are Sandbox operations.
 
 1. **Make a Sandbox payment.** Sign in with a fixed test account, create an order in PayPal Sandbox, approve it as the Sandbox buyer, and capture it in NovaPay.
-2. **Show the books.** Open Ledger and confirm the capture is posted and the USD trial balance balances. Open Approvals and show the pending count.
-3. **Show both AI routes.** Ask `What is 7 + 5?` and point out the `code` route. Then ask `Is the latest PayPal capture consistent with its ledger record? Cite the records used.` and show the `llm` route and its citation chips.
-4. **Diagnose a failure.** Open PayPal Sandbox and show the cause category, safe retry guidance, and next step for a failed request.
-5. **Review a refund proposal.** Ask NovaPay AI to explain a completed capture and propose a refund, then send it to Approvals. Show the human review and step-up check.
-6. **Review risk and support.** Open Settings → Security to show sign-in risk and device history, then create or review a support ticket.
+2. **Diagnose a failure.** Open PayPal Sandbox and show the cause category, safe retry guidance, and next step for a failed request.
+3. **Review a refund proposal.** Ask NovaPay AI to explain a completed capture and propose a refund.
+4. **Review it in Approvals.** Show the human approval and step-up check before the Sandbox refund executes.
+5. **Review risk.** Open Settings → Security to show sign-in risk and device history.
+6. **Create a support ticket.** Open Help & support and submit a ticket about the payment.
 
 For the sandbox-first flow: create and capture an order, ask the assistant about the activity, send its proposal to Approvals and approve the refund. The refund executes in Sandbox, a transaction row appears and the audit trail records it.
 
@@ -128,3 +124,5 @@ Login and device risk are recorded with salted hashes for network range and brow
 NovaPay records failed sign-in reports and applies account and network-prefix lockouts before login plus to authenticated API requests. Supabase Auth is still reachable directly by an attacker, so NovaPay cannot prevent direct password attempts against Supabase; Supabase's own Auth rate limits cover that path.
 
 Settings → Security uses real Supabase-backed login and device records, shows the current explainable risk reasons, and lets owners/admins unlock a workspace member. Device removal also ends that device's active step-up grant. This panel reports only data recorded after these migrations are applied; earlier sign-ins are not backfilled.
+
+The signed-in Cash Flow Overview reads the organization's ledger cash accounts, separates currencies, and formats amounts in the source currency. The assistant is a full-page conversation; user messages can be copied or edited, while approval proposals still require the existing human review flow. Unauthenticated dashboard seed graphics remain illustrative and are restricted to the explicit demo session.

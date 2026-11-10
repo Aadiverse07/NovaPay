@@ -10,11 +10,15 @@
     catch (_) { return 2; }
   }
   function formatMinor(value, currency) {
-    var code = String(currency || "USD").toUpperCase(), places = digits(code), amount;
-    try { amount = BigInt(value == null ? 0 : value); } catch (_) { return "—"; }
-    var negative = amount < 0n; if (negative) amount = -amount;
-    var scale = 10n ** BigInt(places), whole = amount / scale, fraction = places ? "." + String(amount % scale).padStart(places, "0") : "";
-    return code + " " + (negative ? "-" : "") + whole.toLocaleString("en-US") + fraction;
+    var code=String(currency||"USD").toUpperCase(),places=digits(code),amount;
+    try{amount=BigInt(value==null?0:value)}catch(_){return "—"}
+    var negative=amount<0n;if(negative)amount=-amount;var scale=10n**BigInt(places),whole=amount/scale,fraction=String(amount%scale).padStart(places,"0");
+    try{
+      var formatter=new Intl.NumberFormat(undefined,{style:"currency",currency:code,minimumFractionDigits:0,maximumFractionDigits:0});
+      var wholeText=formatter.format(whole),decimal=new Intl.NumberFormat(undefined).formatToParts(1.1).find(function(part){return part.type==="decimal"})?.value||".";
+      var fractionText=places?decimal+fraction.replace(/\d/g,function(d){return new Intl.NumberFormat(undefined,{useGrouping:false}).format(Number(d))}):"";
+      return (negative?"−":"")+wholeText+fractionText;
+    }catch(_){return code+" "+(negative?"−":"")+whole.toLocaleString()+ (places?"."+fraction:"")}
   }
   function formatMajor(value, currency) {
     if (value == null || value === "") return "—";
@@ -52,10 +56,23 @@
     });
     return { revenue: formatGroups(revenue), fees: formatGroups(fees), refunds: formatGroups(refunds), net: formatGroups(net), revenueByCurrency: revenue, feesByCurrency: fees, refundsByCurrency: refunds, netByCurrency: net };
   }
+  function cashCurrencies(rows) {
+    var totals=Object.create(null);
+    (rows||[]).forEach(function(row){var code=String(row.currency||"").toUpperCase();if(!/^[A-Z]{3}$/.test(code))return;try{totals[code]=(totals[code]||0n)+BigInt(row.money_in_minor||0)+BigInt(row.money_out_minor||0)}catch(_){}});
+    var currencies=Object.keys(totals).sort();
+    var defaultCurrency=currencies.slice().sort(function(a,b){return totals[a]===totals[b]?a.localeCompare(b):totals[a]>totals[b]?-1:1})[0]||"";
+    return {currencies:currencies,defaultCurrency:defaultCurrency};
+  }
+  function cashTotals(rows,currency) {
+    var selected=(rows||[]).filter(function(row){return !currency||String(row.currency||"").toUpperCase()===String(currency).toUpperCase()});
+    var moneyIn=0n,moneyOut=0n,net=0n;
+    selected.forEach(function(row){try{moneyIn+=BigInt(row.money_in_minor||0);moneyOut+=BigInt(row.money_out_minor||0);net+=BigInt(row.net_minor||0)}catch(_){}});
+    return {moneyIn:String(moneyIn),moneyOut:String(moneyOut),net:String(net),count:selected.length};
+  }
   function cashMovement(rows) {
     var currencies = new Set((rows || []).map(function (row) { return String(row.currency || "USD").toUpperCase(); }));
     if (currencies.size > 1) return { multiCurrency: true, currencies: Array.from(currencies).sort(), points: [] };
     return { multiCurrency: false, currency: Array.from(currencies)[0] || null, points: (rows || []).map(function (row) { return { period: String(row.period || ""), value: String(row.cash_movement_minor || 0) }; }) };
   }
-  return { formatMinor: formatMinor, formatMajor: formatMajor, metrics: metrics, cashMovement: cashMovement, localDate: localDate };
+  return { formatMinor: formatMinor, formatMajor: formatMajor, metrics: metrics, cashMovement: cashMovement, cashCurrencies: cashCurrencies, cashTotals: cashTotals, localDate: localDate };
 }));

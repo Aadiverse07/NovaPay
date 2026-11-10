@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { createApp } from '../src/app.js';
 import { createRepositories } from '../src/repos/memory.js';
 
@@ -38,29 +37,4 @@ test('campaign list is live and organization scoped; owner can create, viewer re
     const isolated = await call('other-token', orgB, '/funds/campaigns');
     assert.equal((await isolated.json()).campaigns.length, 1);
   } finally { await new Promise((resolve) => server.close(resolve)); }
-});
-
-test('dashboard loads live fund views; campaign create uses API with field validation and single-submit guard', async () => {
-  const [html, views, modules] = await Promise.all([
-    readFile(new URL('../../dashboard.html', import.meta.url), 'utf8'),
-    readFile(new URL('../../src/fund-views.js', import.meta.url), 'utf8'),
-    readFile(new URL('../../src/modules.js', import.meta.url), 'utf8'),
-  ]);
-  assert.match(html, /src="src\/fund-views\.js(?:\?v=\d+)?"/);
-  assert.match(views, /#view-community-funds/);
-  assert.match(views, /NovaPayApi\.request\("\/api\/funds\/campaigns"/);
-  assert.match(views, /result\.role/);
-  assert.match(views, /transparency\?campaignId=/);
-  assert.match(views, /Transparency and spending · read only/);
-  assert.match(views, /No completion evidence/);
-  assert.match(views, /Download audit CSV/);
-  assert.match(views, /novapay:financial-refresh/);
-  assert.match(views, /No campaigns yet/);
-  assert.match(html, /data-fund-sample hidden/);
-  assert.match(views, /node\.style\.display = "none"/);
-  assert.match(modules, /campaignSubmitting=true/);
-  assert.match(modules, /\/api\/funds\/campaigns/);
-  assert.match(modules, /currencyDigits\(currency\)/);
-  assert.match(modules, /targetMinor=Math\.round\(target\*Math\.pow\(10,digits\)\)/);
-  assert.doesNotMatch(modules, /Campaign publishing is not connected/);
 });

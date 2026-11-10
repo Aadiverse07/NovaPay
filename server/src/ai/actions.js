@@ -4,8 +4,7 @@ import '../../../src/assistant-actions.js';
 export const ASSISTANT_ACTION_REGISTRY = globalThis.NovaPayAssistantActions;
 const registry = new Map(ASSISTANT_ACTION_REGISTRY.registry.map((item) => [item.id, item]));
 const uiRoleRules = {
-  'invoice-create': ['owner', 'admin', 'accountant'], 'campaign-create': ['owner', 'admin', 'accountant'],
-  'maintenance-new': ['owner', 'admin', 'accountant', 'approver', 'resident'],
+  'invoice-create': ['owner', 'admin', 'accountant'],
   'ledger-export': ['owner', 'admin', 'accountant'], 'reports-export': ['owner', 'admin', 'accountant'],
 };
 
@@ -56,9 +55,6 @@ export function validateAssistantActions(candidates, message, role = 'viewer', c
   for (const candidate of candidates) {
     const definition = registry.get(candidate?.id);
     if (!definition || !definition.roles.includes(role)) continue;
-    if (definition.id === 'data.query' && ((candidate.args?.topic === 'funds' && !capabilities.ENABLE_COMMUNITY_FUNDS) || (candidate.args?.topic === 'maintenance' && !capabilities.ENABLE_MAINTENANCE))) continue;
-    if (!capabilities.ENABLE_COMMUNITY_FUNDS && (definition.id.startsWith('funds.') || (definition.id === 'nav.open' && candidate.args?.view === 'community-funds') || (definition.id === 'ui.click' && ['campaign-view','campaign-create'].includes(candidate.args?.uiAction)))) continue;
-    if (!capabilities.ENABLE_MAINTENANCE && (definition.id.startsWith('maintenance.') || (definition.id === 'nav.open' && candidate.args?.view === 'maintenance') || (definition.id === 'ui.click' && ['maintenance-view','maintenance-new'].includes(candidate.args?.uiAction)))) continue;
     const parsed = fromJsonSchema(definition.args).safeParse(candidate.args || {});
     if (!parsed.success) continue;
     const args = parsed.data;
@@ -89,12 +85,9 @@ function actionMatchesUserText(id, args, text) {
   if (id === 'assistant.help') return /\b(help|what can you do|capabilities)\b/.test(text);
   if (id === 'data.query') return true;
   if (id === 'documents.promptUpload') return /\b(upload|attach|process)\b.{0,35}\b(document|file|receipt|invoice|pdf)\b/.test(text);
-  if (id === 'maintenance.openNew') return /\b(new|create|open|start)\b.{0,35}\bmaintenance\b/.test(text);
-  if (id === 'funds.openCampaign') return /\b(open|show|view)\b.{0,35}\b(campaign|funds?)\b/.test(text);
   if (id === 'invoice.createDraft') return /\b(create|make|new|generate|raise|prepare)\b.{0,60}\b(invoice|draft)\b|\b(invoice|draft)\b.{0,45}\b(create|make|generate|raise)\b/.test(text);
   if (id === 'invoice.downloadPdf') return /\b(download|save)\b.{0,35}\b(invoice|pdf)\b/.test(text);
   if (id === 'invoice.requestSendApproval') return /\b(send|deliver)\b.{0,35}\binvoice\b/.test(text);
-  if (id === 'funds.createCampaignDraft') return /\b(create|make|prepare)\b.{0,40}\b(campaign|fundraiser)\b/.test(text);
   if (id === 'documents.proposeConfirm') return /\b(confirm|approve|post)\b.{0,40}\b(document|ocr|invoice)\b/.test(text);
   if (id === 'report.export' || id === 'ledger.export') return /\b(export|download)\b/.test(text);
   if (id === 'report.open') return /\b(open|show|view|go to)\b.{0,35}\breport/.test(text);
@@ -104,10 +97,10 @@ function actionMatchesUserText(id, args, text) {
 }
 
 const viewAliases = [
-  ['ai-assistant', /\b(?:ai assistant|assistant)\b/], ['community-funds', /\b(?:community funds|campaigns?|funds?)\b/],
+  ['ai-assistant', /\b(?:ai assistant|assistant)\b/],
   ['transactions', /\btransactions?\b/], ['approvals', /\bapprovals?\b/], ['sandbox', /\b(?:paypal )?sandbox\b/],
   ['ledger', /\b(?:ledger|trial balance)\b/], ['invoices', /\binvoices?\b/], ['reports', /\breports?\b/],
-  ['documents', /\b(?:documents?|receipts?)\b/], ['maintenance', /\bmaintenance\b/], ['dashboard', /\b(?:dashboard|home)\b/],
+  ['documents', /\b(?:documents?|receipts?)\b/], ['dashboard', /\b(?:dashboard|home)\b/],
 ];
 
 export function parseNavigationCommand(value) {
@@ -118,17 +111,16 @@ export function parseNavigationCommand(value) {
     : null;
 }
 
-export function parseFastAssistantCommand(message, role = 'viewer', capabilities = {}) {
+export function parseFastAssistantCommand(message, role = 'viewer') {
   const text = String(message || '').toLocaleLowerCase('en-US').replace(/[’‘]/g, "'").trim();
   let action;
   const navigation = parseNavigationCommand(text);
-  if (navigation && (navigation.view !== 'community-funds' || capabilities.ENABLE_COMMUNITY_FUNDS) && (navigation.view !== 'maintenance' || capabilities.ENABLE_MAINTENANCE)) action = { id: 'nav.open', tier: 0, args: navigation };
+  if (navigation) action = { id: 'nav.open', tier: 0, args: navigation };
   else if (/^(?:stop|stop speaking|cancel|be quiet|quiet)[.! ]*$/.test(text)) action = { id: 'assistant.stopSpeaking', tier: 0, args: {} };
   else if (/^(?:repeat|say that again|again)[.! ]*$/.test(text)) action = { id: 'assistant.repeat', tier: 0, args: {} };
   else if (/^(?:help|what can you do\??|capabilities\??)[.! ]*$/.test(text)) action = { id: 'assistant.help', tier: 0, args: {} };
   else if (/^(?:(?:download|save) (?:my |the )?(?:last|latest) invoice(?: pdf)?|download (?:it|that))[.! ]*$/.test(text)) action = { id: 'invoice.downloadPdf', tier: 1, args: {} };
   else if (/^(?:upload|attach|process) (?:my |the )?(?:document|file|receipt|invoice|pdf)[.! ]*$/.test(text)) action = { id: 'documents.promptUpload', tier: 0, args: {} };
-  else if (capabilities.ENABLE_MAINTENANCE && /^(?:new|create|open|start) (?:a )?maintenance request[.! ]*$/.test(text)) action = { id: 'maintenance.openNew', tier: 0, args: {} };
   if (!action) return null;
   const registered = registry.get(action.id);
   if (!registered || !registered.roles.includes(role)) return null;
@@ -136,8 +128,7 @@ export function parseFastAssistantCommand(message, role = 'viewer', capabilities
     'assistant.stopSpeaking': 'Okay, I stopped speaking.', 'assistant.repeat': 'I will repeat my previous answer.',
     'assistant.help': 'I can open NovaPay modules, answer questions from your organization data, and guide you to supported forms and reviews.',
     'documents.promptUpload': 'Please attach your document. I opened Documents so you can choose the file.',
-    'maintenance.openNew': 'I opened the maintenance request form.',
   };
-  const names = { dashboard: 'dashboard', transactions: 'Transactions', 'ai-assistant': 'AI Assistant', approvals: 'Approvals', sandbox: 'PayPal Sandbox', ledger: 'Ledger', invoices: 'Invoices', reports: 'Reports', documents: 'Documents', 'community-funds': 'Community Funds', maintenance: 'Maintenance' };
+  const names = { dashboard: 'dashboard', transactions: 'Transactions', 'ai-assistant': 'AI Assistant', approvals: 'Approvals', sandbox: 'PayPal Sandbox', ledger: 'Ledger', invoices: 'Invoices', reports: 'Reports', documents: 'Documents' };
   return { route: 'code', reason: 'deterministic_assistant_command', reply: action.id === 'nav.open' ? `Opening ${names[action.args.view]}.` : phrases[action.id], actions: [action], usage: { model: null, inputTokens: 0, outputTokens: 0 }, cached: false };
 }

@@ -32,3 +32,13 @@ test('assistant sends only the last ten bounded turns and capped transaction IDs
   assert.equal(body.context.selectedTransactionIds.length, 10);
   assert.deepEqual(body.context.filteredTransactionIds, ['CAP-F']);
 });
+
+test('edited conversation replaces the transcript and removes turns after the edited message', () => {
+  const values = new Map();
+  const storage = { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key) };
+  const store = conversation.create(storage); store.load('org:user');
+  store.append('user', 'first'); store.append('assistant', 'answer'); store.append('user', 'second'); store.append('assistant', 'later answer');
+  store.replace([{ role: 'user', text: 'edited first' }]);
+  assert.deepEqual(store.turns(), [{ role: 'user', text: 'edited first' }]);
+  const restored = conversation.create(storage); assert.deepEqual(restored.load('org:user'), [{ role: 'user', text: 'edited first' }]);
+});
