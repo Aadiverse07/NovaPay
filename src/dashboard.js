@@ -45,7 +45,9 @@
     if(!titles[view])view="dashboard";
     panels.forEach(function(p){p.hidden=p.id!=="view-"+view});
     nav.forEach(function(a){a.setAttribute("aria-current",a.dataset.view===view?"page":"false")});
-    title.textContent=titles[view];
+    var hidePageTitle=Boolean(document.querySelector("#view-"+view+"[data-hide-page-title]"));
+    if(hidePageTitle){title.remove();}else{if(!title.isConnected)document.querySelector(".dashboard-heading").appendChild(title);title.textContent=titles[view];}
+    document.body.classList.toggle("assistant-active",view==="ai-assistant");
     if(writeHash&&location.hash!=="#"+view)history.pushState(null,"","#"+view);
     if(view==="transactions"&&window.NovaPayTransactionsGrid)requestAnimationFrame(function(){var panel=$("view-transactions");if(panel&&!panel.hidden)window.NovaPayTransactionsGrid.init()});
     if(!preserveScroll)window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
