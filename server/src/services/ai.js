@@ -121,13 +121,18 @@ export function sanitizeAIResponse(text, context = {}) {
       ...(Array.isArray(context.records) ? context.records : []),
       ...(Array.isArray(context.transactions) ? context.transactions : []),
     ];
-    const knownIds = new Set(knownRecords.flatMap((item) => [item?.id, item?.sourceId].map((id) => String(id || ''))).filter(Boolean));
+    const normalizeKnownId = (value) => String(value || '')
+      .trim()
+      .replace(/^[\s"'`“”‘’]+|[\s"'`“”‘’]+$/g, '')
+      .replace(/^capture\s+/i, '')
+      .trim()
+      .toLocaleLowerCase('en-US');
+    const knownIds = new Map(knownRecords.flatMap((item) => [item?.id, item?.sourceId]
+      .filter((id) => id != null && String(id).trim())
+      .map((id) => [normalizeKnownId(id), String(id)])));
     const resolveKnownId = (value) => {
-      const id = String(value || '');
-      if (knownIds.has(id)) return id;
-      const compact = id.replace(/\s+/g, '');
-      if (!/^[A-Z0-9]{12,24}$/i.test(compact) || !/\s/.test(id)) return null;
-      return [...knownIds].find((known) => /^[A-Z0-9]{12,24}$/i.test(known) && known.toUpperCase() === compact.toUpperCase()) || null;
+      const normalized = normalizeKnownId(value);
+      return knownIds.get(normalized) || knownIds.get(normalized.replace(/\s+/g, '')) || null;
     };
     const evidence = [...new Set(out.evidence.map(resolveKnownId).filter(Boolean))];
     if (proposal) {
@@ -261,6 +266,23 @@ function safeProposalText(value, fallback, maxLength) {
   return (text || fallback).slice(0, maxLength);
 }
 
+function refundProposalIntent(message) {
+  const text = String(message || '');
+  return /\b(?:propose|create|start|raise|initiate|request)\b.{0,60}\brefund\b|\brefund\b.{0,60}\b(?:propose|create|start|raise|initiate|request)\b/i.test(text);
+}
+
+function paypalIdsInMessage(message) {
+  return [...new Set(String(message || '').match(/\b[A-Z0-9]{15,20}\b/g) || [])];
+}
+
+function statedRefundReason(message, captureId) {
+  const text = String(message || '');
+  const idIndex = text.indexOf(captureId);
+  const tail = idIndex >= 0 ? text.slice(idIndex + captureId.length) : '';
+  const cleaned = tail.replace(/^[\s,.:;—-]+/, '').replace(/[\s"'`“”‘’.]+$/, '').trim();
+  return cleaned.slice(0, 500) || 'Refund requested via assistant';
+}
+
 async function persistPendingProposal({ proposal, citations, records, repos, context }) {
   const reject = (reasonCode) => {
     console.warn(JSON.stringify({ level: 'warn', event: 'ai_proposal_not_created', reasonCode }));
@@ -311,20 +333,21 @@ async function persistPendingProposal({ proposal, citations, records, repos, con
 
 function proposalFailureReply(reasonCode) {
   const reasons = {
-    PROPOSAL_REFERENCE_NOT_IN_ORG: 'the transaction ID did not match a record in this organization',
+    PROPOSAL_REFERENCE_NOT_IN_ORG: 'I could not find that capture in this organization.',
     PROPOSAL_OBJECT_MISSING: 'the assistant did not return a valid proposal reference',
     PROPOSAL_CONTEXT_OR_REPOSITORY_MISSING: 'the organization or approval service is unavailable',
-    PROPOSAL_RECORD_NOT_FOUND: 'the transaction could not be matched to an organization record',
+    PROPOSAL_RECORD_NOT_FOUND: 'I could not find that capture in this organization.',
     PROPOSAL_CITATION_MISSING: 'the transaction was not cited by the answer',
-    REFUND_CAPTURE_NOT_COMPLETED: 'the record is not a completed capture',
-    REFUND_CAPTURE_NOT_FOUND_OR_NOT_COMPLETED: 'the completed capture could not be verified in this organization',
-    REFUND_BALANCE_EXHAUSTED: 'there is no refundable balance remaining',
-    REFUND_CURRENCY_NOT_USD: 'refund proposals require a USD capture',
+    REFUND_CAPTURE_NOT_COMPLETED: 'This capture is not completed, so it cannot be refunded.',
+    REFUND_CAPTURE_NOT_FOUND_OR_NOT_COMPLETED: 'I could not verify this as a completed capture in this organization.',
+    REFUND_BALANCE_EXHAUSTED: 'This capture has already been fully refunded; there is no remaining amount to refund.',
+    REFUND_CURRENCY_NOT_USD: 'Refund proposals are currently supported only for USD captures.',
     SEND_INVOICE_RECORD_INELIGIBLE: 'the referenced record is not an invoice',
     SEND_INVOICE_NOT_REVIEWED: 'the invoice is not eligible for a send proposal',
     PAYOUT_RECORD_INELIGIBLE: 'the referenced record is not an eligible payout',
     APPROVAL_CREATE_RETURNED_EMPTY: 'the approval service did not create an approval',
   };
+  if (reasonCode === 'PROPOSAL_REFERENCE_NOT_IN_ORG' || reasonCode === 'PROPOSAL_RECORD_NOT_FOUND' || reasonCode === 'REFUND_CAPTURE_NOT_COMPLETED' || reasonCode === 'REFUND_CAPTURE_NOT_FOUND_OR_NOT_COMPLETED' || reasonCode === 'REFUND_BALANCE_EXHAUSTED' || reasonCode === 'REFUND_CURRENCY_NOT_USD') return reasons[reasonCode];
   return `I could not create a proposal: ${reasons[reasonCode] || 'the approval could not be created'}.`;
 }
 
@@ -359,6 +382,23 @@ export function createAIService({ config, events, repos, fx, provider = createLL
         return withRoute({ reply: limited ? AI_DAILY_LIMIT_REPLY : AI_TEMPORARILY_UNAVAILABLE_REPLY, evidence: [], proposal: null, ...(limited ? { limited: true } : { unavailable: true }) });
       }
       safeRecords = [...safeRecords, ...(Array.isArray(documents?.records) ? documents.records : [])];
+    }
+    const refundIntent = refundProposalIntent(message);
+    const requestedPayPalIds = paypalIdsInMessage(message);
+    if (refundIntent && requestedPayPalIds.length > 1) {
+      const reply = 'Your message includes two payment IDs. Which capture should I use for the refund proposal?';
+      return withRoute({ reply, speak: safeSpokenText(reply), evidence: [], proposal: null, insufficientEvidence: false });
+    }
+    let deterministicRefund = null;
+    if (refundIntent && requestedPayPalIds.length === 1) {
+      const requestedId = requestedPayPalIds[0];
+      const normalizedId = requestedId.toLocaleLowerCase('en-US');
+      deterministicRefund = safeRecords.find((record) => record?.recordType === 'transaction'
+        && [record.id, record.sourceId].some((value) => String(value || '').trim().toLocaleLowerCase('en-US') === normalizedId)) || null;
+      if (!deterministicRefund) {
+        const reply = 'I could not find that capture in this organization.';
+        return withRoute({ reply, speak: safeSpokenText(reply), evidence: [], proposal: null, insufficientEvidence: false });
+      }
     }
     if (typeof requestContext.captureEvidence === 'function') requestContext.captureEvidence(safeRecords);
     const safeContext = { records: safeRecords };
@@ -420,6 +460,15 @@ export function createAIService({ config, events, repos, fx, provider = createLL
       return withRoute({ reply: AI_TEMPORARILY_UNAVAILABLE_REPLY, evidence: [], proposal: null, unavailable: true });
     }
     const sanitized = sanitizeAIResponse(typeof result === 'string' ? result : result?.text, safeContext);
+    if (deterministicRefund) {
+      sanitized.proposal = {
+        type: 'refund',
+        txId: String(deterministicRefund.sourceId || deterministicRefund.id),
+        title: 'Review refund',
+        reason: statedRefundReason(message, requestedPayPalIds[0]),
+      };
+      sanitized.evidence = [String(deterministicRefund.id)];
+    }
     if (reservation?.usageId) await aiRepo.usage.complete(reservation.usageId, { inputTokens: Number(result?.usage?.inputTokens ?? inputTokensEstimate), outputTokens: Number(result?.usage?.outputTokens || 0), latencyMs: Date.now() - startedAt, model: result?.model || config.resolvedLLMModel || config.LLM_MODEL, status: sanitized.reply === UNSAFE_REPLY || sanitized.reply === EMPTY_REPLY ? 'invalid_response' : 'completed' }).catch(() => {});
     if (sanitized.reply === UNSAFE_REPLY || sanitized.reply === EMPTY_REPLY) return withRoute(sanitized);
     const rawParsed = (() => { try { return JSON.parse(typeof result === 'string' ? result : result?.text); } catch { return null; } })();
@@ -429,7 +478,7 @@ export function createAIService({ config, events, repos, fx, provider = createLL
     else if (sanitized.proposal && !sanitized.evidence.length) proposalFailure = 'PROPOSAL_CITATION_MISSING';
     else if (!sanitized.proposal && claimsProposal) proposalFailure = 'PROPOSAL_OBJECT_MISSING';
     if (proposalFailure) console.warn(JSON.stringify({ level: 'warn', event: 'ai_proposal_not_created', reasonCode: proposalFailure }));
-    const actions = validateAssistantActions(rawParsed?.actions, message, context?.role);
+    const actions = deterministicRefund ? [] : validateAssistantActions(rawParsed?.actions, message, context?.role);
     const knownIds = new Set(safeRecords.flatMap((record) => [record?.id, record?.sourceId].map((id) => String(id || ''))).filter(Boolean));
     const unknownEvidenceCount = Array.isArray(rawParsed?.evidence) ? rawParsed.evidence.filter((id) => !knownIds.has(String(id))).length : 0;
     if (unknownEvidenceCount) events?.addCall({ t: new Date().toISOString(), m: `AI sanitizer dropped ${unknownEvidenceCount} unknown evidence reference(s)`, ok: true });
