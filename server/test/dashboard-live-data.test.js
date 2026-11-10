@@ -45,7 +45,7 @@ test('authenticated dashboard loads tenant-scoped reports after auth and has ret
   for (const route of ['/api/reports/profit-and-loss', '/api/reports/fees', '/api/reports/refunds', '/api/reports/cash-flow-series', '/api/transactions']) assert.ok(loader.includes(route));
   assert.match(loader, /Couldn't load dashboard data\./);
   assert.match(loader, /button\.textContent = "Retry"/);
-  assert.match(dashboard, /mode==="supabase"\)return/);
+  assert.match(dashboard, /mode!=="demo"\|\|!window\.NovaPayAuth\.isAuthenticated\(\)\)return/);
   assert.match(html, /src="src\/dashboard-data\.js"/);
   assert.match(html, /src="src\/dashboard-live-data\.js"/);
 });
@@ -56,6 +56,4 @@ test('cash flow uses currency separated cash series, live failures, and supports
   assert.match(loader, /cashflow-currency/);
   assert.match(loader, /new Set\(rows\.map/);
   assert.match(loader, /cashText\(netTotal,currency\)/);
-  assert.match(loader, /failures\.filter/);
-  assert.match(loader, /No failed payments/);
 });

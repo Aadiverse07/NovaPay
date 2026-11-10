@@ -60,7 +60,7 @@ test('live cash chart resets demo animation, draws axes, and shows one monthly p
     'profit-and-loss': { rows: [] }, fees: { rows: [] }, refunds: { rows: [] },
     'cash-flow-series': { rows: [{ period: '2026-11', currency: 'USD', money_in_minor: '15000', money_out_minor: '2500', net_minor: '12500' }] },
     failures: { failures: [] },
-    transactions: { transactions: [] }, failures: { failures: [] }
+    transactions: { transactions: [] }
   };
   const window = {
     NovaPayAuth: { mode: 'supabase', ready: Promise.resolve(), isAuthenticated: () => true },
@@ -85,7 +85,7 @@ test('live cash chart resets demo animation, draws axes, and shows one monthly p
 });
 
 test('cashflow sample renderer is gated at call time and Sandbox sizing follows the container', () => {
-  assert.match(dashboardSource, /function renderCashflow\(range, animate\)\{\s*if\(window\.NovaPayAuth&&window\.NovaPayAuth\.mode==="supabase"\)return/);
+  assert.match(dashboardSource, /function renderCashflow\(range, animate\)\{\s*if\(!window\.NovaPayAuth\|\|window\.NovaPayAuth\.mode!=="demo"\|\|!window\.NovaPayAuth\.isAuthenticated\(\)\)return/);
   assert.match(heroCss, /\.hs-paypal \.hs-recv strong\{font-size:1em;max-width:calc\(100% - 2\.4em\);white-space:normal;overflow-wrap:normal\}/);
   assert.doesNotMatch(heroCss, /\.hs-paypal \.hs-recv strong\{[^}]*\b\d+(?:\.\d+)?vw/);
 });

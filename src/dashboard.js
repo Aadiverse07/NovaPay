@@ -674,7 +674,7 @@
     if(area){if(motion.reduced()){area.style.transform="scaleX(1)";}else requestAnimationFrame(function(){area.style.transition="transform "+motion.chart.duration+"ms "+motion.easing;area.style.transform="scaleX(1)";});}
   }
   function renderKpis(key, animate){
-    if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase")return;
+    if(!window.NovaPayAuth||window.NovaPayAuth.mode!=="demo"||!window.NovaPayAuth.isAuthenticated())return;
     var set=kpiSets[key]||kpiSets.today;
     ["revenue","fees","refunds","disputes","net"].forEach(function(k,idx){
       var d=set[k],val=d[0],pct=d[1],up=pct>=0,good=lowerIsBetter[k]?!up:up;
@@ -691,8 +691,8 @@
   }
   var dateSelect=$("dashboard-date");
   if(dateSelect){var now=new Date(),yesterday=new Date(now);yesterday.setDate(now.getDate()-1);var week=new Date(now);week.setDate(now.getDate()-6);var dateFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short",year:"numeric"}),rangeFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short"});dateSelect.options[0].textContent=dateFormat.format(now);dateSelect.options[1].textContent=dateFormat.format(yesterday);dateSelect.options[2].textContent=rangeFormat.format(week)+" – "+dateFormat.format(now);}
-  if(dateSelect){dateSelect.addEventListener("change",function(){if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){document.dispatchEvent(new CustomEvent("novapay:dashboard-period"));return;}renderKpis(dateSelect.value, true);});}
-  if(!(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"))renderKpis("today", false);
+  if(dateSelect){dateSelect.addEventListener("change",function(){if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){document.dispatchEvent(new CustomEvent("novapay:dashboard-period"));return;}if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderKpis(dateSelect.value, true);});}
+  if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderKpis("today", false);
   applyChartTheme();
 
   /* Cash flow: deterministic demo series per range; totals always equal the sum of the plotted points */
@@ -715,7 +715,7 @@
   function pathFor(vals,max){return vals.map(function(v,i){return (i?"L":"M")+xAt(i,vals.length).toFixed(1)+" "+(PAD+(1-v/max)*(H-PAD*2)).toFixed(1);}).join(" ");}
   function areaFor(vals,max){return pathFor(vals,max)+" L"+xAt(vals.length-1,vals.length).toFixed(1)+" "+(H-PAD)+" L"+PAD+" "+(H-PAD)+" Z";}
   function renderCashflow(range, animate){
-    if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase")return;
+    if(!window.NovaPayAuth||window.NovaPayAuth.mode!=="demo"||!window.NovaPayAuth.isAuthenticated())return;
     var cfg=ranges[range]||ranges["30D"];cfRange=range;
     var mi=series(cfg,cfg.in,0),mo=series(cfg,cfg.out,5),net=mi.map(function(v,i){return v-mo[i];});
     var totIn=mi.reduce(function(a,b){return a+b;},0),totOut=mo.reduce(function(a,b){return a+b;},0);
@@ -738,7 +738,7 @@
     $("cf-tip").hidden=true;$("cf-cursor").hidden=true;$("cf-crosshair-y").hidden=true;
     document.querySelectorAll("#cashflow-tabs button").forEach(function(b){var on=b.dataset.range===range;b.classList.toggle("active",on);b.setAttribute("aria-selected",String(on));b.setAttribute("role","tab");});
   }
-  document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){document.querySelectorAll("#cashflow-tabs button").forEach(function(tab){tab.classList.toggle("active",tab===b)});document.dispatchEvent(new CustomEvent("novapay:dashboard-period",{detail:{period:b.dataset.range}}));return;}renderCashflow(b.dataset.range,true);});});
+  document.querySelectorAll("#cashflow-tabs button").forEach(function(b){b.addEventListener("click",function(){if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){document.querySelectorAll("#cashflow-tabs button").forEach(function(tab){tab.classList.toggle("active",tab===b)});document.dispatchEvent(new CustomEvent("novapay:dashboard-period",{detail:{period:b.dataset.range}}));return;}if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderCashflow(b.dataset.range,true);});});
 
   var plot=$("cf-plot"),tip=$("cf-tip"),cursor=$("cf-cursor"),crosshairY=$("cf-crosshair-y");
   document.addEventListener("novapay:cashflow-live",function(event){var live=event.detail||{},points=live.points||[];cf={live:true,currency:live.currency,points:points,cfg:{n:points.length,labels:function(i){return points[i]&&points[i].period||""}}};});
@@ -753,12 +753,12 @@
   }
   plot.addEventListener("mousemove",hover);plot.addEventListener("touchstart",function(e){hover(e.touches[0]);},{passive:true});plot.addEventListener("touchmove",function(e){hover(e.touches[0]);},{passive:true});
   plot.addEventListener("mouseleave",function(){tip.hidden=true;cursor.hidden=true;crosshairY.hidden=true;});
-  if(!(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"))renderCashflow("30D",false);
+  if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderCashflow("30D",false);
   applyChartTheme();
-  if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); if(!(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase")){renderKpis(dateSelect?dateSelect.value:"today",false);renderCashflow(cfRange,false);} });
+  if(window.NovaPayChartTheme) window.NovaPayChartTheme.onChange(function(){ applyChartTheme(); if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated()){renderKpis(dateSelect?dateSelect.value:"today",false);renderCashflow(cfRange,false);} });
 
   function animateHealth(){
-    if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase")return;
+    if(!window.NovaPayAuth||window.NovaPayAuth.mode!=="demo"||!window.NovaPayAuth.isAuthenticated())return;
     var ring=document.querySelector(".health-ring"),seg=document.querySelector(".health-segment-main"),value=document.querySelector("[data-health-value]");
     if(!ring||!seg)return;
     var pct=82; seg.style.strokeDasharray=pct+" "+(100-pct); seg.style.strokeDashoffset="100";
