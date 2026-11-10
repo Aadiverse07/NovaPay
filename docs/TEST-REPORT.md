@@ -1611,8 +1611,8 @@ A real Supabase API session was verified, but no browser UI was driven. Manual s
 - Final suite after the five follow-up fixes: `npm test` PASS, 429/429 tests; migrations 0001–0029 parse successfully.
 
 ## 2026-11-10 final polish
-- `npm test` — PASS, 437 passed, 0 failed. Includes cash-flow-series BigInt/currency aggregation, dashboard live rendering, optional module route/UI behavior, and assistant message action source regressions.
-- `npm run test:optional-modules` — PASS, 437 passed, 0 failed with both module flags enabled.
+- `npm test` — PASS, 438 passed, 0 failed. Includes cash-flow-series BigInt/currency aggregation, dashboard live rendering, optional module route/UI behavior, and assistant message action source regressions.
+- `npm run test:optional-modules` — PASS, 438 passed, 0 failed with both module flags enabled.
 - `node scripts/check-migrations.js` — PASS; migration syntax 0001–0029. No migration added.
 - Not tested live: authenticated browser rendering, actual Supabase cash ledger data, PayPal Sandbox, SMTP, and the visual small-screen/dark-mode presentation.
 - Task 5 was intentionally skipped because existing failures API pagination/role limits cannot guarantee a correct selected-period KPI without changing its API contract.
