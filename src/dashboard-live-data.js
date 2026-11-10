@@ -3,9 +3,12 @@
   var $ = function (id) { return document.getElementById(id); };
   var auth = window.NovaPayAuth, data = window.NovaPayDashboardData, api = window.NovaPayApi;
   if (!auth || !data || !api) return;
-  var busy = false, queued = false, lastPassiveRefresh = 0;
+  var busy = false, queued = false, lastPassiveRefresh = 0, periodOverride = null;
   function periodRange(value) {
     var now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), 1), end = now;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(value||""))) { start = new Date(value+"T00:00:00"); end = new Date(value+"T00:00:00"); }
+    if (value === "yesterday") { start = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1); end = new Date(start); }
+    if (value === "week" || value === "7D") start = new Date(now.getFullYear(), now.getMonth(), now.getDate()-6);
     if (value === "last-month" || value === "30D") { start = new Date(now.getFullYear(), now.getMonth() - 1, 1); end = new Date(now.getFullYear(), now.getMonth(), 0); }
     if (value === "year") { start = new Date(now.getFullYear(), 0, 1); end = now; }
     return "?from=" + data.localDate(start) + "&to=" + data.localDate(end);
@@ -65,7 +68,7 @@
     if (busy) { queued = true; return; }
     busy = true; setStatus("Loading organization data…", false);
     try {
-      var activeTab = document.querySelector("#cashflow-tabs button.active"), selection = $("dashboard-date") && $("dashboard-date").value || (activeTab && activeTab.dataset.range), range = periodRange(selection);
+      var activeTab = document.querySelector("#cashflow-tabs button.active"), selection = periodOverride || ($("dashboard-date") && $("dashboard-date").value) || (activeTab && activeTab.dataset.range), range = periodRange(selection);
       var responses = await Promise.all([api.request("/api/reports/profit-and-loss" + range), api.request("/api/reports/fees" + range), api.request("/api/reports/refunds" + range), api.request("/api/reports/cash-flow-series" + range), api.request("/api/transactions?limit=50&offset=0")]);
       var metric = data.metrics(responses[0].rows || [], responses[1].rows || [], responses[2].rows || []), transactions = responses[4].transactions || [];
       $("kpi-revenue").textContent = metric.revenue; $("kpi-fees").textContent = metric.fees; $("kpi-refunds").textContent = metric.refunds; $("kpi-net").textContent = metric.net;
@@ -81,7 +84,7 @@
   function loadIfActive() { if (active() && auth.mode === "supabase" && auth.isAuthenticated()) load(); }
   function refreshOnFocus() { if (!active() || auth.mode !== "supabase" || !auth.isAuthenticated()) return; var now = Date.now(); if (now - lastPassiveRefresh < 30000) return; lastPassiveRefresh = now; load(); }
   Promise.resolve(auth.ready).then(function () { if (auth.mode !== "supabase" || !auth.isAuthenticated()) return; document.querySelectorAll("[data-dashboard-sample]").forEach(function (node) { node.hidden = true; }); loadIfActive(); });
-  document.addEventListener("novapay:dashboard-period", loadIfActive);
+  document.addEventListener("novapay:dashboard-period", function(event){periodOverride=event.detail&&event.detail.period||null;loadIfActive()});
   if($("cashflow-currency"))$("cashflow-currency").addEventListener("change",function(){selectedCurrency=this.value;loadIfActive()});
   document.addEventListener("novapay:financial-refresh", function (event) { var resources = event.detail && event.detail.resources; if ((!resources || resources.indexOf("dashboard") !== -1) && active()) loadIfActive(); });
   document.addEventListener("novapay:auth", loadIfActive);

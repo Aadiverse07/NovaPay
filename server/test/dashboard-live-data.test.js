@@ -53,6 +53,7 @@ test('authenticated dashboard loads tenant-scoped reports after auth and has ret
 
 test('cash flow uses currency separated cash series, live failures, and supports the currency selector', () => {
   assert.match(loader, /cash-flow-series/);
+  assert.match(loader, /periodOverride \|\|/);
   assert.match(loader, /cashflow-currency/);
   assert.match(loader, /new Set\(rows\.map/);
   assert.match(loader, /cashText\(netTotal,currency\)/);

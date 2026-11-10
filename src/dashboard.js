@@ -691,7 +691,7 @@
   }
   var dateSelect=$("dashboard-date");
   if(dateSelect){var now=new Date(),yesterday=new Date(now);yesterday.setDate(now.getDate()-1);var week=new Date(now);week.setDate(now.getDate()-6);var dateFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short",year:"numeric"}),rangeFormat=new Intl.DateTimeFormat(undefined,{day:"2-digit",month:"short"});dateSelect.options[0].textContent=dateFormat.format(now);dateSelect.options[1].textContent=dateFormat.format(yesterday);dateSelect.options[2].textContent=rangeFormat.format(week)+" – "+dateFormat.format(now);}
-  if(dateSelect){dateSelect.addEventListener("change",function(){if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){document.dispatchEvent(new CustomEvent("novapay:dashboard-period"));return;}if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderKpis(dateSelect.value, true);});}
+  if(dateSelect){dateSelect.addEventListener("change",function(){if(window.NovaPayAuth&&window.NovaPayAuth.mode==="supabase"){document.dispatchEvent(new CustomEvent("novapay:dashboard-period",{detail:{period:dateSelect.value}}));return;}if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderKpis(dateSelect.value, true);});}
   if(window.NovaPayAuth&&window.NovaPayAuth.mode==="demo"&&window.NovaPayAuth.isAuthenticated())renderKpis("today", false);
   applyChartTheme();
 
