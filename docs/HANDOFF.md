@@ -111,3 +111,12 @@ Phase decisions are recorded in `docs/DECISIONS.md`, including public config fie
 - Support tickets now receive per-organization numbers; creators see only ticket number and purpose. Support/owner/admin staff retain the queue and thread. Creator replies are rejected; public staff replies/status emails use the email address resolved from the ticket creator's Supabase account.
 - Message email outcomes are persisted and visible to staff, with retry for failed public mail. Internal notes never email. SMTP is optional and ticket creation still persists when unconfigured.
 - Apply migration 0029_support_ticket_email.sql after 0028. Add the SMTP variables documented in .env.example as needed. Live SMTP and migration application remain unverified.
+
+## 2026-11-10 demo polish handoff
+
+- Branch: `release/novapay-2026-11-10-final-polish`; based on current `origin/main` after PR #20 was merged.
+- Removed Community Funds and Maintenance UI, client module, current API/frontend feature guides and assistant actions. Server code, flags, existing data, roles, migrations and transaction/ledger history are retained. Unknown old hashes return to Dashboard.
+- Rebuilt the assistant as a full-page chat and added message copy/edit with transcript truncation and an existing-approval note. The prior approval remains server-side and is not replayed by the UI.
+- Added the org-scoped cash-flow series endpoint from cash ledger accounts, with monthly BigInt totals separated by currency; signed-in chart seed rendering is disabled. Dashboard sample rendering remains available only in authenticated demo mode.
+- Task 5 (Failed payments KPI) was skipped: `/api/failures` is capped and role-restricted, so a reliable selected-period count needs a dedicated date-filtered API contract. Avoided presenting a partial count as complete.
+- No migration was added. Existing `ENABLE_COMMUNITY_FUNDS` and `ENABLE_MAINTENANCE` flags remain default-off. Full automated tests and migration parsing are being rerun before publishing; no visual browser walkthrough or live Supabase/PayPal/SMTP flow was performed for this polish.

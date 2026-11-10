@@ -124,3 +124,5 @@ Login and device risk are recorded with salted hashes for network range and brow
 NovaPay records failed sign-in reports and applies account and network-prefix lockouts before login plus to authenticated API requests. Supabase Auth is still reachable directly by an attacker, so NovaPay cannot prevent direct password attempts against Supabase; Supabase's own Auth rate limits cover that path.
 
 Settings → Security uses real Supabase-backed login and device records, shows the current explainable risk reasons, and lets owners/admins unlock a workspace member. Device removal also ends that device's active step-up grant. This panel reports only data recorded after these migrations are applied; earlier sign-ins are not backfilled.
+
+The signed-in Cash Flow Overview reads the organization's ledger cash accounts, separates currencies, and formats amounts in the source currency. The assistant is a full-page conversation; user messages can be copied or edited, while approval proposals still require the existing human review flow. Unauthenticated dashboard seed graphics remain illustrative and are restricted to the explicit demo session.
