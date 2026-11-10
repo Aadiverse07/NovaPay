@@ -1,12 +1,11 @@
 const GREETING_KEY = 'novapay-voice-greeting-spoken';
 
-export function buildVoiceGreeting(registry, featureFlags = globalThis.NovaPayFeatures || {}) {
-  const features = featureFlags;
-  const available = registry?.availableRegistry ? registry.availableRegistry(features) : registry?.registry;
+export function buildVoiceGreeting(registry) {
+  const available = registry?.registry;
   const nav = available?.find((item) => item.id === 'nav.open');
   const views = nav?.args?.properties?.view?.enum || [];
   const names = views.filter((view) => view !== 'dashboard' && view !== 'ai-assistant').map((view) => ({
-    'community-funds': 'community funds', sandbox: 'PayPal Sandbox',
+    sandbox: 'PayPal Sandbox',
   }[view] || view.replaceAll('-', ' ')));
   const capabilities = names.length ? `I can help with everything inside NovaPay, including ${names.join(', ')}.` : 'I can help with the NovaPay modules available in this workspace.';
   return `Hey, I’m NovaPay, the AI assistant for NovaPay Finance. ${capabilities} To use me, tap the mic and tell me what you need. I’ll answer by voice, and I can open modules and help with supported tasks.`;

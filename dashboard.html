@@ -71,8 +71,6 @@
       <a href="#invoices" data-view="invoices" aria-label="Invoices"><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/invoices.png" alt="" width="38" height="38"></span><b>Invoices</b></a>
       <a href="#reports" data-view="reports" aria-label="Reports"><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/reports.png" alt="" width="38" height="38"></span><b>Reports</b></a>
       <a href="#documents" data-view="documents" aria-label="Documents"><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/documents.png" alt="" width="38" height="38"></span><b>Documents</b></a>
-      <a href="#community-funds" data-view="community-funds" aria-label="Community Funds" hidden><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/fundraising.png" alt="" width="38" height="38"></span><b>Community Funds</b></a>
-      <a href="#maintenance" data-view="maintenance" aria-label="Maintenance" hidden><span class="nav-ai-logo nav-np-tile"><img class="nav-mod-logo nav-mod-logo--np" src="assets/icons/maintenance.png" alt="" width="38" height="38"></span><b>Maintenance</b></a>
     </nav>
     <a class="back-home" href="preview.html#home">← Back to Home</a>
   </aside>
@@ -285,16 +283,6 @@
         <p id="documents-live-status" class="module-status" role="status" aria-live="polite">Loading organization documents…</p><button id="documents-retry" class="btn btn--ghost" type="button" hidden>Retry</button>
         <div class="module-kpis module-kpis--two"><article class="dash-card"><div class="card-heading"><div><h3>Organization documents</h3><span id="documents-count" class="status info">Loading</span></div><button id="documents-refresh" class="btn btn--ghost" type="button">Refresh</button></div><div id="documents-list" aria-live="polite"></div></article><article class="dash-card"><h3>Field review</h3><div id="document-review-panel"><p>Select a processed document to review extracted fields and confidence.</p></div></article></div>
       </div>
-      <div class="view" id="view-community-funds" data-view-panel hidden>
-        <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/fundraising.png" alt="" width="64" height="64"><h2 class="sr-only">Campaigns &amp; public record</h2><p>Manage campaign goals and connect contributions to approved spending.</p></div>
-        <div class="module-kpis" data-fund-sample hidden><article class="dash-card"><small>Active campaigns</small><strong>3</strong><span>Across 2 communities</span></article><article class="dash-card"><small>Raised this month</small><strong>₹4,82,000</strong><span>Illustrative contributions</span></article><article class="dash-card"><small>Needs attention</small><strong>1</strong><span>Contribution reconciliation</span></article></div>
-        <div class="campaign-grid" data-fund-sample hidden><article class="dash-card campaign-card"><span class="status success">Active</span><h3>Community Learning Center</h3><p>Furniture and learning materials for the new neighborhood center.</p><div class="campaign-progress"><span style="width:72%"></span></div><div class="campaign-numbers"><b>₹3,60,000 raised</b><span>of ₹5,00,000</span></div><small>42 contributions · updated 21 Oct 2026</small><button class="btn btn--ghost" data-ui-action="campaign-view">View contributions</button></article><article class="dash-card campaign-card"><span class="status info">Active</span><h3>Park Renewal Drive</h3><p>Accessible paths, seating and native planting for the local park.</p><div class="campaign-progress"><span style="width:46%"></span></div><div class="campaign-numbers"><b>₹1,22,000 raised</b><span>of ₹2,65,000</span></div><small>19 contributions · updated 20 Oct 2026</small><button class="btn btn--ghost" data-ui-action="campaign-view">View contributions</button></article><article class="dash-card campaign-create"><span class="upload-icon">＋</span><h3>Start a campaign</h3><p>Set a goal, explain the need and share transparent progress.</p><button class="btn btn--primary" data-ui-action="campaign-create">Create campaign</button></article></div>
-        <section class="community-transparency-section" data-fund-sample hidden aria-labelledby="community-transparency-title">
-        <div class="page-intro"><span class="section-kicker">PUBLIC VIEW · READ ONLY</span><h2 id="community-transparency-title">Transparency &amp; spending</h2><p>Review the public record linking contributions to approved spending and completion evidence.</p></div>
-        <article class="dash-card transparency-hero"><span class="status success">Public transparency · read only</span><h2>Maple Grove Community Fund</h2><p>Contributions and expenses are shared with personal details removed. This demonstration uses illustrative data.</p><div class="report-summary-grid"><div><small>Raised</small><strong>₹4,82,000</strong></div><div><small>Spent</small><strong>₹1,28,400</strong></div><div><small>Available</small><strong>₹3,53,600</strong></div></div></article>
-        <div class="module-kpis module-kpis--two"><article class="dash-card"><h3>Recent contributions</h3><div class="transparency-row"><span>Community supporter</span><b>₹5,000</b><small>21 Oct · Verified</small></div><div class="transparency-row"><span>Anonymous</span><b>₹2,500</b><small>20 Oct · Verified</small></div><div class="transparency-row"><span>Community supporter</span><b>₹1,000</b><small>19 Oct · Verified</small></div></article><article class="dash-card"><h3>Recent spending</h3><div class="transparency-row"><span>Playground safety surface</span><b>₹26,700</b><small>Approved · Paid · Evidence complete</small></div><div class="transparency-row"><span>Community hall water pump</span><b>₹18,400</b><small>Approved · Payment evidence pending</small></div><p class="module-foot">Each expense links to approval, invoice, payment reference and completion evidence.</p></article></div>
-        </section>
-      </div>
       <div class="view" id="view-settings" data-view-panel hidden>
         <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/settings.png" alt="" width="64" height="64"><h2 class="sr-only">Settings</h2><p>Manage account preferences and browser-saved data.</p></div>
         <div class="settings-layout">
@@ -357,7 +345,7 @@
             <section class="set-group"><h4 class="set-group-title">Layout</h4>
               <div class="settings-card">
                 <label><span><b>Compact layout</b><small>Tighter spacing in cards and tables to fit more on screen.</small></span><input type="checkbox" id="set-compact"></label>
-                <label for="set-landing"><span><b>Start page</b><small>The page that opens when you launch the dashboard.</small></span><select id="set-landing"><option value="dashboard">Dashboard</option><option value="transactions">Transactions</option><option value="ai-assistant">AI Assistant</option><option value="approvals">Approvals</option><option value="sandbox">PayPal Sandbox</option><option value="ledger">Ledger</option><option value="invoices">Invoices</option><option value="reports">Reports</option><option value="documents">Documents</option><option value="community-funds" data-optional-module="community-funds" hidden>Community Funds</option><option value="maintenance" data-optional-module="maintenance" hidden>Maintenance</option><option value="settings">Settings</option></select></label>
+                <label for="set-landing"><span><b>Start page</b><small>The page that opens when you launch the dashboard.</small></span><select id="set-landing"><option value="dashboard">Dashboard</option><option value="transactions">Transactions</option><option value="ai-assistant">AI Assistant</option><option value="approvals">Approvals</option><option value="sandbox">PayPal Sandbox</option><option value="ledger">Ledger</option><option value="invoices">Invoices</option><option value="reports">Reports</option><option value="documents">Documents</option><option value="settings">Settings</option></select></label>
               </div>
             </section>
             <section class="set-group"><h4 class="set-group-title">Accessibility</h4>
@@ -441,10 +429,6 @@
           </div>
         </div>
       </div>
-      <div class="view" id="view-maintenance" data-view-panel hidden>
-        <div class="page-intro ai-page-intro"><img class="module-head-logo" src="assets/icons/maintenance.png" alt="" width="64" height="64"><h2 class="sr-only">Maintenance</h2><p>Track requests from quotation through approval and completion.</p></div>
-        <article class="dash-card module-card"><div class="card-heading"><div><h3>Maintenance requests</h3><p>Every expense should link to its approval, invoice, payment and completion evidence.</p></div><button class="btn btn--primary" data-ui-action="maintenance-new">＋ New request</button></div><div class="maintenance-list"><article><span class="request-icon">⌂</span><div class="request-main"><b>Replace community hall water pump</b><small>Maple Grove · Requested 18 Oct 2026</small><div class="workflow-steps"><span class="done">Quotation</span><span class="done">Approved</span><span>Payment</span><span>Completion</span></div></div><div class="request-meta"><b>₹18,400</b><span class="status warn">Payment evidence needed</span></div><button class="table-action" data-ui-action="maintenance-view">View details</button></article><article><span class="request-icon">⌂</span><div class="request-main"><b>Repair playground safety surface</b><small>Maple Grove · Requested 12 Oct 2026</small><div class="workflow-steps"><span class="done">Quotation</span><span class="done">Approved</span><span class="done">Payment</span><span class="done">Completion</span></div></div><div class="request-meta"><b>₹26,700</b><span class="status success">Evidence complete</span></div><button class="table-action" data-ui-action="maintenance-view">View details</button></article></div></article>
-      </div>
 
 </section>
   </main>
@@ -474,50 +458,6 @@
     <div class="detail-note" id="detail-note">This is illustrative sample data. No live PayPal transaction is accessed or changed.</div>
     <div class="tx-ai-controls"><label for="tx-ai-question">Ask AI about this transaction</label><div class="tx-ai-row" id="tx-ai-row"><div class="ai-dictation" id="tx-dictation" role="group" aria-label="Voice dictation"><button type="button" class="ai-dict-btn" id="tx-dict-cancel" aria-label="Cancel dictation" title="Cancel (Esc)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="ai-dict-wave strands-container" id="tx-dict-wave" aria-label="Listening animation"></div><span class="ai-dict-time" id="tx-dict-time" role="timer" aria-label="Recording time">0:00</span><button type="button" class="ai-dict-btn ai-dict-btn--ok" id="tx-dict-confirm" aria-label="Use dictated text" title="Done (Enter)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></div><input id="tx-ai-question" placeholder="Ask using the available transaction data"><button class="ai-tool-button" id="tx-ai-mic" type="button" aria-label="Start voice input" title="Start voice input"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></svg></button><button class="btn btn--ghost" id="tx-ai-ask" type="button">Ask AI</button></div><p id="tx-voice-status" role="status" aria-live="polite"></p><p id="tx-ai-answer" aria-live="polite"></p><button class="btn btn--primary" id="tx-send-approval" type="button">Send finding to Approvals</button></div>
     <button class="btn btn--ghost" type="button" data-close-transaction>Close</button>
-  </section>
-</div>
-<div class="transaction-modal campaign-modal" id="campaign-create-modal" hidden aria-hidden="true">
-  <div class="transaction-modal-backdrop" data-campaign-close></div>
-  <section class="transaction-dialog campaign-dialog" role="dialog" aria-modal="true" aria-labelledby="campaign-create-title">
-    <button class="modal-close" type="button" data-campaign-close aria-label="Close campaign form" style="left:auto!important;right:16px!important;top:14px!important;float:none!important">×</button>
-    <span class="section-kicker">COMMUNITY FUND · NEW CAMPAIGN</span>
-    <h2 id="campaign-create-title">Create a campaign</h2>
-    <p>Share the goal and purpose so your community knows what it is supporting.</p>
-    <form id="campaign-create-form" class="campaign-form" novalidate>
-      <label>Campaign title<input name="title" required maxlength="140" autocomplete="off" placeholder="e.g. Community garden refresh"></label>
-      <label>Purpose<textarea name="purpose" required maxlength="1000" rows="3" placeholder="What will this campaign fund?"></textarea></label>
-      <div class="campaign-form-row">
-        <label>Currency<select name="currency" required><option value="USD">USD · PayPal Sandbox</option></select></label>
-        <label>Target amount (USD)<input name="target" type="number" required min="0.01" step="0.01" inputmode="decimal" placeholder="500.00"></label>
-        <label>Target date <span class="form-optional">Optional</span><input name="deadline" type="date"></label>
-      </div>
-      <label>Organiser<input name="organiser" required maxlength="160" autocomplete="organization" value="Organization"></label>
-      <p class="campaign-form-note">Campaign details will be shown with the public contribution and spending record.</p>
-      <p class="campaign-form-status" id="campaign-form-status" role="status" aria-live="polite"></p>
-      <div class="campaign-form-actions"><button class="btn btn--primary" type="submit">Continue</button><button class="btn btn--ghost" type="button" data-campaign-close>Cancel</button></div>
-    </form>
-  </section>
-</div>
-<div class="transaction-modal maintenance-request-modal" id="maintenance-create-modal" hidden aria-hidden="true">
-  <div class="transaction-modal-backdrop" data-maintenance-close></div>
-  <section class="transaction-dialog maintenance-request-dialog" role="dialog" aria-modal="true" aria-labelledby="maintenance-create-title">
-    <button class="modal-close" type="button" data-maintenance-close aria-label="Close maintenance request form">×</button>
-    <span class="section-kicker">COMMUNITY OPERATIONS · NEW REQUEST</span>
-    <h2 id="maintenance-create-title">New maintenance request</h2>
-    <p>Describe the work needed. Requests should include a clear scope and estimated cost.</p>
-    <form id="maintenance-create-form" class="campaign-form" novalidate>
-      <label>Request title<input name="title" required maxlength="160" autocomplete="off" placeholder="e.g. Repair community hall roof"></label>
-      <label>Description<textarea name="description" required maxlength="2000" rows="3" placeholder="Describe the repair or maintenance work"></textarea></label>
-      <label>Location<input name="location" required maxlength="160" placeholder="Building, floor or area"></label>
-      <label>Category<select name="category" required><option value="">Choose category</option><option>Plumbing</option><option>Electrical</option><option>Safety</option><option>Cleaning</option><option>Other</option></select></label>
-      <label>Priority<select name="priority" required><option value="">Choose priority</option><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
-      <label>Estimated budget (USD)<input name="estimate" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Optional"></label>
-      <label>Currency<select name="currency" required><option value="USD">USD</option></select></label>
-      <label>Linked campaign (optional)<select name="campaignId"><option value="">No campaign</option></select></label>
-      <p class="module-foot" id="maintenance-form-status" role="alert" aria-live="polite"></p>
-      <p class="campaign-form-note">Requests are reviewed before approval, payment, and completion evidence are recorded.</p>
-      <div class="campaign-form-actions"><button class="btn btn--primary" type="submit">Continue</button><button class="btn btn--ghost" type="button" data-maintenance-close>Cancel</button></div>
-    </form>
   </section>
 </div>
 <div class="transaction-modal report-modal" id="report-detail-modal" hidden aria-hidden="true">
@@ -618,7 +558,6 @@
 <script src="src/reports-data.js"></script>
 <script src="src/reports-live.js"></script>
 <script src="src/currency-minor.js"></script>
-<script src="src/fund-views.js?v=2"></script>
 <script src="src/invoice-detail.js"></script>
 <script src="src/invoices-live.js"></script>
 <script src="src/documents.js"></script>

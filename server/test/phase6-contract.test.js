@@ -10,14 +10,12 @@ const contractUrl = new URL('../../docs/FRONTEND-CONTRACT.md', import.meta.url);
 const routesSource = await readFile(routeUrl, 'utf8');
 const contract = await readFile(contractUrl, 'utf8');
 
-test('every mounted Phase 6 fund route is documented in the frontend contract', () => {
+test('legacy Phase 6 routes remain implemented but are no longer part of the visible frontend contract', () => {
   const routePattern = /router\.(get|post)\('([^']+)'/g;
   const routes = [...routesSource.matchAll(routePattern)].map(([, method, path]) => `${method.toUpperCase()} /api${path}`);
   assert.ok(routes.length >= 15, `expected fund route inventory, found ${routes.length}`);
-  for (const route of routes) assert.ok(contract.includes(`### \`${route}\``), `missing route contract heading: ${route}`);
-  assert.match(contract, /RATE_LIMITED/);
-  assert.match(contract, /USER_RATE_LIMITED/);
-  assert.match(contract, /SIMULATED/);
+  assert.ok(routes.some((route) => route.includes('/api/funds/campaigns')));
+  assert.doesNotMatch(contract, /Optional legacy module contract|Community Funds|Maintenance payout/);
 });
 
 test('payment approval and fund API requests are covered by authenticated and IP rate limits', async () => {

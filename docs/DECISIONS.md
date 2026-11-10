@@ -805,3 +805,8 @@
 ## Optional module visibility (2026-11-09)
 
 Community Funds and Maintenance are soft-disabled by default with `ENABLE_COMMUNITY_FUNDS` and `ENABLE_MAINTENANCE`. Their tables, migrations, repositories, and transaction/ledger records are retained. The flags are exposed in `/api/status`; disabled routes return a structured `404 MODULE_NOT_ENABLED`, and the browser hides module entry points and assistant actions. Set either environment variable to `true` to re-enable its module. No migration is added.
+
+## 2026-11-10 — Remove optional modules from the demo UI
+- Choice: remove the Community Funds and Maintenance browser modules and assistant targets while retaining their existing server implementation, flags, database constraints, migrations and persisted records.
+- Reason: those modules do not support the current PayPal demo path, while historical contribution transactions and ledger entries remain part of the financial record. Old bookmarks fall back to Dashboard.
+- No schema change or migration was made.

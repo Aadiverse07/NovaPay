@@ -7,14 +7,13 @@
 }(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
   var ROUTES = { code: "Code", sql: "Database", ocr: "OCR", retrieval: "Retrieval", llm: "LLM" };
-  var QUICK_VIEWS = { ledger: "ledger", invoices: "invoices", approvals: "approvals", transactions: "transactions", reports: "reports", documents: "documents", maintenance: "maintenance", "community funds": "community-funds", dashboard: "dashboard" };
+  var QUICK_VIEWS = { ledger: "ledger", invoices: "invoices", approvals: "approvals", transactions: "transactions", reports: "reports", documents: "documents", dashboard: "dashboard" };
   function parseQuickCommand(message) {
     var text = String(message || "").toLocaleLowerCase("en-US").replace(/[’‘]/g, "'").trim();
     var nav = text.match(/^(?:please\s+)?(?:open|go to|navigate to|switch to|take me to|show)(?:\s+the)?\s+(.+?)[.! ]*$/);
     if (nav && QUICK_VIEWS[nav[1].trim()]) {
       var view = QUICK_VIEWS[nav[1].trim()];
-      if (view === "community-funds" && !(root.NovaPayFeatures && root.NovaPayFeatures.communityFunds) || view === "maintenance" && !(root.NovaPayFeatures && root.NovaPayFeatures.maintenance)) return null;
-      return { action: { id: "nav.open", tier: 0, args: { view: view } }, reply: "Opening " + (view === "community-funds" ? "Community Funds" : view[0].toUpperCase() + view.slice(1)) + ".", speak: true };
+      return { action: { id: "nav.open", tier: 0, args: { view: view } }, reply: "Opening " + (view[0].toUpperCase() + view.slice(1)) + ".", speak: true };
     }
     if (/^(?:stop|stop speaking|cancel|be quiet|quiet)[.! ]*$/.test(text)) return { action: { id: "assistant.stopSpeaking", tier: 0, args: {} }, reply: "Okay, I stopped speaking.", speak: false };
     if (/^(?:repeat|say that again|again)[.! ]*$/.test(text)) return { action: { id: "assistant.repeat", tier: 0, args: {} }, reply: "I will repeat my previous answer.", speak: false };

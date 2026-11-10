@@ -9,7 +9,7 @@ function store(initial = {}) {
 }
 
 test('intro capability sentence is derived from registered navigation views', () => {
-  const greeting = buildVoiceGreeting(ASSISTANT_ACTION_REGISTRY, { communityFunds: true, maintenance: true });
+  const greeting = buildVoiceGreeting(ASSISTANT_ACTION_REGISTRY);
   for (const view of ASSISTANT_ACTION_REGISTRY.views.filter((item) => !['dashboard', 'ai-assistant'].includes(item))) {
     const label = view === 'community-funds' ? 'community funds' : view === 'sandbox' ? 'PayPal Sandbox' : view.replaceAll('-', ' ');
     assert.ok(greeting.toLowerCase().includes(label.toLowerCase()), `registered view ${view} is named in the greeting`);

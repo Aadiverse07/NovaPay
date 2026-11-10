@@ -19,7 +19,7 @@ test('fast commands navigate in place without an LLM call', async () => {
 });
 
 test('navigation parser covers registered modules and rejects arbitrary targets', () => {
-  assert.deepEqual(parseNavigationCommand('go to community funds'), { view: 'community-funds' });
+  assert.equal(parseNavigationCommand('go to community funds'), null);
   assert.deepEqual(parseNavigationCommand('take me to invoices'), { view: 'invoices' });
   assert.equal(parseNavigationCommand('open an external website'), null);
   assert.deepEqual(ASSISTANT_ACTION_REGISTRY.views, [...new Set(ASSISTANT_ACTION_REGISTRY.views)]);
