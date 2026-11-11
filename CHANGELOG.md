@@ -16,8 +16,8 @@
 - Removed the external Google Fonts dependency from the landing page.
 - Preserved the existing Phase 1–7 demo behavior and Demo Mode disclosures.
 
-### Demo disclaimer
-NovaPay is a static demo. It does not connect to PayPal, does not call a production AI backend, and does not execute real financial actions.
+### Scope note
+This entry records the Phase 8 front-end layer, which was a static demo at the time. NovaPay now connects to the PayPal Sandbox, Supabase and Gemini through its backend. It still uses test money only and does not execute real financial actions. See README.md for what is real and what is simulated.
 
 ## Phase 9 — Hero laptop animation
 - Added 3D laptop hero, floating cards, Open Dashboard transition, dashboard fade-in; fixed missing logo script and tablet horizontal overflow.
