@@ -61,9 +61,13 @@ test('currency catalog merges provider support and includes currency names and e
 });
 
 test('authenticated currency-list route returns merged currency metadata', async () => {
+  const converterFixture = async (input) => {
+    if (new URL(input).pathname === '/api/currencies') return { ok: true, async json() { return [{ code: 'INR', name: 'Indian rupee', decimals: 2 }, { code: 'USD', name: 'US dollar', decimals: 2 }, { code: 'JPY', name: 'Japanese yen', decimals: 0 }]; } };
+    throw new Error('unexpected converter URL');
+  };
   const { service } = fixtureService(); const app = express();
   app.use((req, _res, next) => { req.user = { id: 'owner' }; req.orgId = 'org'; next(); });
-  app.use('/api', fxRoutes({ fx: service }));
+  app.use('/api', fxRoutes({ fx: service, fetchImpl: converterFixture }));
   const server = app.listen(0, '127.0.0.1'); await new Promise((resolve) => server.once('listening', resolve));
   try {
     const response = await fetch(`http://127.0.0.1:${server.address().port}/api/fx/currencies`), body = await response.json();
